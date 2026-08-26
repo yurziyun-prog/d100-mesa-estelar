@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
     <style>
+        /* ============================================
+           SEÇÃO 1: ESTILOS GLOBAIS E FUNDO
+           ============================================ */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -54,6 +57,9 @@
         .container { max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
         h1 { text-align: center; color: #fff; margin-bottom: 10px; font-size: 2.2em; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
         
+        /* ============================================
+           SEÇÃO 2: IDIOMA E LOGIN
+           ============================================ */
         .lang-selector { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .lang-btn { 
             padding: 8px 16px; 
@@ -108,6 +114,9 @@
         
         .hidden { display: none !important; }
         
+        /* ============================================
+           SEÇÃO 3: HEADER E ABAS
+           ============================================ */
         .user-header { 
             display: flex; 
             justify-content: space-between; 
@@ -145,6 +154,9 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
+        /* ============================================
+           SEÇÃO 4: GERENCIADOR DE PERSONAGENS
+           ============================================ */
         .char-manager {
             background: rgba(255,255,255,0.06);
             border-radius: 15px;
@@ -191,6 +203,9 @@
             cursor: pointer; font-weight: bold;
         }
         
+        /* ============================================
+           SEÇÃO 5: FICHA DO PERSONAGEM
+           ============================================ */
         .character-card {
             background: rgba(255,255,255,0.06);
             border-radius: 20px;
@@ -280,6 +295,9 @@
             margin-top: 5px;
         }
         
+        /* ============================================
+           SEÇÃO 6: FORMULÁRIOS E BOTÕES
+           ============================================ */
         .form-section {
             background: rgba(255,255,255,0.06);
             border-radius: 15px;
@@ -314,6 +332,8 @@
         }
         .btn-save:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(40,167,69,0.4); }
         
+        .btn-edit { background: #3498db; color: #fff; padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; }
+        
         .total-points {
             text-align: center; padding: 20px;
             background: rgba(0,212,255,0.1);
@@ -328,6 +348,9 @@
         .message.error { background: rgba(220,53,69,0.2); color: #ff6b6b; border: 1px solid #dc3545; }
         .message.success { background: rgba(40,167,69,0.2); color: #6bff8e; border: 1px solid #28a745; }
         
+        /* ============================================
+           SEÇÃO 7: SUB-ABAS DA FICHA
+           ============================================ */
         .char-tabs {
             display: flex;
             gap: 10px;
@@ -353,6 +376,9 @@
         .char-tab-content { display: none; }
         .char-tab-content.active { display: block; }
         
+        /* ============================================
+           SEÇÃO 8: PERÍCIAS
+           ============================================ */
         .skills-table {
             width: 100%;
             border-collapse: collapse;
@@ -408,6 +434,9 @@
             color: #ff6b6b;
         }
         
+        /* ============================================
+           SEÇÃO 9: INVENTÁRIO
+           ============================================ */
         .inventory-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -450,6 +479,9 @@
         .inventory-item-name { color: #fff; font-weight: bold; }
         .inventory-item-details { color: #aaa; font-size: 0.85em; }
         
+        /* ============================================
+           SEÇÃO 10: COMBATE
+           ============================================ */
         .combat-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -477,6 +509,9 @@
         .hit-location-hp { color: #e74c3c; font-weight: bold; }
         .hit-location-ap { color: #3498db; font-weight: bold; }
         
+        /* ============================================
+           SEÇÃO 11: ROLAGEM DE DADOS
+           ============================================ */
         .dice-roller {
             background: rgba(255,255,255,0.05);
             border-radius: 15px;
@@ -515,6 +550,9 @@
             border: 2px solid rgba(0,212,255,0.3);
         }
         
+        /* ============================================
+           SEÇÃO 12: BANCO DE DADOS E REGRAS
+           ============================================ */
         .db-item {
             background: rgba(255,255,255,0.05);
             padding: 15px;
@@ -532,7 +570,34 @@
             display: flex;
             gap: 5px;
         }
-        .btn-edit { background: #3498db; color: #fff; }
+        
+        .regras-view {
+            background: rgba(0,0,0,0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            color: #e0e0e0;
+        }
+        .regras-view h1, .regras-view h2, .regras-view h3 {
+            color: #00d4ff;
+            margin: 15px 0 10px;
+        }
+        .regras-view strong { color: #fff; }
+        .regras-view em { color: #aaa; }
+        
+        .escudo-mestre-view {
+            background: rgba(255,215,0,0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,215,0,0.3);
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            color: #ffd700;
+        }
         
         @media (max-width: 768px) {
             .attributes-grid { grid-template-columns: repeat(2, 1fr); }
@@ -546,6 +611,7 @@
     <div class="stars-container" id="starsContainer"></div>
     
     <div class="container">
+        <!-- LOGIN -->
         <div id="loginScreen" class="login-screen">
             <div class="login-box">
                 <div class="lang-selector">
@@ -563,6 +629,7 @@
             </div>
         </div>
 
+        <!-- APP -->
         <div id="appScreen" class="hidden">
             <div class="user-header">
                 <div class="user-info">
@@ -578,13 +645,16 @@
 
             <h1 data-i18n="appTitle">D100 - Mesa Estelar RPG</h1>
 
+            <!-- ABAS GLOBAIS -->
             <div class="tabs">
-                <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha">📋 Ficha</button>
+                <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha"> Ficha</button>
                 <button class="tab-btn" id="configTabBtn" onclick="mostrarAba('config', this)" data-i18n="tabConfig">⚙️ Config</button>
                 <button class="tab-btn hidden" id="bancoTabBtn" onclick="mostrarAba('banco', this)" data-i18n="tabBanco">📚 Banco de Dados</button>
                 <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
+                <button class="tab-btn hidden" id="escudoTabBtn" onclick="mostrarAba('escudo', this)">️ Escudo do Mestre</button>
             </div>
 
+            <!-- ABA FICHA -->
             <div id="ficha" class="tab-content active">
                 <div class="char-manager">
                     <h3 data-i18n="myCharacters">Meus Personagens</h3>
@@ -596,12 +666,13 @@
                     <div class="char-tabs">
                         <button class="char-tab-btn active" onclick="mostrarCharAba('personagem', this)">📄 Personagem</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('pericias', this)">⚔️ Perícias</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)"> Inventário</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)">🎒 Inventário</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('combate', this)">⚔️ Combate</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)">📔 Anotações</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)"> Rolagem</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)">🎲 Rolagem</button>
                     </div>
 
+                    <!-- PERSONAGEM -->
                     <div id="char-personagem" class="char-tab-content active">
                         <div class="character-card">
                             <div class="character-header">
@@ -617,37 +688,37 @@
                                 <div class="attr-card">
                                     <div class="attr-label" data-i18n="FOR">FOR</div>
                                     <div class="attr-value" id="valFOR">10</div>
-                                    <div class="attr-bonus"><input type="number" id="bonusFOR" value="0" min="-5" max="5" onchange="calcularDerivados()"></div>
+                                    <div class="attr-bonus"><input type="number" id="bonusFOR" value="0" min="-5" max="5" oninput="calcularDerivados()"></div>
                                 </div>
                                 <div class="attr-card">
                                     <div class="attr-label" data-i18n="CON">CON</div>
                                     <div class="attr-value" id="valCON">10</div>
-                                    <div class="attr-bonus"><input type="number" id="bonusCON" value="0" min="-5" max="5" onchange="calcularDerivados()"></div>
+                                    <div class="attr-bonus"><input type="number" id="bonusCON" value="0" min="-5" max="5" oninput="calcularDerivados()"></div>
                                 </div>
                                 <div class="attr-card">
                                     <div class="attr-label" data-i18n="TAM">TAM</div>
                                     <div class="attr-value" id="valTAM">10</div>
-                                    <div class="attr-bonus"><input type="number" id="bonusTAM" value="0" min="-5" max="5" onchange="calcularDerivados()"></div>
+                                    <div class="attr-bonus"><input type="number" id="bonusTAM" value="0" min="-5" max="5" oninput="calcularDerivados()"></div>
                                 </div>
                                 <div class="attr-card">
                                     <div class="attr-label" data-i18n="DES">DES</div>
                                     <div class="attr-value" id="valDES">10</div>
-                                    <div class="attr-bonus"><input type="number" id="bonusDES" value="0" min="-5" max="5" onchange="calcularDerivados()"></div>
+                                    <div class="attr-bonus"><input type="number" id="bonusDES" value="0" min="-5" max="5" oninput="calcularDerivados()"></div>
                                 </div>
                                 <div class="attr-card">
                                     <div class="attr-label" data-i18n="INT">INT</div>
                                     <div class="attr-value" id="valINT">10</div>
-                                    <div class="attr-bonus"><input type="number" id="bonusINT" value="0" min="-5" max="5" onchange="calcularDerivados()"></div>
+                                    <div class="attr-bonus"><input type="number" id="bonusINT" value="0" min="-5" max="5" oninput="calcularDerivados()"></div>
                                 </div>
                                 <div class="attr-card">
                                     <div class="attr-label" data-i18n="POD">POD</div>
                                     <div class="attr-value" id="valPOD">10</div>
-                                    <div class="attr-bonus"><input type="number" id="bonusPOD" value="0" min="-5" max="5" onchange="calcularDerivados()"></div>
+                                    <div class="attr-bonus"><input type="number" id="bonusPOD" value="0" min="-5" max="5" oninput="calcularDerivados()"></div>
                                 </div>
                                 <div class="attr-card">
                                     <div class="attr-label" data-i18n="CAR">CAR</div>
                                     <div class="attr-value" id="valCAR">10</div>
-                                    <div class="attr-bonus"><input type="number" id="bonusCAR" value="0" min="-5" max="5" onchange="calcularDerivados()"></div>
+                                    <div class="attr-bonus"><input type="number" id="bonusCAR" value="0" min="-5" max="5" oninput="calcularDerivados()"></div>
                                 </div>
                             </div>
 
@@ -692,19 +763,20 @@
 
                             <h4 style="color: #fff; margin: 20px 0 15px 0;" data-i18n="attributes">Atributos</h4>
                             <div class="attributes-grid">
-                                <div class="form-group"><label data-i18n="FOR">FOR</label><input type="number" id="editFOR" min="3" max="18" value="10" onchange="calcularTotal()"></div>
-                                <div class="form-group"><label data-i18n="CON">CON</label><input type="number" id="editCON" min="3" max="18" value="10" onchange="calcularTotal()"></div>
-                                <div class="form-group"><label data-i18n="TAM">TAM</label><input type="number" id="editTAM" min="6" max="18" value="10" onchange="calcularTotal()"></div>
-                                <div class="form-group"><label data-i18n="DES">DES</label><input type="number" id="editDES" min="3" max="18" value="10" onchange="calcularTotal()"></div>
-                                <div class="form-group"><label data-i18n="INT">INT</label><input type="number" id="editINT" min="6" max="18" value="10" onchange="calcularTotal()"></div>
-                                <div class="form-group"><label data-i18n="POD">POD</label><input type="number" id="editPOD" min="3" max="18" value="10" onchange="calcularTotal()"></div>
-                                <div class="form-group"><label data-i18n="CAR">CAR</label><input type="number" id="editCAR" min="3" max="18" value="10" onchange="calcularTotal()"></div>
+                                <div class="form-group"><label data-i18n="FOR">FOR</label><input type="number" id="editFOR" min="3" max="18" value="10" oninput="calcularTotal()"></div>
+                                <div class="form-group"><label data-i18n="CON">CON</label><input type="number" id="editCON" min="3" max="18" value="10" oninput="calcularTotal()"></div>
+                                <div class="form-group"><label data-i18n="TAM">TAM</label><input type="number" id="editTAM" min="6" max="18" value="10" oninput="calcularTotal()"></div>
+                                <div class="form-group"><label data-i18n="DES">DES</label><input type="number" id="editDES" min="3" max="18" value="10" oninput="calcularTotal()"></div>
+                                <div class="form-group"><label data-i18n="INT">INT</label><input type="number" id="editINT" min="6" max="18" value="10" oninput="calcularTotal()"></div>
+                                <div class="form-group"><label data-i18n="POD">POD</label><input type="number" id="editPOD" min="3" max="18" value="10" oninput="calcularTotal()"></div>
+                                <div class="form-group"><label data-i18n="CAR">CAR</label><input type="number" id="editCAR" min="3" max="18" value="10" oninput="calcularTotal()"></div>
                             </div>
 
                             <button class="btn-save" onclick="salvarPersonagem()" data-i18n="saveChar">💾 Salvar Personagem</button>
                         </div>
                     </div>
 
+                    <!-- PERÍCIAS -->
                     <div id="char-pericias" class="char-tab-content">
                         <div class="form-section">
                             <h3>⚔️ Perícias</h3>
@@ -753,9 +825,10 @@
                         </div>
                     </div>
 
+                    <!-- INVENTÁRIO -->
                     <div id="char-inventario" class="char-tab-content">
                         <div class="form-section">
-                            <h3> Inventário</h3>
+                            <h3>🎒 Inventário</h3>
                             <p style="color: #aaa; margin-bottom: 20px;">Organize seus itens em diferentes compartimentos</p>
                             
                             <div class="inventory-grid">
@@ -765,17 +838,17 @@
                                     <div class="inventory-items" id="inv-bolso"></div>
                                 </div>
                                 <div class="inventory-slot">
-                                    <h4> Mochila</h4>
+                                    <h4>🎒 Mochila</h4>
                                     <div class="capacity">Capacidade: 20 kg | 20 itens</div>
                                     <div class="inventory-items" id="inv-mochila"></div>
                                 </div>
                                 <div class="inventory-slot">
-                                    <h4> Veículo/Nave</h4>
+                                    <h4>🚗 Veículo/Nave</h4>
                                     <div class="capacity">Capacidade: 500 kg | 100 itens</div>
                                     <div class="inventory-items" id="inv-veiculo"></div>
                                 </div>
                                 <div class="inventory-slot">
-                                    <h4>🏠 Casa/Base</h4>
+                                    <h4> Casa/Base</h4>
                                     <div class="capacity">Capacidade: Ilimitada</div>
                                     <div class="inventory-items" id="inv-casa"></div>
                                 </div>
@@ -785,9 +858,10 @@
                         </div>
                     </div>
 
+                    <!-- COMBATE -->
                     <div id="char-combate" class="char-tab-content">
                         <div class="form-section">
-                            <h3>️ Combate</h3>
+                            <h3>⚔️ Combate</h3>
                             
                             <div class="combat-grid">
                                 <div class="combat-section">
@@ -801,7 +875,7 @@
                                 </div>
                                 
                                 <div class="combat-section">
-                                    <h4>😮‍💨 Fadiga</h4>
+                                    <h4>‍💨 Fadiga</h4>
                                     <select id="fadigaLevel" onchange="salvarFadiga()">
                                         <option value="Fresh">Descansado (Fresh)</option>
                                         <option value="Winded">Ofegante (Winded)</option>
@@ -827,14 +901,21 @@
                         </div>
                     </div>
 
+                    <!-- ANOTAÇÕES -->
                     <div id="char-anotacoes" class="char-tab-content">
                         <div class="form-section">
-                            <h3>📔 Anotações</h3>
-                            <textarea id="charAnotacoes" rows="15" placeholder="Escreva suas anotações aqui..."></textarea>
-                            <button class="btn-save" onclick="salvarAnotacoes()" style="margin-top: 15px;">💾 Salvar Anotações</button>
+                            <h3> Anotações</h3>
+                            <textarea id="charAnotacoes" rows="10" placeholder="Escreva suas anotações aqui..."></textarea>
+                            
+                            <h3 style="margin-top: 30px; color: #ffd700;">⭐ Eventos Especiais</h3>
+                            <p style="color: #aaa; margin-bottom: 10px;">Eventos especiais do personagem (serão rolados futuramente)</p>
+                            <textarea id="charEventos" rows="6" placeholder="Ex: Encontro com entidade misteriosa, Descoberta de artefato antigo..."></textarea>
+                            
+                            <button class="btn-save" onclick="salvarAnotacoes()" style="margin-top: 15px;">💾 Salvar Anotações e Eventos</button>
                         </div>
                     </div>
 
+                    <!-- ROLAGEM -->
                     <div id="char-rolagem" class="char-tab-content">
                         <div class="form-section">
                             <h3>🎲 Rolagem de Dados</h3>
@@ -869,6 +950,7 @@
                 </div>
             </div>
 
+            <!-- CONFIG -->
             <div id="config" class="tab-content">
                 <div class="form-section">
                     <h3 data-i18n="configTitle">⚙️ Configurações do Sistema (Mestre)</h3>
@@ -881,9 +963,10 @@
                 </div>
             </div>
 
+            <!-- BANCO DE DADOS -->
             <div id="banco" class="tab-content">
                 <div class="form-section">
-                    <h3>📚 Banco de Dados do Sistema</h3>
+                    <h3> Banco de Dados do Sistema</h3>
                     <p style="color: #aaa; margin-bottom: 20px;">Edite as perícias, origens, carreiras e outros dados do sistema.</p>
                     
                     <div class="tabs" style="margin-bottom: 20px;">
@@ -926,19 +1009,46 @@
                 </div>
             </div>
 
+            <!-- REGRAS -->
             <div id="regras" class="tab-content">
                 <div class="form-section">
                     <h3> Regras do Sistema</h3>
-                    <div id="regrasContent">
+                    <div id="regrasViewMode" class="regras-view"></div>
+                    <div id="regrasEditMode" class="hidden">
                         <textarea id="regrasTexto" rows="20" style="width: 100%; background: rgba(0,0,0,0.3); color: #fff; padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);"></textarea>
                     </div>
-                    <button class="btn-save" onclick="salvarRegras()" style="margin-top: 15px;" id="btnSalvarRegras">💾 Salvar Regras</button>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn-save" onclick="editarRegras()" id="btnEditarRegras">✏️ Editar Regras</button>
+                        <button class="btn-save hidden" onclick="salvarRegras()" id="btnSalvarRegras" style="background: linear-gradient(135deg, #00d4ff, #0099cc);">💾 Salvar Regras</button>
+                        <button class="btn-save hidden" onclick="cancelarEdicaoRegras()" id="btnCancelarRegras" style="background: linear-gradient(135deg, #6c757d, #495057);">❌ Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ESCUDO DO MESTRE -->
+            <div id="escudo" class="tab-content">
+                <div class="form-section">
+                    <h3>🛡️ Escudo do Mestre</h3>
+                    <p style="color: #ffd700; margin-bottom: 20px;">Anotações privadas do mestre, regras especiais da campanha, roladores personalizados (em desenvolvimento)</p>
+                    
+                    <div id="escudoViewMode" class="escudo-mestre-view"></div>
+                    <div id="escudoEditMode" class="hidden">
+                        <textarea id="escudoTexto" rows="20" style="width: 100%; background: rgba(0,0,0,0.3); color: #ffd700; padding: 15px; border-radius: 10px; border: 1px solid rgba(255,215,0,0.3);"></textarea>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn-save" onclick="editarEscudo()" id="btnEditarEscudo" style="background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000;">✏️ Editar Escudo</button>
+                        <button class="btn-save hidden" onclick="salvarEscudo()" id="btnSalvarEscudo" style="background: linear-gradient(135deg, #28a745, #218838);">💾 Salvar Escudo</button>
+                        <button class="btn-save hidden" onclick="cancelarEdicaoEscudo()" id="btnCancelarEscudo" style="background: linear-gradient(135deg, #6c757d, #495057);"> Cancelar</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script type="module">
+        // ============================================
+        // SEÇÃO 1: CONFIGURAÇÃO FIREBASE
+        // ============================================
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -958,6 +1068,9 @@
         const db = getFirestore(app);
         const storage = getStorage(app);
 
+        // ============================================
+        // SEÇÃO 2: VARIÁVEIS GLOBAIS
+        // ============================================
         let currentUserUid = null;
         let userData = null;
         let idiomaAtual = 'pt';
@@ -971,9 +1084,17 @@
         let especializacoesDB = [];
         let itensDB = [];
         let regrasTexto = '';
+        let escudoTexto = '';
+        let regrasTemp = '';
+        let escudoTemp = '';
         let faixaAltura = { min: 160, max: 180 };
         let faixaPeso = { min: 60, max: 80 };
 
+        // ============================================
+        // SEÇÃO 3: DADOS PADRÃO
+        // ============================================
+        
+        // Gerar estrelas
         function gerarEstrelas() {
             const container = document.getElementById('starsContainer');
             const numEstrelas = 200;
@@ -1073,8 +1194,8 @@
             { id: 'rifle_laser', nome: 'Rifle Laser', categoria: 'Armas', peso: 4, pa: 0, pv: 8, dano: '2d8', alcance: '300m', municao: 'Bateria', preco: 18000 },
             { id: 'espada_longa', nome: 'Espada Longa', categoria: 'Armas', peso: 3, pa: 0, pv: 10, dano: '1d8+1', alcance: 'Corpo a corpo', municao: '∞', preco: 1500 },
             { id: 'sabre', nome: 'Sabre', categoria: 'Armas', peso: 2, pa: 0, pv: 8, dano: '1d8', alcance: 'Corpo a corpo', municao: '', preco: 1300 },
-            { id: 'adaga', nome: 'Adaga', categoria: 'Armas', peso: 1, pa: 0, pv: 4, dano: '1d4+1', alcance: 'Corpo a corpo', municao: '∞', preco: 240 },
-            { id: 'faca_utilitaria', nome: 'Faca Utilitária', categoria: 'Armas', peso: 1, pa: 0, pv: 3, dano: '1d4', alcance: 'Corpo a corpo', municao: '∞', preco: 150 },
+            { id: 'adaga', nome: 'Adaga', categoria: 'Armas', peso: 1, pa: 2, pv: 4, dano: '1d4+1', alcance: 'Corpo a corpo', municao: '∞', preco: 240 },
+            { id: 'faca_utilitaria', nome: 'Faca Utilitária', categoria: 'Armas', peso: 1, pa: 1, pv: 3, dano: '1d4', alcance: 'Corpo a corpo', municao: '∞', preco: 150 },
             { id: 'bateria', nome: 'Bateria', categoria: 'Munição', peso: 1, pa: 0, pv: 1, quantidade: 100, preco: 900 },
             { id: 'celula_energia', nome: 'Célula de Energia', categoria: 'Munição', peso: 1, pa: 0, pv: 1, quantidade: 100, preco: 1500 },
             { id: 'racao_7_dias', nome: 'Ração de 7 dias', categoria: 'Comida', peso: 7, pa: 0, pv: 1, preco: 60 },
@@ -1095,7 +1216,7 @@
             { id: 'capa_viajante', nome: 'Capa de Viajante', categoria: 'Roupas', peso: 2, pa: 0, pv: 3, preco: 200 },
             { id: 'chapeu', nome: 'Chapéu', categoria: 'Roupas', peso: 0, pa: 0, pv: 1, preco: 40 },
             { id: 'botas_couro', nome: 'Botas de Couro', categoria: 'Roupas', peso: 2, pa: 0, pv: 4, preco: 160 },
-            { id: 'algemas_eletronicas', nome: 'Algemas Eletrônicas', categoria: 'Diversos', peso: 1, pa: 0, pv: 2, preco: 800 },
+            { id: 'algemas_eletronicas', nome: 'Algemas Eletrônicas', categoria: 'Diversos', peso: 1, pa: 3, pv: 2, preco: 800 },
             { id: 'tradutor_comunicador', nome: 'Tradutor-Comunicador', categoria: 'Comunicação', peso: 1, pa: 0, pv: 2, preco: 7800 }
         ];
 
@@ -1160,12 +1281,45 @@ Descansado → Ofegante (15min) → Cansado (3h) → Fatigado (6h) → Exausto (
 Determinados pelo TAM (Tamanho) e Tipo Corporal (Leve/Médio/Pesado).
 Consulte a tabela Height & Weight do livro.`;
 
+        const escudoPadrao = `# Escudo do Mestre
+
+## Anotações da Campanha
+
+Espaço para anotações privadas do mestre.
+
+## Regras Especiais da Campanha
+
+- Regra 1: ...
+- Regra 2: ...
+
+## Roladores Especiais (Em desenvolvimento)
+
+- Rolador de Eventos
+- Rolador de Clima
+- Rolador de Encontros
+
+## NPCs Importantes
+
+- NPC 1: ...
+- NPC 2: ...
+
+## Segredos da Campanha
+
+- Segredo 1: ...
+- Segredo 2: ...`;
+
+        // ============================================
+        // SEÇÃO 4: TRADUÇÕES
+        // ============================================
         const traducoes = {
-            pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: '➕ Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '⚙️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Etapa 2 - Origem (Perícias Básicas):', pointsEtapa3: 'Etapa 3 - Carreira (Perícias Profissionais):', pointsEtapa4: 'Etapa 4 - Livre:', saveConfig: '💾 Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: ' Mestre', jogador: '👤 Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
-            en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: ' Database', tabRegras: '📖 Rules', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Step 2 - Origin (Basic Skills):', pointsEtapa3: 'Step 3 - Career (Professional Skills):', pointsEtapa4: 'Step 4 - Free:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: '👤 Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
-            zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: '📋 角色卡', tabConfig: '⚙️ 设置', tabBanco: '📚 数据库', tabRegras: '📖 规则', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '阶段2 - 起源（基础技能）：', pointsEtapa3: '阶段3 - 职业（专业技能）：', pointsEtapa4: '阶段4 - 自由：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
+            pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: '📋 Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: '➕ Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: ' Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Etapa 2 - Origem (Perícias Básicas):', pointsEtapa3: 'Etapa 3 - Carreira (Perícias Profissionais):', pointsEtapa4: 'Etapa 4 - Livre:', saveConfig: '💾 Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: '👤 Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
+            en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Step 2 - Origin (Basic Skills):', pointsEtapa3: 'Step 3 - Career (Professional Skills):', pointsEtapa4: 'Step 4 - Free:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: ' GM', jogador: '👤 Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
+            zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: ' 角色卡', tabConfig: '️ 设置', tabBanco: ' 数据库', tabRegras: ' 规则', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '阶段2 - 起源（基础技能）：', pointsEtapa3: '阶段3 - 职业（专业技能）：', pointsEtapa4: '阶段4 - 自由：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
         };
 
+        // ============================================
+        // SEÇÃO 5: AUTENTICAÇÃO
+        // ============================================
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserUid = user.uid;
@@ -1177,18 +1331,13 @@ Consulte a tabela Height & Weight do livro.`;
                     document.getElementById('userRole').textContent = userData.role === 'mestre' ? t.mestre : t.jogador;
                     document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none';
                     document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
-                    document.getElementById('btnSalvarRegras').style.display = userData.role === 'mestre' ? 'block' : 'none';
-                    if (userData.role === 'mestre') {
-                        await carregarConfiguracoes();
-                        document.getElementById('regrasTexto').readOnly = false;
-                    } else {
-                        document.getElementById('regrasTexto').readOnly = true;
-                    }
+                    document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
                 }
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appScreen').classList.remove('hidden');
                 await carregarBancosDeDados();
                 await carregarRegras();
+                await carregarEscudo();
                 await carregarPersonagens();
             } else {
                 currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
@@ -1219,6 +1368,9 @@ Consulte a tabela Height & Weight do livro.`;
 
         window.fazerLogout = () => signOut(auth);
 
+        // ============================================
+        // SEÇÃO 6: CARREGAMENTO DE DADOS
+        // ============================================
         async function carregarBancosDeDados() {
             const periciasSnap = await getDocs(collection(db, "pericias"));
             if (periciasSnap.empty) {
@@ -1271,15 +1423,19 @@ Consulte a tabela Height & Weight do livro.`;
                 regrasTexto = regrasPadrao;
                 await setDoc(doc(db, "configuracoes", "regras"), { texto: regrasPadrao });
             }
-            document.getElementById('regrasTexto').value = regrasTexto;
+            renderizarRegras();
         }
 
-        window.salvarRegras = async () => {
-            if (userData.role !== 'mestre') { alert('Apenas o mestre!'); return; }
-            regrasTexto = document.getElementById('regrasTexto').value;
-            await setDoc(doc(db, "configuracoes", "regras"), { texto: regrasTexto });
-            alert('Regras salvas!');
-        };
+        async function carregarEscudo() {
+            const escudoDoc = await getDoc(doc(db, "configuracoes", "escudoMestre"));
+            if (escudoDoc.exists()) {
+                escudoTexto = escudoDoc.data().texto || escudoPadrao;
+            } else {
+                escudoTexto = escudoPadrao;
+                await setDoc(doc(db, "configuracoes", "escudoMestre"), { texto: escudoPadrao });
+            }
+            renderizarEscudo();
+        }
 
         function popularSelects() {
             const selectOrigem = document.getElementById('editOrigin');
@@ -1306,6 +1462,96 @@ Consulte a tabela Height & Weight do livro.`;
             }
         }
 
+        // ============================================
+        // SEÇÃO 7: REGRAS E ESCUDO DO MESTRE
+        // ============================================
+        function renderizarRegras() {
+            const viewMode = document.getElementById('regrasViewMode');
+            viewMode.innerHTML = formatarMarkdown(regrasTexto);
+        }
+
+        function renderizarEscudo() {
+            const viewMode = document.getElementById('escudoViewMode');
+            viewMode.innerHTML = formatarMarkdown(escudoTexto);
+        }
+
+        function formatarMarkdown(texto) {
+            return texto
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                .replace(/^- (.*$)/gim, '<li>$1</li>')
+                .replace(/\n/gim, '<br>');
+        }
+
+        window.editarRegras = () => {
+            if (userData.role !== 'mestre') { alert('Apenas o mestre!'); return; }
+            regrasTemp = regrasTexto;
+            document.getElementById('regrasTexto').value = regrasTexto;
+            document.getElementById('regrasViewMode').classList.add('hidden');
+            document.getElementById('regrasEditMode').classList.remove('hidden');
+            document.getElementById('btnEditarRegras').classList.add('hidden');
+            document.getElementById('btnSalvarRegras').classList.remove('hidden');
+            document.getElementById('btnCancelarRegras').classList.remove('hidden');
+        };
+
+        window.salvarRegras = async () => {
+            regrasTexto = document.getElementById('regrasTexto').value;
+            await setDoc(doc(db, "configuracoes", "regras"), { texto: regrasTexto });
+            renderizarRegras();
+            document.getElementById('regrasViewMode').classList.remove('hidden');
+            document.getElementById('regrasEditMode').classList.add('hidden');
+            document.getElementById('btnEditarRegras').classList.remove('hidden');
+            document.getElementById('btnSalvarRegras').classList.add('hidden');
+            document.getElementById('btnCancelarRegras').classList.add('hidden');
+            alert('Regras salvas!');
+        };
+
+        window.cancelarEdicaoRegras = () => {
+            regrasTexto = regrasTemp;
+            document.getElementById('regrasViewMode').classList.remove('hidden');
+            document.getElementById('regrasEditMode').classList.add('hidden');
+            document.getElementById('btnEditarRegras').classList.remove('hidden');
+            document.getElementById('btnSalvarRegras').classList.add('hidden');
+            document.getElementById('btnCancelarRegras').classList.add('hidden');
+        };
+
+        window.editarEscudo = () => {
+            escudoTemp = escudoTexto;
+            document.getElementById('escudoTexto').value = escudoTexto;
+            document.getElementById('escudoViewMode').classList.add('hidden');
+            document.getElementById('escudoEditMode').classList.remove('hidden');
+            document.getElementById('btnEditarEscudo').classList.add('hidden');
+            document.getElementById('btnSalvarEscudo').classList.remove('hidden');
+            document.getElementById('btnCancelarEscudo').classList.remove('hidden');
+        };
+
+        window.salvarEscudo = async () => {
+            escudoTexto = document.getElementById('escudoTexto').value;
+            await setDoc(doc(db, "configuracoes", "escudoMestre"), { texto: escudoTexto });
+            renderizarEscudo();
+            document.getElementById('escudoViewMode').classList.remove('hidden');
+            document.getElementById('escudoEditMode').classList.add('hidden');
+            document.getElementById('btnEditarEscudo').classList.remove('hidden');
+            document.getElementById('btnSalvarEscudo').classList.add('hidden');
+            document.getElementById('btnCancelarEscudo').classList.add('hidden');
+            alert('Escudo do Mestre salvo!');
+        };
+
+        window.cancelarEdicaoEscudo = () => {
+            escudoTexto = escudoTemp;
+            document.getElementById('escudoViewMode').classList.remove('hidden');
+            document.getElementById('escudoEditMode').classList.add('hidden');
+            document.getElementById('btnEditarEscudo').classList.remove('hidden');
+            document.getElementById('btnSalvarEscudo').classList.add('hidden');
+            document.getElementById('btnCancelarEscudo').classList.add('hidden');
+        };
+
+        // ============================================
+        // SEÇÃO 8: CONFIGURAÇÕES
+        // ============================================
         window.salvarConfiguracoes = async () => {
             if (userData.role !== 'mestre') { alert('Apenas o mestre!'); return; }
             configuracoes = { etapa1: parseInt(document.getElementById('configEtapa1').value), etapa2: parseInt(document.getElementById('configEtapa2').value), etapa3: parseInt(document.getElementById('configEtapa3').value), etapa4: parseInt(document.getElementById('configEtapa4').value) };
@@ -1315,6 +1561,9 @@ Consulte a tabela Height & Weight do livro.`;
             setTimeout(() => msgDiv.innerHTML = '', 3000);
         };
 
+        // ============================================
+        // SEÇÃO 9: PERSONAGENS
+        // ============================================
         function limparFormulario() {
             document.getElementById('editName').value = '';
             document.getElementById('editRace').value = 'Humano';
@@ -1325,6 +1574,7 @@ Consulte a tabela Height & Weight do livro.`;
             document.getElementById('editImageFile').value = '';
             document.getElementById('uploadStatus').textContent = '';
             document.getElementById('charAnotacoes').value = '';
+            document.getElementById('charEventos').value = '';
             ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => {
                 document.getElementById(`edit${attr}`).value = 10;
                 document.getElementById(`bonus${attr}`).value = 0;
@@ -1362,7 +1612,7 @@ Consulte a tabela Height & Weight do livro.`;
             const maxChars = userData.role === 'mestre' ? 999 : 5;
             if (userCharacters.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
             const charId = `char_${Date.now()}`;
-            const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { bolso: [], mochila: [], veiculo: [], casa: [] }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '' };
+            const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { bolso: [], mochila: [], veiculo: [], casa: [] }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
             await setDoc(doc(db, "personagens", charId), newChar);
             await carregarPersonagens(); currentCharId = charId;
             await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -1380,6 +1630,9 @@ Consulte a tabela Height & Weight do livro.`;
             } catch (error) { console.error('Erro:', error); document.getElementById('uploadStatus').textContent = t.uploadError; document.getElementById('uploadStatus').style.color = '#ff6b6b'; }
         };
 
+        // ============================================
+        // SEÇÃO 10: CÁLCULOS
+        // ============================================
         function calcularFormula(formula, attrs) {
             try {
                 let expr = formula;
@@ -1456,7 +1709,7 @@ Consulte a tabela Height & Weight do livro.`;
         }
 
         function preencherFormulario(data) {
-            document.getElementById('editName').value = data.nome || ''; document.getElementById('editRace').value = data.raca || 'Humano'; document.getElementById('editConcept').value = data.conceito || ''; document.getElementById('editSex').value = data.sexo || 'Masculino'; document.getElementById('editAge').value = data.idade || 25; document.getElementById('editOrigin').value = data.origem || origensDB[0]?.id || 'urbano'; document.getElementById('editCareer').value = data.carreira || carreirasDB[0]?.id || 'militar'; document.getElementById('editSocialClass').value = data.classeSocial || 'Pessoa Livre'; document.getElementById('editBodyType').value = data.tipoCorporal || 'Médio'; document.getElementById('editImageURL').value = data.imagem || ''; document.getElementById('charAnotacoes').value = data.anotacoes || ''; uploadedImageURL = data.imagem || null;
+            document.getElementById('editName').value = data.nome || ''; document.getElementById('editRace').value = data.raca || 'Humano'; document.getElementById('editConcept').value = data.conceito || ''; document.getElementById('editSex').value = data.sexo || 'Masculino'; document.getElementById('editAge').value = data.idade || 25; document.getElementById('editOrigin').value = data.origem || origensDB[0]?.id || 'urbano'; document.getElementById('editCareer').value = data.carreira || carreirasDB[0]?.id || 'militar'; document.getElementById('editSocialClass').value = data.classeSocial || 'Pessoa Livre'; document.getElementById('editBodyType').value = data.tipoCorporal || 'Médio'; document.getElementById('editImageURL').value = data.imagem || ''; document.getElementById('charAnotacoes').value = data.anotacoes || ''; document.getElementById('charEventos').value = data.eventos || ''; uploadedImageURL = data.imagem || null;
             const attrs = data.atributos || {};
             ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => { document.getElementById(`edit${attr}`).value = attrs[attr] || 10; });
             const isMaster = userData.role === 'mestre';
@@ -1482,6 +1735,9 @@ Consulte a tabela Height & Weight do livro.`;
             await setDoc(doc(db, "personagens", currentCharId), { altura: altura, peso: peso }, { merge: true });
         };
 
+        // ============================================
+        // SEÇÃO 11: PERÍCIAS
+        // ============================================
         function renderizarPericias(char) {
             const attrs = char.atributos || {};
             const pericias = char.pericias || {};
@@ -1540,7 +1796,7 @@ Consulte a tabela Height & Weight do livro.`;
                 const dados = pericias[p.id] || { treinoTotal: 0, treinoEtapa: 0 };
                 const total = base + dados.treinoTotal;
                 const maxPermitido = maxTreinoEtapa;
-                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${p.nome}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" onchange="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo.toLowerCase() === 'básica' ? 'basica' : 'profissional'}', ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${p.nome}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" oninput="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo.toLowerCase() === 'básica' ? 'basica' : 'profissional'}', ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
             };
             
             const renderLinhaEspecializacao = (e) => {
@@ -1548,7 +1804,7 @@ Consulte a tabela Height & Weight do livro.`;
                 const dados = especializacoes[e.id] || { treinoTotal: 0, treinoEtapa: 0 };
                 const total = base + dados.treinoTotal;
                 const maxPermitido = maxTreinoEtapa;
-                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${e.nome}</td><td>${e.uso}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" onchange="atualizarTreinoEspecializacao('${e.id}', this.value, ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${e.nome}</td><td>${e.uso}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" oninput="atualizarTreinoEspecializacao('${e.id}', this.value, ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
             };
             
             const periciasInvestidas = periciasDisponiveis.filter(p => pericias[p.id] && pericias[p.id].treinoTotal > 0);
@@ -1607,31 +1863,9 @@ Consulte a tabela Height & Weight do livro.`;
 
         window.mudarEtapaPericias = () => { if (currentCharId) { const char = userCharacters.find(c => c.id === currentCharId); if (char) renderizarPericias(char); } };
 
-        window.salvarAnotacoes = async () => {
-            if (!currentCharId) return;
-            const anotacoes = document.getElementById('charAnotacoes').value;
-            await setDoc(doc(db, "personagens", currentCharId), { anotacoes: anotacoes }, { merge: true });
-            alert('Anotações salvas!');
-        };
-
-        window.salvarPersonagem = async () => {
-            const t = traducoes[idiomaAtual];
-            const isMaster = userData.role === 'mestre';
-            const maxPoints = isMaster ? 999 : configuracoes.etapa1;
-            const total = parseInt(document.getElementById('totalPoints').textContent);
-            if (total > maxPoints && !isMaster) { alert(t.pointsExceeded + maxPoints); return; }
-            const nome = document.getElementById('editName').value.trim(); if (!nome) { alert('Preencha o nome'); return; }
-            const atributos = {}; const bonus = {};
-            ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => { atributos[attr] = parseInt(document.getElementById(`edit${attr}`).value) || 10; bonus[attr] = parseInt(document.getElementById(`bonus${attr}`).value) || 0; });
-            const imagemFinal = uploadedImageURL || document.getElementById('editImageURL').value.trim() || null;
-            const personagemData = { nome: nome, raca: document.getElementById('editRace').value.trim(), conceito: document.getElementById('editConcept').value.trim(), sexo: document.getElementById('editSex').value, idade: parseInt(document.getElementById('editAge').value) || 25, origem: document.getElementById('editOrigin').value, carreira: document.getElementById('editCareer').value, classeSocial: document.getElementById('editSocialClass').value, tipoCorporal: document.getElementById('editBodyType').value, imagem: imagemFinal, atributos: atributos, bonus: bonus, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, updatedAt: new Date().toISOString() };
-            let charId = currentCharId;
-            if (!charId) { charId = `char_${Date.now()}`; await setDoc(doc(db, "personagens", charId), personagemData); currentCharId = charId; await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true }); }
-            else { await setDoc(doc(db, "personagens", charId), personagemData, { merge: true }); }
-            uploadedImageURL = null; document.getElementById('editImageFile').value = ''; document.getElementById('uploadStatus').textContent = '';
-            await carregarPersonagens(); alert(t.saved);
-        };
-
+        // ============================================
+        // SEÇÃO 12: INVENTÁRIO
+        // ============================================
         function renderizarInventario(char) {
             const inv = char.inventario || { bolso: [], mochila: [], veiculo: [], casa: [] };
             const renderItems = (items) => items.map(item => `<div class="inventory-item"><div><div class="inventory-item-name">${item.nome}</div><div class="inventory-item-details">${item.peso || 0}kg | PA: ${item.pa || 0} | PV: ${item.pv || 0}</div></div><button class="btn-small btn-delete" onclick="removerItem('${item.id}')">🗑️</button></div>`).join('') || '<p style="color: #666; text-align: center;">Vazio</p>';
@@ -1666,6 +1900,9 @@ Consulte a tabela Height & Weight do livro.`;
             await carregarPersonagens();
         };
 
+        // ============================================
+        // SEÇÃO 13: COMBATE
+        // ============================================
         function renderizarCombate(char) {
             const attrs = char.atributos || {};
             const bonus = char.bonus || {};
@@ -1721,6 +1958,20 @@ Consulte a tabela Height & Weight do livro.`;
             await carregarPersonagens();
         };
 
+        // ============================================
+        // SEÇÃO 14: ANOTAÇÕES E EVENTOS
+        // ============================================
+        window.salvarAnotacoes = async () => {
+            if (!currentCharId) return;
+            const anotacoes = document.getElementById('charAnotacoes').value;
+            const eventos = document.getElementById('charEventos').value;
+            await setDoc(doc(db, "personagens", currentCharId), { anotacoes: anotacoes, eventos: eventos }, { merge: true });
+            alert('Anotações e Eventos salvos!');
+        };
+
+        // ============================================
+        // SEÇÃO 15: ROLAGEM DE DADOS
+        // ============================================
         window.rolarDado = (tipo) => {
             const faces = parseInt(tipo.replace('d', ''));
             const resultado = Math.floor(Math.random() * faces) + 1;
@@ -1756,6 +2007,30 @@ Consulte a tabela Height & Weight do livro.`;
             document.getElementById('rollResultText').innerHTML = `<strong>${formula}</strong> = ${total}<br><small>${detalhes.join(' + ')}</small>`;
         };
 
+        // ============================================
+        // SEÇÃO 16: SALVAR PERSONAGEM
+        // ============================================
+        window.salvarPersonagem = async () => {
+            const t = traducoes[idiomaAtual];
+            const isMaster = userData.role === 'mestre';
+            const maxPoints = isMaster ? 999 : configuracoes.etapa1;
+            const total = parseInt(document.getElementById('totalPoints').textContent);
+            if (total > maxPoints && !isMaster) { alert(t.pointsExceeded + maxPoints); return; }
+            const nome = document.getElementById('editName').value.trim(); if (!nome) { alert('Preencha o nome'); return; }
+            const atributos = {}; const bonus = {};
+            ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => { atributos[attr] = parseInt(document.getElementById(`edit${attr}`).value) || 10; bonus[attr] = parseInt(document.getElementById(`bonus${attr}`).value) || 0; });
+            const imagemFinal = uploadedImageURL || document.getElementById('editImageURL').value.trim() || null;
+            const personagemData = { nome: nome, raca: document.getElementById('editRace').value.trim(), conceito: document.getElementById('editConcept').value.trim(), sexo: document.getElementById('editSex').value, idade: parseInt(document.getElementById('editAge').value) || 25, origem: document.getElementById('editOrigin').value, carreira: document.getElementById('editCareer').value, classeSocial: document.getElementById('editSocialClass').value, tipoCorporal: document.getElementById('editBodyType').value, imagem: imagemFinal, atributos: atributos, bonus: bonus, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, updatedAt: new Date().toISOString() };
+            let charId = currentCharId;
+            if (!charId) { charId = `char_${Date.now()}`; await setDoc(doc(db, "personagens", charId), personagemData); currentCharId = charId; await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true }); }
+            else { await setDoc(doc(db, "personagens", charId), personagemData, { merge: true }); }
+            uploadedImageURL = null; document.getElementById('editImageFile').value = ''; document.getElementById('uploadStatus').textContent = '';
+            await carregarPersonagens(); alert(t.saved);
+        };
+
+        // ============================================
+        // SEÇÃO 17: NAVEGAÇÃO
+        // ============================================
         window.mostrarAba = (abaId, btn) => { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(abaId).classList.add('active'); btn.classList.add('active'); };
 
         window.mostrarCharAba = (abaId, btn) => { document.querySelectorAll('.char-tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.char-tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`char-${abaId}`).classList.add('active'); btn.classList.add('active'); };
@@ -1798,11 +2073,17 @@ Consulte a tabela Height & Weight do livro.`;
         window.editarItem = async (id) => { const i = itensDB.find(x => x.id === id); if (!i) return; const nome = prompt('Nome:', i.nome); if (!nome) return; const peso = parseFloat(prompt('Peso:', i.peso)); const pa = parseInt(prompt('PA:', i.pa)); const pv = parseInt(prompt('PV:', i.pv)); await setDoc(doc(db, "itens", id), { ...i, nome, peso, pa, pv }); await carregarBancosDeDados(); renderizarBancoItens(); };
         window.removerItemBanco = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "itens", id)); itensDB = itensDB.filter(i => i.id !== id); renderizarBancoItens(); };
 
-        window.mudarIdioma = (lang) => { idiomaAtual = lang; localStorage.setItem('idiomaPreferido', lang); document.querySelectorAll('.lang-btn').forEach(btn => { btn.classList.remove('active'); if ((lang === 'pt' && btn.textContent === 'PT') || (lang === 'en' && btn.textContent === 'EN') || (lang === 'zh' && btn.textContent === '中文')) { btn.classList.add('active'); } }); const t = traducoes[lang]; document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (t[key]) el.textContent = t[key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.getAttribute('data-i18n-placeholder'); if (t[key]) el.placeholder = t[key]; }); if (userData) { const roleText = userData.role === 'mestre' ? t.mestre : t.jogador; document.getElementById('userRole').textContent = roleText; document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none'; document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre'); document.getElementById('btnSalvarRegras').style.display = userData.role === 'mestre' ? 'block' : 'none'; } if (currentCharId) { const isMaster = userData.role === 'mestre'; const maxPoints = isMaster ? 999 : configuracoes.etapa1; document.getElementById('pointsLimitText').textContent = isMaster ? '(Mestre - sem limite)' : `/${maxPoints} pontos`; } renderizarListaPersonagens(); };
+        // ============================================
+        // SEÇÃO 18: IDIOMA
+        // ============================================
+        window.mudarIdioma = (lang) => { idiomaAtual = lang; localStorage.setItem('idiomaPreferido', lang); document.querySelectorAll('.lang-btn').forEach(btn => { btn.classList.remove('active'); if ((lang === 'pt' && btn.textContent === 'PT') || (lang === 'en' && btn.textContent === 'EN') || (lang === 'zh' && btn.textContent === '中文')) { btn.classList.add('active'); } }); const t = traducoes[lang]; document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (t[key]) el.textContent = t[key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.getAttribute('data-i18n-placeholder'); if (t[key]) el.placeholder = t[key]; }); if (userData) { const roleText = userData.role === 'mestre' ? t.mestre : t.jogador; document.getElementById('userRole').textContent = roleText; document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none'; document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre'); document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre'); } if (currentCharId) { const isMaster = userData.role === 'mestre'; const maxPoints = isMaster ? 999 : configuracoes.etapa1; document.getElementById('pointsLimitText').textContent = isMaster ? '(Mestre - sem limite)' : `/${maxPoints} pontos`; } renderizarListaPersonagens(); };
 
         window.addEventListener('DOMContentLoaded', () => { const idiomaSalvo = localStorage.getItem('idiomaPreferido') || 'pt'; mudarIdioma(idiomaSalvo); });
 
-        window.fazerLogin = fazerLogin; window.fazerRegistro = fazerRegistro; window.fazerLogout = fazerLogout; window.novoPersonagem = novoPersonagem; window.selecionarPersonagem = selecionarPersonagem; window.deletarPersonagem = deletarPersonagem; window.salvarPersonagem = salvarPersonagem; window.handleImageUpload = handleImageUpload; window.calcularTotal = calcularTotal; window.calcularDerivados = calcularDerivados; window.calcularAlturaPesoAutomatico = calcularAlturaPesoAutomatico; window.salvarAlturaPeso = salvarAlturaPeso; window.mostrarAba = mostrarAba; window.mostrarCharAba = mostrarCharAba; window.mostrarBancoAba = mostrarBancoAba; window.salvarConfiguracoes = salvarConfiguracoes; window.mudarIdioma = mudarIdioma; window.mudarEtapaPericias = mudarEtapaPericias; window.atualizarTreinoPericia = atualizarTreinoPericia; window.atualizarTreinoEspecializacao = atualizarTreinoEspecializacao; window.salvarPericias = salvarPericias; window.salvarAnotacoes = salvarAnotacoes; window.adicionarPericia = adicionarPericia; window.editarPericia = editarPericia; window.removerPericia = removerPericia; window.adicionarOrigem = adicionarOrigem; window.editarOrigem = editarOrigem; window.removerOrigem = removerOrigem; window.adicionarCarreira = adicionarCarreira; window.editarCarreira = editarCarreira; window.removerCarreira = removerCarreira; window.adicionarEspecializacao = adicionarEspecializacao; window.editarEspecializacao = editarEspecializacao; window.removerEspecializacao = removerEspecializacao; window.adicionarItemBanco = adicionarItemBanco; window.editarItem = editarItem; window.removerItemBanco = removerItemBanco; window.adicionarItem = adicionarItem; window.removerItem = removerItem; window.salvarFadiga = salvarFadiga; window.equiparArma = equiparArma; window.desequiparArma = desequiparArma; window.rolarDado = rolarDado; window.rolarFormula = rolarFormula; window.salvarRegras = salvarRegras;
+        // ============================================
+        // SEÇÃO 19: EXPORTAR FUNÇÕES GLOBAIS
+        // ============================================
+        window.fazerLogin = fazerLogin; window.fazerRegistro = fazerRegistro; window.fazerLogout = fazerLogout; window.novoPersonagem = novoPersonagem; window.selecionarPersonagem = selecionarPersonagem; window.deletarPersonagem = deletarPersonagem; window.salvarPersonagem = salvarPersonagem; window.handleImageUpload = handleImageUpload; window.calcularTotal = calcularTotal; window.calcularDerivados = calcularDerivados; window.calcularAlturaPesoAutomatico = calcularAlturaPesoAutomatico; window.salvarAlturaPeso = salvarAlturaPeso; window.mostrarAba = mostrarAba; window.mostrarCharAba = mostrarCharAba; window.mostrarBancoAba = mostrarBancoAba; window.salvarConfiguracoes = salvarConfiguracoes; window.mudarIdioma = mudarIdioma; window.mudarEtapaPericias = mudarEtapaPericias; window.atualizarTreinoPericia = atualizarTreinoPericia; window.atualizarTreinoEspecializacao = atualizarTreinoEspecializacao; window.salvarPericias = salvarPericias; window.salvarAnotacoes = salvarAnotacoes; window.adicionarPericia = adicionarPericia; window.editarPericia = editarPericia; window.removerPericia = removerPericia; window.adicionarOrigem = adicionarOrigem; window.editarOrigem = editarOrigem; window.removerOrigem = removerOrigem; window.adicionarCarreira = adicionarCarreira; window.editarCarreira = editarCarreira; window.removerCarreira = removerCarreira; window.adicionarEspecializacao = adicionarEspecializacao; window.editarEspecializacao = editarEspecializacao; window.removerEspecializacao = removerEspecializacao; window.adicionarItemBanco = adicionarItemBanco; window.editarItem = editarItem; window.removerItemBanco = removerItemBanco; window.adicionarItem = adicionarItem; window.removerItem = removerItem; window.salvarFadiga = salvarFadiga; window.equiparArma = equiparArma; window.desequiparArma = desequiparArma; window.rolarDado = rolarDado; window.rolarFormula = rolarFormula; window.editarRegras = editarRegras; window.salvarRegras = salvarRegras; window.cancelarEdicaoRegras = cancelarEdicaoRegras; window.editarEscudo = editarEscudo; window.salvarEscudo = salvarEscudo; window.cancelarEdicaoEscudo = cancelarEdicaoEscudo;
     </script>
 </body>
 </html>
