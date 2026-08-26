@@ -630,6 +630,16 @@
             const idiomaSalvo = localStorage.getItem('idiomaPreferido') || 'pt';
             mudarIdioma(idiomaSalvo);
         });
+
+// Tornar funções globais
+window.fazerLogin = fazerLogin;
+window.fazerRegistro = fazerRegistro;
+window.fazerLogout = fazerLogout;
+window.salvarFicha = salvarFicha;
+window.salvarConfiguracoes = salvarConfiguracoes;
+window.mostrarAba = mostrarAba;
+window.mudarIdioma = mudarIdioma;
+
     </script>
 </body>
 </html>
