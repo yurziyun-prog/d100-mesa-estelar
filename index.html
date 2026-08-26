@@ -30,7 +30,7 @@
                 linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 25%, #0a1a3e 50%, #1a0a2e 75%, #0a0a1a 100%);
         }
         
-        .stars-1, .stars-2, .stars-3 {
+        .stars-container {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
@@ -38,89 +38,18 @@
             pointer-events: none;
         }
         
-        .stars-1 {
-            background-image: 
-                radial-gradient(2px 2px at 20px 30px, #fff, transparent),
-                radial-gradient(2px 2px at 40px 70px, #fff, transparent),
-                radial-gradient(1px 1px at 90px 40px, #fff, transparent),
-                radial-gradient(1px 1px at 130px 80px, #fff, transparent),
-                radial-gradient(2px 2px at 160px 120px, #ddd, transparent),
-                radial-gradient(1px 1px at 200px 50px, #fff, transparent),
-                radial-gradient(2px 2px at 250px 150px, #fff, transparent),
-                radial-gradient(1px 1px at 300px 90px, #eee, transparent),
-                radial-gradient(2px 2px at 350px 200px, #fff, transparent),
-                radial-gradient(1px 1px at 400px 100px, #fff, transparent),
-                radial-gradient(1px 1px at 450px 250px, #ddd, transparent),
-                radial-gradient(2px 2px at 500px 180px, #fff, transparent),
-                radial-gradient(1px 1px at 550px 300px, #fff, transparent),
-                radial-gradient(2px 2px at 600px 50px, #eee, transparent),
-                radial-gradient(1px 1px at 650px 220px, #fff, transparent),
-                radial-gradient(2px 2px at 700px 130px, #fff, transparent),
-                radial-gradient(1px 1px at 750px 280px, #ddd, transparent),
-                radial-gradient(2px 2px at 800px 170px, #fff, transparent),
-                radial-gradient(1px 1px at 850px 60px, #fff, transparent),
-                radial-gradient(2px 2px at 900px 240px, #eee, transparent);
-            background-size: 1000px 1000px;
-            animation: twinkle1 4s infinite;
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite;
+            animation-delay: var(--delay);
         }
         
-        .stars-2 {
-            background-image: 
-                radial-gradient(1px 1px at 50px 100px, #fff, transparent),
-                radial-gradient(2px 2px at 100px 200px, #ddd, transparent),
-                radial-gradient(1px 1px at 150px 50px, #fff, transparent),
-                radial-gradient(2px 2px at 200px 300px, #eee, transparent),
-                radial-gradient(1px 1px at 250px 150px, #fff, transparent),
-                radial-gradient(2px 2px at 300px 250px, #fff, transparent),
-                radial-gradient(1px 1px at 350px 80px, #ddd, transparent),
-                radial-gradient(2px 2px at 400px 180px, #fff, transparent),
-                radial-gradient(1px 1px at 450px 120px, #eee, transparent),
-                radial-gradient(2px 2px at 500px 280px, #fff, transparent),
-                radial-gradient(1px 1px at 550px 200px, #fff, transparent),
-                radial-gradient(2px 2px at 600px 100px, #ddd, transparent),
-                radial-gradient(1px 1px at 650px 300px, #fff, transparent),
-                radial-gradient(2px 2px at 700px 220px, #eee, transparent),
-                radial-gradient(1px 1px at 750px 140px, #fff, transparent),
-                radial-gradient(2px 2px at 800px 260px, #fff, transparent),
-                radial-gradient(1px 1px at 850px 180px, #ddd, transparent),
-                radial-gradient(2px 2px at 900px 80px, #eee, transparent),
-                radial-gradient(1px 1px at 950px 200px, #fff, transparent),
-                radial-gradient(2px 2px at 980px 300px, #fff, transparent);
-            background-size: 1000px 1000px;
-            animation: twinkle2 6s infinite;
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.3); }
         }
-        
-        .stars-3 {
-            background-image: 
-                radial-gradient(1px 1px at 10px 10px, #fff, transparent),
-                radial-gradient(1px 1px at 30px 60px, #fff, transparent),
-                radial-gradient(1px 1px at 70px 20px, #fff, transparent),
-                radial-gradient(1px 1px at 110px 90px, #fff, transparent),
-                radial-gradient(1px 1px at 140px 40px, #fff, transparent),
-                radial-gradient(1px 1px at 180px 110px, #fff, transparent),
-                radial-gradient(1px 1px at 220px 70px, #fff, transparent),
-                radial-gradient(1px 1px at 270px 130px, #fff, transparent),
-                radial-gradient(1px 1px at 320px 30px, #fff, transparent),
-                radial-gradient(1px 1px at 370px 160px, #fff, transparent),
-                radial-gradient(1px 1px at 420px 90px, #fff, transparent),
-                radial-gradient(1px 1px at 470px 210px, #fff, transparent),
-                radial-gradient(1px 1px at 520px 60px, #fff, transparent),
-                radial-gradient(1px 1px at 570px 140px, #fff, transparent),
-                radial-gradient(1px 1px at 620px 190px, #fff, transparent),
-                radial-gradient(1px 1px at 670px 100px, #fff, transparent),
-                radial-gradient(1px 1px at 720px 230px, #fff, transparent),
-                radial-gradient(1px 1px at 770px 50px, #fff, transparent),
-                radial-gradient(1px 1px at 820px 170px, #fff, transparent),
-                radial-gradient(1px 1px at 870px 120px, #fff, transparent),
-                radial-gradient(1px 1px at 920px 200px, #fff, transparent),
-                radial-gradient(1px 1px at 970px 80px, #fff, transparent);
-            background-size: 1000px 1000px;
-            animation: twinkle3 5s infinite;
-        }
-        
-        @keyframes twinkle1 { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
-        @keyframes twinkle2 { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
-        @keyframes twinkle3 { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.9; } }
         
         .container { max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
         h1 { text-align: center; color: #fff; margin-bottom: 10px; font-size: 2.2em; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
@@ -342,6 +271,14 @@
         }
         .stat-label { color: #aaa; font-size: 0.9em; margin-bottom: 5px; }
         .stat-value { color: #00d4ff; font-size: 1.8em; font-weight: bold; }
+        .stat-value input {
+            width: 80%; text-align: center;
+            background: rgba(0,212,255,0.2);
+            border: 1px solid #00d4ff;
+            border-radius: 5px;
+            color: #00d4ff; font-size: 1.2em; font-weight: bold;
+            margin-top: 5px;
+        }
         
         .form-section {
             background: rgba(255,255,255,0.06);
@@ -416,7 +353,6 @@
         .char-tab-content { display: none; }
         .char-tab-content.active { display: block; }
         
-        /* Tabela de perícias */
         .skills-table {
             width: 100%;
             border-collapse: collapse;
@@ -440,7 +376,7 @@
             text-align: center;
         }
         .skill-total { color: #00d4ff; font-weight: bold; }
-        .skill-locked { opacity: 0.5; }
+        .skill-invested { background: rgba(40,167,69,0.15) !important; }
         
         .etapa-indicator {
             background: rgba(0,212,255,0.15);
@@ -452,6 +388,129 @@
         .etapa-indicator h4 { color: #00d4ff; margin-bottom: 5px; }
         .etapa-indicator p { color: #aaa; font-size: 0.9em; }
         
+        .pontos-restantes {
+            background: rgba(40,167,69,0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #28a745;
+        }
+        .pontos-restantes span {
+            color: #6bff8e;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        /* Inventário */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .inventory-slot {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .inventory-slot h4 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .inventory-slot .capacity {
+            color: #aaa;
+            font-size: 0.85em;
+            margin-bottom: 10px;
+        }
+        .inventory-items {
+            min-height: 100px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            padding: 10px;
+        }
+        .inventory-item {
+            background: rgba(255,255,255,0.08);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .inventory-item-name { color: #fff; font-weight: bold; }
+        .inventory-item-details { color: #aaa; font-size: 0.85em; }
+        
+        /* Combate */
+        .combat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .combat-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        .combat-section h4 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+        .hit-location {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .hit-location-name { color: #fff; }
+        .hit-location-hp { color: #e74c3c; font-weight: bold; }
+        .hit-location-ap { color: #3498db; font-weight: bold; }
+        
+        /* Rolagem */
+        .dice-roller {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+        }
+        .dice-display {
+            font-size: 5em;
+            margin: 20px 0;
+            color: #00d4ff;
+            text-shadow: 0 0 20px rgba(0,212,255,0.5);
+        }
+        .dice-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .dice-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .dice-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(155,89,182,0.4); }
+        .roll-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0,212,255,0.1);
+            border-radius: 10px;
+            border: 2px solid rgba(0,212,255,0.3);
+        }
+        
         @media (max-width: 768px) {
             .attributes-grid { grid-template-columns: repeat(2, 1fr); }
             .character-header { justify-content: center; text-align: center; }
@@ -461,9 +520,7 @@
 </head>
 <body>
     <div class="galaxy-bg"></div>
-    <div class="stars-1"></div>
-    <div class="stars-2"></div>
-    <div class="stars-3"></div>
+    <div class="stars-container" id="starsContainer"></div>
     
     <div class="container">
         <!-- LOGIN -->
@@ -502,9 +559,10 @@
 
             <!-- ABAS GLOBAIS -->
             <div class="tabs">
-                <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha">📋 Ficha</button>
+                <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha"> Ficha</button>
                 <button class="tab-btn" id="configTabBtn" onclick="mostrarAba('config', this)" data-i18n="tabConfig">⚙️ Config</button>
-                <button class="tab-btn hidden" id="bancoTabBtn" onclick="mostrarAba('banco', this)" data-i18n="tabBanco"> Banco de Dados</button>
+                <button class="tab-btn hidden" id="bancoTabBtn" onclick="mostrarAba('banco', this)" data-i18n="tabBanco">📚 Banco de Dados</button>
+                <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
             </div>
 
             <!-- ABA FICHA -->
@@ -520,7 +578,7 @@
                         <button class="char-tab-btn active" onclick="mostrarCharAba('personagem', this)">📄 Personagem</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('pericias', this)">⚔️ Perícias</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)">🎒 Inventário</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('combate', this)">️ Combate</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('combate', this)">⚔️ Combate</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)">📔 Anotações</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)">🎲 Rolagem</button>
                     </div>
@@ -529,7 +587,7 @@
                     <div id="char-personagem" class="char-tab-content active">
                         <div class="character-card">
                             <div class="character-header">
-                                <div class="avatar" id="charAvatar"><span>👤</span></div>
+                                <div class="avatar" id="charAvatar"><span></span></div>
                                 <div class="char-info">
                                     <h2 id="charName">-</h2>
                                     <p><span id="charRace">-</span> | <span id="charOrigin">-</span> | <span id="charCareer">-</span></p>
@@ -582,8 +640,14 @@
                                 <div class="stat-box"><div class="stat-label" data-i18n="modExp">Mod. Experiência</div><div class="stat-value" id="statModExp">0</div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="taxaRecup">Taxa de Recuperação</div><div class="stat-value" id="statTaxaRecup">1</div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="pontosSorte">Pontos de Sorte</div><div class="stat-value" id="statPontosSorte">1</div></div>
-                                <div class="stat-box"><div class="stat-label" data-i18n="altura">Altura</div><div class="stat-value" id="statAltura">170 cm</div></div>
-                                <div class="stat-box"><div class="stat-label" data-i18n="peso">Peso</div><div class="stat-value" id="statPeso">70 kg</div></div>
+                                <div class="stat-box">
+                                    <div class="stat-label" data-i18n="altura">Altura (cm)</div>
+                                    <div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div>
+                                </div>
+                                <div class="stat-box">
+                                    <div class="stat-label" data-i18n="peso">Peso (kg)</div>
+                                    <div class="stat-value"><input type="number" id="editPeso" onchange="salvarAlturaPeso()"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -598,7 +662,7 @@
                             <div class="form-group"><label data-i18n="origin">Origem:</label><select id="editOrigin"></select></div>
                             <div class="form-group"><label data-i18n="career">Carreira:</label><select id="editCareer"></select></div>
                             <div class="form-group"><label data-i18n="socialClass">Classe Social:</label><select id="editSocialClass"><option value="Escravizado">Escravizado (x0.1)</option><option value="Servo">Servo (x0.2)</option><option value="Marginalizado">Marginalizado (x0.15)</option><option value="Pessoa Livre" selected>Pessoa Livre (x1.0)</option><option value="Trabalhador Pobre">Trabalhador Pobre (x0.35)</option><option value="Classe Média">Classe Média (x2.0)</option><option value="Pequena Nobreza">Pequena Nobreza (x3.0)</option><option value="Pequena Elite">Pequena Elite (x3.0)</option><option value="Aristocracia">Aristocracia (x5.0)</option><option value="Grande Elite">Grande Elite (x5.0)</option><option value="Governante">Governante (x10.0)</option><option value="Exilado">Exilado (x0.1)</option></select></div>
-                            <div class="form-group"><label data-i18n="bodyType">Tipo Corporal:</label><select id="editBodyType" onchange="calcularAlturaPesoAutomatico()"><option value="Leve">Leve (x0.8)</option><option value="Médio" selected>Médio (x1.0)</option><option value="Pesado">Pesado (x1.3)</option><option value="Gigante">Gigante (x2.0)</option></select></div>
+                            <div class="form-group"><label data-i18n="bodyType">Tipo Corporal:</label><select id="editBodyType" onchange="calcularAlturaPesoAutomatico()"><option value="Leve">Leve (Lithe)</option><option value="Médio" selected>Médio (Medium)</option><option value="Pesado">Pesado (Heavy)</option><option value="Gigante">Gigante (Master)</option></select></div>
                             <div class="form-group"><label data-i18n="charImage">Imagem do Personagem:</label><input type="url" id="editImageURL" placeholder="https://exemplo.com/imagem.jpg"><p style="color: #aaa; font-size: 0.85em; margin-top: 5px;">ou</p><input type="file" id="editImageFile" accept="image/*" onchange="handleImageUpload(event)"><p id="uploadStatus" style="color: #aaa; font-size: 0.85em; margin-top: 5px;"></p></div>
 
                             <div class="etapa-indicator">
@@ -629,32 +693,42 @@
                             <h3>⚔️ Perícias</h3>
                             <div class="etapa-indicator">
                                 <h4>Etapa: <span id="periciasEtapaLabel">2 - Origem</span></h4>
-                                <p>Pontos disponíveis: <strong id="periciasPontosRestantes">100</strong></p>
+                                <div class="pontos-restantes">
+                                    Pontos disponíveis: <span id="periciasPontosRestantes">100</span> / <span id="periciasPontosTotal">100</span>
+                                </div>
                             </div>
                             
                             <div class="form-group">
                                 <label>Etapa de Criação:</label>
                                 <select id="periciasEtapa" onchange="mudarEtapaPericias()">
-                                    <option value="2">Etapa 2 - Origem (100 pts)</option>
-                                    <option value="3">Etapa 3 - Carreira (100 pts)</option>
-                                    <option value="4">Etapa 4 - Livre (150 pts)</option>
+                                    <option value="2">Etapa 2 - Origem (100 pts, máx 30 por perícia)</option>
+                                    <option value="3">Etapa 3 - Carreira (100 pts, máx 30 por perícia)</option>
+                                    <option value="4">Etapa 4 - Livre (150 pts, máx 30 por perícia)</option>
                                 </select>
                             </div>
 
-                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias Básicas</h4>
-                            <table class="skills-table" id="tabelaPericiasBasicas">
-                                <thead>
-                                    <tr><th>Perícia</th><th>Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr>
-                                </thead>
+                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias com Investimento</h4>
+                            <table class="skills-table">
+                                <thead><tr><th>Perícia</th><th>Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
+                                <tbody id="corpoPericiasInvestidas"></tbody>
+                            </table>
+
+                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias Básicas Disponíveis</h4>
+                            <table class="skills-table">
+                                <thead><tr><th>Perícia</th><th>Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
                                 <tbody id="corpoPericiasBasicas"></tbody>
                             </table>
 
-                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias Profissionais</h4>
-                            <table class="skills-table" id="tabelaPericiasProfissionais">
-                                <thead>
-                                    <tr><th>Perícia</th><th>Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr>
-                                </thead>
+                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias Profissionais Disponíveis</h4>
+                            <table class="skills-table">
+                                <thead><tr><th>Perícia</th><th>Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
                                 <tbody id="corpoPericiasProfissionais"></tbody>
+                            </table>
+
+                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Especializações</h4>
+                            <table class="skills-table">
+                                <thead><tr><th>Especialização</th><th>Tipo</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
+                                <tbody id="corpoEspecializacoes"></tbody>
                             </table>
                         </div>
                     </div>
@@ -663,7 +737,32 @@
                     <div id="char-inventario" class="char-tab-content">
                         <div class="form-section">
                             <h3>🎒 Inventário</h3>
-                            <p style="color: #aaa;">Em desenvolvimento...</p>
+                            <p style="color: #aaa; margin-bottom: 20px;">Organize seus itens em diferentes compartimentos</p>
+                            
+                            <div class="inventory-grid">
+                                <div class="inventory-slot">
+                                    <h4>👛 Bolso</h4>
+                                    <div class="capacity">Capacidade: 2 kg | 2 itens</div>
+                                    <div class="inventory-items" id="inv-bolso"></div>
+                                </div>
+                                <div class="inventory-slot">
+                                    <h4>🎒 Mochila</h4>
+                                    <div class="capacity">Capacidade: 20 kg | 20 itens</div>
+                                    <div class="inventory-items" id="inv-mochila"></div>
+                                </div>
+                                <div class="inventory-slot">
+                                    <h4>🚗 Veículo/Nave</h4>
+                                    <div class="capacity">Capacidade: 500 kg | 100 itens</div>
+                                    <div class="inventory-items" id="inv-veiculo"></div>
+                                </div>
+                                <div class="inventory-slot">
+                                    <h4>🏠 Casa/Base</h4>
+                                    <div class="capacity">Capacidade: Ilimitada</div>
+                                    <div class="inventory-items" id="inv-casa"></div>
+                                </div>
+                            </div>
+                            
+                            <button class="btn-save" onclick="adicionarItem()" style="margin-top: 20px;">➕ Adicionar Item</button>
                         </div>
                     </div>
 
@@ -671,15 +770,50 @@
                     <div id="char-combate" class="char-tab-content">
                         <div class="form-section">
                             <h3>⚔️ Combate</h3>
-                            <p style="color: #aaa;">Em desenvolvimento...</p>
+                            
+                            <div class="combat-grid">
+                                <div class="combat-section">
+                                    <h4>🛡️ Pontos de Vida por Localização</h4>
+                                    <div id="hitLocations"></div>
+                                </div>
+                                
+                                <div class="combat-section">
+                                    <h4>🛡️ Armadura por Localização</h4>
+                                    <div id="armorLocations"></div>
+                                </div>
+                                
+                                <div class="combat-section">
+                                    <h4>😮‍💨 Fadiga</h4>
+                                    <select id="fadigaLevel" onchange="salvarFadiga()">
+                                        <option value="Fresh">Descansado (Fresh)</option>
+                                        <option value="Winded">Ofegante (Winded)</option>
+                                        <option value="Tired">Cansado (Tired)</option>
+                                        <option value="Wearied">Fatigado (Wearied)</option>
+                                        <option value="Exhausted">Exausto (Exhausted)</option>
+                                        <option value="Debilitated">Debilitado (Debilitated)</option>
+                                        <option value="Incapacitated">Incapacitado (Incapacitated)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="combat-section">
+                                    <h4>🔫 Armas Equipadas</h4>
+                                    <div id="weaponsEquipped"></div>
+                                    <button class="btn-save" onclick="equiparArma()" style="margin-top: 10px; font-size: 0.9em;">Equipar Arma</button>
+                                </div>
+                                
+                                <div class="combat-section">
+                                    <h4>🎯 Munição</h4>
+                                    <div id="ammoInventory"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <!-- ANOTAÇÕES -->
                     <div id="char-anotacoes" class="char-tab-content">
                         <div class="form-section">
-                            <h3>📔 Anotações</h3>
-                            <textarea id="charAnotacoes" rows="10" placeholder="Escreva suas anotações aqui..."></textarea>
+                            <h3> Anotações</h3>
+                            <textarea id="charAnotacoes" rows="15" placeholder="Escreva suas anotações aqui..."></textarea>
                             <button class="btn-save" onclick="salvarAnotacoes()" style="margin-top: 15px;">💾 Salvar Anotações</button>
                         </div>
                     </div>
@@ -688,7 +822,32 @@
                     <div id="char-rolagem" class="char-tab-content">
                         <div class="form-section">
                             <h3>🎲 Rolagem de Dados</h3>
-                            <p style="color: #aaa;">Em desenvolvimento...</p>
+                            <div class="dice-roller">
+                                <div class="dice-display" id="diceDisplay">🎲</div>
+                                <div id="rollResult" style="font-size: 1.5em; color: #fff; margin-bottom: 20px;">Clique em um dado para rolar</div>
+                                
+                                <div class="form-group" style="max-width: 400px; margin: 0 auto 20px;">
+                                    <label>Fórmula de dano (ex: 2d6+1d2):</label>
+                                    <input type="text" id="damageFormula" placeholder="2d6+1d2" value="1d100">
+                                </div>
+                                
+                                <div class="dice-buttons">
+                                    <button class="dice-btn" onclick="rolarDado('d100')">D100</button>
+                                    <button class="dice-btn" onclick="rolarDado('d20')">D20</button>
+                                    <button class="dice-btn" onclick="rolarDado('d12')">D12</button>
+                                    <button class="dice-btn" onclick="rolarDado('d10')">D10</button>
+                                    <button class="dice-btn" onclick="rolarDado('d8')">D8</button>
+                                    <button class="dice-btn" onclick="rolarDado('d6')">D6</button>
+                                    <button class="dice-btn" onclick="rolarDado('d4')">D4</button>
+                                    <button class="dice-btn" onclick="rolarDado('d3')">D3</button>
+                                    <button class="dice-btn" onclick="rolarDado('d2')">D2</button>
+                                    <button class="dice-btn" onclick="rolarFormula()" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🎲 Rolar Fórmula</button>
+                                </div>
+                                
+                                <div class="roll-result hidden" id="rollResultBox">
+                                    <div id="rollResultText"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -711,12 +870,14 @@
             <div id="banco" class="tab-content">
                 <div class="form-section">
                     <h3>📚 Banco de Dados do Sistema</h3>
-                    <p style="color: #aaa; margin-bottom: 20px;">Edite as perícias, origens e carreiras do sistema. As mudanças afetam todos os personagens.</p>
+                    <p style="color: #aaa; margin-bottom: 20px;">Edite as perícias, origens, carreiras e outros dados do sistema.</p>
                     
                     <div class="tabs" style="margin-bottom: 20px;">
                         <button class="tab-btn active" onclick="mostrarBancoAba('pericias', this)">Perícias</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('origens', this)">Origens</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('carreiras', this)">Carreiras</button>
+                        <button class="tab-btn" onclick="mostrarBancoAba('especializacoes', this)">Especializações</button>
+                        <button class="tab-btn" onclick="mostrarBancoAba('itens', this)">Itens</button>
                     </div>
 
                     <div id="banco-pericias" class="tab-content active">
@@ -734,6 +895,49 @@
                         <h4 style="color: #fff; margin-bottom: 15px;">Carreiras do Sistema</h4>
                         <div id="listaBancoCarreiras"></div>
                     </div>
+
+                    <div id="banco-especializacoes" class="tab-content">
+                        <h4 style="color: #fff; margin-bottom: 15px;">Especializações do Sistema</h4>
+                        <div id="listaBancoEspecializacoes"></div>
+                        <button class="btn-save" onclick="adicionarEspecializacao()" style="margin-top: 15px;">➕ Adicionar Especialização</button>
+                    </div>
+
+                    <div id="banco-itens" class="tab-content">
+                        <h4 style="color: #fff; margin-bottom: 15px;">Itens do Sistema</h4>
+                        <div id="listaBancoItens"></div>
+                        <button class="btn-save" onclick="adicionarItemBanco()" style="margin-top: 15px;">➕ Adicionar Item</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- REGRAS (Todos) -->
+            <div id="regras" class="tab-content">
+                <div class="form-section">
+                    <h3>📖 Regras do Sistema</h3>
+                    <div style="color: #ccc; line-height: 1.8;">
+                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Criação de Personagem</h4>
+                        <p><strong>Etapa 1 - Características (80 pts):</strong> Distribua pontos em FOR, CON, TAM, DES, INT, POD, CAR. Mínimo 3 (6 para INT e TAM), máximo 18.</p>
+                        <p><strong>Etapa 2 - Origem (100 pts):</strong> Invista em perícias básicas da sua origem. Máximo 30 pts por perícia.</p>
+                        <p><strong>Etapa 3 - Carreira (100 pts):</strong> Invista em perícias básicas e profissionais da carreira. Máximo 30 pts por perícia.</p>
+                        <p><strong>Etapa 4 - Livre (150 pts):</strong> Invista em qualquer perícia. Máximo 30 pts por perícia nesta etapa (pode somar aos investimentos anteriores).</p>
+                        
+                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Testes de Perícia</h4>
+                        <p>Role D100. Se o resultado for menor ou igual ao total da perícia (Base + Treino + Modificadores), é sucesso.</p>
+                        <p><strong>Crítico:</strong> Resultado ≤ 10% do total (ou ≤ 5% para total ≥ 50)</p>
+                        <p><strong>Falha Crítica:</strong> 96-100 (se perícia ≥ 96, então 97-100, etc. 100 é sempre falha crítica)</p>
+                        
+                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Iniciativa</h4>
+                        <p>Role 1D10 + valor de Iniciativa (INT + DES).</p>
+                        
+                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Dano</h4>
+                        <p>Dano da arma + Modificador de Dano (FOR + TAM). Primeiro desconta da Armadura, depois dos PV.</p>
+                        
+                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Localização do Acerto (D20)</h4>
+                        <p>1-3: Perna Direita | 4-6: Perna Esquerda | 7-9: Abdômen | 10-12: Peito | 13-15: Braço Direito | 16-18: Braço Esquerdo | 19-20: Cabeça</p>
+                        
+                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Fadiga</h4>
+                        <p>Descansado → Ofegante (15min) → Cansado (3h) → Fatigado (6h) → Exausto (12h) → Debilitado (18h) → Incapacitado (24h)</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -742,7 +946,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, query, where, getDocs, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, getDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
         const firebaseConfig = {
@@ -769,10 +973,31 @@
         let periciasDB = [];
         let origensDB = [];
         let carreirasDB = [];
+        let especializacoesDB = [];
+        let itensDB = [];
+        let faixaAltura = { min: 160, max: 180 };
+        let faixaPeso = { min: 60, max: 80 };
 
-        // Dados padrão das perícias
+        // Gerar estrelas
+        function gerarEstrelas() {
+            const container = document.getElementById('starsContainer');
+            const numEstrelas = 200;
+            for (let i = 0; i < numEstrelas; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.setProperty('--duration', (Math.random() * 3 + 2) + 's');
+                star.style.setProperty('--delay', Math.random() * 5 + 's');
+                container.appendChild(star);
+            }
+        }
+        gerarEstrelas();
+
         const periciasPadrao = [
-            // Básicas
             { id: 'atletismo', nome: 'Atletismo', categoria: 'Física', tipo: 'Básica', formula: 'FOR+DES', especializavel: false, penalidadeArmadura: 1 },
             { id: 'navegacao_remo', nome: 'Navegação a Remo', categoria: 'Veículos', tipo: 'Básica', formula: 'FOR+CON', especializavel: false, penalidadeArmadura: 1 },
             { id: 'forca_bruta', nome: 'Força Bruta', categoria: 'Física', tipo: 'Básica', formula: 'FOR+TAM', especializavel: false, penalidadeArmadura: 1 },
@@ -795,67 +1020,24 @@
             { id: 'natacao', nome: 'Natação', categoria: 'Física', tipo: 'Básica', formula: 'FOR+CON', especializavel: false, penalidadeArmadura: 1 },
             { id: 'combate_desarmado', nome: 'Combate Desarmado', categoria: 'Combate', tipo: 'Básica', formula: 'FOR+DES', especializavel: true, penalidadeArmadura: 1 },
             { id: 'forca_vontade', nome: 'Força de Vontade', categoria: 'Psi', tipo: 'Básica', formula: 'POD*2', especializavel: false, penalidadeArmadura: 0 },
-            // Profissionais
             { id: 'arte', nome: 'Arte', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'astrologia', nome: 'Astrologia', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 },
             { id: 'comercio', nome: 'Comércio', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'cortesia', nome: 'Cortesia', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'cofres_fechaduras', nome: 'Cofres/Fechaduras', categoria: 'Técnica', tipo: 'Profissional', formula: 'DES*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'disfarce', nome: 'Disfarce', categoria: 'Manipulação', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 1 },
             { id: 'engenharia', nome: 'Engenharia', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'falsificacao', nome: 'Falsificação', categoria: 'Manipulação', tipo: 'Profissional', formula: 'DES+INT', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'ganhos_jogos', nome: 'Ganhos/Jogos', categoria: 'Manipulação', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'idiomas', nome: 'Idiomas', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'lingua_antiga', nome: 'Língua Antiga', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'mecanismos', nome: 'Mecanismos', categoria: 'Técnica', tipo: 'Profissional', formula: 'DES+INT', especializavel: true, penalidadeArmadura: 0 },
             { id: 'medicina', nome: 'Medicina', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'meditacao', nome: 'Meditação', categoria: 'Psi', tipo: 'Profissional', formula: 'CON+POD', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'musica', nome: 'Música', categoria: 'Social', tipo: 'Profissional', formula: 'DES+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'navegacao', nome: 'Navegação', categoria: 'Veículos', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'oratoria', nome: 'Oratória', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0.5 },
             { id: 'pilotagem', nome: 'Pilotagem', categoria: 'Veículos', tipo: 'Profissional', formula: 'DES+POD', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'politica', nome: 'Política', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'rastrear', nome: 'Rastrear', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 1 },
-            { id: 'saber_lore', nome: 'Saber/Lore', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'seducao', nome: 'Sedução', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
             { id: 'sobrevivencia', nome: 'Sobrevivência', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+CON', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'teatro', nome: 'Teatro', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'transe', nome: 'Transe', categoria: 'Psi', tipo: 'Profissional', formula: 'CON+POD', especializavel: true, penalidadeArmadura: 0.5 },
+            { id: 'tatica', nome: 'Tática', categoria: 'Combate', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
+            { id: 'armeiro', nome: 'Armeiro', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 0 },
+            { id: 'interrogatorio', nome: 'Interrogatório', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
+            { id: 'rastrear', nome: 'Rastrear', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 1 },
             { id: 'submundo', nome: 'Submundo/Malandragem', categoria: 'Furtividade', tipo: 'Profissional', formula: 'POD+CAR', especializavel: true, penalidadeArmadura: 1 },
             { id: 'astronavegacao', nome: 'Astronavegação', categoria: 'Veículos', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'ciber_seguranca', nome: 'Ciber-Segurança/Hackear', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'sistemas_escudo', nome: 'Sistemas de Escudo/Sensores', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'xenobiologia', nome: 'Xenobiologia', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'exotecnologia', nome: 'Exotecnologia', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'agricultura', nome: 'Agricultura', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+CON', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'animais', nome: 'Animais', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'avaliacao', nome: 'Avaliação', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'ensino', nome: 'Ensino', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'estrategia', nome: 'Estratégia', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'interrogatorio', nome: 'Interrogatório', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'pesquisa', nome: 'Pesquisa', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'tatica', nome: 'Tática', categoria: 'Combate', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'historia', nome: 'História', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'direito', nome: 'Direito', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'linguistica', nome: 'Linguística', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'psicologia', nome: 'Psicologia', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'cartografia', nome: 'Cartografia', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'mineracao', nome: 'Mineração', categoria: 'Técnica', tipo: 'Profissional', formula: 'FOR+CON', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'logistica', nome: 'Logística', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'economia', nome: 'Economia', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0.5 },
-            { id: 'criptografia', nome: 'Criptografia', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'anatomia', nome: 'Anatomia', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'genealogia', nome: 'Genealogia', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'heraldismo', nome: 'Heraldismo', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'bancario', nome: 'Bancário', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
             { id: 'mecanica', nome: 'Mecânica', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 1 },
             { id: 'eletronica', nome: 'Eletrônica', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 0.5 },
             { id: 'computadores', nome: 'Computadores', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'demolicoes', nome: 'Demolições', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 1 },
-            { id: 'comando', nome: 'Comando', categoria: 'Social', tipo: 'Profissional', formula: 'CAR+INT', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'adestramento', nome: 'Adestramento', categoria: 'Animais', tipo: 'Profissional', formula: 'CAR+POD', especializavel: true, penalidadeArmadura: 1 },
-            { id: 'armeiro', nome: 'Armeiro', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 0 },
-            { id: 'sobrevivencia_espacial', nome: 'Sobrevivência Espacial', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 }
+            { id: 'sobrevivencia_espacial', nome: 'Sobrevivência Espacial', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 },
+            { id: 'sistemas_escudo', nome: 'Sistemas de Escudo/Sensores', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
+            { id: 'logistica', nome: 'Logística', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 }
         ];
 
         const origensPadrao = [
@@ -874,20 +1056,27 @@
             { id: 'pirata_espacial', nome: 'Pirata Espacial', periciasBasicas: ['atletismo', 'esquiva', 'furtividade', 'percepcao', 'resistencia'], periciasProfissionais: ['armeiro', 'astronavegacao', 'logistica', 'mecanica', 'pilotagem', 'submundo', 'sobrevivencia_espacial', 'tatica'] },
             { id: 'guarda_costas', nome: 'Guarda-Costas', periciasBasicas: ['atletismo', 'esquiva', 'percepcao', 'resistencia', 'forca_vontade'], periciasProfissionais: ['armeiro', 'interrogatorio', 'medicina', 'rastrear', 'tatica'] },
             { id: 'militar', nome: 'Militar', periciasBasicas: ['atletismo', 'esquiva', 'forca_bruta', 'percepcao', 'resistencia', 'combate_desarmado'], periciasProfissionais: ['armeiro', 'comando', 'demolicoes', 'estrategia', 'logistica', 'medicina', 'sobrevivencia', 'tatica'] },
-            { id: 'mercenario', nome: 'Mercenário', periciasBasicas: ['atletismo', 'esquiva', 'forca_bruta', 'percepcao', 'resistencia', 'combate_desarmado'], periciasProfissionais: ['armeiro', 'comando', 'demolicoes', 'logistica', 'medicina', 'sobrevivencia', 'tatica'] },
-            { id: 'engenheiro', nome: 'Engenheiro', periciasBasicas: ['percepcao', 'intuicao', 'costumes', 'regiao', 'forca_vontade'], periciasProfissionais: ['eletronica', 'engenharia', 'exotecnologia', 'logistica', 'mecanica', 'pesquisa', 'sistemas_escudo'] },
-            { id: 'piloto', nome: 'Piloto de Nave Estelar', periciasBasicas: ['conduzir', 'resistencia', 'esquiva', 'regiao', 'percepcao', 'forca_vontade'], periciasProfissionais: ['astronavegacao', 'computadores', 'eletronica', 'mecanica', 'pilotagem', 'sistemas_escudo', 'sobrevivencia_espacial'] },
-            { id: 'cientista', nome: 'Cientista', periciasBasicas: ['percepcao', 'intuicao', 'costumes', 'regiao', 'forca_vontade'], periciasProfissionais: ['anatomia', 'pesquisa', 'saber_lore', 'xenobiologia', 'exotecnologia'] },
-            { id: 'diplomata', nome: 'Diplomata', periciasBasicas: ['influencia', 'intuicao', 'costumes', 'lingua_nativa', 'forca_vontade'], periciasProfissionais: ['cortesia', 'direito', 'idiomas', 'oratoria', 'politica', 'psicologia'] },
             { id: 'medico', nome: 'Médico', periciasBasicas: ['influencia', 'intuicao', 'percepcao', 'primeiros_socorros', 'forca_vontade'], periciasProfissionais: ['anatomia', 'medicina', 'pesquisa', 'psicologia', 'xenobiologia'] },
-            { id: 'comerciante', nome: 'Comerciante', periciasBasicas: ['influencia', 'intuicao', 'costumes', 'lingua_nativa', 'percepcao'], periciasProfissionais: ['avaliacao', 'comercio', 'economia', 'ganhos_jogos', 'oratoria', 'submundo'] },
-            { id: 'espio', nome: 'Espião', periciasBasicas: ['esquiva', 'furtividade', 'influencia', 'percepcao', 'forca_vontade'], periciasProfissionais: ['ciber_seguranca', 'criptografia', 'disfarce', 'falsificacao', 'interrogatorio', 'submundo'] }
+            { id: 'engenheiro', nome: 'Engenheiro', periciasBasicas: ['percepcao', 'intuicao', 'costumes', 'regiao', 'forca_vontade'], periciasProfissionais: ['eletronica', 'engenharia', 'exotecnologia', 'logistica', 'mecanica', 'pesquisa', 'sistemas_escudo'] },
+            { id: 'piloto', nome: 'Piloto de Nave Estelar', periciasBasicas: ['conduzir', 'resistencia', 'esquiva', 'regiao', 'percepcao', 'forca_vontade'], periciasProfissionais: ['astronavegacao', 'computadores', 'eletronica', 'mecanica', 'pilotagem', 'sistemas_escudo', 'sobrevivencia_espacial'] }
+        ];
+
+        const especializacoesPadrao = [
+            { id: 'combate_pistola_laser', nome: 'Combate com Pistola Laser', tipo: 'Combate', uso: 'Distância', formula: 'DES+POD' },
+            { id: 'atirador_elite', nome: 'Atirador de Elite', tipo: 'Combate', uso: 'Distância', formula: 'DES+POD' },
+            { id: 'arma_laser_pesada', nome: 'Arma Laser Pesada', tipo: 'Combate', uso: 'Distância', formula: 'FOR+DES' },
+            { id: 'luta_gravidade_zero', nome: 'Luta em Gravidade Zero', tipo: 'Combate', uso: 'Corpo a corpo + Distância + Defesa', formula: 'DES+POD' },
+            { id: 'guarda_costas_arma_longa', nome: 'Guarda-Costas (Arma Longa/Escudo)', tipo: 'Combate', uso: 'Corpo a corpo + Defesa', formula: 'FOR+DES' },
+            { id: 'combate_traje_espacial', nome: 'Combate em Traje Espacial', tipo: 'Combate', uso: 'Corpo a corpo + Distância + Defesa', formula: 'DES+POD' },
+            { id: 'psiquismo_materia', nome: 'Psiquismo (Matéria)', tipo: 'Psi', uso: 'Teste', formula: 'INT+POD' },
+            { id: 'psiquismo_mente', nome: 'Psiquismo (Mente)', tipo: 'Psi', uso: 'Teste', formula: 'INT+POD' },
+            { id: 'psiquismo_sentidos', nome: 'Psiquismo (Sentidos)', tipo: 'Psi', uso: 'Teste', formula: 'INT+POD' }
         ];
 
         const traducoes = {
-            pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: '📋 Ficha', tabConfig: '️ Config', tabBanco: '📚 Banco de Dados', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: '➕ Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '⚙️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Etapa 2 - Origem (Perícias Básicas):', pointsEtapa3: 'Etapa 3 - Carreira (Perícias Profissionais):', pointsEtapa4: 'Etapa 4 - Livre:', saveConfig: '💾 Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: '👤 Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
-            en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '⚙️ Config', tabBanco: '📚 Database', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Step 2 - Origin (Basic Skills):', pointsEtapa3: 'Step 3 - Career (Professional Skills):', pointsEtapa4: 'Step 4 - Free:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: '👤 Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
-            zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: '📋 角色卡', tabConfig: '️ 设置', tabBanco: '📚 数据库', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '阶段2 - 起源（基础技能）：', pointsEtapa3: '阶段3 - 职业（专业技能）：', pointsEtapa4: '阶段4 - 自由：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: ' 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
+            pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: '➕ Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '⚙️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Etapa 2 - Origem (Perícias Básicas):', pointsEtapa3: 'Etapa 3 - Carreira (Perícias Profissionais):', pointsEtapa4: 'Etapa 4 - Livre:', saveConfig: '💾 Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: '👤 Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
+            en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: ' Sheet', tabConfig: '⚙️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Step 2 - Origin (Basic Skills):', pointsEtapa3: 'Step 3 - Career (Professional Skills):', pointsEtapa4: 'Step 4 - Free:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: '👤 Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
+            zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: '📋 角色卡', tabConfig: '⚙️ 设置', tabBanco: '📚 数据库', tabRegras: '📖 规则', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '阶段2 - 起源（基础技能）：', pointsEtapa3: '阶段3 - 职业（专业技能）：', pointsEtapa4: '阶段4 - 自由：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
         };
 
         onAuthStateChanged(auth, async (user) => {
@@ -937,51 +1126,47 @@
         window.fazerLogout = () => signOut(auth);
 
         async function carregarBancosDeDados() {
-            // Carregar perícias
             const periciasSnap = await getDocs(collection(db, "pericias"));
             if (periciasSnap.empty) {
-                // Popular com dados padrão
-                for (const p of periciasPadrao) {
-                    await setDoc(doc(db, "pericias", p.id), p);
-                }
+                for (const p of periciasPadrao) await setDoc(doc(db, "pericias", p.id), p);
                 periciasDB = [...periciasPadrao];
             } else {
-                periciasDB = [];
-                periciasSnap.forEach(doc => periciasDB.push({ id: doc.id, ...doc.data() }));
+                periciasDB = []; periciasSnap.forEach(doc => periciasDB.push({ id: doc.id, ...doc.data() }));
             }
 
-            // Carregar origens
             const origensSnap = await getDocs(collection(db, "origens"));
             if (origensSnap.empty) {
-                for (const o of origensPadrao) {
-                    await setDoc(doc(db, "origens", o.id), o);
-                }
+                for (const o of origensPadrao) await setDoc(doc(db, "origens", o.id), o);
                 origensDB = [...origensPadrao];
             } else {
-                origensDB = [];
-                origensSnap.forEach(doc => origensDB.push({ id: doc.id, ...doc.data() }));
+                origensDB = []; origensSnap.forEach(doc => origensDB.push({ id: doc.id, ...doc.data() }));
             }
 
-            // Carregar carreiras
             const carreirasSnap = await getDocs(collection(db, "carreiras"));
             if (carreirasSnap.empty) {
-                for (const c of carreirasPadrao) {
-                    await setDoc(doc(db, "carreiras", c.id), c);
-                }
+                for (const c of carreirasPadrao) await setDoc(doc(db, "carreiras", c.id), c);
                 carreirasDB = [...carreirasPadrao];
             } else {
-                carreirasDB = [];
-                carreirasSnap.forEach(doc => carreirasDB.push({ id: doc.id, ...doc.data() }));
+                carreirasDB = []; carreirasSnap.forEach(doc => carreirasDB.push({ id: doc.id, ...doc.data() }));
             }
 
-            // Popular selects
+            const espSnap = await getDocs(collection(db, "especializacoes"));
+            if (espSnap.empty) {
+                for (const e of especializacoesPadrao) await setDoc(doc(db, "especializacoes", e.id), e);
+                especializacoesDB = [...especializacoesPadrao];
+            } else {
+                especializacoesDB = []; espSnap.forEach(doc => especializacoesDB.push({ id: doc.id, ...doc.data() }));
+            }
+
+            const itensSnap = await getDocs(collection(db, "itens"));
+            itensDB = []; itensSnap.forEach(doc => itensDB.push({ id: doc.id, ...doc.data() }));
+
             popularSelects();
         }
 
         function popularSelects() {
             const selectOrigem = document.getElementById('editOrigin');
             selectOrigem.innerHTML = origensDB.map(o => `<option value="${o.id}">${o.nome}</option>`).join('');
-            
             const selectCarreira = document.getElementById('editCareer');
             selectCarreira.innerHTML = carreirasDB.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
         }
@@ -1013,6 +1198,23 @@
             setTimeout(() => msgDiv.innerHTML = '', 3000);
         };
 
+        function limparFormulario() {
+            document.getElementById('editName').value = '';
+            document.getElementById('editRace').value = 'Humano';
+            document.getElementById('editConcept').value = '';
+            document.getElementById('editSex').value = 'Masculino';
+            document.getElementById('editAge').value = 25;
+            document.getElementById('editImageURL').value = '';
+            document.getElementById('editImageFile').value = '';
+            document.getElementById('uploadStatus').textContent = '';
+            document.getElementById('charAnotacoes').value = '';
+            ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => {
+                document.getElementById(`edit${attr}`).value = 10;
+                document.getElementById(`bonus${attr}`).value = 0;
+            });
+            uploadedImageURL = null;
+        }
+
         function renderizarListaPersonagens() {
             const container = document.getElementById('charList');
             const t = traducoes[idiomaAtual];
@@ -1021,8 +1223,18 @@
                 const isActive = char.id === currentCharId;
                 return `<div class="char-item ${isActive ? 'active' : ''}" onclick="selecionarPersonagem('${char.id}')"><div class="char-item-avatar">${char.imagem ? `<img src="${char.imagem}" alt="${char.nome}">` : '👤'}</div><div class="char-item-name">${char.nome || 'Sem Nome'}</div><div class="char-item-actions"><button class="btn-small btn-select" onclick="event.stopPropagation(); selecionarPersonagem('${char.id}')">${t.selectChar}</button><button class="btn-small btn-delete" onclick="event.stopPropagation(); deletarPersonagem('${char.id}')">${t.deleteChar}</button></div></div>`;
             }).join('');
-            if (currentCharId) { const char = userCharacters.find(c => c.id === currentCharId); if (char) { document.getElementById('characterSection').classList.remove('hidden'); atualizarVisualizacao(char); preencherFormulario(char); renderizarPericias(char); } }
-            else { document.getElementById('characterSection').classList.add('hidden'); }
+            if (currentCharId) {
+                const char = userCharacters.find(c => c.id === currentCharId);
+                if (char) {
+                    limparFormulario();
+                    document.getElementById('characterSection').classList.remove('hidden');
+                    atualizarVisualizacao(char);
+                    preencherFormulario(char);
+                    renderizarPericias(char);
+                    renderizarInventario(char);
+                    renderizarCombate(char);
+                }
+            } else { document.getElementById('characterSection').classList.add('hidden'); }
         }
 
         window.selecionarPersonagem = async (charId) => { currentCharId = charId; await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true }); renderizarListaPersonagens(); };
@@ -1033,7 +1245,7 @@
             const maxChars = userData.role === 'mestre' ? 999 : 5;
             if (userCharacters.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
             const charId = `char_${Date.now()}`;
-            const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '' };
+            const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { bolso: [], mochila: [], veiculo: [], casa: [] }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '' };
             await setDoc(doc(db, "personagens", charId), newChar);
             await carregarPersonagens(); currentCharId = charId;
             await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -1066,9 +1278,24 @@
             } catch (e) { return 0; }
         }
 
-        function getTabelaTAM(tamEfetivo) {
-            const tabela = { 1: { altura: [1, 45], peso: [1, 5] }, 2: { altura: [46, 80], peso: [6, 10] }, 3: { altura: [81, 105], peso: [11, 15] }, 4: { altura: [106, 120], peso: [16, 20] }, 5: { altura: [121, 130], peso: [21, 25] }, 6: { altura: [131, 140], peso: [26, 30] }, 7: { altura: [141, 150], peso: [31, 35] }, 8: { altura: [151, 155], peso: [36, 40] }, 9: { altura: [156, 160], peso: [41, 45] }, 10: { altura: [161, 165], peso: [46, 50] }, 11: { altura: [166, 170], peso: [51, 55] }, 12: { altura: [171, 175], peso: [56, 60] }, 13: { altura: [176, 180], peso: [61, 65] }, 14: { altura: [181, 185], peso: [66, 70] }, 15: { altura: [186, 190], peso: [71, 75] }, 16: { altura: [191, 195], peso: [76, 80] }, 17: { altura: [196, 200], peso: [81, 85] }, 18: { altura: [201, 205], peso: [86, 90] }, 19: { altura: [206, 210], peso: [91, 95] }, 20: { altura: [211, 215], peso: [96, 100] }, 21: { altura: [216, 220], peso: [101, 105] } };
-            return tabela[tamEfetivo] || { altura: [170, 170], peso: [70, 70] };
+        function getTabelaTAM(tam) {
+            const tabela = { 1: { altura: [1, 45], leve: [1, 5], medio: [1, 7], pesado: [1, 9] }, 2: { altura: [46, 80], leve: [6, 10], medio: [8, 14], pesado: [10, 18] }, 3: { altura: [81, 105], leve: [11, 15], medio: [15, 21], pesado: [19, 27] }, 4: { altura: [106, 120], leve: [16, 20], medio: [22, 28], pesado: [28, 36] }, 5: { altura: [121, 130], leve: [21, 25], medio: [29, 35], pesado: [37, 45] }, 6: { altura: [131, 140], leve: [26, 30], medio: [36, 42], pesado: [46, 54] }, 7: { altura: [141, 150], leve: [31, 35], medio: [43, 49], pesado: [55, 63] }, 8: { altura: [151, 155], leve: [36, 40], medio: [50, 56], pesado: [64, 72] }, 9: { altura: [156, 160], leve: [41, 45], medio: [57, 63], pesado: [73, 81] }, 10: { altura: [161, 165], leve: [46, 50], medio: [64, 70], pesado: [82, 90] }, 11: { altura: [166, 170], leve: [51, 55], medio: [71, 77], pesado: [91, 99] }, 12: { altura: [171, 175], leve: [56, 60], medio: [78, 84], pesado: [100, 108] }, 13: { altura: [176, 180], leve: [61, 65], medio: [85, 91], pesado: [109, 117] }, 14: { altura: [181, 185], leve: [66, 70], medio: [92, 98], pesado: [118, 126] }, 15: { altura: [186, 190], leve: [71, 75], medio: [99, 105], pesado: [127, 135] }, 16: { altura: [191, 195], leve: [76, 80], medio: [106, 112], pesado: [136, 144] }, 17: { altura: [196, 200], leve: [81, 85], medio: [113, 119], pesado: [145, 153] }, 18: { altura: [201, 205], leve: [86, 90], medio: [120, 126], pesado: [154, 162] }, 19: { altura: [206, 210], leve: [91, 95], medio: [127, 133], pesado: [163, 171] }, 20: { altura: [211, 215], leve: [96, 100], medio: [134, 140], pesado: [172, 180] }, 21: { altura: [216, 220], leve: [101, 105], medio: [141, 147], pesado: [181, 189] } };
+            return tabela[tam] || { altura: [170, 170], leve: [60, 70], medio: [70, 80], pesado: [80, 90] };
+        }
+
+        function calcularAlturaPeso(tam, tipoCorporal) {
+            const tamEfetivo = Math.max(1, Math.min(21, tam));
+            const dados = getTabelaTAM(tamEfetivo);
+            let coluna = 'medio';
+            if (tipoCorporal === 'Leve') coluna = 'leve';
+            else if (tipoCorporal === 'Pesado') coluna = 'pesado';
+            else if (tipoCorporal === 'Gigante') {
+                const base = getTabelaTAM(21);
+                return { altura: base.altura[1] + 5, peso: base.pesado[1] + 9, alturaMin: base.altura[1], alturaMax: base.altura[1] + 10, pesoMin: base.pesado[1], pesoMax: base.pesado[1] + 20 };
+            }
+            const alturaMedia = Math.round((dados.altura[0] + dados.altura[1]) / 2);
+            const pesoMedio = Math.round((dados[coluna][0] + dados[coluna][1]) / 2);
+            return { altura: alturaMedia, peso: pesoMedio, alturaMin: dados.altura[0], alturaMax: dados.altura[1], pesoMin: dados[coluna][0], pesoMax: dados[coluna][1] };
         }
 
         function calcularPA(int, des) { const soma = int + des; if (soma <= 12) return 1; if (soma <= 24) return 2; if (soma <= 36) return 3; return 3 + Math.floor((soma - 36) / 12); }
@@ -1076,7 +1303,6 @@
         function calcularModExperiencia(car) { if (car <= 6) return -1; if (car <= 12) return 0; if (car <= 18) return 1; return 1 + Math.floor((car - 18) / 6); }
         function calcularTaxaRecuperacao(con) { if (con <= 6) return 1; if (con <= 12) return 2; if (con <= 18) return 3; return 3 + Math.floor((con - 18) / 6); }
         function calcularPontosSorte(pod) { if (pod <= 6) return 1; if (pod <= 12) return 2; if (pod <= 18) return 3; return 3 + Math.floor((pod - 18) / 6); }
-        function calcularAlturaPeso(tam, tipoCorporal) { const multiplicadores = { 'Leve': 0.8, 'Médio': 1.0, 'Pesado': 1.3, 'Gigante': 2.0 }; const mult = multiplicadores[tipoCorporal] || 1.0; const tamEfetivo = Math.round(tam * mult); const dados = getTabelaTAM(Math.max(1, Math.min(21, tamEfetivo))); const alturaMedia = Math.round((dados.altura[0] + dados.altura[1]) / 2); const pesoMedio = Math.round((dados.peso[0] + dados.peso[1]) / 2); return { altura: alturaMedia, peso: pesoMedio, alturaMin: dados.altura[0], alturaMax: dados.altura[1], pesoMin: dados.peso[0], pesoMax: dados.peso[1] }; }
 
         function atualizarVisualizacao(data) {
             document.getElementById('charName').textContent = data.nome || '-';
@@ -1086,7 +1312,7 @@
             document.getElementById('charOrigin').textContent = origemObj ? origemObj.nome : '-';
             document.getElementById('charCareer').textContent = carreiraObj ? carreiraObj.nome : '-';
             const avatarDiv = document.getElementById('charAvatar');
-            if (data.imagem) { avatarDiv.innerHTML = `<img src="${data.imagem}" alt="${data.nome}">`; } else { avatarDiv.innerHTML = '<span></span>'; }
+            if (data.imagem) { avatarDiv.innerHTML = `<img src="${data.imagem}" alt="${data.nome}">`; } else { avatarDiv.innerHTML = '<span>👤</span>'; }
             const attrs = data.atributos || {}; const bonus = data.bonus || { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 };
             ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => { document.getElementById(`val${attr}`).textContent = (attrs[attr] || 10) + (bonus[attr] || 0); document.getElementById(`bonus${attr}`).value = bonus[attr] || 0; });
             const PA = calcularPA((attrs.INT || 10) + (bonus.INT || 0), (attrs.DES || 10) + (bonus.DES || 0));
@@ -1096,7 +1322,17 @@
             const taxaRecup = calcularTaxaRecuperacao((attrs.CON || 10) + (bonus.CON || 0));
             const pontosSorte = calcularPontosSorte((attrs.POD || 10) + (bonus.POD || 0));
             const calc = calcularAlturaPeso((attrs.TAM || 10) + (bonus.TAM || 0), data.tipoCorporal || 'Médio');
-            document.getElementById('statPA').textContent = PA; document.getElementById('statIniciativa').textContent = iniciativa; document.getElementById('statModDano').textContent = modDano; document.getElementById('statModExp').textContent = modExp > 0 ? `+${modExp}` : modExp; document.getElementById('statTaxaRecup').textContent = taxaRecup; document.getElementById('statPontosSorte').textContent = pontosSorte; document.getElementById('statAltura').textContent = `${data.altura || calc.altura} cm`; document.getElementById('statPeso').textContent = `${data.peso || calc.peso} kg`;
+            document.getElementById('statPA').textContent = PA; document.getElementById('statIniciativa').textContent = iniciativa; document.getElementById('statModDano').textContent = modDano; document.getElementById('statModExp').textContent = modExp > 0 ? `+${modExp}` : modExp; document.getElementById('statTaxaRecup').textContent = taxaRecup; document.getElementById('statPontosSorte').textContent = pontosSorte;
+            const inputAltura = document.getElementById('editAltura');
+            const inputPeso = document.getElementById('editPeso');
+            inputAltura.value = data.altura || calc.altura;
+            inputPeso.value = data.peso || calc.peso;
+            inputAltura.min = calc.alturaMin;
+            inputAltura.max = calc.alturaMax;
+            inputPeso.min = calc.pesoMin;
+            inputPeso.max = calc.pesoMax;
+            faixaAltura = { min: calc.alturaMin, max: calc.alturaMax };
+            faixaPeso = { min: calc.pesoMin, max: calc.pesoMax };
             document.getElementById('charDetails').textContent = `${data.sexo || '-'} | ${data.idade || '?'} anos | ${data.classeSocial || '-'}`;
             const etapaLabels = { 1: '1 - Características', 2: '2 - Origem', 3: '3 - Carreira', 4: '4 - Livre' };
             document.getElementById('etapaLabel').textContent = etapaLabels[data.etapaCriacao || 1];
@@ -1109,91 +1345,129 @@
             const isMaster = userData.role === 'mestre';
             const maxPoints = isMaster ? 999 : configuracoes.etapa1;
             document.getElementById('pointsLimitText').textContent = isMaster ? '(Mestre - sem limite)' : `/${maxPoints} pontos`;
-            // Ajustar min/max dos inputs de atributos
-            ['FOR', 'CON', 'DES', 'POD', 'CAR'].forEach(attr => {
-                const input = document.getElementById(`edit${attr}`);
-                input.min = isMaster ? 1 : 3;
-                input.max = isMaster ? 99 : 18;
-            });
-            ['TAM', 'INT'].forEach(attr => {
-                const input = document.getElementById(`edit${attr}`);
-                input.min = isMaster ? 1 : 6;
-                input.max = isMaster ? 99 : 18;
-            });
+            ['FOR', 'CON', 'DES', 'POD', 'CAR'].forEach(attr => { const input = document.getElementById(`edit${attr}`); input.min = isMaster ? 1 : 3; input.max = isMaster ? 99 : 18; });
+            ['TAM', 'INT'].forEach(attr => { const input = document.getElementById(`edit${attr}`); input.min = isMaster ? 1 : 6; input.max = isMaster ? 99 : 18; });
             calcularTotal();
         }
 
         window.calcularTotal = () => { let total = 0; ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => { total += parseInt(document.getElementById(`edit${attr}`).value) || 0; }); const totalEl = document.getElementById('totalPoints'); totalEl.textContent = total; const isMaster = userData.role === 'mestre'; const maxPoints = isMaster ? 999 : configuracoes.etapa1; if (total > maxPoints && !isMaster) { totalEl.classList.add('exceeded'); } else { totalEl.classList.remove('exceeded'); } };
 
-        window.calcularDerivados = () => { if (!currentCharId) return; const char = userCharacters.find(c => c.id === currentCharId); if (!char) return; const attrs = char.atributos || {}; const bonus = { FOR: parseInt(document.getElementById('bonusFOR').value) || 0, CON: parseInt(document.getElementById('bonusCON').value) || 0, TAM: parseInt(document.getElementById('bonusTAM').value) || 0, DES: parseInt(document.getElementById('bonusDES').value) || 0, INT: parseInt(document.getElementById('bonusINT').value) || 0, POD: parseInt(document.getElementById('bonusPOD').value) || 0, CAR: parseInt(document.getElementById('bonusCAR').value) || 0 }; const PA = calcularPA((attrs.INT || 10) + bonus.INT, (attrs.DES || 10) + bonus.DES); const iniciativa = (attrs.INT || 10) + bonus.INT + (attrs.DES || 10) + bonus.DES; const modDano = calcularModDano((attrs.FOR || 10) + bonus.FOR, (attrs.TAM || 10) + bonus.TAM); const modExp = calcularModExperiencia((attrs.CAR || 10) + bonus.CAR); const taxaRecup = calcularTaxaRecuperacao((attrs.CON || 10) + bonus.CON); const pontosSorte = calcularPontosSorte((attrs.POD || 10) + bonus.POD); const calc = calcularAlturaPeso((attrs.TAM || 10) + bonus.TAM, char.tipoCorporal || 'Médio'); document.getElementById('statPA').textContent = PA; document.getElementById('statIniciativa').textContent = iniciativa; document.getElementById('statModDano').textContent = modDano; document.getElementById('statModExp').textContent = modExp > 0 ? `+${modExp}` : modExp; document.getElementById('statTaxaRecup').textContent = taxaRecup; document.getElementById('statPontosSorte').textContent = pontosSorte; };
+        window.calcularDerivados = () => { if (!currentCharId) return; const char = userCharacters.find(c => c.id === currentCharId); if (!char) return; const attrs = char.atributos || {}; const bonus = { FOR: parseInt(document.getElementById('bonusFOR').value) || 0, CON: parseInt(document.getElementById('bonusCON').value) || 0, TAM: parseInt(document.getElementById('bonusTAM').value) || 0, DES: parseInt(document.getElementById('bonusDES').value) || 0, INT: parseInt(document.getElementById('bonusINT').value) || 0, POD: parseInt(document.getElementById('bonusPOD').value) || 0, CAR: parseInt(document.getElementById('bonusCAR').value) || 0 }; const PA = calcularPA((attrs.INT || 10) + bonus.INT, (attrs.DES || 10) + bonus.DES); const iniciativa = (attrs.INT || 10) + bonus.INT + (attrs.DES || 10) + bonus.DES; const modDano = calcularModDano((attrs.FOR || 10) + bonus.FOR, (attrs.TAM || 10) + bonus.TAM); const modExp = calcularModExperiencia((attrs.CAR || 10) + bonus.CAR); const taxaRecup = calcularTaxaRecuperacao((attrs.CON || 10) + bonus.CON); const pontosSorte = calcularPontosSorte((attrs.POD || 10) + bonus.POD); document.getElementById('statPA').textContent = PA; document.getElementById('statIniciativa').textContent = iniciativa; document.getElementById('statModDano').textContent = modDano; document.getElementById('statModExp').textContent = modExp > 0 ? `+${modExp}` : modExp; document.getElementById('statTaxaRecup').textContent = taxaRecup; document.getElementById('statPontosSorte').textContent = pontosSorte; };
 
-        window.calcularAlturaPesoAutomatico = () => { if (!currentCharId) return; const char = userCharacters.find(c => c.id === currentCharId); if (!char) return; const attrs = char.atributos || {}; const bonus = { TAM: parseInt(document.getElementById('bonusTAM').value) || 0 }; const calc = calcularAlturaPeso((attrs.TAM || 10) + bonus.TAM, document.getElementById('editBodyType').value); };
+        window.calcularAlturaPesoAutomatico = () => { if (!currentCharId) return; const char = userCharacters.find(c => c.id === currentCharId); if (!char) return; const attrs = char.atributos || {}; const bonus = { TAM: parseInt(document.getElementById('bonusTAM').value) || 0 }; const calc = calcularAlturaPeso((attrs.TAM || 10) + bonus.TAM, document.getElementById('editBodyType').value); document.getElementById('editAltura').value = calc.altura; document.getElementById('editPeso').value = calc.peso; document.getElementById('editAltura').min = calc.alturaMin; document.getElementById('editAltura').max = calc.alturaMax; document.getElementById('editPeso').min = calc.pesoMin; document.getElementById('editPeso').max = calc.pesoMax; };
+
+        window.salvarAlturaPeso = async () => {
+            if (!currentCharId) return;
+            const altura = parseInt(document.getElementById('editAltura').value);
+            const peso = parseInt(document.getElementById('editPeso').value);
+            if (altura < faixaAltura.min || altura > faixaAltura.max) { alert(`Altura deve estar entre ${faixaAltura.min} e ${faixaAltura.max} cm`); document.getElementById('editAltura').value = Math.max(faixaAltura.min, Math.min(faixaAltura.max, altura)); return; }
+            if (peso < faixaPeso.min || peso > faixaPeso.max) { alert(`Peso deve estar entre ${faixaPeso.min} e ${faixaPeso.max} kg`); document.getElementById('editPeso').value = Math.max(faixaPeso.min, Math.min(faixaPeso.max, peso)); return; }
+            await setDoc(doc(db, "personagens", currentCharId), { altura: altura, peso: peso }, { merge: true });
+        };
 
         function renderizarPericias(char) {
             const attrs = char.atributos || {};
             const pericias = char.pericias || {};
+            const especializacoes = char.especializacoes || {};
             const etapa = parseInt(document.getElementById('periciasEtapa').value) || 2;
             const origem = origensDB.find(o => o.id === char.origem);
             const carreira = carreirasDB.find(c => c.id === char.carreira);
+            const isMaster = userData.role === 'mestre';
+            const maxTreinoEtapa = isMaster ? 999 : 30;
+            const pontosEtapa = { 2: configuracoes.etapa2, 3: configuracoes.etapa3, 4: configuracoes.etapa4 };
+            const pontosTotal = pontosEtapa[etapa] || 100;
             
-            const periciasBasicas = periciasDB.filter(p => p.tipo === 'Básica');
-            const periciasProfissionais = periciasDB.filter(p => p.tipo === 'Profissional');
-            
-            // Determinar perícias disponíveis por etapa
-            let basicasDisponiveis = [];
-            let profissionaisDisponiveis = [];
-            
+            let periciasDisponiveis = [];
             if (etapa === 2 && origem) {
-                basicasDisponiveis = periciasBasicas.filter(p => origem.periciasBasicas.includes(p.id));
+                periciasDisponiveis = periciasDB.filter(p => p.tipo === 'Básica' && origem.periciasBasicas.includes(p.id));
             } else if (etapa === 3 && carreira) {
-                basicasDisponiveis = periciasBasicas.filter(p => carreira.periciasBasicas.includes(p.id));
-                profissionaisDisponiveis = periciasProfissionais.filter(p => carreira.periciasProfissionais.includes(p.id));
+                periciasDisponiveis = periciasDB.filter(p => (p.tipo === 'Básica' && carreira.periciasBasicas.includes(p.id)) || (p.tipo === 'Profissional' && carreira.periciasProfissionais.includes(p.id)));
             } else if (etapa === 4) {
-                basicasDisponiveis = periciasBasicas;
-                profissionaisDisponiveis = periciasProfissionais;
+                periciasDisponiveis = periciasDB;
             }
             
-            const maxTreinoEtapa = 30;
-            const pontosEtapa = { 2: configuracoes.etapa2, 3: configuracoes.etapa3, 4: configuracoes.etapa4 };
-            const pontosRestantes = pontosEtapa[etapa] || 100;
+            let totalInvestidoEtapa = 0;
+            Object.values(pericias).forEach(p => { if (p.etapa === etapa) totalInvestidoEtapa += (p.treinoEtapa || 0); });
+            const pontosRestantes = Math.max(0, pontosTotal - totalInvestidoEtapa);
             
             document.getElementById('periciasEtapaLabel').textContent = `${etapa} - ${etapa === 2 ? 'Origem' : etapa === 3 ? 'Carreira' : 'Livre'}`;
             document.getElementById('periciasPontosRestantes').textContent = pontosRestantes;
+            document.getElementById('periciasPontosTotal').textContent = pontosTotal;
             
-            // Renderizar básicas
+            const corpoInvestidas = document.getElementById('corpoPericiasInvestidas');
             const corpoBasicas = document.getElementById('corpoPericiasBasicas');
-            corpoBasicas.innerHTML = basicasDisponiveis.map(p => {
-                const base = calcularFormula(p.formula, attrs);
-                const treino = pericias[p.id]?.treino || 0;
-                const total = base + treino;
-                const locked = treino >= maxTreinoEtapa ? 'skill-locked' : '';
-                return `<tr class="${locked}"><td>${p.nome}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${treino}" min="0" max="${maxTreinoEtapa}" onchange="atualizarTreinoPericia('${p.id}', this.value, 'basica')"></td><td class="skill-total">${total}</td></tr>`;
-            }).join('');
-            
-            // Renderizar profissionais
             const corpoProfissionais = document.getElementById('corpoPericiasProfissionais');
-            corpoProfissionais.innerHTML = profissionaisDisponiveis.map(p => {
+            const corpoEspecializacoes = document.getElementById('corpoEspecializacoes');
+            
+            corpoInvestidas.innerHTML = '';
+            corpoBasicas.innerHTML = '';
+            corpoProfissionais.innerHTML = '';
+            corpoEspecializacoes.innerHTML = '';
+            
+            const periciasInvestidas = periciasDisponiveis.filter(p => pericias[p.id] && pericias[p.id].treinoTotal > 0);
+            const periciasNaoInvestidas = periciasDisponiveis.filter(p => !pericias[p.id] || pericias[p.id].treinoTotal === 0);
+            
+            const renderLinha = (p, tipo) => {
                 const base = calcularFormula(p.formula, attrs);
-                const treino = pericias[p.id]?.treino || 0;
-                const total = base + treino;
-                const locked = treino >= maxTreinoEtapa ? 'skill-locked' : '';
-                return `<tr class="${locked}"><td>${p.nome}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${treino}" min="0" max="${maxTreinoEtapa}" onchange="atualizarTreinoPericia('${p.id}', this.value, 'profissional')"></td><td class="skill-total">${total}</td></tr>`;
-            }).join('');
+                const dados = pericias[p.id] || { treinoTotal: 0, treinoEtapa: 0 };
+                const total = base + dados.treinoTotal;
+                const maxPermitido = maxTreinoEtapa + (etapa === 4 ? dados.treinoTotal : 0);
+                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${p.nome}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxTreinoEtapa}" onchange="atualizarTreinoPericia('${p.id}', this.value, '${tipo}', ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+            };
+            
+            periciasInvestidas.forEach(p => {
+                if (p.tipo === 'Básica') corpoInvestidas.innerHTML += renderLinha(p, 'basica');
+                else corpoInvestidas.innerHTML += renderLinha(p, 'profissional');
+            });
+            
+            periciasNaoInvestidas.forEach(p => {
+                if (p.tipo === 'Básica') corpoBasicas.innerHTML += renderLinha(p, 'basica');
+                else corpoProfissionais.innerHTML += renderLinha(p, 'profissional');
+            });
+            
+            especializacoesDB.forEach(e => {
+                const dados = especializacoes[e.id] || { treinoTotal: 0, treinoEtapa: 0 };
+                const base = calcularFormula(e.formula, attrs);
+                const total = base + dados.treinoTotal;
+                const maxPermitido = maxTreinoEtapa + (etapa === 4 ? dados.treinoTotal : 0);
+                corpoEspecializacoes.innerHTML += `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${e.nome}</td><td>${e.uso}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxTreinoEtapa}" onchange="atualizarTreinoEspecializacao('${e.id}', this.value, ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+            });
         }
 
-        window.atualizarTreinoPericia = async (periciaId, valor, tipo) => {
+        window.atualizarTreinoPericia = async (periciaId, valor, tipo, etapa) => {
             if (!currentCharId) return;
             const char = userCharacters.find(c => c.id === currentCharId);
             if (!char) return;
             const pericias = char.pericias || {};
-            const etapa = parseInt(document.getElementById('periciasEtapa').value) || 2;
-            const maxTreinoEtapa = 30;
+            const isMaster = userData.role === 'mestre';
+            const maxTreinoEtapa = isMaster ? 999 : 30;
             let valorNum = parseInt(valor) || 0;
             if (valorNum > maxTreinoEtapa) valorNum = maxTreinoEtapa;
             if (valorNum < 0) valorNum = 0;
-            pericias[periciaId] = { treino: valorNum, tipo: tipo };
+            if (!pericias[periciaId]) pericias[periciaId] = { treinoTotal: 0, treinoEtapa: 0, tipo: tipo };
+            pericias[periciaId].treinoEtapa = valorNum;
+            pericias[periciaId].treinoTotal = (pericias[periciaId].treinoTotalAnterior || 0) + valorNum;
+            pericias[periciaId].etapa = etapa;
             await setDoc(doc(db, "personagens", currentCharId), { pericias: pericias }, { merge: true });
-            renderizarPericias(char);
+            await carregarPersonagens();
+        };
+
+        window.atualizarTreinoEspecializacao = async (espId, valor, etapa) => {
+            if (!currentCharId) return;
+            const char = userCharacters.find(c => c.id === currentCharId);
+            if (!char) return;
+            const especializacoes = char.especializacoes || {};
+            const isMaster = userData.role === 'mestre';
+            const maxTreinoEtapa = isMaster ? 999 : 30;
+            let valorNum = parseInt(valor) || 0;
+            if (valorNum > maxTreinoEtapa) valorNum = maxTreinoEtapa;
+            if (valorNum < 0) valorNum = 0;
+            if (!especializacoes[espId]) especializacoes[espId] = { treinoTotal: 0, treinoEtapa: 0 };
+            especializacoes[espId].treinoEtapa = valorNum;
+            especializacoes[espId].treinoTotal = (especializacoes[espId].treinoTotalAnterior || 0) + valorNum;
+            especializacoes[espId].etapa = etapa;
+            await setDoc(doc(db, "personagens", currentCharId), { especializacoes: especializacoes }, { merge: true });
+            await carregarPersonagens();
         };
 
         window.mudarEtapaPericias = () => { if (currentCharId) { const char = userCharacters.find(c => c.id === currentCharId); if (char) renderizarPericias(char); } };
@@ -1223,6 +1497,130 @@
             await carregarPersonagens(); alert(t.saved);
         };
 
+        function renderizarInventario(char) {
+            const inv = char.inventario || { bolso: [], mochila: [], veiculo: [], casa: [] };
+            const renderItems = (items) => items.map(item => `<div class="inventory-item"><div><div class="inventory-item-name">${item.nome}</div><div class="inventory-item-details">${item.peso || 0}kg | PA: ${item.pa || 0} | PV: ${item.pv || 0}</div></div><button class="btn-small btn-delete" onclick="removerItem('${item.id}')">🗑️</button></div>`).join('') || '<p style="color: #666; text-align: center;">Vazio</p>';
+            document.getElementById('inv-bolso').innerHTML = renderItems(inv.bolso);
+            document.getElementById('inv-mochila').innerHTML = renderItems(inv.mochila);
+            document.getElementById('inv-veiculo').innerHTML = renderItems(inv.veiculo);
+            document.getElementById('inv-casa').innerHTML = renderItems(inv.casa);
+        }
+
+        window.adicionarItem = async () => {
+            if (!currentCharId) return;
+            const nome = prompt('Nome do item:');
+            if (!nome) return;
+            const peso = parseFloat(prompt('Peso (kg):', '1')) || 1;
+            const pa = parseInt(prompt('PA (Armadura):', '0')) || 0;
+            const pv = parseInt(prompt('PV (Pontos de Vida):', '1')) || 1;
+            const local = prompt('Local (bolso/mochila/veiculo/casa):', 'mochila') || 'mochila';
+            const char = userCharacters.find(c => c.id === currentCharId);
+            const inv = char.inventario || { bolso: [], mochila: [], veiculo: [], casa: [] };
+            if (!inv[local]) inv[local] = [];
+            inv[local].push({ id: `item_${Date.now()}`, nome, peso, pa, pv });
+            await setDoc(doc(db, "personagens", currentCharId), { inventario: inv }, { merge: true });
+            await carregarPersonagens();
+        };
+
+        window.removerItem = async (itemId) => {
+            if (!currentCharId) return;
+            const char = userCharacters.find(c => c.id === currentCharId);
+            const inv = char.inventario || { bolso: [], mochila: [], veiculo: [], casa: [] };
+            Object.keys(inv).forEach(local => { inv[local] = inv[local].filter(i => i.id !== itemId); });
+            await setDoc(doc(db, "personagens", currentCharId), { inventario: inv }, { merge: true });
+            await carregarPersonagens();
+        };
+
+        function renderizarCombate(char) {
+            const attrs = char.atributos || {};
+            const bonus = char.bonus || {};
+            const conTotal = (attrs.CON || 10) + (bonus.CON || 0);
+            const tamTotal = (attrs.TAM || 10) + (bonus.TAM || 0);
+            const soma = conTotal + tamTotal;
+            
+            const hitLocations = { 'Perna Direita': Math.max(1, Math.floor(soma / 5)), 'Perna Esquerda': Math.max(1, Math.floor(soma / 5)), 'Abdômen': Math.max(2, Math.floor(soma / 3)), 'Peito': Math.max(3, Math.floor(soma / 2.5)), 'Braço Direito': Math.max(1, Math.floor(soma / 5)), 'Braço Esquerdo': Math.max(1, Math.floor(soma / 5)), 'Cabeça': Math.max(1, Math.floor(soma / 4)) };
+            
+            const combat = char.combate || { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] };
+            
+            document.getElementById('hitLocations').innerHTML = Object.entries(hitLocations).map(([loc, pv]) => {
+                const pvAtual = combat.hitLocations[loc] || pv;
+                return `<div class="hit-location"><span class="hit-location-name">${loc}</span><span class="hit-location-hp">PV: ${pvAtual}/${pv}</span></div>`;
+            }).join('');
+            
+            document.getElementById('armorLocations').innerHTML = Object.keys(hitLocations).map(loc => {
+                const ap = combat.armor[loc] || 0;
+                return `<div class="hit-location"><span class="hit-location-name">${loc}</span><span class="hit-location-ap">PA: ${ap}</span></div>`;
+            }).join('');
+            
+            document.getElementById('fadigaLevel').value = combat.fadiga || 'Fresh';
+            
+            document.getElementById('weaponsEquipped').innerHTML = (combat.armas || []).map((arma, i) => `<div class="hit-location"><span class="hit-location-name">${arma.nome}</span><button class="btn-small btn-delete" onclick="desequiparArma(${i})">🗑️</button></div>`).join('') || '<p style="color: #666;">Nenhuma arma equipada</p>';
+            
+            document.getElementById('ammoInventory').innerHTML = (combat.municao || []).map(m => `<div class="hit-location"><span class="hit-location-name">${m.nome}</span><span class="hit-location-hp">${m.quantidade} un.</span></div>`).join('') || '<p style="color: #666;">Sem munição</p>';
+        }
+
+        window.salvarFadiga = async () => {
+            if (!currentCharId) return;
+            const fadiga = document.getElementById('fadigaLevel').value;
+            await setDoc(doc(db, "personagens", currentCharId), { 'combate.fadiga': fadiga }, { merge: true });
+        };
+
+        window.equiparArma = async () => {
+            if (!currentCharId) return;
+            const nome = prompt('Nome da arma:');
+            if (!nome) return;
+            const char = userCharacters.find(c => c.id === currentCharId);
+            const combat = char.combate || { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] };
+            if (!combat.armas) combat.armas = [];
+            combat.armas.push({ nome, dano: '1d6', alcance: 'Corpo a corpo' });
+            await setDoc(doc(db, "personagens", currentCharId), { combate: combat }, { merge: true });
+            await carregarPersonagens();
+        };
+
+        window.desequiparArma = async (index) => {
+            if (!currentCharId) return;
+            const char = userCharacters.find(c => c.id === currentCharId);
+            const combat = char.combate || { armas: [] };
+            combat.armas.splice(index, 1);
+            await setDoc(doc(db, "personagens", currentCharId), { combate: combat }, { merge: true });
+            await carregarPersonagens();
+        };
+
+        window.rolarDado = (tipo) => {
+            const faces = parseInt(tipo.replace('d', ''));
+            const resultado = Math.floor(Math.random() * faces) + 1;
+            document.getElementById('diceDisplay').textContent = `🎲 ${resultado}`;
+            document.getElementById('rollResult').textContent = `${tipo.toUpperCase()}: ${resultado}`;
+            document.getElementById('rollResultBox').classList.remove('hidden');
+            document.getElementById('rollResultText').innerHTML = `<strong>${tipo.toUpperCase()}:</strong> ${resultado}`;
+        };
+
+        window.rolarFormula = () => {
+            const formula = document.getElementById('damageFormula').value || '1d100';
+            const partes = formula.split('+').map(p => p.trim());
+            let total = 0;
+            let detalhes = [];
+            partes.forEach(parte => {
+                const match = parte.match(/(\d+)?d(\d+)/i);
+                if (match) {
+                    const qtd = parseInt(match[1]) || 1;
+                    const faces = parseInt(match[2]);
+                    let soma = 0;
+                    const rolagens = [];
+                    for (let i = 0; i < qtd; i++) { const r = Math.floor(Math.random() * faces) + 1; soma += r; rolagens.push(r); }
+                    total += soma;
+                    detalhes.push(`${qtd}d${faces}: [${rolagens.join(', ')}] = ${soma}`);
+                } else {
+                    const num = parseInt(parte);
+                    if (!isNaN(num)) { total += num; detalhes.push(`${num}`); }
+                }
+            });
+            document.getElementById('diceDisplay').textContent = `🎲 ${total}`;
+            document.getElementById('rollResult').textContent = `${formula} = ${total}`;
+            document.getElementById('rollResultBox').classList.remove('hidden');
+            document.getElementById('rollResultText').innerHTML = `<strong>${formula}</strong> = ${total}<br><small>${detalhes.join(' + ')}</small>`;
+        };
+
         window.mostrarAba = (abaId, btn) => { document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(abaId).classList.add('active'); btn.classList.add('active'); };
 
         window.mostrarCharAba = (abaId, btn) => { document.querySelectorAll('.char-tab-content').forEach(tab => tab.classList.remove('active')); document.querySelectorAll('.char-tab-btn').forEach(b => b.classList.remove('active')); document.getElementById(`char-${abaId}`).classList.add('active'); btn.classList.add('active'); };
@@ -1235,66 +1633,27 @@
             if (abaId === 'pericias') renderizarBancoPericias();
             if (abaId === 'origens') renderizarBancoOrigens();
             if (abaId === 'carreiras') renderizarBancoCarreiras();
+            if (abaId === 'especializacoes') renderizarBancoEspecializacoes();
+            if (abaId === 'itens') renderizarBancoItens();
         };
 
-        function renderizarBancoPericias() {
-            const container = document.getElementById('listaBancoPericias');
-            container.innerHTML = periciasDB.map(p => `
-                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
-                    <strong>${p.nome}</strong> (${p.tipo}) - Fórmula: ${p.formula}
-                    <button class="btn-small btn-delete" onclick="removerPericia('${p.id}')" style="margin-left: 10px;">Remover</button>
-                </div>
-            `).join('');
-        }
+        function renderizarBancoPericias() { document.getElementById('listaBancoPericias').innerHTML = periciasDB.map(p => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${p.nome}</strong> (${p.tipo}) - ${p.formula} <button class="btn-small btn-delete" onclick="removerPericia('${p.id}')" style="margin-left: 10px;">Remover</button></div>`).join(''); }
+        function renderizarBancoOrigens() { document.getElementById('listaBancoOrigens').innerHTML = origensDB.map(o => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${o.nome}</strong> - Perícias: ${o.periciasBasicas.join(', ')}</div>`).join(''); }
+        function renderizarBancoCarreiras() { document.getElementById('listaBancoCarreiras').innerHTML = carreirasDB.map(c => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${c.nome}</strong><br>Básicas: ${c.periciasBasicas.join(', ')}<br>Profissionais: ${c.periciasProfissionais.join(', ')}</div>`).join(''); }
+        function renderizarBancoEspecializacoes() { document.getElementById('listaBancoEspecializacoes').innerHTML = especializacoesDB.map(e => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${e.nome}</strong> (${e.tipo}) - ${e.formula} <button class="btn-small btn-delete" onclick="removerEspecializacao('${e.id}')" style="margin-left: 10px;">Remover</button></div>`).join(''); }
+        function renderizarBancoItens() { document.getElementById('listaBancoItens').innerHTML = itensDB.length ? itensDB.map(i => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${i.nome}</strong> - ${i.peso}kg | PA: ${i.pa} | PV: ${i.pv}</div>`).join('') : '<p style="color: #aaa;">Nenhum item cadastrado</p>'; }
 
-        function renderizarBancoOrigens() {
-            const container = document.getElementById('listaBancoOrigens');
-            container.innerHTML = origensDB.map(o => `
-                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
-                    <strong>${o.nome}</strong> - Perícias: ${o.periciasBasicas.join(', ')}
-                </div>
-            `).join('');
-        }
-
-        function renderizarBancoCarreiras() {
-            const container = document.getElementById('listaBancoCarreiras');
-            container.innerHTML = carreirasDB.map(c => `
-                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;">
-                    <strong>${c.nome}</strong><br>
-                    Básicas: ${c.periciasBasicas.join(', ')}<br>
-                    Profissionais: ${c.periciasProfissionais.join(', ')}
-                </div>
-            `).join('');
-        }
-
-        window.adicionarPericia = async () => {
-            const nome = prompt('Nome da perícia:');
-            if (!nome) return;
-            const formula = prompt('Fórmula (ex: FOR+DES, INT*2, CAR*2+40):');
-            if (!formula) return;
-            const tipo = prompt('Tipo (Básica ou Profissional):', 'Profissional');
-            const categoria = prompt('Categoria:', 'Técnica');
-            const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            const novaPericia = { id, nome, formula, tipo, categoria, especializavel: true, penalidadeArmadura: 0 };
-            await setDoc(doc(db, "pericias", id), novaPericia);
-            periciasDB.push(novaPericia);
-            renderizarBancoPericias();
-            alert('Perícia adicionada!');
-        };
-
-        window.removerPericia = async (id) => {
-            if (!confirm('Remover esta perícia?')) return;
-            await deleteDoc(doc(db, "pericias", id));
-            periciasDB = periciasDB.filter(p => p.id !== id);
-            renderizarBancoPericias();
-        };
+        window.adicionarPericia = async () => { const nome = prompt('Nome:'); if (!nome) return; const formula = prompt('Fórmula (ex: FOR+DES):'); if (!formula) return; const tipo = prompt('Tipo (Básica/Profissional):', 'Profissional'); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, formula, tipo, categoria: 'Geral', especializavel: true, penalidadeArmadura: 0 }; await setDoc(doc(db, "pericias", id), nova); periciasDB.push(nova); renderizarBancoPericias(); };
+        window.removerPericia = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "pericias", id)); periciasDB = periciasDB.filter(p => p.id !== id); renderizarBancoPericias(); };
+        window.adicionarEspecializacao = async () => { const nome = prompt('Nome:'); if (!nome) return; const formula = prompt('Fórmula:'); if (!formula) return; const uso = prompt('Uso (Distância/Corpo a corpo/Defesa/Teste):'); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, formula, tipo: 'Combate', uso }; await setDoc(doc(db, "especializacoes", id), nova); especializacoesDB.push(nova); renderizarBancoEspecializacoes(); };
+        window.removerEspecializacao = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "especializacoes", id)); especializacoesDB = especializacoesDB.filter(e => e.id !== id); renderizarBancoEspecializacoes(); };
+        window.adicionarItemBanco = async () => { const nome = prompt('Nome:'); if (!nome) return; const peso = parseFloat(prompt('Peso (kg):', '1')) || 1; const pa = parseInt(prompt('PA:', '0')) || 0; const pv = parseInt(prompt('PV:', '1')) || 1; const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const novo = { id, nome, peso, pa, pv }; await setDoc(doc(db, "itens", id), novo); itensDB.push(novo); renderizarBancoItens(); };
 
         window.mudarIdioma = (lang) => { idiomaAtual = lang; localStorage.setItem('idiomaPreferido', lang); document.querySelectorAll('.lang-btn').forEach(btn => { btn.classList.remove('active'); if ((lang === 'pt' && btn.textContent === 'PT') || (lang === 'en' && btn.textContent === 'EN') || (lang === 'zh' && btn.textContent === '中文')) { btn.classList.add('active'); } }); const t = traducoes[lang]; document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (t[key]) el.textContent = t[key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.getAttribute('data-i18n-placeholder'); if (t[key]) el.placeholder = t[key]; }); if (userData) { const roleText = userData.role === 'mestre' ? t.mestre : t.jogador; document.getElementById('userRole').textContent = roleText; document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none'; document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre'); } if (currentCharId) { const isMaster = userData.role === 'mestre'; const maxPoints = isMaster ? 999 : configuracoes.etapa1; document.getElementById('pointsLimitText').textContent = isMaster ? '(Mestre - sem limite)' : `/${maxPoints} pontos`; } renderizarListaPersonagens(); };
 
         window.addEventListener('DOMContentLoaded', () => { const idiomaSalvo = localStorage.getItem('idiomaPreferido') || 'pt'; mudarIdioma(idiomaSalvo); });
 
-        // Tornar funções globais
-        window.fazerLogin = fazerLogin; window.fazerRegistro = fazerRegistro; window.fazerLogout = fazerLogout; window.novoPersonagem = novoPersonagem; window.selecionarPersonagem = selecionarPersonagem; window.deletarPersonagem = deletarPersonagem; window.salvarPersonagem = salvarPersonagem; window.handleImageUpload = handleImageUpload; window.calcularTotal = calcularTotal; window.calcularDerivados = calcularDerivados; window.calcularAlturaPesoAutomatico = calcularAlturaPesoAutomatico; window.mostrarAba = mostrarAba; window.mostrarCharAba = mostrarCharAba; window.mostrarBancoAba = mostrarBancoAba; window.salvarConfiguracoes = salvarConfiguracoes; window.mudarIdioma = mudarIdioma; window.mudarEtapaPericias = mudarEtapaPericias; window.atualizarTreinoPericia = atualizarTreinoPericia; window.salvarAnotacoes = salvarAnotacoes; window.adicionarPericia = adicionarPericia; window.removerPericia = removerPericia;
+        window.fazerLogin = fazerLogin; window.fazerRegistro = fazerRegistro; window.fazerLogout = fazerLogout; window.novoPersonagem = novoPersonagem; window.selecionarPersonagem = selecionarPersonagem; window.deletarPersonagem = deletarPersonagem; window.salvarPersonagem = salvarPersonagem; window.handleImageUpload = handleImageUpload; window.calcularTotal = calcularTotal; window.calcularDerivados = calcularDerivados; window.calcularAlturaPesoAutomatico = calcularAlturaPesoAutomatico; window.salvarAlturaPeso = salvarAlturaPeso; window.mostrarAba = mostrarAba; window.mostrarCharAba = mostrarCharAba; window.mostrarBancoAba = mostrarBancoAba; window.salvarConfiguracoes = salvarConfiguracoes; window.mudarIdioma = mudarIdioma; window.mudarEtapaPericias = mudarEtapaPericias; window.atualizarTreinoPericia = atualizarTreinoPericia; window.atualizarTreinoEspecializacao = atualizarTreinoEspecializacao; window.salvarAnotacoes = salvarAnotacoes; window.adicionarPericia = adicionarPericia; window.removerPericia = removerPericia; window.adicionarEspecializacao = adicionarEspecializacao; window.removerEspecializacao = removerEspecializacao; window.adicionarItemBanco = adicionarItemBanco; window.adicionarItem = adicionarItem; window.removerItem = removerItem; window.salvarFadiga = salvarFadiga; window.equiparArma = equiparArma; window.desequiparArma = desequiparArma; window.rolarDado = rolarDado; window.rolarFormula = rolarFormula;
     </script>
 </body>
 </html>
