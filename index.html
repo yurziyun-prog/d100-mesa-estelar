@@ -400,8 +400,14 @@
             font-weight: bold;
             font-size: 1.2em;
         }
+        .pontos-restantes.over {
+            background: rgba(220,53,69,0.2);
+            border-color: #dc3545;
+        }
+        .pontos-restantes.over span {
+            color: #ff6b6b;
+        }
         
-        /* Inventário */
         .inventory-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -444,7 +450,6 @@
         .inventory-item-name { color: #fff; font-weight: bold; }
         .inventory-item-details { color: #aaa; font-size: 0.85em; }
         
-        /* Combate */
         .combat-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -472,7 +477,6 @@
         .hit-location-hp { color: #e74c3c; font-weight: bold; }
         .hit-location-ap { color: #3498db; font-weight: bold; }
         
-        /* Rolagem */
         .dice-roller {
             background: rgba(255,255,255,0.05);
             border-radius: 15px;
@@ -511,6 +515,25 @@
             border: 2px solid rgba(0,212,255,0.3);
         }
         
+        .db-item {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .db-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .db-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .btn-edit { background: #3498db; color: #fff; }
+        
         @media (max-width: 768px) {
             .attributes-grid { grid-template-columns: repeat(2, 1fr); }
             .character-header { justify-content: center; text-align: center; }
@@ -523,7 +546,6 @@
     <div class="stars-container" id="starsContainer"></div>
     
     <div class="container">
-        <!-- LOGIN -->
         <div id="loginScreen" class="login-screen">
             <div class="login-box">
                 <div class="lang-selector">
@@ -541,7 +563,6 @@
             </div>
         </div>
 
-        <!-- APP -->
         <div id="appScreen" class="hidden">
             <div class="user-header">
                 <div class="user-info">
@@ -557,15 +578,13 @@
 
             <h1 data-i18n="appTitle">D100 - Mesa Estelar RPG</h1>
 
-            <!-- ABAS GLOBAIS -->
             <div class="tabs">
-                <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha"> Ficha</button>
+                <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha">📋 Ficha</button>
                 <button class="tab-btn" id="configTabBtn" onclick="mostrarAba('config', this)" data-i18n="tabConfig">⚙️ Config</button>
                 <button class="tab-btn hidden" id="bancoTabBtn" onclick="mostrarAba('banco', this)" data-i18n="tabBanco">📚 Banco de Dados</button>
                 <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
             </div>
 
-            <!-- ABA FICHA -->
             <div id="ficha" class="tab-content active">
                 <div class="char-manager">
                     <h3 data-i18n="myCharacters">Meus Personagens</h3>
@@ -577,17 +596,16 @@
                     <div class="char-tabs">
                         <button class="char-tab-btn active" onclick="mostrarCharAba('personagem', this)">📄 Personagem</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('pericias', this)">⚔️ Perícias</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)">🎒 Inventário</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)"> Inventário</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('combate', this)">⚔️ Combate</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)">📔 Anotações</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)">🎲 Rolagem</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)"> Rolagem</button>
                     </div>
 
-                    <!-- PERSONAGEM -->
                     <div id="char-personagem" class="char-tab-content active">
                         <div class="character-card">
                             <div class="character-header">
-                                <div class="avatar" id="charAvatar"><span></span></div>
+                                <div class="avatar" id="charAvatar"><span>👤</span></div>
                                 <div class="char-info">
                                     <h2 id="charName">-</h2>
                                     <p><span id="charRace">-</span> | <span id="charOrigin">-</span> | <span id="charCareer">-</span></p>
@@ -687,14 +705,14 @@
                         </div>
                     </div>
 
-                    <!-- PERÍCIAS -->
                     <div id="char-pericias" class="char-tab-content">
                         <div class="form-section">
                             <h3>⚔️ Perícias</h3>
                             <div class="etapa-indicator">
                                 <h4>Etapa: <span id="periciasEtapaLabel">2 - Origem</span></h4>
-                                <div class="pontos-restantes">
+                                <div class="pontos-restantes" id="pontosRestantesBox">
                                     Pontos disponíveis: <span id="periciasPontosRestantes">100</span> / <span id="periciasPontosTotal">100</span>
+                                    <br><small>Total investido: <span id="periciasTotalInvestido">0</span></small>
                                 </div>
                             </div>
                             
@@ -730,13 +748,14 @@
                                 <thead><tr><th>Especialização</th><th>Tipo</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
                                 <tbody id="corpoEspecializacoes"></tbody>
                             </table>
+
+                            <button class="btn-save" onclick="salvarPericias()" style="margin-top: 20px;">💾 Salvar Perícias</button>
                         </div>
                     </div>
 
-                    <!-- INVENTÁRIO -->
                     <div id="char-inventario" class="char-tab-content">
                         <div class="form-section">
-                            <h3>🎒 Inventário</h3>
+                            <h3> Inventário</h3>
                             <p style="color: #aaa; margin-bottom: 20px;">Organize seus itens em diferentes compartimentos</p>
                             
                             <div class="inventory-grid">
@@ -746,12 +765,12 @@
                                     <div class="inventory-items" id="inv-bolso"></div>
                                 </div>
                                 <div class="inventory-slot">
-                                    <h4>🎒 Mochila</h4>
+                                    <h4> Mochila</h4>
                                     <div class="capacity">Capacidade: 20 kg | 20 itens</div>
                                     <div class="inventory-items" id="inv-mochila"></div>
                                 </div>
                                 <div class="inventory-slot">
-                                    <h4>🚗 Veículo/Nave</h4>
+                                    <h4> Veículo/Nave</h4>
                                     <div class="capacity">Capacidade: 500 kg | 100 itens</div>
                                     <div class="inventory-items" id="inv-veiculo"></div>
                                 </div>
@@ -766,10 +785,9 @@
                         </div>
                     </div>
 
-                    <!-- COMBATE -->
                     <div id="char-combate" class="char-tab-content">
                         <div class="form-section">
-                            <h3>⚔️ Combate</h3>
+                            <h3>️ Combate</h3>
                             
                             <div class="combat-grid">
                                 <div class="combat-section">
@@ -809,16 +827,14 @@
                         </div>
                     </div>
 
-                    <!-- ANOTAÇÕES -->
                     <div id="char-anotacoes" class="char-tab-content">
                         <div class="form-section">
-                            <h3> Anotações</h3>
+                            <h3>📔 Anotações</h3>
                             <textarea id="charAnotacoes" rows="15" placeholder="Escreva suas anotações aqui..."></textarea>
                             <button class="btn-save" onclick="salvarAnotacoes()" style="margin-top: 15px;">💾 Salvar Anotações</button>
                         </div>
                     </div>
 
-                    <!-- ROLAGEM -->
                     <div id="char-rolagem" class="char-tab-content">
                         <div class="form-section">
                             <h3>🎲 Rolagem de Dados</h3>
@@ -853,7 +869,6 @@
                 </div>
             </div>
 
-            <!-- CONFIG -->
             <div id="config" class="tab-content">
                 <div class="form-section">
                     <h3 data-i18n="configTitle">⚙️ Configurações do Sistema (Mestre)</h3>
@@ -866,7 +881,6 @@
                 </div>
             </div>
 
-            <!-- BANCO DE DADOS (Mestre) -->
             <div id="banco" class="tab-content">
                 <div class="form-section">
                     <h3>📚 Banco de Dados do Sistema</h3>
@@ -889,11 +903,13 @@
                     <div id="banco-origens" class="tab-content">
                         <h4 style="color: #fff; margin-bottom: 15px;">Origens do Sistema</h4>
                         <div id="listaBancoOrigens"></div>
+                        <button class="btn-save" onclick="adicionarOrigem()" style="margin-top: 15px;">➕ Adicionar Origem</button>
                     </div>
 
                     <div id="banco-carreiras" class="tab-content">
                         <h4 style="color: #fff; margin-bottom: 15px;">Carreiras do Sistema</h4>
                         <div id="listaBancoCarreiras"></div>
+                        <button class="btn-save" onclick="adicionarCarreira()" style="margin-top: 15px;">➕ Adicionar Carreira</button>
                     </div>
 
                     <div id="banco-especializacoes" class="tab-content">
@@ -910,34 +926,13 @@
                 </div>
             </div>
 
-            <!-- REGRAS (Todos) -->
             <div id="regras" class="tab-content">
                 <div class="form-section">
-                    <h3>📖 Regras do Sistema</h3>
-                    <div style="color: #ccc; line-height: 1.8;">
-                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Criação de Personagem</h4>
-                        <p><strong>Etapa 1 - Características (80 pts):</strong> Distribua pontos em FOR, CON, TAM, DES, INT, POD, CAR. Mínimo 3 (6 para INT e TAM), máximo 18.</p>
-                        <p><strong>Etapa 2 - Origem (100 pts):</strong> Invista em perícias básicas da sua origem. Máximo 30 pts por perícia.</p>
-                        <p><strong>Etapa 3 - Carreira (100 pts):</strong> Invista em perícias básicas e profissionais da carreira. Máximo 30 pts por perícia.</p>
-                        <p><strong>Etapa 4 - Livre (150 pts):</strong> Invista em qualquer perícia. Máximo 30 pts por perícia nesta etapa (pode somar aos investimentos anteriores).</p>
-                        
-                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Testes de Perícia</h4>
-                        <p>Role D100. Se o resultado for menor ou igual ao total da perícia (Base + Treino + Modificadores), é sucesso.</p>
-                        <p><strong>Crítico:</strong> Resultado ≤ 10% do total (ou ≤ 5% para total ≥ 50)</p>
-                        <p><strong>Falha Crítica:</strong> 96-100 (se perícia ≥ 96, então 97-100, etc. 100 é sempre falha crítica)</p>
-                        
-                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Iniciativa</h4>
-                        <p>Role 1D10 + valor de Iniciativa (INT + DES).</p>
-                        
-                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Dano</h4>
-                        <p>Dano da arma + Modificador de Dano (FOR + TAM). Primeiro desconta da Armadura, depois dos PV.</p>
-                        
-                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Localização do Acerto (D20)</h4>
-                        <p>1-3: Perna Direita | 4-6: Perna Esquerda | 7-9: Abdômen | 10-12: Peito | 13-15: Braço Direito | 16-18: Braço Esquerdo | 19-20: Cabeça</p>
-                        
-                        <h4 style="color: #00d4ff; margin: 20px 0 10px;">Fadiga</h4>
-                        <p>Descansado → Ofegante (15min) → Cansado (3h) → Fatigado (6h) → Exausto (12h) → Debilitado (18h) → Incapacitado (24h)</p>
+                    <h3> Regras do Sistema</h3>
+                    <div id="regrasContent">
+                        <textarea id="regrasTexto" rows="20" style="width: 100%; background: rgba(0,0,0,0.3); color: #fff; padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.2);"></textarea>
                     </div>
+                    <button class="btn-save" onclick="salvarRegras()" style="margin-top: 15px;" id="btnSalvarRegras">💾 Salvar Regras</button>
                 </div>
             </div>
         </div>
@@ -975,10 +970,10 @@
         let carreirasDB = [];
         let especializacoesDB = [];
         let itensDB = [];
+        let regrasTexto = '';
         let faixaAltura = { min: 160, max: 180 };
         let faixaPeso = { min: 60, max: 80 };
 
-        // Gerar estrelas
         function gerarEstrelas() {
             const container = document.getElementById('starsContainer');
             const numEstrelas = 200;
@@ -1052,13 +1047,13 @@
         ];
 
         const carreirasPadrao = [
-            { id: 'cacador_recompensas', nome: 'Caçador de Recompensas', periciasBasicas: ['atletismo', 'esquiva', 'furtividade', 'percepcao', 'forca_vontade'], periciasProfissionais: ['armeiro', 'interrogatorio', 'pilotagem', 'rastrear', 'submundo', 'sobrevivencia'] },
-            { id: 'pirata_espacial', nome: 'Pirata Espacial', periciasBasicas: ['atletismo', 'esquiva', 'furtividade', 'percepcao', 'resistencia'], periciasProfissionais: ['armeiro', 'astronavegacao', 'logistica', 'mecanica', 'pilotagem', 'submundo', 'sobrevivencia_espacial', 'tatica'] },
-            { id: 'guarda_costas', nome: 'Guarda-Costas', periciasBasicas: ['atletismo', 'esquiva', 'percepcao', 'resistencia', 'forca_vontade'], periciasProfissionais: ['armeiro', 'interrogatorio', 'medicina', 'rastrear', 'tatica'] },
-            { id: 'militar', nome: 'Militar', periciasBasicas: ['atletismo', 'esquiva', 'forca_bruta', 'percepcao', 'resistencia', 'combate_desarmado'], periciasProfissionais: ['armeiro', 'comando', 'demolicoes', 'estrategia', 'logistica', 'medicina', 'sobrevivencia', 'tatica'] },
-            { id: 'medico', nome: 'Médico', periciasBasicas: ['influencia', 'intuicao', 'percepcao', 'primeiros_socorros', 'forca_vontade'], periciasProfissionais: ['anatomia', 'medicina', 'pesquisa', 'psicologia', 'xenobiologia'] },
-            { id: 'engenheiro', nome: 'Engenheiro', periciasBasicas: ['percepcao', 'intuicao', 'costumes', 'regiao', 'forca_vontade'], periciasProfissionais: ['eletronica', 'engenharia', 'exotecnologia', 'logistica', 'mecanica', 'pesquisa', 'sistemas_escudo'] },
-            { id: 'piloto', nome: 'Piloto de Nave Estelar', periciasBasicas: ['conduzir', 'resistencia', 'esquiva', 'regiao', 'percepcao', 'forca_vontade'], periciasProfissionais: ['astronavegacao', 'computadores', 'eletronica', 'mecanica', 'pilotagem', 'sistemas_escudo', 'sobrevivencia_espacial'] }
+            { id: 'cacador_recompensas', nome: 'Caçador de Recompensas', periciasBasicas: ['atletismo', 'esquiva', 'furtividade', 'percepcao', 'forca_vontade'], periciasProfissionais: ['armeiro', 'interrogatorio', 'pilotagem', 'rastrear', 'submundo', 'sobrevivencia'], especializacoes: ['combate_pistola_laser', 'atirador_elite'] },
+            { id: 'pirata_espacial', nome: 'Pirata Espacial', periciasBasicas: ['atletismo', 'esquiva', 'furtividade', 'percepcao', 'resistencia'], periciasProfissionais: ['armeiro', 'astronavegacao', 'logistica', 'mecanica', 'pilotagem', 'submundo', 'sobrevivencia_espacial', 'tatica'], especializacoes: ['luta_gravidade_zero', 'arma_laser_pesada'] },
+            { id: 'guarda_costas', nome: 'Guarda-Costas', periciasBasicas: ['atletismo', 'esquiva', 'percepcao', 'resistencia', 'forca_vontade'], periciasProfissionais: ['armeiro', 'interrogatorio', 'medicina', 'rastrear', 'tatica'], especializacoes: ['guarda_costas_arma_longa', 'combate_pistola_laser'] },
+            { id: 'militar', nome: 'Militar', periciasBasicas: ['atletismo', 'esquiva', 'forca_bruta', 'percepcao', 'resistencia', 'combate_desarmado'], periciasProfissionais: ['armeiro', 'comando', 'demolicoes', 'estrategia', 'logistica', 'medicina', 'sobrevivencia', 'tatica'], especializacoes: ['soldado_infantaria', 'arma_laser_pesada'] },
+            { id: 'medico', nome: 'Médico', periciasBasicas: ['influencia', 'intuicao', 'percepcao', 'primeiros_socorros', 'forca_vontade'], periciasProfissionais: ['anatomia', 'medicina', 'pesquisa', 'psicologia', 'xenobiologia'], especializacoes: [] },
+            { id: 'engenheiro', nome: 'Engenheiro', periciasBasicas: ['percepcao', 'intuicao', 'costumes', 'regiao', 'forca_vontade'], periciasProfissionais: ['eletronica', 'engenharia', 'exotecnologia', 'logistica', 'mecanica', 'pesquisa', 'sistemas_escudo'], especializacoes: [] },
+            { id: 'piloto', nome: 'Piloto de Nave Estelar', periciasBasicas: ['conduzir', 'resistencia', 'esquiva', 'regiao', 'percepcao', 'forca_vontade'], periciasProfissionais: ['astronavegacao', 'computadores', 'eletronica', 'mecanica', 'pilotagem', 'sistemas_escudo', 'sobrevivencia_espacial'], especializacoes: ['combate_traje_espacial'] }
         ];
 
         const especializacoesPadrao = [
@@ -1073,9 +1068,101 @@
             { id: 'psiquismo_sentidos', nome: 'Psiquismo (Sentidos)', tipo: 'Psi', uso: 'Teste', formula: 'INT+POD' }
         ];
 
+        const itensPadrao = [
+            { id: 'pistola_laser', nome: 'Pistola Laser', categoria: 'Armas', peso: 2, pa: 0, pv: 5, dano: '2d6', alcance: '60m', municao: 'Bateria', preco: 9000 },
+            { id: 'rifle_laser', nome: 'Rifle Laser', categoria: 'Armas', peso: 4, pa: 0, pv: 8, dano: '2d8', alcance: '300m', municao: 'Bateria', preco: 18000 },
+            { id: 'espada_longa', nome: 'Espada Longa', categoria: 'Armas', peso: 3, pa: 0, pv: 10, dano: '1d8+1', alcance: 'Corpo a corpo', municao: '∞', preco: 1500 },
+            { id: 'sabre', nome: 'Sabre', categoria: 'Armas', peso: 2, pa: 0, pv: 8, dano: '1d8', alcance: 'Corpo a corpo', municao: '', preco: 1300 },
+            { id: 'adaga', nome: 'Adaga', categoria: 'Armas', peso: 1, pa: 0, pv: 4, dano: '1d4+1', alcance: 'Corpo a corpo', municao: '∞', preco: 240 },
+            { id: 'faca_utilitaria', nome: 'Faca Utilitária', categoria: 'Armas', peso: 1, pa: 0, pv: 3, dano: '1d4', alcance: 'Corpo a corpo', municao: '∞', preco: 150 },
+            { id: 'bateria', nome: 'Bateria', categoria: 'Munição', peso: 1, pa: 0, pv: 1, quantidade: 100, preco: 900 },
+            { id: 'celula_energia', nome: 'Célula de Energia', categoria: 'Munição', peso: 1, pa: 0, pv: 1, quantidade: 100, preco: 1500 },
+            { id: 'racao_7_dias', nome: 'Ração de 7 dias', categoria: 'Comida', peso: 7, pa: 0, pv: 1, preco: 60 },
+            { id: 'bolsa_agua', nome: 'Bolsa de Água', categoria: 'Comida', peso: 2, pa: 0, pv: 1, preco: 20 },
+            { id: 'kit_medico_basico', nome: 'Kit Médico Básico', categoria: 'Itens Médicos', peso: 2, pa: 0, pv: 1, preco: 480 },
+            { id: 'nanogel_regenerativo', nome: 'Nanogel Regenerativo', categoria: 'Itens Médicos', peso: 1, pa: 0, pv: 1, preco: 4800 },
+            { id: 'antidoto_universal', nome: 'Antídoto Universal', categoria: 'Itens Médicos', peso: 1, pa: 0, pv: 1, preco: 2000 },
+            { id: 'mochila_avancada', nome: 'Mochila Avançada', categoria: 'Diversos', peso: 2, pa: 0, pv: 5, capacidade: -20, preco: 1400 },
+            { id: 'kit_sobrevivencia', nome: 'Kit de Sobrevivência', categoria: 'Ferramentas', peso: 5, pa: 0, pv: 3, preco: 750 },
+            { id: 'binoculos', nome: 'Binóculos', categoria: 'Ferramentas', peso: 1, pa: 0, pv: 2, preco: 540 },
+            { id: 'scanner_reconhecimento', nome: 'Scanner de Reconhecimento', categoria: 'Tecnologia', peso: 1, pa: 0, pv: 3, preco: 12000 },
+            { id: 'drone_reconhecimento', nome: 'Drone de Reconhecimento', categoria: 'Tecnologia', peso: 2, pa: 0, pv: 5, preco: 20000 },
+            { id: 'comunicador_completo', nome: 'Comunicador Completo', categoria: 'Comunicação', peso: 1, pa: 0, pv: 2, preco: 8400 },
+            { id: 'reliquia_desconhecida', nome: 'Relíquia Desconhecida', categoria: 'Diversos', peso: 1, pa: 0, pv: 1, preco: 0 },
+            { id: 'coleto_balistico', nome: 'Colete Balístico', categoria: 'Armaduras', peso: 5, pa: 4, pv: 8, preco: 5600 },
+            { id: 'roupa_viajante', nome: 'Roupa de Viajante', categoria: 'Roupas', peso: 2, pa: 0, pv: 3, preco: 120 },
+            { id: 'cinto_utilitario', nome: 'Cinto Utilitário', categoria: 'Roupas', peso: 1, pa: 0, pv: 2, preco: 160 },
+            { id: 'capa_viajante', nome: 'Capa de Viajante', categoria: 'Roupas', peso: 2, pa: 0, pv: 3, preco: 200 },
+            { id: 'chapeu', nome: 'Chapéu', categoria: 'Roupas', peso: 0, pa: 0, pv: 1, preco: 40 },
+            { id: 'botas_couro', nome: 'Botas de Couro', categoria: 'Roupas', peso: 2, pa: 0, pv: 4, preco: 160 },
+            { id: 'algemas_eletronicas', nome: 'Algemas Eletrônicas', categoria: 'Diversos', peso: 1, pa: 0, pv: 2, preco: 800 },
+            { id: 'tradutor_comunicador', nome: 'Tradutor-Comunicador', categoria: 'Comunicação', peso: 1, pa: 0, pv: 2, preco: 7800 }
+        ];
+
+        const regrasPadrao = `# Regras do Sistema D100 - Mesa Estelar RPG
+
+## Criação de Personagem
+
+### Etapa 1 - Características (80 pts)
+Distribua pontos em FOR, CON, TAM, DES, INT, POD, CAR.
+- Mínimo: 3 (6 para INT e TAM)
+- Máximo: 18
+- Mestre: sem limites
+
+### Etapa 2 - Origem (100 pts)
+Invista em perícias básicas da sua origem.
+- Máximo: 30 pts por perícia
+
+### Etapa 3 - Carreira (100 pts)
+Invista em perícias básicas e profissionais da carreira.
+- Máximo: 30 pts por perícia
+
+### Etapa 4 - Livre (150 pts)
+Invista em qualquer perícia ou especialização.
+- Máximo: 30 pts por perícia nesta etapa
+- Pode somar aos investimentos anteriores
+
+## Testes de Perícia
+
+Role D100. Se o resultado for menor ou igual ao total da perícia (Base + Treino + Modificadores), é sucesso.
+
+### Graus de Sucesso
+- **Crítico**: Resultado ≤ 10% do total (ou ≤ 5% para total ≥ 50)
+- **Sucesso**: Resultado ≤ total da perícia
+- **Falha**: Resultado > total da perícia
+- **Falha Crítica**: 96-100 (se perícia ≥ 96, então 97-100, etc. 100 é sempre falha crítica)
+
+## Iniciativa
+
+Role 1D10 + valor de Iniciativa (INT + DES).
+
+## Dano
+
+Dano da arma + Modificador de Dano (FOR + TAM).
+Primeiro desconta da Armadura, depois dos PV.
+
+## Localização do Acerto (D20)
+
+- 1-3: Perna Direita
+- 4-6: Perna Esquerda
+- 7-9: Abdômen
+- 10-12: Peito
+- 13-15: Braço Direito
+- 16-18: Braço Esquerdo
+- 19-20: Cabeça
+
+## Fadiga
+
+Descansado → Ofegante (15min) → Cansado (3h) → Fatigado (6h) → Exausto (12h) → Debilitado (18h) → Incapacitado (24h)
+
+## Altura e Peso
+
+Determinados pelo TAM (Tamanho) e Tipo Corporal (Leve/Médio/Pesado).
+Consulte a tabela Height & Weight do livro.`;
+
         const traducoes = {
-            pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: '➕ Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '⚙️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Etapa 2 - Origem (Perícias Básicas):', pointsEtapa3: 'Etapa 3 - Carreira (Perícias Profissionais):', pointsEtapa4: 'Etapa 4 - Livre:', saveConfig: '💾 Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: '👤 Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
-            en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: ' Sheet', tabConfig: '⚙️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Step 2 - Origin (Basic Skills):', pointsEtapa3: 'Step 3 - Career (Professional Skills):', pointsEtapa4: 'Step 4 - Free:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: '👤 Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
+            pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: '➕ Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '⚙️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Etapa 2 - Origem (Perícias Básicas):', pointsEtapa3: 'Etapa 3 - Carreira (Perícias Profissionais):', pointsEtapa4: 'Etapa 4 - Livre:', saveConfig: '💾 Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: ' Mestre', jogador: '👤 Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
+            en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: ' Database', tabRegras: '📖 Rules', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Step 2 - Origin (Basic Skills):', pointsEtapa3: 'Step 3 - Career (Professional Skills):', pointsEtapa4: 'Step 4 - Free:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: '👤 Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
             zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: '📋 角色卡', tabConfig: '⚙️ 设置', tabBanco: '📚 数据库', tabRegras: '📖 规则', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '阶段2 - 起源（基础技能）：', pointsEtapa3: '阶段3 - 职业（专业技能）：', pointsEtapa4: '阶段4 - 自由：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
         };
 
@@ -1090,11 +1177,18 @@
                     document.getElementById('userRole').textContent = userData.role === 'mestre' ? t.mestre : t.jogador;
                     document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none';
                     document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
-                    if (userData.role === 'mestre') await carregarConfiguracoes();
+                    document.getElementById('btnSalvarRegras').style.display = userData.role === 'mestre' ? 'block' : 'none';
+                    if (userData.role === 'mestre') {
+                        await carregarConfiguracoes();
+                        document.getElementById('regrasTexto').readOnly = false;
+                    } else {
+                        document.getElementById('regrasTexto').readOnly = true;
+                    }
                 }
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appScreen').classList.remove('hidden');
                 await carregarBancosDeDados();
+                await carregarRegras();
                 await carregarPersonagens();
             } else {
                 currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
@@ -1159,10 +1253,33 @@
             }
 
             const itensSnap = await getDocs(collection(db, "itens"));
-            itensDB = []; itensSnap.forEach(doc => itensDB.push({ id: doc.id, ...doc.data() }));
+            if (itensSnap.empty) {
+                for (const i of itensPadrao) await setDoc(doc(db, "itens", i.id), i);
+                itensDB = [...itensPadrao];
+            } else {
+                itensDB = []; itensSnap.forEach(doc => itensDB.push({ id: doc.id, ...doc.data() }));
+            }
 
             popularSelects();
         }
+
+        async function carregarRegras() {
+            const regrasDoc = await getDoc(doc(db, "configuracoes", "regras"));
+            if (regrasDoc.exists()) {
+                regrasTexto = regrasDoc.data().texto || regrasPadrao;
+            } else {
+                regrasTexto = regrasPadrao;
+                await setDoc(doc(db, "configuracoes", "regras"), { texto: regrasPadrao });
+            }
+            document.getElementById('regrasTexto').value = regrasTexto;
+        }
+
+        window.salvarRegras = async () => {
+            if (userData.role !== 'mestre') { alert('Apenas o mestre!'); return; }
+            regrasTexto = document.getElementById('regrasTexto').value;
+            await setDoc(doc(db, "configuracoes", "regras"), { texto: regrasTexto });
+            alert('Regras salvas!');
+        };
 
         function popularSelects() {
             const selectOrigem = document.getElementById('editOrigin');
@@ -1378,21 +1495,35 @@
             const pontosTotal = pontosEtapa[etapa] || 100;
             
             let periciasDisponiveis = [];
+            let especializacoesDisponiveis = [];
+            
             if (etapa === 2 && origem) {
                 periciasDisponiveis = periciasDB.filter(p => p.tipo === 'Básica' && origem.periciasBasicas.includes(p.id));
             } else if (etapa === 3 && carreira) {
                 periciasDisponiveis = periciasDB.filter(p => (p.tipo === 'Básica' && carreira.periciasBasicas.includes(p.id)) || (p.tipo === 'Profissional' && carreira.periciasProfissionais.includes(p.id)));
+                especializacoesDisponiveis = especializacoesDB.filter(e => carreira.especializacoes && carreira.especializacoes.includes(e.id));
             } else if (etapa === 4) {
                 periciasDisponiveis = periciasDB;
+                especializacoesDisponiveis = especializacoesDB;
             }
             
             let totalInvestidoEtapa = 0;
             Object.values(pericias).forEach(p => { if (p.etapa === etapa) totalInvestidoEtapa += (p.treinoEtapa || 0); });
+            Object.values(especializacoes).forEach(e => { if (e.etapa === etapa) totalInvestidoEtapa += (e.treinoEtapa || 0); });
             const pontosRestantes = Math.max(0, pontosTotal - totalInvestidoEtapa);
+            const overLimit = totalInvestidoEtapa > pontosTotal;
             
             document.getElementById('periciasEtapaLabel').textContent = `${etapa} - ${etapa === 2 ? 'Origem' : etapa === 3 ? 'Carreira' : 'Livre'}`;
             document.getElementById('periciasPontosRestantes').textContent = pontosRestantes;
             document.getElementById('periciasPontosTotal').textContent = pontosTotal;
+            document.getElementById('periciasTotalInvestido').textContent = totalInvestidoEtapa;
+            
+            const pontosBox = document.getElementById('pontosRestantesBox');
+            if (overLimit) {
+                pontosBox.classList.add('over');
+            } else {
+                pontosBox.classList.remove('over');
+            }
             
             const corpoInvestidas = document.getElementById('corpoPericiasInvestidas');
             const corpoBasicas = document.getElementById('corpoPericiasBasicas');
@@ -1404,34 +1535,34 @@
             corpoProfissionais.innerHTML = '';
             corpoEspecializacoes.innerHTML = '';
             
-            const periciasInvestidas = periciasDisponiveis.filter(p => pericias[p.id] && pericias[p.id].treinoTotal > 0);
-            const periciasNaoInvestidas = periciasDisponiveis.filter(p => !pericias[p.id] || pericias[p.id].treinoTotal === 0);
-            
-            const renderLinha = (p, tipo) => {
+            const renderLinhaPericia = (p) => {
                 const base = calcularFormula(p.formula, attrs);
                 const dados = pericias[p.id] || { treinoTotal: 0, treinoEtapa: 0 };
                 const total = base + dados.treinoTotal;
-                const maxPermitido = maxTreinoEtapa + (etapa === 4 ? dados.treinoTotal : 0);
-                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${p.nome}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxTreinoEtapa}" onchange="atualizarTreinoPericia('${p.id}', this.value, '${tipo}', ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+                const maxPermitido = maxTreinoEtapa;
+                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${p.nome}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" onchange="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo.toLowerCase() === 'básica' ? 'basica' : 'profissional'}', ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
             };
             
-            periciasInvestidas.forEach(p => {
-                if (p.tipo === 'Básica') corpoInvestidas.innerHTML += renderLinha(p, 'basica');
-                else corpoInvestidas.innerHTML += renderLinha(p, 'profissional');
-            });
-            
-            periciasNaoInvestidas.forEach(p => {
-                if (p.tipo === 'Básica') corpoBasicas.innerHTML += renderLinha(p, 'basica');
-                else corpoProfissionais.innerHTML += renderLinha(p, 'profissional');
-            });
-            
-            especializacoesDB.forEach(e => {
-                const dados = especializacoes[e.id] || { treinoTotal: 0, treinoEtapa: 0 };
+            const renderLinhaEspecializacao = (e) => {
                 const base = calcularFormula(e.formula, attrs);
+                const dados = especializacoes[e.id] || { treinoTotal: 0, treinoEtapa: 0 };
                 const total = base + dados.treinoTotal;
-                const maxPermitido = maxTreinoEtapa + (etapa === 4 ? dados.treinoTotal : 0);
-                corpoEspecializacoes.innerHTML += `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${e.nome}</td><td>${e.uso}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxTreinoEtapa}" onchange="atualizarTreinoEspecializacao('${e.id}', this.value, ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
-            });
+                const maxPermitido = maxTreinoEtapa;
+                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${e.nome}</td><td>${e.uso}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" onchange="atualizarTreinoEspecializacao('${e.id}', this.value, ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+            };
+            
+            const periciasInvestidas = periciasDisponiveis.filter(p => pericias[p.id] && pericias[p.id].treinoTotal > 0);
+            const periciasNaoInvestidasBasicas = periciasDisponiveis.filter(p => p.tipo === 'Básica' && (!pericias[p.id] || pericias[p.id].treinoTotal === 0));
+            const periciasNaoInvestidasProfissionais = periciasDisponiveis.filter(p => p.tipo === 'Profissional' && (!pericias[p.id] || pericias[p.id].treinoTotal === 0));
+            const especializacoesInvestidas = especializacoesDisponiveis.filter(e => especializacoes[e.id] && especializacoes[e.id].treinoTotal > 0);
+            const especializacoesNaoInvestidas = especializacoesDisponiveis.filter(e => !especializacoes[e.id] || especializacoes[e.id].treinoTotal === 0);
+            
+            periciasInvestidas.forEach(p => corpoInvestidas.innerHTML += renderLinhaPericia(p));
+            especializacoesInvestidas.forEach(e => corpoInvestidas.innerHTML += renderLinhaEspecializacao(e));
+            
+            periciasNaoInvestidasBasicas.forEach(p => corpoBasicas.innerHTML += renderLinhaPericia(p));
+            periciasNaoInvestidasProfissionais.forEach(p => corpoProfissionais.innerHTML += renderLinhaPericia(p));
+            especializacoesNaoInvestidas.forEach(e => corpoEspecializacoes.innerHTML += renderLinhaEspecializacao(e));
         }
 
         window.atualizarTreinoPericia = async (periciaId, valor, tipo, etapa) => {
@@ -1468,6 +1599,10 @@
             especializacoes[espId].etapa = etapa;
             await setDoc(doc(db, "personagens", currentCharId), { especializacoes: especializacoes }, { merge: true });
             await carregarPersonagens();
+        };
+
+        window.salvarPericias = async () => {
+            alert('Perícias salvas automaticamente a cada mudança!');
         };
 
         window.mudarEtapaPericias = () => { if (currentCharId) { const char = userCharacters.find(c => c.id === currentCharId); if (char) renderizarPericias(char); } };
@@ -1637,23 +1772,37 @@
             if (abaId === 'itens') renderizarBancoItens();
         };
 
-        function renderizarBancoPericias() { document.getElementById('listaBancoPericias').innerHTML = periciasDB.map(p => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${p.nome}</strong> (${p.tipo}) - ${p.formula} <button class="btn-small btn-delete" onclick="removerPericia('${p.id}')" style="margin-left: 10px;">Remover</button></div>`).join(''); }
-        function renderizarBancoOrigens() { document.getElementById('listaBancoOrigens').innerHTML = origensDB.map(o => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${o.nome}</strong> - Perícias: ${o.periciasBasicas.join(', ')}</div>`).join(''); }
-        function renderizarBancoCarreiras() { document.getElementById('listaBancoCarreiras').innerHTML = carreirasDB.map(c => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${c.nome}</strong><br>Básicas: ${c.periciasBasicas.join(', ')}<br>Profissionais: ${c.periciasProfissionais.join(', ')}</div>`).join(''); }
-        function renderizarBancoEspecializacoes() { document.getElementById('listaBancoEspecializacoes').innerHTML = especializacoesDB.map(e => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${e.nome}</strong> (${e.tipo}) - ${e.formula} <button class="btn-small btn-delete" onclick="removerEspecializacao('${e.id}')" style="margin-left: 10px;">Remover</button></div>`).join(''); }
-        function renderizarBancoItens() { document.getElementById('listaBancoItens').innerHTML = itensDB.length ? itensDB.map(i => `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 10px;"><strong>${i.nome}</strong> - ${i.peso}kg | PA: ${i.pa} | PV: ${i.pv}</div>`).join('') : '<p style="color: #aaa;">Nenhum item cadastrado</p>'; }
+        function renderizarBancoPericias() { document.getElementById('listaBancoPericias').innerHTML = periciasDB.map(p => `<div class="db-item"><div class="db-item-header"><strong>${p.nome}</strong> (${p.tipo}) - ${p.formula}<div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarPericia('${p.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerPericia('${p.id}')">Remover</button></div></div></div>`).join(''); }
+        function renderizarBancoOrigens() { document.getElementById('listaBancoOrigens').innerHTML = origensDB.map(o => `<div class="db-item"><div class="db-item-header"><strong>${o.nome}</strong> - Perícias: ${o.periciasBasicas.join(', ')}<div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarOrigem('${o.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerOrigem('${o.id}')">Remover</button></div></div></div>`).join(''); }
+        function renderizarBancoCarreiras() { document.getElementById('listaBancoCarreiras').innerHTML = carreirasDB.map(c => `<div class="db-item"><div class="db-item-header"><strong>${c.nome}</strong><div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarCarreira('${c.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerCarreira('${c.id}')">Remover</button></div></div><div>Básicas: ${c.periciasBasicas.join(', ')}</div><div>Profissionais: ${c.periciasProfissionais.join(', ')}</div><div>Especializações: ${(c.especializacoes || []).join(', ') || 'Nenhuma'}</div></div>`).join(''); }
+        function renderizarBancoEspecializacoes() { document.getElementById('listaBancoEspecializacoes').innerHTML = especializacoesDB.map(e => `<div class="db-item"><div class="db-item-header"><strong>${e.nome}</strong> (${e.tipo}) - ${e.formula}<div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarEspecializacao('${e.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerEspecializacao('${e.id}')">Remover</button></div></div></div>`).join(''); }
+        function renderizarBancoItens() { document.getElementById('listaBancoItens').innerHTML = itensDB.length ? itensDB.map(i => `<div class="db-item"><div class="db-item-header"><strong>${i.nome}</strong> - ${i.peso}kg | PA: ${i.pa} | PV: ${i.pv}<div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarItem('${i.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerItemBanco('${i.id}')">Remover</button></div></div></div>`).join('') : '<p style="color: #aaa;">Nenhum item cadastrado</p>'; }
 
         window.adicionarPericia = async () => { const nome = prompt('Nome:'); if (!nome) return; const formula = prompt('Fórmula (ex: FOR+DES):'); if (!formula) return; const tipo = prompt('Tipo (Básica/Profissional):', 'Profissional'); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, formula, tipo, categoria: 'Geral', especializavel: true, penalidadeArmadura: 0 }; await setDoc(doc(db, "pericias", id), nova); periciasDB.push(nova); renderizarBancoPericias(); };
+        window.editarPericia = async (id) => { const p = periciasDB.find(x => x.id === id); if (!p) return; const nome = prompt('Nome:', p.nome); if (!nome) return; const formula = prompt('Fórmula:', p.formula); const tipo = prompt('Tipo:', p.tipo); await setDoc(doc(db, "pericias", id), { ...p, nome, formula, tipo }); await carregarBancosDeDados(); renderizarBancoPericias(); };
         window.removerPericia = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "pericias", id)); periciasDB = periciasDB.filter(p => p.id !== id); renderizarBancoPericias(); };
+        
+        window.adicionarOrigem = async () => { const nome = prompt('Nome:'); if (!nome) return; const periciasStr = prompt('Perícias básicas (separadas por vírgula):'); const periciasBasicas = periciasStr ? periciasStr.split(',').map(s => s.trim()) : []; const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, periciasBasicas }; await setDoc(doc(db, "origens", id), nova); origensDB.push(nova); popularSelects(); renderizarBancoOrigens(); };
+        window.editarOrigem = async (id) => { const o = origensDB.find(x => x.id === id); if (!o) return; const nome = prompt('Nome:', o.nome); if (!nome) return; const periciasStr = prompt('Perícias básicas:', o.periciasBasicas.join(', ')); const periciasBasicas = periciasStr.split(',').map(s => s.trim()); await setDoc(doc(db, "origens", id), { ...o, nome, periciasBasicas }); await carregarBancosDeDados(); popularSelects(); renderizarBancoOrigens(); };
+        window.removerOrigem = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "origens", id)); origensDB = origensDB.filter(o => o.id !== id); popularSelects(); renderizarBancoOrigens(); };
+        
+        window.adicionarCarreira = async () => { const nome = prompt('Nome:'); if (!nome) return; const basicasStr = prompt('Perícias básicas (vírgula):'); const profissionaisStr = prompt('Perícias profissionais (vírgula):'); const especializacoesStr = prompt('Especializações (vírgula, vazio se nenhuma):', ''); const periciasBasicas = basicasStr ? basicasStr.split(',').map(s => s.trim()) : []; const periciasProfissionais = profissionaisStr ? profissionaisStr.split(',').map(s => s.trim()) : []; const especializacoes = especializacoesStr ? especializacoesStr.split(',').map(s => s.trim()) : []; const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, periciasBasicas, periciasProfissionais, especializacoes }; await setDoc(doc(db, "carreiras", id), nova); carreirasDB.push(nova); popularSelects(); renderizarBancoCarreiras(); };
+        window.editarCarreira = async (id) => { const c = carreirasDB.find(x => x.id === id); if (!c) return; const nome = prompt('Nome:', c.nome); if (!nome) return; const basicasStr = prompt('Perícias básicas:', c.periciasBasicas.join(', ')); const profissionaisStr = prompt('Perícias profissionais:', c.periciasProfissionais.join(', ')); const especializacoesStr = prompt('Especializações:', (c.especializacoes || []).join(', ')); const periciasBasicas = basicasStr.split(',').map(s => s.trim()); const periciasProfissionais = profissionaisStr.split(',').map(s => s.trim()); const especializacoes = especializacoesStr ? especializacoesStr.split(',').map(s => s.trim()) : []; await setDoc(doc(db, "carreiras", id), { ...c, nome, periciasBasicas, periciasProfissionais, especializacoes }); await carregarBancosDeDados(); popularSelects(); renderizarBancoCarreiras(); };
+        window.removerCarreira = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "carreiras", id)); carreirasDB = carreirasDB.filter(c => c.id !== id); popularSelects(); renderizarBancoCarreiras(); };
+        
         window.adicionarEspecializacao = async () => { const nome = prompt('Nome:'); if (!nome) return; const formula = prompt('Fórmula:'); if (!formula) return; const uso = prompt('Uso (Distância/Corpo a corpo/Defesa/Teste):'); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, formula, tipo: 'Combate', uso }; await setDoc(doc(db, "especializacoes", id), nova); especializacoesDB.push(nova); renderizarBancoEspecializacoes(); };
+        window.editarEspecializacao = async (id) => { const e = especializacoesDB.find(x => x.id === id); if (!e) return; const nome = prompt('Nome:', e.nome); if (!nome) return; const formula = prompt('Fórmula:', e.formula); const uso = prompt('Uso:', e.uso); await setDoc(doc(db, "especializacoes", id), { ...e, nome, formula, uso }); await carregarBancosDeDados(); renderizarBancoEspecializacoes(); };
         window.removerEspecializacao = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "especializacoes", id)); especializacoesDB = especializacoesDB.filter(e => e.id !== id); renderizarBancoEspecializacoes(); };
+        
         window.adicionarItemBanco = async () => { const nome = prompt('Nome:'); if (!nome) return; const peso = parseFloat(prompt('Peso (kg):', '1')) || 1; const pa = parseInt(prompt('PA:', '0')) || 0; const pv = parseInt(prompt('PV:', '1')) || 1; const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const novo = { id, nome, peso, pa, pv }; await setDoc(doc(db, "itens", id), novo); itensDB.push(novo); renderizarBancoItens(); };
+        window.editarItem = async (id) => { const i = itensDB.find(x => x.id === id); if (!i) return; const nome = prompt('Nome:', i.nome); if (!nome) return; const peso = parseFloat(prompt('Peso:', i.peso)); const pa = parseInt(prompt('PA:', i.pa)); const pv = parseInt(prompt('PV:', i.pv)); await setDoc(doc(db, "itens", id), { ...i, nome, peso, pa, pv }); await carregarBancosDeDados(); renderizarBancoItens(); };
+        window.removerItemBanco = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "itens", id)); itensDB = itensDB.filter(i => i.id !== id); renderizarBancoItens(); };
 
-        window.mudarIdioma = (lang) => { idiomaAtual = lang; localStorage.setItem('idiomaPreferido', lang); document.querySelectorAll('.lang-btn').forEach(btn => { btn.classList.remove('active'); if ((lang === 'pt' && btn.textContent === 'PT') || (lang === 'en' && btn.textContent === 'EN') || (lang === 'zh' && btn.textContent === '中文')) { btn.classList.add('active'); } }); const t = traducoes[lang]; document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (t[key]) el.textContent = t[key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.getAttribute('data-i18n-placeholder'); if (t[key]) el.placeholder = t[key]; }); if (userData) { const roleText = userData.role === 'mestre' ? t.mestre : t.jogador; document.getElementById('userRole').textContent = roleText; document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none'; document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre'); } if (currentCharId) { const isMaster = userData.role === 'mestre'; const maxPoints = isMaster ? 999 : configuracoes.etapa1; document.getElementById('pointsLimitText').textContent = isMaster ? '(Mestre - sem limite)' : `/${maxPoints} pontos`; } renderizarListaPersonagens(); };
+        window.mudarIdioma = (lang) => { idiomaAtual = lang; localStorage.setItem('idiomaPreferido', lang); document.querySelectorAll('.lang-btn').forEach(btn => { btn.classList.remove('active'); if ((lang === 'pt' && btn.textContent === 'PT') || (lang === 'en' && btn.textContent === 'EN') || (lang === 'zh' && btn.textContent === '中文')) { btn.classList.add('active'); } }); const t = traducoes[lang]; document.querySelectorAll('[data-i18n]').forEach(el => { const key = el.getAttribute('data-i18n'); if (t[key]) el.textContent = t[key]; }); document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { const key = el.getAttribute('data-i18n-placeholder'); if (t[key]) el.placeholder = t[key]; }); if (userData) { const roleText = userData.role === 'mestre' ? t.mestre : t.jogador; document.getElementById('userRole').textContent = roleText; document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none'; document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre'); document.getElementById('btnSalvarRegras').style.display = userData.role === 'mestre' ? 'block' : 'none'; } if (currentCharId) { const isMaster = userData.role === 'mestre'; const maxPoints = isMaster ? 999 : configuracoes.etapa1; document.getElementById('pointsLimitText').textContent = isMaster ? '(Mestre - sem limite)' : `/${maxPoints} pontos`; } renderizarListaPersonagens(); };
 
         window.addEventListener('DOMContentLoaded', () => { const idiomaSalvo = localStorage.getItem('idiomaPreferido') || 'pt'; mudarIdioma(idiomaSalvo); });
 
-        window.fazerLogin = fazerLogin; window.fazerRegistro = fazerRegistro; window.fazerLogout = fazerLogout; window.novoPersonagem = novoPersonagem; window.selecionarPersonagem = selecionarPersonagem; window.deletarPersonagem = deletarPersonagem; window.salvarPersonagem = salvarPersonagem; window.handleImageUpload = handleImageUpload; window.calcularTotal = calcularTotal; window.calcularDerivados = calcularDerivados; window.calcularAlturaPesoAutomatico = calcularAlturaPesoAutomatico; window.salvarAlturaPeso = salvarAlturaPeso; window.mostrarAba = mostrarAba; window.mostrarCharAba = mostrarCharAba; window.mostrarBancoAba = mostrarBancoAba; window.salvarConfiguracoes = salvarConfiguracoes; window.mudarIdioma = mudarIdioma; window.mudarEtapaPericias = mudarEtapaPericias; window.atualizarTreinoPericia = atualizarTreinoPericia; window.atualizarTreinoEspecializacao = atualizarTreinoEspecializacao; window.salvarAnotacoes = salvarAnotacoes; window.adicionarPericia = adicionarPericia; window.removerPericia = removerPericia; window.adicionarEspecializacao = adicionarEspecializacao; window.removerEspecializacao = removerEspecializacao; window.adicionarItemBanco = adicionarItemBanco; window.adicionarItem = adicionarItem; window.removerItem = removerItem; window.salvarFadiga = salvarFadiga; window.equiparArma = equiparArma; window.desequiparArma = desequiparArma; window.rolarDado = rolarDado; window.rolarFormula = rolarFormula;
+        window.fazerLogin = fazerLogin; window.fazerRegistro = fazerRegistro; window.fazerLogout = fazerLogout; window.novoPersonagem = novoPersonagem; window.selecionarPersonagem = selecionarPersonagem; window.deletarPersonagem = deletarPersonagem; window.salvarPersonagem = salvarPersonagem; window.handleImageUpload = handleImageUpload; window.calcularTotal = calcularTotal; window.calcularDerivados = calcularDerivados; window.calcularAlturaPesoAutomatico = calcularAlturaPesoAutomatico; window.salvarAlturaPeso = salvarAlturaPeso; window.mostrarAba = mostrarAba; window.mostrarCharAba = mostrarCharAba; window.mostrarBancoAba = mostrarBancoAba; window.salvarConfiguracoes = salvarConfiguracoes; window.mudarIdioma = mudarIdioma; window.mudarEtapaPericias = mudarEtapaPericias; window.atualizarTreinoPericia = atualizarTreinoPericia; window.atualizarTreinoEspecializacao = atualizarTreinoEspecializacao; window.salvarPericias = salvarPericias; window.salvarAnotacoes = salvarAnotacoes; window.adicionarPericia = adicionarPericia; window.editarPericia = editarPericia; window.removerPericia = removerPericia; window.adicionarOrigem = adicionarOrigem; window.editarOrigem = editarOrigem; window.removerOrigem = removerOrigem; window.adicionarCarreira = adicionarCarreira; window.editarCarreira = editarCarreira; window.removerCarreira = removerCarreira; window.adicionarEspecializacao = adicionarEspecializacao; window.editarEspecializacao = editarEspecializacao; window.removerEspecializacao = removerEspecializacao; window.adicionarItemBanco = adicionarItemBanco; window.editarItem = editarItem; window.removerItemBanco = removerItemBanco; window.adicionarItem = adicionarItem; window.removerItem = removerItem; window.salvarFadiga = salvarFadiga; window.equiparArma = equiparArma; window.desequiparArma = desequiparArma; window.rolarDado = rolarDado; window.rolarFormula = rolarFormula; window.salvarRegras = salvarRegras;
     </script>
 </body>
 </html>
