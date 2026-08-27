@@ -763,6 +763,7 @@
                             <input type="file" id="importSkillsFile" accept=".csv" style="display:none" onchange="importarPlanilha('pericias', this)">
                             <button class="btn-import" onclick="document.getElementById('importSkillsFile').click()">📥 Importar Planilha CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('pericias')">📄 Baixar Template</button>
+                            <button class="btn-template" onclick="exportarBancoCSV('pericias')">📤 Exportar CSV</button>
                         </div>
                         <div id="listaBancoPericias"></div>
                         <button class="btn-save" onclick="adicionarPericia()" style="margin-top:15px;">➕ Adicionar Perícia</button>
@@ -774,6 +775,7 @@
                             <input type="file" id="importOriginsFile" accept=".csv" style="display:none" onchange="importarPlanilha('origens', this)">
                             <button class="btn-import" onclick="document.getElementById('importOriginsFile').click()">📥 Importar Planilha CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('origens')">📄 Baixar Template</button>
+                            <button class="btn-template" onclick="exportarBancoCSV('origens')">📤 Exportar CSV</button>
                         </div>
                         <div id="listaBancoOrigens"></div>
                         <button class="btn-save" onclick="adicionarOrigem()" style="margin-top:15px;">➕ Adicionar Origem</button>
@@ -785,6 +787,7 @@
                             <input type="file" id="importCareersFile" accept=".csv" style="display:none" onchange="importarPlanilha('carreiras', this)">
                             <button class="btn-import" onclick="document.getElementById('importCareersFile').click()">📥 Importar Planilha CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('carreiras')">📄 Baixar Template</button>
+                            <button class="btn-template" onclick="exportarBancoCSV('carreiras')">📤 Exportar CSV</button>
                         </div>
                         <div id="listaBancoCarreiras"></div>
                         <button class="btn-save" onclick="adicionarCarreira()" style="margin-top:15px;">➕ Adicionar Carreira</button>
@@ -796,6 +799,7 @@
                             <input type="file" id="importSpecsFile" accept=".csv" style="display:none" onchange="importarPlanilha('especializacoes', this)">
                             <button class="btn-import" onclick="document.getElementById('importSpecsFile').click()">📥 Importar Planilha CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('especializacoes')">📄 Baixar Template</button>
+                            <button class="btn-template" onclick="exportarBancoCSV('especializacoes')">📤 Exportar CSV</button>
                         </div>
                         <div id="listaBancoEspecializacoes"></div>
                         <button class="btn-save" onclick="adicionarEspecializacao()" style="margin-top:15px;">➕ Adicionar Especialização</button>
@@ -807,6 +811,7 @@
                             <input type="file" id="importPsiPowersFile" accept=".csv" style="display:none" onchange="importarPlanilha('poderesPsi', this)">
                             <button class="btn-import" onclick="document.getElementById('importPsiPowersFile').click()">📥 Importar Planilha CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('poderesPsi')">📄 Baixar Template</button>
+                            <button class="btn-template" onclick="exportarBancoCSV('poderesPsi')">📤 Exportar CSV</button>
                         </div>
                         <div id="listaBancoPoderesPsi"></div>
                         <button class="btn-save" onclick="adicionarPoderPsi()" style="margin-top:15px;">➕ Adicionar Poder Psi</button>
@@ -818,6 +823,7 @@
                             <input type="file" id="importItemsFile" accept=".csv" style="display:none" onchange="importarPlanilha('itens', this)">
                             <button class="btn-import" onclick="document.getElementById('importItemsFile').click()">📥 Importar Planilha CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('itens')">📄 Baixar Template</button>
+                            <button class="btn-template" onclick="exportarBancoCSV('itens')">📤 Exportar CSV</button>
                         </div>
                         <div id="listaBancoItens"></div>
                         <button class="btn-save" onclick="adicionarItemBanco()" style="margin-top:15px;">➕ Adicionar Item</button>
@@ -4594,6 +4600,147 @@ window.importarPlanilha = async (tipo, input) => {
             input.value = '';
         }
     });
+};
+
+
+function escaparCSV_(valor) {
+    if (valor === null || valor === undefined) return '';
+    let s = String(valor);
+    // Como usamos ; como separador, protege ;, aspas e quebras de linha.
+    if (/[;"\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+}
+
+function linhaCSV_(cabecalhos, objeto) {
+    return cabecalhos.map(h => escaparCSV_(objeto[h])).join(';');
+}
+
+function dadosExportacaoBanco_(tipo) {
+    const configs = {
+        pericias: {
+            dados: periciasDB,
+            cabecalhos: ['id','nome','nome_en','nome_zh','categoria','tipo','formula','especializavel','penalidadeArmadura','descricao','descricao_en','descricao_zh'],
+            map: p => ({
+                id:p.id||'', nome:p.nome||'', nome_en:p.nome_en||'', nome_zh:p.nome_zh||'',
+                categoria:p.categoria||'', tipo:p.tipo||'', formula:p.formula||'',
+                especializavel:!!p.especializavel,
+                penalidadeArmadura:p.penalidadeArmadura ?? 0,
+                descricao:p.descricao||'', descricao_en:p.descricao_en||'', descricao_zh:p.descricao_zh||''
+            })
+        },
+        origens: {
+            dados: origensDB,
+            cabecalhos: ['id','nome','nome_en','nome_zh','periciasBasicas','periciasProfissionais','especializacoes','descricao','descricao_en','descricao_zh'],
+            map: o => ({
+                id:o.id||'', nome:o.nome||'', nome_en:o.nome_en||'', nome_zh:o.nome_zh||'',
+                periciasBasicas:(o.periciasBasicas||[]).join('|'),
+                periciasProfissionais:(o.periciasProfissionais||[]).join('|'),
+                especializacoes:(o.especializacoes||[]).join('|'),
+                descricao:o.descricao||'', descricao_en:o.descricao_en||'', descricao_zh:o.descricao_zh||''
+            })
+        },
+        carreiras: {
+            dados: carreirasDB,
+            cabecalhos: ['id','nome','nome_en','nome_zh','periciasBasicas','periciasProfissionais','especializacoes','descricao','descricao_en','descricao_zh'],
+            map: c => ({
+                id:c.id||'', nome:c.nome||'', nome_en:c.nome_en||'', nome_zh:c.nome_zh||'',
+                periciasBasicas:(c.periciasBasicas||[]).join('|'),
+                periciasProfissionais:(c.periciasProfissionais||[]).join('|'),
+                especializacoes:(c.especializacoes||[]).join('|'),
+                descricao:c.descricao||'', descricao_en:c.descricao_en||'', descricao_zh:c.descricao_zh||''
+            })
+        },
+        especializacoes: {
+            dados: especializacoesDB,
+            cabecalhos: ['id','nome','nome_en','nome_zh','tipo','uso','formula','descricao','descricao_en','descricao_zh'],
+            map: e => ({
+                id:e.id||'', nome:e.nome||'', nome_en:e.nome_en||'', nome_zh:e.nome_zh||'',
+                tipo:e.tipo||'', uso:e.uso||'', formula:e.formula||'',
+                descricao:e.descricao||'', descricao_en:e.descricao_en||'', descricao_zh:e.descricao_zh||''
+            })
+        },
+        poderesPsi: {
+            dados: poderesPsiDB,
+            cabecalhos: ['id','nome','nome_en','nome_zh','esfera','arco','custo','observacao','observacao_en','observacao_zh'],
+            map: p => ({
+                id:p.id||'', nome:p.nome||'', nome_en:p.nome_en||'', nome_zh:p.nome_zh||'',
+                esfera:p.esfera||'', arco:p.arco ?? 1, custo:p.custo ?? 0,
+                observacao:p.observacao||'', observacao_en:p.observacao_en||'', observacao_zh:p.observacao_zh||''
+            })
+        },
+        itens: {
+            dados: itensDB,
+            cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','imagem','descricao','descricao_en','descricao_zh'],
+            map: i => ({
+                id:i.id||'', nome:i.nome||'', nome_en:i.nome_en||'', nome_zh:i.nome_zh||'',
+                categoria:i.categoria||'Diversos',
+                peso:i.peso ?? 0,
+                preco:i.preco ?? i.valor ?? i.valorBase ?? 0,
+                pa:i.pa ?? i.PA ?? 0,
+                pv:i.pv ?? i.PV ?? 1,
+                alcance:i.alcance||'',
+                dano:i.dano||'',
+                municao:i.municao||i.recurso||'',
+                uso:i.uso ?? i.quantidade ?? '',
+                destinoLocal:i.destinoLocal||i.destino||i.local||'',
+                locaisProtegidos:i.locaisProtegidos||i.protege||i.protecao||'',
+                nivelAcesso:i.nivelAcesso||i.acesso||'',
+                material:i.material||'',
+                unidade:i.unidade||'',
+                imagem:i.imagem||i.urlImagem||'',
+                descricao:i.descricao||i.observacoes||'',
+                descricao_en:i.descricao_en||'',
+                descricao_zh:i.descricao_zh||''
+            })
+        }
+    };
+    return configs[tipo] || null;
+}
+
+window.exportarBancoCSV = (tipo) => {
+    if (!userData || userData.role !== 'mestre') {
+        alert('Apenas o mestre pode exportar os bancos do sistema.');
+        return;
+    }
+
+    const cfg = dadosExportacaoBanco_(tipo);
+    if (!cfg) {
+        alert('Banco desconhecido.');
+        return;
+    }
+
+    const dados = [...(cfg.dados || [])]
+        .sort((a,b) => String(a.nome||'').localeCompare(String(b.nome||''),'pt'))
+        .map(cfg.map);
+
+    if (!dados.length) {
+        alert('Este banco está vazio.');
+        return;
+    }
+
+    const linhas = [
+        cfg.cabecalhos.join(';'),
+        ...dados.map(obj => linhaCSV_(cfg.cabecalhos, obj))
+    ];
+    const conteudo = '\uFEFF' + linhas.join('\r\n');
+    const blob = new Blob([conteudo], { type:'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    const agora = new Date();
+    const data = [
+        agora.getFullYear(),
+        String(agora.getMonth()+1).padStart(2,'0'),
+        String(agora.getDate()).padStart(2,'0')
+    ].join('-');
+    a.download = `banco_${tipo}_${data}.csv`;
+
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    somSalvar_();
 };
 
 window.baixarTemplate = (tipo) => {
