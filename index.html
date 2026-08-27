@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
+    <!-- Mesa Estelar v24: i18n completo + compatibilidade cruzada de armas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -1636,7 +1637,7 @@ window.gastarPontoSorte = async () => {
 
 function atualizarVisualizacao(data) {
     document.getElementById('charName').textContent = data.nome || '-';
-    document.getElementById('charRace').textContent = data.raca || '-';
+    document.getElementById('charRace').textContent = traduzirRacaExibicao_(data.raca || '-');
     const origemObj = origensDB.find(o => o.id === data.origem);
     const carreiraObj = carreirasDB.find(c => c.id === data.carreira);
     document.getElementById('charOrigin').textContent = origemObj ? getNome(origemObj) : '-';
@@ -2347,16 +2348,17 @@ function popularEquipamentosCombate_(char) {
     if (!pericia) {
         opcoes = [{value:'', label:'—'}];
     } else if (pericia.id === 'esquiva') {
-        opcoes = [{value:'nenhum', label:'Nenhum equipamento'}];
+        opcoes = [{value:'nenhum', label:uiTxt_('noneEquipment')}];
     } else if (pericia.id === 'combate_desarmado') {
-        opcoes = [{value:'desarmado', label:'Punhos'}];
+        opcoes = [{value:'desarmado', label:uiTxt_('fists')}];
     } else {
         const compativeis = equipados.filter(i => equipamentoCompativelComPericia_(i, pericia));
         opcoes = compativeis.map((item, i) => {
             const id = item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`;
-            return {value:String(id), label:getNome(item)};
+            const graus = penalidadeCompatibilidadeArma_(pericia, item);
+            return {value:String(id), label:`${getNome(item)}${rotuloPenalidadeCompatibilidade_(graus)}`};
         });
-        if (!opcoes.length) opcoes = [{value:'', label:'Nenhum equipamento compatível'}];
+        if (!opcoes.length) opcoes = [{value:'', label:uiTxt_('noCompatibleEquipment')}];
     }
 
     select.innerHTML = opcoes.map(o => `<option value="${escaparHtmlInventario_(o.value)}">${escaparHtmlInventario_(o.label)}</option>`).join('');
@@ -2409,14 +2411,17 @@ window.atualizarPainelCombate = () => {
         const atual = selectEquip.value;
         const equipados = obterItensEquipados_(char).filter(itemEhArmaOuEscudo_);
         let opcoes;
-        if (pericia.id === 'esquiva') opcoes = [{value:'nenhum',label:'Nenhum equipamento'}];
-        else if (pericia.id === 'combate_desarmado') opcoes = [{value:'desarmado',label:'Punhos'}];
+        if (pericia.id === 'esquiva') opcoes = [{value:'nenhum',label:uiTxt_('noneEquipment')}];
+        else if (pericia.id === 'combate_desarmado') opcoes = [{value:'desarmado',label:uiTxt_('fists')}];
         else {
-            opcoes = equipados.filter(i => equipamentoCompativelComPericia_(i, pericia)).map((item,i) => ({
-                value:String(item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`),
-                label:getNome(item)
-            }));
-            if (!opcoes.length) opcoes = [{value:'',label:'Nenhum equipamento compatível'}];
+            opcoes = equipados.filter(i => equipamentoCompativelComPericia_(i, pericia)).map((item,i) => {
+                const graus = penalidadeCompatibilidadeArma_(pericia, item);
+                return {
+                    value:String(item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`),
+                    label:`${getNome(item)}${rotuloPenalidadeCompatibilidade_(graus)}`
+                };
+            });
+            if (!opcoes.length) opcoes = [{value:'',label:uiTxt_('noCompatibleEquipment')}];
         }
         selectEquip.innerHTML = opcoes.map(o => `<option value="${escaparHtmlInventario_(o.value)}">${escaparHtmlInventario_(o.label)}</option>`).join('');
         if ([...selectEquip.options].some(o => o.value === atual)) selectEquip.value = atual;
@@ -2428,6 +2433,23 @@ window.mostrarDanoEquipamentoCombate = () => {
     const alvo = document.getElementById('combatWeaponDamage');
     if (!alvo) return;
     alvo.textContent = obterExpressaoDanoCombate_() || '—';
+    const char = userCharacters.find(c => c.id === currentCharId);
+    const pericia = obterPericiaCombateSelecionada_();
+    const item = encontrarEquipamentoCombate_(document.getElementById('combatWeaponSelect')?.value || '');
+    const valorAlvo = document.getElementById('combatSkillValue');
+    if (char && pericia && valorAlvo) {
+        const bruto = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
+        const graus = item ? penalidadeCompatibilidadeArma_(pericia, item) : 0;
+        if (graus > 0) {
+            const idx = Math.min(GRAUS_DIFICULDADE.length - 1, 2 + graus);
+            const efetivo = Math.max(1, Math.floor(bruto * GRAUS_DIFICULDADE[idx].multiplicador));
+            valorAlvo.textContent = `${bruto} → ${efetivo}`;
+            valorAlvo.title = `${uiTxt_('weaponMismatch')}: +${graus} ${uiTxt_('difficultySteps')}`;
+        } else {
+            valorAlvo.textContent = bruto;
+            valorAlvo.title = '';
+        }
+    }
     atualizarStatusMunicaoCombate_();
 };
 
@@ -2521,7 +2543,9 @@ window.rolarCombateD100 = async () => {
 
     const valorBase = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
     const dificuldadeEscolhidaId = document.getElementById('combatDifficultySelect')?.value || 'padrao';
-    const ajuste = aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeEscolhidaId);
+    let ajuste = aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeEscolhidaId);
+    const grausCompatibilidade = armaUsada ? penalidadeCompatibilidadeArma_(pericia, armaUsada) : 0;
+    ajuste = aplicarPenalidadeCompatibilidade_(ajuste, valorBase, grausCompatibilidade);
     if (ajuste.bloqueado) {
         resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(ajuste.regra.nome)}: nenhuma atividade possível.`;
         await registrarHistoricoCombate_(
@@ -2537,13 +2561,14 @@ window.rolarCombateD100 = async () => {
     const r = classificarD100_(valor, roll);
     const margem = Math.abs(valor-roll);
     const nomePericia = getNome(pericia);
-    const fadigaTxt = ajuste.degrausFadiga > 0 ? ` · Fadiga +${ajuste.degrausFadiga} degrau${ajuste.degrausFadiga > 1 ? 's' : ''}` : '';
-    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}<br><small>Dificuldade: ${escaparHtmlInventario_(ajuste.escolhida.nome)}${fadigaTxt} → <strong>${escaparHtmlInventario_(ajuste.efetiva.nome)}</strong> · ${valorBase} → ${valor}</small>`;
+    const fadigaTxt = ajuste.degrausFadiga > 0 ? ` · ${uiTxt_('fatigue')} +${ajuste.degrausFadiga}` : '';
+    const compatTxt = grausCompatibilidade > 0 ? ` · ${uiTxt_('weaponMismatch')} +${grausCompatibilidade}` : '';
+    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${traduzirResultadoD100_(r.grau)}</strong> · ${uiTxt_('margin')} ${margem}<br><small>${uiTxt_('difficulty')}: ${traduzirDificuldade_(ajuste.escolhida.id)}${fadigaTxt}${compatTxt} → <strong>${traduzirDificuldade_(ajuste.efetiva.id)}</strong> · ${valorBase} → ${valor}</small>`;
 
     await registrarHistoricoCombate_(
         'D100',
-        `${nomePericia}: ${roll} / ${valor} → ${r.grau} · Margem ${margem} · Dificuldade ${ajuste.escolhida.nome}${fadigaTxt} → ${ajuste.efetiva.nome} (${valorBase}→${valor})`,
-        { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome, dificuldadeEscolhida: ajuste.escolhida.nome, dificuldadeEfetiva: ajuste.efetiva.nome, degrausFadiga: ajuste.degrausFadiga }
+        `${nomePericia}: ${roll} / ${valor} → ${r.grau} · Margem ${margem} · Dificuldade ${ajuste.escolhida.nome}${fadigaTxt}${compatTxt} → ${ajuste.efetiva.nome} (${valorBase}→${valor})`,
+        { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome, dificuldadeEscolhida: ajuste.escolhida.nome, dificuldadeEfetiva: ajuste.efetiva.nome, degrausFadiga: ajuste.degrausFadiga, penalidadeCompatibilidade: grausCompatibilidade, equipamentoId: armaUsada?.id || null }
     );
 
     char.combate = char.combate || {};
@@ -2941,7 +2966,7 @@ function renderizarCombate(char) {
         const temAtual = Object.prototype.hasOwnProperty.call(combat.hitLocations || {}, loc);
         const pvAtual = temAtual ? combat.hitLocations[loc] : pv;
         return `<div class="hit-location">
-            <span class="hit-location-name">${loc}</span>
+            <span class="hit-location-name">${traduzirTextoFixo_(loc)}</span>
             <input type="number" value="${pv}" readonly>
             <input type="number" value="${pvAtual}" class="damage" onchange="salvarCombate('hitLocations', '${loc}', this.value)">
         </div>`;
@@ -2955,7 +2980,7 @@ function renderizarCombate(char) {
             ? `PA total ${total} = ${base} natural/manual + ${equipamento} de equipamento`
             : `PA manual/natural: ${base}`;
         return `<div class="hit-location">
-            <span class="hit-location-name">${loc}</span>
+            <span class="hit-location-name">${traduzirTextoFixo_(loc)}</span>
             <input type="number" value="${total}" min="0" title="${explicacao}" onchange="salvarPATotal('${loc}', this.value, ${equipamento})">
         </div>`;
     }).join('');
@@ -3644,8 +3669,12 @@ function renderizarPericias(char) {
         ...Object.values(pericias), ...Object.values(especializacoes)
     ].reduce((soma, dados) => soma + investimentoNaVisao(dados), 0);
 
-    const rotulos = { origem: 'Origem', carreira: 'Carreira', hobbie: 'Hobbie', todas: 'Todas' };
-    document.getElementById('periciasEtapaLabel').textContent = rotulos[visao] || 'Origem';
+    const rotulos = {
+        pt: { origem: 'Origem', carreira: 'Carreira', hobbie: 'Hobbie', todas: 'Todas' },
+        en: { origem: 'Origin', carreira: 'Career', hobbie: 'Hobby', todas: 'All' },
+        zh: { origem: '起源', carreira: '职业', hobbie: '爱好', todas: '全部' }
+    };
+    document.getElementById('periciasEtapaLabel').textContent = (rotulos[idiomaAtual] || rotulos.pt)[visao] || (rotulos[idiomaAtual] || rotulos.pt).origem;
 
     const pontosBox = document.getElementById('pontosRestantesBox');
     if (visao === 'todas') {
@@ -3679,7 +3708,7 @@ function renderizarPericias(char) {
         const input = somenteLeitura
             ? `<span>${treinoTotal}</span>`
             : `<input type="number" value="${treinoVisao}" min="0" max="${maxTreinoCategoria}" oninput="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo}', '${visao}')">`;
-        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(p)}</td><td>${p.formula}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
+        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(p)}</td><td>${formatarFormulaIdioma_(p.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
 
     const renderLinhaEspecializacao = (e, somenteLeitura = false) => {
@@ -3691,7 +3720,7 @@ function renderizarPericias(char) {
         const input = somenteLeitura
             ? `<span>${treinoTotal}</span>`
             : `<input type="number" value="${treinoVisao}" min="0" max="${maxTreinoCategoria}" oninput="atualizarTreinoEspecializacao('${e.id}', this.value, '${visao}')">`;
-        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(e)}</td><td>${e.tipo} - ${e.formula}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
+        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(e)}</td><td>${traduzirTipoPericia_(e.tipo)} - ${formatarFormulaIdioma_(e.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
 
     const estaInvestidaNestaVisao = (dados) => visao === 'todas' ? totalTreinoPericia_(dados) > 0 : investimentoNaVisao(dados) > 0;
@@ -5070,6 +5099,376 @@ window.fecharModal = () => {
     uploadedItemImage = null;
 };
 
+
+// ============================================
+// I18N DE INTERFACE + COMPATIBILIDADE DE ARMAS
+// ============================================
+
+const UI_EXTRA = {
+    pt: {
+        noCompatibleEquipment:'Nenhum equipamento compatível', noneEquipment:'Nenhum equipamento', fists:'Punhos',
+        fatigue:'Fadiga', weaponMismatch:'Arma não ideal', margin:'Margem', difficulty:'Dificuldade',
+        difficultySteps:'degrau(s) de dificuldade', exactWeapon:'adequada', relatedWeapon:'relacionada',
+        offWeapon:'improvisada', skills:'Perícias', skill:'Perícia', formula:'Fórmula', base:'Base', training:'Treino', total:'Total'
+    },
+    en: {
+        noCompatibleEquipment:'No compatible equipment', noneEquipment:'No equipment', fists:'Fists',
+        fatigue:'Fatigue', weaponMismatch:'Weapon mismatch', margin:'Margin', difficulty:'Difficulty',
+        difficultySteps:'difficulty step(s)', exactWeapon:'matched', relatedWeapon:'related',
+        offWeapon:'off-specialty', skills:'Skills', skill:'Skill', formula:'Formula', base:'Base', training:'Training', total:'Total'
+    },
+    zh: {
+        noCompatibleEquipment:'没有兼容装备', noneEquipment:'无装备', fists:'拳脚',
+        fatigue:'疲劳', weaponMismatch:'武器不匹配', margin:'差值', difficulty:'难度',
+        difficultySteps:'级难度', exactWeapon:'匹配', relatedWeapon:'相关',
+        offWeapon:'非专长', skills:'技能', skill:'技能', formula:'公式', base:'基础', training:'训练', total:'总值'
+    }
+};
+function uiTxt_(k) { return (UI_EXTRA[idiomaAtual] || UI_EXTRA.pt)[k] || UI_EXTRA.pt[k] || k; }
+
+const ATRIBUTOS_I18N = {
+    pt:{FOR:'FOR',CON:'CON',TAM:'TAM',DES:'DES',INT:'INT',POD:'POD',CAR:'CAR'},
+    en:{FOR:'STR',CON:'CON',TAM:'SIZ',DES:'DEX',INT:'INT',POD:'POW',CAR:'CHA'},
+    zh:{FOR:'力量',CON:'体质',TAM:'体型',DES:'敏捷',INT:'智力',POD:'意志',CAR:'魅力'}
+};
+function formatarFormulaIdioma_(formula) {
+    let s = String(formula || '');
+    const mapa = ATRIBUTOS_I18N[idiomaAtual] || ATRIBUTOS_I18N.pt;
+    ['FOR','CON','TAM','DES','INT','POD','CAR'].forEach(a => {
+        s = s.replace(new RegExp(a,'g'), mapa[a]);
+    });
+    return s.replace(/\*/g, '×');
+}
+function traduzirTipoPericia_(tipo) {
+    const n = normalizarTextoCombate_(tipo);
+    const mapa = {
+        combate:{pt:'Combate',en:'Combat',zh:'战斗'}, psi:{pt:'Psi',en:'Psi',zh:'灵能'},
+        magia:{pt:'Magia',en:'Magic',zh:'魔法'}
+    };
+    return (mapa[n]?.[idiomaAtual]) || tipo || '';
+}
+function traduzirRacaExibicao_(raca) {
+    const n = normalizarTextoCombate_(raca);
+    if (n === 'humano' || n === 'human' || n === '人类') return {pt:'Humano',en:'Human',zh:'人类'}[idiomaAtual] || 'Humano';
+    return raca;
+}
+function traduzirDificuldade_(id) {
+    const m = {
+        muito_facil:{pt:'Muito Fácil',en:'Very Easy',zh:'非常容易'},
+        facil:{pt:'Fácil',en:'Easy',zh:'容易'},
+        padrao:{pt:'Padrão',en:'Standard',zh:'标准'},
+        dificil:{pt:'Difícil',en:'Hard',zh:'困难'},
+        formidavel:{pt:'Formidável',en:'Formidable',zh:'艰巨'},
+        herculeo:{pt:'Hercúleo',en:'Herculean',zh:'极难'}
+    };
+    return m[id]?.[idiomaAtual] || m[id]?.pt || id;
+}
+function traduzirResultadoD100_(grau) {
+    const m = {
+        'Fiasco':{pt:'Fiasco',en:'Fumble',zh:'大失败'},
+        'Crítico':{pt:'Crítico',en:'Critical',zh:'大成功'},
+        'Sucesso':{pt:'Sucesso',en:'Success',zh:'成功'},
+        'Falha':{pt:'Falha',en:'Failure',zh:'失败'}
+    };
+    return m[grau]?.[idiomaAtual] || grau;
+}
+
+// Dicionário para todos os rótulos fixos mais usados. O sistema marca os nós
+// na primeira passagem e passa a alterná-los entre PT/EN/ZH sem perder a chave.
+const UI_TEXT_MAP = {
+    '📄 Personagem':['📄 Personagem','📄 Character','📄 角色'],
+    '📚 Perícias':['📚 Perícias','📚 Skills','📚 技能'],
+    '🎒 Inventário':['🎒 Inventário','🎒 Inventory','🎒 物品栏'],
+    '⚔️ Combate':['⚔️ Combate','⚔️ Combat','⚔️ 战斗'],
+    '📔 Anotações':['📔 Anotações','📔 Notes','📔 笔记'],
+    '🎲 Rolagem':['🎲 Rolagem','🎲 Rolls','🎲 掷骰'],
+    '🛡️ Escudo do Mestre':['🛡️ Escudo do Mestre','🛡️ GM Screen','🛡️ 主持人屏幕'],
+    'Editar Personagem':['Editar Personagem','Edit Character','编辑角色'],
+    'Nome:':['Nome:','Name:','姓名：'],
+    'Raça:':['Raça:','Race:','种族：'],
+    'Gênero:':['Gênero:','Gender:','性别：'],
+    'Imagem do Personagem (URL):':['Imagem do Personagem (URL):','Character Image (URL):','角色图片（URL）：'],
+    'Ou fazer upload:':['Ou fazer upload:','Or upload:','或上传：'],
+    'Origem:':['Origem:','Origin:','起源：'],
+    'Carreira:':['Carreira:','Career:','职业：'],
+    'Tipo Corporal:':['Tipo Corporal:','Body Type:','体型：'],
+    'Masculino':['Masculino','Male','男性'],
+    'Feminino':['Feminino','Female','女性'],
+    'Hermafrodita':['Hermafrodita','Hermaphrodite','雌雄同体'],
+    'Andrógeno':['Andrógeno','Androgynous','中性'],
+    'Neutro':['Neutro','Neutral','无性别'],
+    'Leve':['Leve','Light','轻型'],
+    'Médio':['Médio','Medium','中型'],
+    'Pesado':['Pesado','Heavy','重型'],
+    '💾 Salvar':['💾 Salvar','💾 Save','💾 保存'],
+    'Pontos de Ação':['Pontos de Ação','Action Points','行动点'],
+    'Iniciativa':['Iniciativa','Initiative','先攻'],
+    'Mod. Dano':['Mod. Dano','Damage Mod.','伤害修正'],
+    'Mod. Experiência':['Mod. Experiência','Experience Mod.','经验修正'],
+    'Taxa de Recuperação':['Taxa de Recuperação','Healing Rate','恢复率'],
+    'Movimento':['Movimento','Movement','移动'],
+    'Pontos de Sorte':['Pontos de Sorte','Luck Points','幸运点'],
+    'Pontos de Magia':['Pontos de Magia','Magic Points','魔法点'],
+    'Altura':['Altura','Height','身高'],
+    'Peso':['Peso','Weight','体重'],
+    'Investimento:':['Investimento:','Investment:','投入：'],
+    'Pontos disponíveis:':['Pontos disponíveis:','Available points:','可用点数：'],
+    'Total investido nesta categoria:':['Total investido nesta categoria:','Total invested in this category:','本类别已投入：'],
+    'Ver perícias de:':['Ver perícias de:','View skills from:','查看技能来源：'],
+    'Origem':['Origem','Origin','起源'],
+    'Carreira':['Carreira','Career','职业'],
+    'Hobbie':['Hobbie','Hobby','爱好'],
+    'Todas':['Todas','All','全部'],
+    'Perícias com Investimento':['Perícias com Investimento','Invested Skills','已投入技能'],
+    'Perícias Básicas Disponíveis':['Perícias Básicas Disponíveis','Available Basic Skills','可用基础技能'],
+    'Perícias Profissionais Disponíveis':['Perícias Profissionais Disponíveis','Available Professional Skills','可用专业技能'],
+    'Especializações':['Especializações','Specializations','专长'],
+    'Perícia':['Perícia','Skill','技能'],
+    'Especialização':['Especialização','Specialization','专长'],
+    'Fórmula':['Fórmula','Formula','公式'],
+    'Tipo / Fórmula':['Tipo / Fórmula','Type / Formula','类型／公式'],
+    'Base':['Base','Base','基础'],
+    'Treino':['Treino','Training','训练'],
+    'Total':['Total','Total','总值'],
+    '🔮 Psiquismo':['🔮 Psiquismo','🔮 Psychism','🔮 灵能'],
+    '💾 Salvar Perícias':['💾 Salvar Perícias','💾 Save Skills','💾 保存技能'],
+    '🎒 Inventário':['🎒 Inventário','🎒 Inventory','🎒 物品栏'],
+    '🧍 Equipado':['🧍 Equipado','🧍 Equipped','🧍 已装备'],
+    '👛 Bolso':['👛 Bolso','👛 Pocket','👛 口袋'],
+    '🎒 Mochila':['🎒 Mochila','🎒 Backpack','🎒 背包'],
+    '🚗 Veículo/Nave':['🚗 Veículo/Nave','🚗 Vehicle/Ship','🚗 载具／飞船'],
+    '🏠 Casa/Base':['🏠 Casa/Base','🏠 Home/Base','🏠 住所／基地'],
+    'Pontos de Vida':['Pontos de Vida','Hit Points','生命值'],
+    'PV Máx':['PV Máx','Max HP','最大生命'],
+    'PV Atual':['PV Atual','Current HP','当前生命'],
+    'Armadura (PA)':['Armadura (PA)','Armor (AP)','护甲（AP）'],
+    'Fadiga':['Fadiga','Fatigue','疲劳'],
+    '🎯 Painel de Combate':['🎯 Painel de Combate','🎯 Combat Panel','🎯 战斗面板'],
+    'Perícia de combate:':['Perícia de combate:','Combat skill:','战斗技能：'],
+    'Dificuldade circunstancial:':['Dificuldade circunstancial:','Circumstantial difficulty:','情境难度：'],
+    'Equipamento:':['Equipamento:','Equipment:','装备：'],
+    'Valor:':['Valor:','Value:','数值：'],
+    'Dano:':['Dano:','Damage:','伤害：'],
+    'Munição / Carga':['Munição / Carga','Ammo / Charge','弹药／能量'],
+    '🔋 Recarregar':['🔋 Recarregar','🔋 Reload','🔋 装填'],
+    '🎲 D100 de Combate':['🎲 D100 de Combate','🎲 Combat D100','🎲 战斗D100'],
+    '💥 Dano':['💥 Dano','💥 Damage','💥 伤害'],
+    '🎯 Localização D20':['🎯 Localização D20','🎯 Hit Location D20','🎯 命中部位D20'],
+    '⚡ Iniciativa':['⚡ Iniciativa','⚡ Initiative','⚡ 先攻'],
+    '🧾 Histórico de rolagens':['🧾 Histórico de rolagens','🧾 Roll History','🧾 掷骰记录'],
+    'últimas 50':['últimas 50','last 50','最近50次'],
+    'Nenhuma rolagem registrada.':['Nenhuma rolagem registrada.','No rolls recorded.','尚无掷骰记录。'],
+    '📔 Anotações':['📔 Anotações','📔 Notes','📔 笔记'],
+    '⭐ Eventos Especiais':['⭐ Eventos Especiais','⭐ Special Events','⭐ 特殊事件'],
+    '🎲 Rolagem de Dados':['🎲 Rolagem de Dados','🎲 Dice Roller','🎲 掷骰'],
+    '📊 Teste de Perícia':['📊 Teste de Perícia','📊 Skill Test','📊 技能检定'],
+    'Perícia:':['Perícia:','Skill:','技能：'],
+    '🎲 Rolar Perícia':['🎲 Rolar Perícia','🎲 Roll Skill','🎲 技能检定'],
+    'Sorte:':['Sorte:','Luck:','幸运：'],
+    '⭐ Gastar':['⭐ Gastar','⭐ Spend','⭐ 使用'],
+    '🛒 Mercado':['🛒 Mercado','🛒 Market','🛒 市场'],
+    'Todas as categorias':['Todas as categorias','All categories','全部类别'],
+    'Mochila':['Mochila','Backpack','背包'],
+    'Bolso':['Bolso','Pocket','口袋'],
+    'Veículo/Nave':['Veículo/Nave','Vehicle/Ship','载具／飞船'],
+    'Casa/Base':['Casa/Base','Home/Base','住所／基地'],
+    'Qualidade':['Qualidade','Quality','品质'],
+    'Básica ×1':['Básica ×1','Basic ×1','基础 ×1'],
+    'Média ×2':['Média ×2','Standard ×2','标准 ×2'],
+    'Superior ×4':['Superior ×4','Superior ×4','优良 ×4'],
+    'Comprar':['Comprar','Buy','购买'],
+    '📖 Regras do Sistema':['📖 Regras do Sistema','📖 System Rules','📖 系统规则'],
+    '⚙️ Configurações do Sistema (Mestre)':['⚙️ Configurações do Sistema (Mestre)','⚙️ System Settings (GM)','⚙️ 系统设置（主持人）'],
+    '📚 Banco de Dados':['📚 Banco de Dados','📚 Database','📚 数据库'],
+    'Perícias':['Perícias','Skills','技能'],
+    'Origens':['Origens','Origins','起源'],
+    'Carreiras':['Carreiras','Careers','职业'],
+    'Poderes Psi':['Poderes Psi','Psi Powers','灵能力量'],
+    'Itens':['Itens','Items','物品'],
+    'Cabeça':['Cabeça','Head','头部'],
+    'Peito':['Peito','Chest','胸部'],
+    'Abdômen':['Abdômen','Abdomen','腹部'],
+    'Braço Direito':['Braço Direito','Right Arm','右臂'],
+    'Braço Esquerdo':['Braço Esquerdo','Left Arm','左臂'],
+    'Perna Direita':['Perna Direita','Right Leg','右腿'],
+    'Perna Esquerda':['Perna Esquerda','Left Leg','左腿'],
+    'Muito Fácil':['Muito Fácil','Very Easy','非常容易'],
+    'Fácil':['Fácil','Easy','容易'],
+    'Padrão':['Padrão','Standard','标准'],
+    'Difícil':['Difícil','Hard','困难'],
+    'Formidável':['Formidável','Formidable','艰巨'],
+    'Hercúleo':['Hercúleo','Herculean','极难'],
+    'Descansado (Fresh)':['Descansado (Fresh)','Fresh','精力充沛'],
+    'Ofegante (Winded)':['Ofegante (Winded)','Winded','气喘'],
+    'Cansado (Tired)':['Cansado (Tired)','Tired','疲倦'],
+    'Fatigado (Wearied)':['Fatigado (Wearied)','Wearied','疲劳'],
+    'Exausto (Exhausted)':['Exausto (Exhausted)','Exhausted','精疲力竭'],
+    'Debilitado (Debilitated)':['Debilitado (Debilitated)','Debilitated','虚弱'],
+    'Incapacitado (Incapacitated)':['Incapacitado (Incapacitated)','Incapacitated','失去行动能力'],
+    'Semiconsciente (Semi-Conscious)':['Semiconsciente (Semi-Conscious)','Semi-Conscious','半昏迷'],
+    'Comatoso (Comatose)':['Comatoso (Comatose)','Comatose','昏迷'],
+    'Morto (Dead)':['Morto (Dead)','Dead','死亡']
+};
+const UI_TEXT_INDEX = {};
+Object.entries(UI_TEXT_MAP).forEach(([pt, vals]) => {
+    UI_TEXT_INDEX[pt] = pt;
+    UI_TEXT_INDEX[vals[1]] = pt;
+    UI_TEXT_INDEX[vals[2]] = pt;
+});
+function traduzirTextoFixo_(pt) {
+    const vals = UI_TEXT_MAP[pt];
+    if (!vals) return pt;
+    return vals[idiomaAtual === 'en' ? 1 : idiomaAtual === 'zh' ? 2 : 0];
+}
+function aplicarTraducaoInterface_(raiz=document.body) {
+    if (!raiz) return;
+    const walker = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(node => {
+        const pai = node.parentElement;
+        if (!pai || ['SCRIPT','STYLE','TEXTAREA'].includes(pai.tagName)) return;
+        const bruto = node.nodeValue || '';
+        const limpo = bruto.trim();
+        if (!limpo) return;
+        let chave = node.__mesaI18nKey || UI_TEXT_INDEX[limpo];
+        if (!chave) return;
+        node.__mesaI18nKey = chave;
+        const traduzido = traduzirTextoFixo_(chave);
+        const inicio = bruto.match(/^\s*/)?.[0] || '';
+        const fim = bruto.match(/\s*$/)?.[0] || '';
+        node.nodeValue = inicio + traduzido + fim;
+    });
+    const placeholders = {
+        'Buscar item...':['Buscar item...','Search item...','搜索物品...'],
+        'Suas anotações...':['Suas anotações...','Your notes...','你的笔记...'],
+        'Eventos especiais...':['Eventos especiais...','Special events...','特殊事件...']
+    };
+    document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el=>{
+        const cur = el.placeholder;
+        let key = el.dataset.i18nAutoPlaceholder;
+        if (!key) {
+            for (const [pt, vals] of Object.entries(placeholders)) {
+                if ([pt,...vals].includes(cur)) { key = pt; break; }
+            }
+            if (key) el.dataset.i18nAutoPlaceholder = key;
+        }
+        if (key) {
+            const vals = placeholders[key];
+            el.placeholder = vals[idiomaAtual === 'en' ? 1 : idiomaAtual === 'zh' ? 2 : 0];
+        }
+    });
+    // Atributos da frente da ficha e do editor.
+    const mapaA = ATRIBUTOS_I18N[idiomaAtual] || ATRIBUTOS_I18N.pt;
+    document.querySelectorAll('.attr-card .attr-label').forEach((el,i)=>{
+        const ids=['FOR','CON','TAM','DES','INT','POD','CAR'];
+        if (ids[i]) el.textContent = mapaA[ids[i]];
+    });
+    ['FOR','CON','TAM','DES','INT','POD','CAR'].forEach(a=>{
+        const input=document.getElementById(`edit${a}`);
+        const lab=input?.previousElementSibling;
+        if (lab && lab.tagName==='LABEL') lab.textContent=mapaA[a];
+    });
+}
+let observerI18nMesa_ = null;
+function iniciarObserverI18n_() {
+    if (observerI18nMesa_) return;
+    observerI18nMesa_ = new MutationObserver(muts=>{
+        if (idiomaAtual === 'pt') return;
+        muts.forEach(m=>m.addedNodes.forEach(n=>{
+            if (n.nodeType===1 || n.nodeType===3) aplicarTraducaoInterface_(n.nodeType===1 ? n : n.parentElement);
+        }));
+    });
+    observerI18nMesa_.observe(document.body,{childList:true,subtree:true});
+}
+
+// Compatibilidade de famílias de arma.
+// 0 = especialização correta; 1 = família próxima; 2 = arma fora da especialidade.
+function familiaArma_(item) {
+    const n = normalizarTextoCombate_([item?.id,item?.nome,item?.nome_en,item?.nome_zh,item?.descricao].filter(Boolean).join(' '));
+    if (/escudo|shield/.test(n)) return 'escudo';
+    if (/granada|grenade|arremesso|throw/.test(n)) return 'arremesso';
+    if (/arco|bow/.test(n)) return 'arco';
+    if (/escopeta|shotgun/.test(n)) return 'escopeta';
+    if (/submetralhadora|submachine/.test(n)) return 'submetralhadora';
+    if (/sniper|precisao|precision|anti.?material/.test(n)) return 'precisao';
+    if (/laser/.test(n) && /pesad|heavy/.test(n)) return 'laser_pesada';
+    if (/laser/.test(n) && /pistola|pistol|palm/.test(n)) return 'laser_pistola';
+    if (/laser/.test(n) && /rifle|fuzil|carabina|carbine/.test(n)) return 'laser_rifle';
+    if (/blaster|phaser|disrupt|disintegr|sonic/.test(n)) return 'energia';
+    if (/pistola|revolver|pistol|handgun|\.38|9mm|\.45|\.357|\.44/.test(n)) return 'pistola';
+    if (/fuzil|rifle|carabina|carbine|5\.56|7\.62/.test(n)) return 'rifle';
+    if (/metralhadora pesada|heavy machine|canhao portatil|launcher/.test(n)) return 'pesada';
+    if (/plasma|vibro/.test(n) && /espada|sword|blade|lamina/.test(n)) return 'plasma_vibro';
+    if (/lanca|alabarda|spear|halberd|polearm/.test(n)) return 'haste';
+    if (/faca|adaga|dagger|knife/.test(n)) return 'branca_curta';
+    if (/espada|sabre|saber|machado|sword|axe/.test(n)) return 'branca_longa';
+    if (itemEhCorpoACorpo_(item)) return 'improvisada';
+    return 'desconhecida';
+}
+const FAMILIAS_ESPECIALIZACAO = {
+    armas_brancas_curtas:['branca_curta'],
+    armas_brancas_longas:['branca_longa'],
+    armas_haste:['haste'],
+    armas_improvisadas:['improvisada'],
+    armas_arremesso:['arremesso'],
+    arqueiro:['arco'],
+    pistolas_revolveres:['pistola'],
+    fuzis_carabinas:['rifle'],
+    escopetas:['escopeta'],
+    submetralhadoras:['submetralhadora'],
+    armas_pesadas:['pesada'],
+    artilharia:['artilharia'],
+    atirador_elite:['precisao'],
+    combate_pistola_laser:['laser_pistola'],
+    pistolas_laser:['laser_pistola'],
+    rifles_laser:['laser_rifle'],
+    arma_laser_pesada:['laser_pesada'],
+    armas_energia:['energia'],
+    esgrima_plasma_vibro:['plasma_vibro']
+};
+function penalidadeCompatibilidadeArma_(pericia,item) {
+    if (!pericia || !item) return 0;
+    if (pericia.id === 'esquiva') return 0;
+    if (pericia.id === 'combate_desarmado' || pericia.id === 'briga_pugilismo') return 2;
+    const fam = familiaArma_(item);
+    if (fam === 'escudo' && normalizarTextoCombate_(pericia.uso || '').includes('defesa')) return 0;
+    const exatas = FAMILIAS_ESPECIALIZACAO[pericia.id] || [];
+    if (exatas.includes(fam)) return 0;
+
+    // Relações próximas que preservam boa parte da técnica.
+    const proximas = {
+        atirador_elite:['rifle'],
+        fuzis_carabinas:['precisao'],
+        pistolas_revolveres:['submetralhadora'],
+        submetralhadoras:['pistola'],
+        combate_pistola_laser:['energia'],
+        pistolas_laser:['energia'],
+        rifles_laser:['energia','laser_pesada'],
+        arma_laser_pesada:['laser_rifle','energia'],
+        armas_energia:['laser_pistola','laser_rifle','laser_pesada']
+    };
+    if ((proximas[pericia.id] || []).includes(fam)) return 1;
+
+    // Se continua no mesmo modo de combate, é permitido, porém com forte penalidade.
+    const uso = normalizarTextoCombate_(pericia.uso || pericia.usoCombate);
+    if (itemEhCorpoACorpo_(item) && (uso.includes('corpo a corpo') || uso.includes('defesa'))) return 2;
+    if (!itemEhCorpoACorpo_(item) && uso.includes('distancia')) return 2;
+    return 99;
+}
+function rotuloPenalidadeCompatibilidade_(graus) {
+    if (!graus || graus >= 99) return '';
+    if (graus === 1) return idiomaAtual==='zh' ? ' ⚠️ +1级' : idiomaAtual==='en' ? ' ⚠️ +1 step' : ' ⚠️ +1 grau';
+    return idiomaAtual==='zh' ? ' ⚠️ +2级' : idiomaAtual==='en' ? ' ⚠️ +2 steps' : ' ⚠️ +2 graus';
+}
+function aplicarPenalidadeCompatibilidade_(ajuste, valorBase, graus) {
+    if (!ajuste || ajuste.bloqueado || !graus || graus >= 99) return ajuste;
+    const indiceAtual = GRAUS_DIFICULDADE.findIndex(g=>g.id===ajuste.efetiva?.id);
+    const indiceNovo = Math.min(GRAUS_DIFICULDADE.length-1, Math.max(0, indiceAtual + graus));
+    const efetiva = GRAUS_DIFICULDADE[indiceNovo];
+    return {...ajuste, efetiva, valor:Math.max(1,Math.floor((parseInt(valorBase)||0)*efetiva.multiplicador)), degrausCompatibilidade:graus};
+}
+
 // ============================================
 // IDIOMA
 // ============================================
@@ -5107,6 +5506,16 @@ window.mudarIdioma = (lang) => {
     }
     renderizarListaPersonagens();
     if (document.getElementById('marketGrid')) renderizarMercado();
+    aplicarTraducaoInterface_(document.body);
+    iniciarObserverI18n_();
+    if (currentCharId) {
+        const charAtual = userCharacters.find(c => c.id === currentCharId);
+        if (charAtual) {
+            renderizarPericias(charAtual);
+            popularEquipamentosCombate_(charAtual);
+            atualizarListaPericias();
+        }
+    }
 };
 
 window.addEventListener('DOMContentLoaded', () => {
