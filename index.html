@@ -702,6 +702,7 @@
                                 <div style="display:flex;justify-content:flex-end;">
                                     <button onclick="usarPoderPsiRolagem()" style="border:none;border-radius:10px;padding:12px 22px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;font-weight:700;cursor:pointer;font-size:1em;">✨ Usar Poder</button>
                                 </div>
+                                <small style="display:block;color:#9f91c7;margin-top:10px;">O custo e o uso são registrados automaticamente. Até a automação individual de cada poder, o efeito específico é aplicado narrativamente pelo jogador/mestre.</small>
                             </div>
 
                             <div style="margin-top:20px;padding:16px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:10px;">
@@ -1059,6 +1060,51 @@ function somMagico_() {
     });
 }
 
+function somSalvar_() {
+    const ctx = obterAudioCtx_(); if (!ctx) return;
+    const agora = ctx.currentTime;
+    [440,554.37,659.25].forEach((freq,i)=>{
+        const osc=ctx.createOscillator(), gain=ctx.createGain();
+        osc.type='sine'; osc.frequency.value=freq;
+        gain.gain.setValueAtTime(.001,agora+i*.045);
+        gain.gain.linearRampToValueAtTime(.035,agora+i*.045+.018);
+        gain.gain.exponentialRampToValueAtTime(.001,agora+i*.045+.20);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(agora+i*.045); osc.stop(agora+i*.045+.22);
+    });
+}
+function somEspada_() {
+    const ctx=obterAudioCtx_(); if(!ctx) return;
+    const t=ctx.currentTime, osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.type='sawtooth'; osc.frequency.setValueAtTime(1250,t); osc.frequency.exponentialRampToValueAtTime(220,t+.18);
+    gain.gain.setValueAtTime(.055,t); gain.gain.exponentialRampToValueAtTime(.001,t+.20);
+    osc.connect(gain).connect(ctx.destination); osc.start(t); osc.stop(t+.21);
+}
+function somLaser_(plasma=false) {
+    const ctx=obterAudioCtx_(); if(!ctx) return;
+    const t=ctx.currentTime, osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.type=plasma?'sawtooth':'square';
+    osc.frequency.setValueAtTime(plasma?230:880,t); osc.frequency.exponentialRampToValueAtTime(plasma?85:180,t+(plasma?.30:.18));
+    gain.gain.setValueAtTime(plasma?.055:.035,t); gain.gain.exponentialRampToValueAtTime(.001,t+(plasma?.32:.20));
+    osc.connect(gain).connect(ctx.destination); osc.start(t); osc.stop(t+(plasma?.33:.21));
+}
+function tipoSomArma_(item,nomeEquip='') {
+    const texto=[nomeEquip,item?.nome,item?.nome_en,item?.nome_zh,item?.categoria,item?.dano,item?.municao]
+      .filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    if(texto.includes('plasma')) return 'plasma';
+    if(texto.includes('laser')||texto.includes('blaster')||texto.includes('energia')) return 'laser';
+    if(['espada','sabre','adaga','faca','lamina','vibro','machado'].some(x=>texto.includes(x))) return 'espada';
+    return 'dado';
+}
+function tocarSomDano_(item,nomeEquip) {
+    const tipo=tipoSomArma_(item,nomeEquip);
+    if(tipo==='plasma') return somLaser_(true);
+    if(tipo==='laser') return somLaser_(false);
+    if(tipo==='espada') return somEspada_();
+    return somDado_();
+}
+
+
 function getDescricao(item) {
     if (!item) return '';
     if (idiomaAtual === 'en') return item.descricao_en || item.descricao || '';
@@ -1351,6 +1397,7 @@ window.salvarAlturaPeso = async () => {
     const altura = parseInt(document.getElementById('editAltura').value);
     const peso = parseInt(document.getElementById('editPeso').value);
     await setDoc(doc(db, "personagens", currentCharId), { altura, peso }, { merge: true });
+    somSalvar_();
 };
 
 window.salvarRecursos = async () => {
@@ -1520,6 +1567,7 @@ function atualizarVisualizacao(data) {
     if (recursosInput) { recursosInput.value = Number(data.recursos || 0); recursosInput.disabled = !(userData && userData.role === 'mestre'); }
     atualizarPontosSorteEMagia_(data);
     renderizarPsiRolagem_(data);
+    renderizarPsiquismo_(data);
     
     renderizarInventario(data);
     renderizarCombate(data);
@@ -1573,6 +1621,7 @@ window.salvarPersonagem = async () => {
     }
     
     await carregarPersonagens();
+    somSalvar_();
     alert('Salvo!');
 };
 
@@ -2238,7 +2287,6 @@ function rolarExpressaoDanoCombate_(expressao) {
 }
 
 window.rolarDanoCombate = async () => {
-    somDado_();
     const resumo = document.getElementById('combatRollSummary');
     const expr = obterExpressaoDanoCombate_();
     if (!resumo) return;
@@ -2250,6 +2298,7 @@ window.rolarDanoCombate = async () => {
     const equipValor = document.getElementById('combatWeaponSelect')?.value || '';
     const item = encontrarEquipamentoCombate_(equipValor);
     const nomeEquip = equipValor === 'desarmado' ? 'Punhos' : (item ? getNome(item) : 'Dano');
+    tocarSomDano_(item, nomeEquip);
     resumo.innerHTML = `<strong>Dano ${escaparHtmlInventario_(expr)}</strong> → <strong>${r.total}</strong>${r.detalhes.length ? `<br><small>${escaparHtmlInventario_(r.detalhes.join(' · '))}</small>` : ''}${r.efeitos.length ? `<br><small>Efeito: ${escaparHtmlInventario_(r.efeitos.join(', '))}</small>` : ''}`;
     const detalhesTexto = r.detalhes.length ? ` · ${r.detalhes.join(' · ')}` : '';
     const efeitosTexto = r.efeitos.length ? ` · Efeito: ${r.efeitos.join(', ')}` : '';
@@ -2563,6 +2612,7 @@ window.salvarCombate = async (tipo, local, valor) => {
     combat[tipo][local] = parseInt(valor) || 0;
     
     await setDoc(doc(db, "personagens", currentCharId), { combate: combat }, { merge: true });
+    somSalvar_();
 };
 
 window.salvarFadiga = async () => {
@@ -2628,6 +2678,7 @@ window.salvarAnotacoes = async () => {
     const anotacoes = document.getElementById('charAnotacoes').value;
     const eventos = document.getElementById('charEventos').value;
     await setDoc(doc(db, "personagens", currentCharId), { anotacoes, eventos }, { merge: true });
+    somSalvar_();
     alert('Salvo!');
 };
 
@@ -3364,7 +3415,17 @@ function renderizarPsiRolagem_(char) {
 
     const esferas = ['Sentidos','Mente','Matéria'].filter(e => treinoPsiEsfera_(char, e) > 0);
     painel.classList.toggle('hidden', esferas.length === 0);
-    if (!esferas.length) return;
+    if (!esferas.length) {
+        esferaSel.innerHTML = '';
+        const poderSel = document.getElementById('psiRollPower');
+        const detalhe = document.getElementById('psiRollDetail');
+        const custo = document.getElementById('psiRollCost');
+        if (poderSel) poderSel.innerHTML = '';
+        if (detalhe) detalhe.innerHTML = '';
+        if (custo) { custo.value = 0; custo.disabled = true; }
+        pontos.textContent = '';
+        return;
+    }
 
     const max = pontosMagiaMax_(char);
     const gastos = Math.max(0, Math.floor(Number(char?.pontosMagiaGastos || 0)));
@@ -3474,7 +3535,11 @@ function renderizarPsiquismo_(char) {
     if (!painel || !container || !resumo) return;
     const possui = temPsiquismoInvestido_(char);
     painel.classList.toggle('hidden', !possui);
-    if (!possui) return;
+    if (!possui) {
+        container.innerHTML = '';
+        resumo.textContent = '';
+        return;
+    }
 
     const max = pontosMagiaMax_(char);
     const gastos = Math.max(0, Math.floor(Number(char?.pontosMagiaGastos || 0)));
@@ -4362,6 +4427,7 @@ window.salvarItem = async () => {
     }
     
     await setDoc(doc(db, "personagens", currentCharId), { inventario: inv }, { merge: true });
+    somSalvar_();
     await carregarPersonagens();
     fecharModal();
 };
