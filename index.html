@@ -335,20 +335,22 @@
                         <div class="form-section">
                             <h3>📚 Perícias</h3>
                             <div class="etapa-indicator">
-                                <h4>Etapa: <span id="periciasEtapaLabel">2 - Origem</span></h4>
+                                <h4>Investimento: <span id="periciasEtapaLabel">Origem</span></h4>
                                 <div class="pontos-restantes" id="pontosRestantesBox">
                                     Pontos disponíveis: <span id="periciasPontosRestantes">100</span> / <span id="periciasPontosTotal">100</span>
-                                    <br><small>Total investido: <span id="periciasTotalInvestido">0</span></small>
+                                    <br><small>Total investido nesta categoria: <span id="periciasTotalInvestido">0</span></small>
                                 </div>
                             </div>
                             
                             <div class="form-group">
-                                <label>Etapa de Criação:</label>
+                                <label>Ver perícias de:</label>
                                 <select id="periciasEtapa" onchange="mudarEtapaPericias()">
-                                    <option value="2">Etapa 2 - Origem (100 pts, máx 30 por perícia)</option>
-                                    <option value="3">Etapa 3 - Carreira (100 pts, máx 30 por perícia)</option>
-                                    <option value="4">Etapa 4 - Livre (150 pts, máx 30 por perícia)</option>
+                                    <option value="origem">Origem</option>
+                                    <option value="carreira">Carreira</option>
+                                    <option value="hobbie">Hobbie</option>
+                                    <option value="todas">Todas</option>
                                 </select>
+                                <small style="display:block;color:#aaa;margin-top:8px;">O limite de treino vale por categoria de investimento. Uma mesma perícia pode receber pontos em Origem, Carreira e Hobbie.</small>
                             </div>
 
                             <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias com Investimento</h4>
@@ -522,13 +524,13 @@
                 <div class="form-section">
                     <h3>⚙️ Configurações do Sistema (Mestre)</h3>
                     <div class="form-group"><label>Etapa 1 - Características:</label><input type="number" id="configEtapa1" value="80"></div>
-                    <div class="form-group"><label>Etapa 2 - Origem (Perícias Básicas):</label><input type="number" id="configEtapa2" value="100"></div>
-                    <div class="form-group"><label>Etapa 3 - Carreira (Perícias Profissionais):</label><input type="number" id="configEtapa3" value="100"></div>
-                    <div class="form-group"><label>Etapa 4 - Livre:</label><input type="number" id="configEtapa4" value="150"></div>
+                    <div class="form-group"><label>Origem:</label><input type="number" id="configEtapa2" value="100"></div>
+                    <div class="form-group"><label>Carreira:</label><input type="number" id="configEtapa3" value="100"></div>
+                    <div class="form-group"><label>Hobbie:</label><input type="number" id="configEtapa4" value="150"></div>
                     <div class="form-group"><label>Limite Mínimo Atributos (geral):</label><input type="number" id="configMinAttr" value="3"></div>
                     <div class="form-group"><label>Limite Mínimo INT/TAM:</label><input type="number" id="configMinAttrINT" value="6"></div>
                     <div class="form-group"><label>Limite Máximo Atributos:</label><input type="number" id="configMaxAttr" value="18"></div>
-                    <div class="form-group"><label>Máximo de Treino por Perícia/Etapa:</label><input type="number" id="configMaxTreino" value="30"></div>
+                    <div class="form-group"><label>Máximo de Treino por Perícia/Categoria:</label><input type="number" id="configMaxTreino" value="30"></div>
                     <button class="btn-save" onclick="salvarConfiguracoes()">💾 Salvar Configurações</button>
                 </div>
             </div>
@@ -537,7 +539,7 @@
             <div id="banco" class="tab-content">
                 <div class="form-section">
                     <h3>📚 Banco de Dados do Sistema</h3>
-                    <p style="color:#aaa; margin-bottom:20px;">Edite as perícias, origens, carreiras e outros dados do sistema.</p>
+                    <p style="color:#aaa; margin-bottom:20px;">Fonte administrativa do sistema. Alterações feitas aqui são gravadas no Firestore e alimentam as fichas.</p>
                     
                     <div class="tabs" style="margin-bottom:20px;">
                         <button class="tab-btn active" onclick="mostrarBancoAba('pericias', this)">Perícias</button>
@@ -734,9 +736,9 @@ function gerarEstrelas() {
 gerarEstrelas();
 
 const traducoes = {
-    pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: ' Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Etapa 2 - Origem (Perícias Básicas):', pointsEtapa3: 'Etapa 3 - Carreira (Perícias Profissionais):', pointsEtapa4: 'Etapa 4 - Livre:', saveConfig: ' Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: ' Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
-    en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Step 2 - Origin (Basic Skills):', pointsEtapa3: 'Step 3 - Career (Professional Skills):', pointsEtapa4: 'Step 4 - Free:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: ' Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
-    zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: ' 角色卡', tabConfig: '️ 设置', tabBanco: ' 数据库', tabRegras: ' 规则', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '阶段2 - 起源（基础技能）：', pointsEtapa3: '阶段3 - 职业（专业技能）：', pointsEtapa4: '阶段4 - 自由：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
+    pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: ' Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Origem:', pointsEtapa3: 'Carreira:', pointsEtapa4: 'Hobbie:', saveConfig: ' Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: ' Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
+    en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Origin:', pointsEtapa3: 'Career:', pointsEtapa4: 'Hobby:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: ' Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
+    zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: ' 角色卡', tabConfig: '️ 设置', tabBanco: ' 数据库', tabRegras: ' 规则', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '起源：', pointsEtapa3: '职业：', pointsEtapa4: '爱好：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
 };
 
 function getNome(item) {
@@ -1405,6 +1407,11 @@ const itensPadrao = [
 // FUNÇÕES DE NAVEGAÇÃO
 // ============================================
 window.mostrarAba = (abaId, btn) => {
+    const abasMestre = ['config', 'banco', 'escudo'];
+    if (abasMestre.includes(abaId) && (!userData || userData.role !== 'mestre')) {
+        alert('Esta área é exclusiva do mestre.');
+        return;
+    }
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(abaId).classList.add('active');
@@ -1420,13 +1427,17 @@ window.mostrarCharAba = (abaId, btn) => {
     if (abaId === 'pericias' && currentCharId) {
         const char = userCharacters.find(c => c.id === currentCharId);
         if (char) {
-            document.getElementById('periciasEtapa').value = '2';
+            document.getElementById('periciasEtapa').value = 'origem';
             renderizarPericias(char);
         }
     }
 };
 
 window.mostrarBancoAba = (abaId, btn) => {
+    if (!userData || userData.role !== 'mestre') {
+        alert('O Banco de Dados é exclusivo do mestre.');
+        return;
+    }
     document.querySelectorAll('#banco .tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('#banco .tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById(`banco-${abaId}`).classList.add('active');
@@ -1441,133 +1452,242 @@ window.mostrarBancoAba = (abaId, btn) => {
 // ============================================
 // FUNÇÕES DE PERÍCIAS
 // ============================================
+function normalizarChaveInvestimento_(chave) {
+    const mapa = { '2': 'origem', '3': 'carreira', '4': 'hobbie', origem: 'origem', carreira: 'carreira', hobbie: 'hobbie' };
+    return mapa[String(chave || '').toLowerCase()] || 'origem';
+}
+
+function obterInvestimentosPericia_(dados = {}) {
+    if (dados.investimentos && typeof dados.investimentos === 'object') {
+        return {
+            origem: Math.max(0, parseInt(dados.investimentos.origem) || 0),
+            carreira: Math.max(0, parseInt(dados.investimentos.carreira) || 0),
+            hobbie: Math.max(0, parseInt(dados.investimentos.hobbie) || 0)
+        };
+    }
+
+    // Compatibilidade com personagens criados pela versão antiga.
+    const legado = Math.max(0, parseInt(dados.treinoTotal ?? dados.treinoEtapa) || 0);
+    const chaveLegada = normalizarChaveInvestimento_(dados.etapa);
+    return {
+        origem: chaveLegada === 'origem' ? legado : 0,
+        carreira: chaveLegada === 'carreira' ? legado : 0,
+        hobbie: chaveLegada === 'hobbie' ? legado : 0
+    };
+}
+
+function totalTreinoPericia_(dados = {}) {
+    const inv = obterInvestimentosPericia_(dados);
+    return inv.origem + inv.carreira + inv.hobbie;
+}
+
+function listaIds_(valor) {
+    if (Array.isArray(valor)) return valor.filter(Boolean);
+    if (!valor) return [];
+    return String(valor).split(/[|,]/).map(v => v.trim()).filter(Boolean);
+}
+
 function renderizarPericias(char) {
-    const attrs = char.atributos || {};
+    const attrsBase = char.atributos || {};
+    const bonus = char.bonus || {};
+    const attrs = {};
+    ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(a => {
+        attrs[a] = (parseInt(attrsBase[a]) || 10) + (parseInt(bonus[a]) || 0);
+    });
+
     const pericias = char.pericias || {};
     const especializacoes = char.especializacoes || {};
-    const etapa = parseInt(document.getElementById('periciasEtapa').value) || 2;
+    const visao = String(document.getElementById('periciasEtapa').value || 'origem').toLowerCase();
     const origem = origensDB.find(o => o.id === char.origem);
     const carreira = carreirasDB.find(c => c.id === char.carreira);
-    const isMaster = userData.role === 'mestre';
-    const maxTreinoEtapa = isMaster ? 999 : configuracoes.maxTreino || 30;
-    const pontosEtapa = { 2: configuracoes.etapa2, 3: configuracoes.etapa3, 4: configuracoes.etapa4 };
-    const pontosTotal = pontosEtapa[etapa] || 100;
-    
+    const isMaster = userData && userData.role === 'mestre';
+    const maxTreinoCategoria = isMaster ? 999 : (configuracoes.maxTreino || 30);
+    const pontosPorVisao = {
+        origem: configuracoes.etapa2 || 100,
+        carreira: configuracoes.etapa3 || 100,
+        hobbie: configuracoes.etapa4 || 150
+    };
+
     let periciasDisponiveis = [];
     let especializacoesDisponiveis = [];
-    
-    if (etapa === 2 && origem) {
-        periciasDisponiveis = periciasDB.filter(p => p.tipo === 'Básica' && origem.periciasBasicas.includes(p.id));
-    } else if (etapa === 3 && carreira) {
-        periciasDisponiveis = periciasDB.filter(p => (p.tipo === 'Básica' && carreira.periciasBasicas.includes(p.id)) || (p.tipo === 'Profissional' && carreira.periciasProfissionais.includes(p.id)));
-        especializacoesDisponiveis = especializacoesDB.filter(e => carreira.especializacoes && carreira.especializacoes.includes(e.id));
-    } else if (etapa === 4) {
-        periciasDisponiveis = periciasDB;
-        especializacoesDisponiveis = especializacoesDB;
+
+    if (visao === 'origem' && origem) {
+        const idsBasicas = listaIds_(origem.periciasBasicas);
+        const idsProf = listaIds_(origem.periciasProfissionais);
+        const idsEsp = listaIds_(origem.especializacoes);
+        periciasDisponiveis = periciasDB.filter(p => idsBasicas.includes(p.id) || idsProf.includes(p.id));
+        especializacoesDisponiveis = especializacoesDB.filter(e => idsEsp.includes(e.id));
+    } else if (visao === 'carreira' && carreira) {
+        const idsBasicas = listaIds_(carreira.periciasBasicas);
+        const idsProf = listaIds_(carreira.periciasProfissionais);
+        const idsEsp = listaIds_(carreira.especializacoes);
+        periciasDisponiveis = periciasDB.filter(p => idsBasicas.includes(p.id) || idsProf.includes(p.id));
+        especializacoesDisponiveis = especializacoesDB.filter(e => idsEsp.includes(e.id));
+    } else if (visao === 'hobbie') {
+        periciasDisponiveis = [...periciasDB];
+        especializacoesDisponiveis = [...especializacoesDB];
+    } else if (visao === 'todas') {
+        // Na visão geral, todas as básicas continuam visíveis; profissionais e
+        // especializações aparecem quando o personagem possui investimento.
+        periciasDisponiveis = periciasDB.filter(p => p.tipo === 'Básica' || totalTreinoPericia_(pericias[p.id]) > 0);
+        especializacoesDisponiveis = especializacoesDB.filter(e => totalTreinoPericia_(especializacoes[e.id]) > 0);
     }
-    
-    let totalInvestidoEtapa = 0;
-    Object.values(pericias).forEach(p => { if (p.etapa === etapa) totalInvestidoEtapa += (p.treinoEtapa || 0); });
-    Object.values(especializacoes).forEach(e => { if (e.etapa === etapa) totalInvestidoEtapa += (e.treinoEtapa || 0); });
-    
-    document.getElementById('periciasEtapaLabel').textContent = `${etapa} - ${etapa === 2 ? 'Origem' : etapa === 3 ? 'Carreira' : 'Livre'}`;
-    document.getElementById('periciasPontosRestantes').textContent = Math.max(0, pontosTotal - totalInvestidoEtapa);
-    document.getElementById('periciasPontosTotal').textContent = pontosTotal;
-    document.getElementById('periciasTotalInvestido').textContent = totalInvestidoEtapa;
-    
+
+    const calcularFormula = (formula, valores) => {
+        try {
+            let expr = String(formula || '0');
+            ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(a => {
+                expr = expr.replace(new RegExp(a, 'g'), valores[a] || 0);
+            });
+            if (!/^[0-9+\-*/().\s]+$/.test(expr)) return 0;
+            return Math.round(Function(`"use strict"; return (${expr})`)());
+        } catch (e) {
+            console.warn('Fórmula inválida:', formula, e);
+            return 0;
+        }
+    };
+
+    const investimentoNaVisao = (dados) => {
+        const inv = obterInvestimentosPericia_(dados);
+        if (visao === 'todas') return totalTreinoPericia_(dados);
+        return inv[visao] || 0;
+    };
+
+    const totalInvestidoCategoria = visao === 'todas' ? 0 : [
+        ...Object.values(pericias), ...Object.values(especializacoes)
+    ].reduce((soma, dados) => soma + investimentoNaVisao(dados), 0);
+
+    const rotulos = { origem: 'Origem', carreira: 'Carreira', hobbie: 'Hobbie', todas: 'Todas' };
+    document.getElementById('periciasEtapaLabel').textContent = rotulos[visao] || 'Origem';
+
     const pontosBox = document.getElementById('pontosRestantesBox');
-    if (totalInvestidoEtapa > pontosTotal) { pontosBox.classList.add('over'); } else { pontosBox.classList.remove('over'); }
-    
+    if (visao === 'todas') {
+        document.getElementById('periciasPontosRestantes').textContent = '—';
+        document.getElementById('periciasPontosTotal').textContent = '—';
+        document.getElementById('periciasTotalInvestido').textContent = Object.values(pericias).reduce((s, d) => s + totalTreinoPericia_(d), 0) + Object.values(especializacoes).reduce((s, d) => s + totalTreinoPericia_(d), 0);
+        pontosBox.classList.remove('over');
+    } else {
+        const pontosTotal = pontosPorVisao[visao] || 100;
+        document.getElementById('periciasPontosRestantes').textContent = Math.max(0, pontosTotal - totalInvestidoCategoria);
+        document.getElementById('periciasPontosTotal').textContent = pontosTotal;
+        document.getElementById('periciasTotalInvestido').textContent = totalInvestidoCategoria;
+        pontosBox.classList.toggle('over', totalInvestidoCategoria > pontosTotal);
+    }
+
     const corpoInvestidas = document.getElementById('corpoPericiasInvestidas');
     const corpoBasicas = document.getElementById('corpoPericiasBasicas');
     const corpoProfissionais = document.getElementById('corpoPericiasProfissionais');
     const corpoEspecializacoes = document.getElementById('corpoEspecializacoes');
-    
     corpoInvestidas.innerHTML = '';
     corpoBasicas.innerHTML = '';
     corpoProfissionais.innerHTML = '';
     corpoEspecializacoes.innerHTML = '';
-    
-    const calcularFormula = (formula, attrs) => {
-        try {
-            let expr = formula;
-            expr = expr.replace(/FOR/g, attrs.FOR || 10);
-            expr = expr.replace(/CON/g, attrs.CON || 10);
-            expr = expr.replace(/TAM/g, attrs.TAM || 10);
-            expr = expr.replace(/DES/g, attrs.DES || 10);
-            expr = expr.replace(/INT/g, attrs.INT || 10);
-            expr = expr.replace(/POD/g, attrs.POD || 10);
-            expr = expr.replace(/CAR/g, attrs.CAR || 10);
-            expr = expr.replace(/\*/g, '*');
-            return Math.round(eval(expr));
-        } catch (e) { return 0; }
-    };
-    
-    const renderLinhaPericia = (p) => {
+
+    const renderLinhaPericia = (p, somenteLeitura = false) => {
         const base = calcularFormula(p.formula, attrs);
-        const dados = pericias[p.id] || { treinoTotal: 0, treinoEtapa: 0 };
-        const total = base + dados.treinoTotal;
-        return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(p)}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxTreinoEtapa}" oninput="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo.toLowerCase().includes('básica') ? 'basica' : 'profissional'}', ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+        const dados = pericias[p.id] || {};
+        const treinoTotal = totalTreinoPericia_(dados);
+        const treinoVisao = visao === 'todas' ? treinoTotal : investimentoNaVisao(dados);
+        const total = base + treinoTotal;
+        const input = somenteLeitura
+            ? `<span>${treinoTotal}</span>`
+            : `<input type="number" value="${treinoVisao}" min="0" max="${maxTreinoCategoria}" oninput="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo}', '${visao}')">`;
+        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(p)}</td><td>${p.formula}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
-    
-    const renderLinhaEspecializacao = (e) => {
+
+    const renderLinhaEspecializacao = (e, somenteLeitura = false) => {
         const base = calcularFormula(e.formula, attrs);
-        const dados = especializacoes[e.id] || { treinoTotal: 0, treinoEtapa: 0 };
-        const total = base + dados.treinoTotal;
-        return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(e)}</td><td>${e.tipo} - ${e.formula}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxTreinoEtapa}" oninput="atualizarTreinoEspecializacao('${e.id}', this.value, ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+        const dados = especializacoes[e.id] || {};
+        const treinoTotal = totalTreinoPericia_(dados);
+        const treinoVisao = visao === 'todas' ? treinoTotal : investimentoNaVisao(dados);
+        const total = base + treinoTotal;
+        const input = somenteLeitura
+            ? `<span>${treinoTotal}</span>`
+            : `<input type="number" value="${treinoVisao}" min="0" max="${maxTreinoCategoria}" oninput="atualizarTreinoEspecializacao('${e.id}', this.value, '${visao}')">`;
+        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(e)}</td><td>${e.tipo} - ${e.formula}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
-    
-    const periciasInvestidas = periciasDisponiveis.filter(p => pericias[p.id] && pericias[p.id].treinoTotal > 0);
-    const periciasNaoInvestidasBasicas = periciasDisponiveis.filter(p => p.tipo === 'Básica' && (!pericias[p.id] || pericias[p.id].treinoTotal === 0));
-    const periciasNaoInvestidasProfissionais = periciasDisponiveis.filter(p => p.tipo === 'Profissional' && (!pericias[p.id] || pericias[p.id].treinoTotal === 0));
-    const especializacoesInvestidas = especializacoesDisponiveis.filter(e => especializacoes[e.id] && especializacoes[e.id].treinoTotal > 0);
-    const especializacoesNaoInvestidas = especializacoesDisponiveis.filter(e => !especializacoes[e.id] || especializacoes[e.id].treinoTotal === 0);
-    
-    periciasInvestidas.forEach(p => corpoInvestidas.innerHTML += renderLinhaPericia(p));
-    especializacoesInvestidas.forEach(e => corpoInvestidas.innerHTML += renderLinhaEspecializacao(e));
-    periciasNaoInvestidasBasicas.forEach(p => corpoBasicas.innerHTML += renderLinhaPericia(p));
-    periciasNaoInvestidasProfissionais.forEach(p => corpoProfissionais.innerHTML += renderLinhaPericia(p));
-    especializacoesNaoInvestidas.forEach(e => corpoEspecializacoes.innerHTML += renderLinhaEspecializacao(e));
+
+    const estaInvestidaNestaVisao = (dados) => visao === 'todas' ? totalTreinoPericia_(dados) > 0 : investimentoNaVisao(dados) > 0;
+    const somenteLeitura = visao === 'todas';
+
+    const periciasInvestidas = periciasDisponiveis.filter(p => estaInvestidaNestaVisao(pericias[p.id] || {}));
+    const espInvestidas = especializacoesDisponiveis.filter(e => estaInvestidaNestaVisao(especializacoes[e.id] || {}));
+    const periciasNaoInvestidasBasicas = periciasDisponiveis.filter(p => p.tipo === 'Básica' && !estaInvestidaNestaVisao(pericias[p.id] || {}));
+    const periciasNaoInvestidasProfissionais = periciasDisponiveis.filter(p => p.tipo === 'Profissional' && !estaInvestidaNestaVisao(pericias[p.id] || {}));
+    const espNaoInvestidas = especializacoesDisponiveis.filter(e => !estaInvestidaNestaVisao(especializacoes[e.id] || {}));
+
+    periciasInvestidas.forEach(p => corpoInvestidas.innerHTML += renderLinhaPericia(p, somenteLeitura));
+    espInvestidas.forEach(e => corpoInvestidas.innerHTML += renderLinhaEspecializacao(e, somenteLeitura));
+    periciasNaoInvestidasBasicas.forEach(p => corpoBasicas.innerHTML += renderLinhaPericia(p, somenteLeitura));
+    periciasNaoInvestidasProfissionais.forEach(p => corpoProfissionais.innerHTML += renderLinhaPericia(p, somenteLeitura));
+    espNaoInvestidas.forEach(e => corpoEspecializacoes.innerHTML += renderLinhaEspecializacao(e, somenteLeitura));
 }
 
-window.atualizarTreinoPericia = async (periciaId, valor, tipo, etapa) => {
-    if (!currentCharId) return;
+window.atualizarTreinoPericia = async (periciaId, valor, tipo, categoria) => {
+    if (!currentCharId || categoria === 'todas') return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
-    const pericias = char.pericias || {};
-    const isMaster = userData.role === 'mestre';
-    const maxTreinoEtapa = isMaster ? 999 : configuracoes.maxTreino || 30;
-    let valorNum = parseInt(valor) || 0;
-    if (valorNum > maxTreinoEtapa) valorNum = maxTreinoEtapa;
-    if (valorNum < 0) valorNum = 0;
-    if (!pericias[periciaId]) pericias[periciaId] = { treinoTotal: 0, treinoEtapa: 0, tipo: tipo };
-    pericias[periciaId].treinoEtapa = valorNum;
-    pericias[periciaId].treinoTotal = (pericias[periciaId].treinoTotalAnterior || 0) + valorNum;
-    pericias[periciaId].etapa = etapa;
-    await setDoc(doc(db, "personagens", currentCharId), { pericias: pericias }, { merge: true });
-    await carregarPersonagens();
+
+    const pericias = { ...(char.pericias || {}) };
+    const atual = { ...(pericias[periciaId] || {}) };
+    const inv = obterInvestimentosPericia_(atual);
+    const limite = userData && userData.role === 'mestre' ? 999 : (configuracoes.maxTreino || 30);
+    const pontosDisponiveis = { origem: configuracoes.etapa2 || 100, carreira: configuracoes.etapa3 || 100, hobbie: configuracoes.etapa4 || 150 };
+    let valorNum = Math.max(0, Math.min(parseInt(valor) || 0, limite));
+
+    const totalOutras = [
+        ...Object.entries(pericias).filter(([id]) => id !== periciaId).map(([, d]) => obterInvestimentosPericia_(d)[categoria] || 0),
+        ...Object.values(char.especializacoes || {}).map(d => obterInvestimentosPericia_(d)[categoria] || 0)
+    ].reduce((a, b) => a + b, 0);
+    valorNum = Math.min(valorNum, Math.max(0, (pontosDisponiveis[categoria] || 9999) - totalOutras));
+
+    inv[categoria] = valorNum;
+    atual.investimentos = inv;
+    atual.treinoTotal = inv.origem + inv.carreira + inv.hobbie;
+    atual.tipo = tipo;
+    delete atual.treinoTotalAnterior;
+    pericias[periciaId] = atual;
+
+    char.pericias = pericias;
+    renderizarPericias(char);
+    await setDoc(doc(db, 'personagens', currentCharId), { pericias }, { merge: true });
 };
 
-window.atualizarTreinoEspecializacao = async (espId, valor, etapa) => {
-    if (!currentCharId) return;
+window.atualizarTreinoEspecializacao = async (espId, valor, categoria) => {
+    if (!currentCharId || categoria === 'todas') return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
-    const especializacoes = char.especializacoes || {};
-    const isMaster = userData.role === 'mestre';
-    const maxTreinoEtapa = isMaster ? 999 : configuracoes.maxTreino || 30;
-    let valorNum = parseInt(valor) || 0;
-    if (valorNum > maxTreinoEtapa) valorNum = maxTreinoEtapa;
-    if (valorNum < 0) valorNum = 0;
-    if (!especializacoes[espId]) especializacoes[espId] = { treinoTotal: 0, treinoEtapa: 0 };
-    especializacoes[espId].treinoEtapa = valorNum;
-    especializacoes[espId].treinoTotal = (especializacoes[espId].treinoTotalAnterior || 0) + valorNum;
-    especializacoes[espId].etapa = etapa;
-    await setDoc(doc(db, "personagens", currentCharId), { especializacoes: especializacoes }, { merge: true });
-    await carregarPersonagens();
+
+    const especializacoes = { ...(char.especializacoes || {}) };
+    const atual = { ...(especializacoes[espId] || {}) };
+    const inv = obterInvestimentosPericia_(atual);
+    const limite = userData && userData.role === 'mestre' ? 999 : (configuracoes.maxTreino || 30);
+    const pontosDisponiveis = { origem: configuracoes.etapa2 || 100, carreira: configuracoes.etapa3 || 100, hobbie: configuracoes.etapa4 || 150 };
+    let valorNum = Math.max(0, Math.min(parseInt(valor) || 0, limite));
+
+    const totalOutras = [
+        ...Object.values(char.pericias || {}).map(d => obterInvestimentosPericia_(d)[categoria] || 0),
+        ...Object.entries(especializacoes).filter(([id]) => id !== espId).map(([, d]) => obterInvestimentosPericia_(d)[categoria] || 0)
+    ].reduce((a, b) => a + b, 0);
+    valorNum = Math.min(valorNum, Math.max(0, (pontosDisponiveis[categoria] || 9999) - totalOutras));
+
+    inv[categoria] = valorNum;
+    atual.investimentos = inv;
+    atual.treinoTotal = inv.origem + inv.carreira + inv.hobbie;
+    delete atual.treinoTotalAnterior;
+    especializacoes[espId] = atual;
+
+    char.especializacoes = especializacoes;
+    renderizarPericias(char);
+    await setDoc(doc(db, 'personagens', currentCharId), { especializacoes }, { merge: true });
 };
 
 window.salvarPericias = async () => { alert('Perícias salvas automaticamente!'); };
-window.mudarEtapaPericias = () => { if (currentCharId) { const char = userCharacters.find(c => c.id === currentCharId); if (char) renderizarPericias(char); } };
+window.mudarEtapaPericias = () => {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (char) renderizarPericias(char);
+};
 
 // ============================================
 // FUNÇÕES DO BANCO DE DADOS
@@ -1681,48 +1801,164 @@ window.removerItemBanco = async (id) => { if (!confirm('Remover?')) return; awai
 // ============================================
 // IMPORTAÇÃO CSV
 // ============================================
+function slugId_(texto) {
+    return String(texto || '')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase().trim()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+}
+
+function parseBoolean_(valor) {
+    if (typeof valor === 'boolean') return valor;
+    return ['1', 'true', 'sim', 'yes', 'x'].includes(String(valor || '').trim().toLowerCase());
+}
+
+function parseNumero_(valor, padrao = 0) {
+    if (valor === null || valor === undefined || String(valor).trim() === '') return padrao;
+    const n = Number(String(valor).replace(',', '.'));
+    return Number.isFinite(n) ? n : padrao;
+}
+
+function normalizarLinhaImportacao_(tipo, bruto) {
+    const nome = String(bruto.nome || bruto.nome_pt || '').trim();
+    const id = String(bruto.id || '').trim() || slugId_(nome);
+    if (!nome || !id) return null;
+
+    const comum = {
+        id,
+        nome,
+        nome_en: String(bruto.nome_en || '').trim(),
+        nome_zh: String(bruto.nome_zh || '').trim()
+    };
+
+    if (tipo === 'pericias') {
+        return {
+            ...comum,
+            categoria: String(bruto.categoria || 'Geral').trim(),
+            tipo: String(bruto.tipo || 'Profissional').trim(),
+            formula: String(bruto.formula || '').trim(),
+            especializavel: parseBoolean_(bruto.especializavel),
+            penalidadeArmadura: parseNumero_(bruto.penalidadeArmadura, 0),
+            descricao: String(bruto.descricao || '').trim(),
+            descricao_en: String(bruto.descricao_en || '').trim(),
+            descricao_zh: String(bruto.descricao_zh || '').trim()
+        };
+    }
+
+    if (tipo === 'origens' || tipo === 'carreiras') {
+        return {
+            ...comum,
+            periciasBasicas: listaIds_(bruto.periciasBasicas),
+            periciasProfissionais: listaIds_(bruto.periciasProfissionais),
+            especializacoes: listaIds_(bruto.especializacoes),
+            descricao: String(bruto.descricao || '').trim(),
+            descricao_en: String(bruto.descricao_en || '').trim(),
+            descricao_zh: String(bruto.descricao_zh || '').trim()
+        };
+    }
+
+    if (tipo === 'especializacoes') {
+        return {
+            ...comum,
+            tipo: String(bruto.tipo || 'Combate').trim(),
+            uso: String(bruto.uso || bruto.usoCombate || 'Teste').trim(),
+            formula: String(bruto.formula || '').trim(),
+            descricao: String(bruto.descricao || '').trim(),
+            descricao_en: String(bruto.descricao_en || '').trim(),
+            descricao_zh: String(bruto.descricao_zh || '').trim()
+        };
+    }
+
+    if (tipo === 'itens') {
+        return {
+            ...comum,
+            categoria: String(bruto.categoria || 'Diversos').trim(),
+            peso: parseNumero_(bruto.peso, 0),
+            pa: parseNumero_(bruto.pa ?? bruto.PA, 0),
+            pv: parseNumero_(bruto.pv ?? bruto.PV, 1),
+            dano: String(bruto.dano || '').trim(),
+            alcance: String(bruto.alcance || '').trim(),
+            municao: String(bruto.municao || '').trim(),
+            quantidade: parseNumero_(bruto.quantidade ?? bruto.uso, 0),
+            preco: parseNumero_(bruto.preco, 0),
+            nivelAcesso: String(bruto.nivelAcesso || bruto.acesso || '').trim(),
+            material: String(bruto.material || '').trim(),
+            descricao: String(bruto.descricao || '').trim(),
+            descricao_en: String(bruto.descricao_en || '').trim(),
+            descricao_zh: String(bruto.descricao_zh || '').trim()
+        };
+    }
+
+    return { ...bruto, ...comum };
+}
+
 window.importarPlanilha = async (tipo, input) => {
+    if (!userData || userData.role !== 'mestre') {
+        alert('Apenas o mestre pode importar bancos do sistema.');
+        input.value = '';
+        return;
+    }
+
     const file = input.files[0];
     if (!file) return;
-    
+
     Papa.parse(file, {
         header: true,
+        skipEmptyLines: true,
+        delimiter: '', // autodetecta vírgula, ponto e vírgula ou tabulação
+        transformHeader: h => String(h || '').trim(),
         complete: async (results) => {
-            const dados = results.data.filter(d => d.nome);
-            
-            if (dados.length === 0) {
-                alert('❌ Planilha vazia ou inválida');
-                return;
+            try {
+                const dados = results.data
+                    .map(linha => normalizarLinhaImportacao_(tipo, linha))
+                    .filter(Boolean);
+
+                if (!dados.length) {
+                    alert('❌ Planilha vazia ou inválida. Verifique se existe a coluna nome (ou nome_pt).');
+                    return;
+                }
+
+                for (const item of dados) {
+                    await setDoc(doc(db, tipo, item.id), item, { merge: true });
+                }
+
+                alert(`✅ ${dados.length} registros de ${tipo} importados/atualizados.`);
+                await carregarBancosDeDados();
+            } catch (erro) {
+                console.error('Erro na importação:', erro);
+                alert('❌ Erro ao importar. Veja o console do navegador para detalhes.');
+            } finally {
+                input.value = '';
             }
-            
-            let count = 0;
-            for (const item of dados) {
-                const id = item.nome.toLowerCase().replace(/[^a-z0-9]/g, '_');
-                await setDoc(doc(db, tipo, id), item);
-                count++;
-            }
-            
-            alert(`✅ ${count} ${tipo} importados com sucesso!`);
-            await carregarBancosDeDados();
+        },
+        error: (erro) => {
+            console.error('Erro CSV:', erro);
+            alert('❌ Não foi possível ler o arquivo CSV.');
+            input.value = '';
         }
     });
 };
 
 window.baixarTemplate = (tipo) => {
     const templates = {
-        pericias: 'nome,nome_en,nome_zh,tipo,tipo_en,tipo_zh,formula,categoria,especializavel,penalidadeArmadura\nAtletismo,Athletics,运动,Básica,Basic,基础,FOR+DES,Física,false,1',
-        origens: 'nome,nome_en,nome_zh,periciasBasicas\nUrbano,Urban,城市,"atletismo,esquiva,percepcao"',
-        carreiras: 'nome,nome_en,nome_zh,periciasBasicas,periciasProfissionais,especializacoes\nMilitar,Military,军事,"atletismo,forca_bruta","armeiro,tatica","soldado_infantaria"',
-        especializacoes: 'nome,nome_en,nome_zh,tipo,uso,formula\nCombate Pistola Laser,Laser Pistol Combat,激光手枪战斗,Combate,Distância,DES+POD',
-        itens: 'nome,nome_en,nome_zh,categoria,peso,pa,pv,dano,alcance,municao,preco\nPistola Laser,Laser Pistol,激光手枪,Armas,2,0,5,2d6,60m,Bateria,9000'
+        pericias: 'id;nome;nome_en;nome_zh;categoria;tipo;formula;especializavel;penalidadeArmadura;descricao;descricao_en;descricao_zh\natletismo;Atletismo;Athletics;运动;Física;Básica;FOR+DES;false;1;;;',
+        origens: 'id;nome;nome_en;nome_zh;periciasBasicas;periciasProfissionais;especializacoes;descricao;descricao_en;descricao_zh\nurbano;Urbano;Urban;城市;costumes|dissimulacao|percepcao;;; ;;;',
+        carreiras: 'id;nome;nome_en;nome_zh;periciasBasicas;periciasProfissionais;especializacoes;descricao;descricao_en;descricao_zh\nmilitar;Militar;Military;军事;atletismo|esquiva|combate_desarmado;armeiro|tatica;soldado_infantaria|arma_laser_pesada;;;',
+        especializacoes: 'id;nome;nome_en;nome_zh;tipo;uso;formula;descricao;descricao_en;descricao_zh\ncombate_pistola_laser;Combate com Pistola Laser;Laser Pistol Combat;激光手枪战斗;Combate;Distância;DES+POD;;;',
+        itens: 'id;nome;nome_en;nome_zh;categoria;peso;pa;pv;dano;alcance;municao;quantidade;preco;nivelAcesso;material;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;0;5;2d6;60 m;Bateria;0;9000;Restrito;;;;'
     };
-    
-    const blob = new Blob([templates[tipo]], { type: 'text/csv' });
+
+    const conteudo = '\uFEFF' + (templates[tipo] || '');
+    const blob = new Blob([conteudo], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `template_${tipo}.csv`;
+    document.body.appendChild(a);
     a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
 };
 
 // ============================================
