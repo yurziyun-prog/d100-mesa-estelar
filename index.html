@@ -450,6 +450,16 @@
                                 <tbody id="corpoEspecializacoes"></tbody>
                             </table>
 
+
+                            <div id="psiPanel" class="hidden" style="margin-top:28px;padding:20px;border:1px solid rgba(166,91,255,.35);border-radius:14px;background:rgba(96,45,150,.16);">
+                                <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:14px;">
+                                    <h3 style="margin:0;color:#d8b4ff;">🔮 Psiquismo</h3>
+                                    <div id="psiPointsSummary" style="font-weight:bold;color:#fff;"></div>
+                                </div>
+                                <p style="color:#aaa;margin:0 0 16px;">Os poderes disponíveis dependem do treino na esfera: 1–14 = Arco 1, 15–29 = Arco 2, 30+ = Arco 3. O gasto é descontado dos Pontos de Magia.</p>
+                                <div id="psiPowersContainer"></div>
+                            </div>
+
                             <button class="btn-save" onclick="salvarPericias()" style="margin-top: 20px;">💾 Salvar Perícias</button>
                         </div>
                     </div>
@@ -709,6 +719,7 @@
                         <button class="tab-btn" onclick="mostrarBancoAba('origens', this)">Origens</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('carreiras', this)">Carreiras</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('especializacoes', this)">Especializações</button>
+                        <button class="tab-btn" onclick="mostrarBancoAba('poderesPsi', this)">Poderes Psi</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('itens', this)">Itens</button>
                     </div>
 
@@ -754,6 +765,17 @@
                         </div>
                         <div id="listaBancoEspecializacoes"></div>
                         <button class="btn-save" onclick="adicionarEspecializacao()" style="margin-top:15px;">➕ Adicionar Especialização</button>
+                    </div>
+
+                    <div id="banco-poderesPsi" class="tab-content">
+                        <h4 style="color:#fff; margin-bottom:15px;">Poderes Psiônicos</h4>
+                        <div class="import-section">
+                            <input type="file" id="importPsiPowersFile" accept=".csv" style="display:none" onchange="importarPlanilha('poderesPsi', this)">
+                            <button class="btn-import" onclick="document.getElementById('importPsiPowersFile').click()">📥 Importar Planilha CSV</button>
+                            <button class="btn-template" onclick="baixarTemplate('poderesPsi')">📄 Baixar Template</button>
+                        </div>
+                        <div id="listaBancoPoderesPsi"></div>
+                        <button class="btn-save" onclick="adicionarPoderPsi()" style="margin-top:15px;">➕ Adicionar Poder Psi</button>
                     </div>
 
                     <div id="banco-itens" class="tab-content">
@@ -940,6 +962,7 @@ let periciasDB = [];
 let origensDB = [];
 let carreirasDB = [];
 let especializacoesDB = [];
+let poderesPsiDB = [];
 let itensDB = [];
 let regrasTexto = '';
 let escudoTexto = '';
@@ -1063,6 +1086,16 @@ async function carregarBancosDeDados() {
         especializacoesDB = []; espSnap.forEach(doc => especializacoesDB.push({ id: doc.id, ...doc.data() }));
     }
 
+    const psiSnap = await getDocs(collection(db, "poderesPsi"));
+    if (psiSnap.empty) {
+        poderesPsiDB = [...poderesPsiPadrao];
+        if (userData && userData.role === 'mestre') {
+            for (const p of poderesPsiPadrao) await setDoc(doc(db, "poderesPsi", p.id), p);
+        }
+    } else {
+        poderesPsiDB = []; psiSnap.forEach(doc => poderesPsiDB.push({ id: doc.id, ...doc.data() }));
+    }
+
     const itensSnap = await getDocs(collection(db, "itens"));
     if (itensSnap.empty) {
         for (const i of itensPadrao) await setDoc(doc(db, "itens", i.id), i);
@@ -1126,6 +1159,7 @@ function renderizarBancoDados() {
     renderizarBancoOrigens();
     renderizarBancoCarreiras();
     renderizarBancoEspecializacoes();
+    renderizarBancoPoderesPsi();
     renderizarBancoItens();
 }
 
@@ -1162,7 +1196,7 @@ window.novoPersonagem = async () => {
     const maxChars = userData.role === 'mestre' ? 999 : 5;
     if (userCharacters.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
     const charId = `char_${Date.now()}`;
-    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: 0, pontosSorte: 1, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
+    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: 0, pontosSorte: null, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
     await carregarPersonagens(); currentCharId = charId;
     await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -1272,11 +1306,29 @@ function pontosMagiaMax_(char) {
     return Math.max(0, Math.floor(obterAtributoTotal_(char, 'POD')));
 }
 
+function pontosSorteMax_(char) {
+    const pod = Math.max(0, Math.floor(obterAtributoTotal_(char, 'POD')));
+    if (pod <= 6) return 1;
+    if (pod <= 12) return 2;
+    return Math.floor((pod - 13) / 6) + 3;
+}
+
+function pontosSorteAtuais_(char) {
+    const max = pontosSorteMax_(char);
+    // Migração da versão antiga, em que todo personagem começava incorretamente com 1 ponto.
+    if (char?.pontosSorteDerivadoV15 !== true) return max;
+    if (char?.pontosSorte === undefined || char?.pontosSorte === null) return max;
+    return Math.max(0, Math.min(max, Math.floor(Number(char.pontosSorte) || 0)));
+}
+
 function atualizarPontosSorteEMagia_(char) {
-    const sorte = Math.max(0, Math.floor(Number(char?.pontosSorte ?? 1)));
+    const maxSorte = pontosSorteMax_(char);
+    const sorte = pontosSorteAtuais_(char);
     const input = document.getElementById('editPontosSorte');
     if (input) {
         input.value = sorte;
+        input.max = maxSorte;
+        input.title = `Máximo derivado do POD: ${maxSorte}`;
         input.disabled = !(userData && userData.role === 'mestre');
     }
     const rollLuck = document.getElementById('rollLuckPoints');
@@ -1301,9 +1353,10 @@ window.salvarPontosSorte = async () => {
         atualizarPontosSorteEMagia_(char);
         return;
     }
-    const valor = Math.max(0, Math.floor(Number(document.getElementById('editPontosSorte')?.value) || 0));
+    const valor = Math.max(0, Math.min(pontosSorteMax_(char), Math.floor(Number(document.getElementById('editPontosSorte')?.value) || 0)));
     char.pontosSorte = valor;
-    await setDoc(doc(db, 'personagens', currentCharId), { pontosSorte: valor }, { merge: true });
+    char.pontosSorteDerivadoV15 = true;
+    await setDoc(doc(db, 'personagens', currentCharId), { pontosSorte: valor, pontosSorteDerivadoV15: true }, { merge: true });
     atualizarPontosSorteEMagia_(char);
 };
 
@@ -1311,14 +1364,15 @@ window.gastarPontoSorte = async () => {
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
-    const atual = Math.max(0, Math.floor(Number(char.pontosSorte ?? 1)));
+    const atual = pontosSorteAtuais_(char);
     if (atual <= 0) {
         alert('O personagem não possui Pontos de Sorte disponíveis.');
         return;
     }
     const novo = atual - 1;
     char.pontosSorte = novo;
-    await setDoc(doc(db, 'personagens', currentCharId), { pontosSorte: novo }, { merge: true });
+    char.pontosSorteDerivadoV15 = true;
+    await setDoc(doc(db, 'personagens', currentCharId), { pontosSorte: novo, pontosSorteDerivadoV15: true }, { merge: true });
     atualizarPontosSorteEMagia_(char);
     await registrarHistoricoGeral_('Sorte', `Gastou 1 Ponto de Sorte · Restantes: ${novo}`, { subtipo:'sorte', gasto:1, restante:novo });
 };
@@ -2634,6 +2688,40 @@ const especializacoesPadrao = [
     { id: 'psiquismo_sentidos', nome: 'Psiquismo (Sentidos)', nome_en: 'Psychism (Senses)', nome_zh: '心灵感应(感官)', tipo: 'Psi', uso: 'Teste', formula: 'INT+POD' }
 ];
 
+const poderesPsiPadrao = [
+    {"id": "evitar_dano", "nome": "Evitar Dano", "nome_en": "Avoid Damage", "nome_zh": "避免伤害", "esfera": "Sentidos", "arco": 1, "custo": 1, "observacao": "1 PP por ponto de dano absorvido", "observacao_en": "", "observacao_zh": ""},
+    {"id": "intuicao_psi", "nome": "Intuição", "nome_en": "Intuition", "nome_zh": "直觉", "esfera": "Sentidos", "arco": 1, "custo": 1, "observacao": "Adiciona 1% em uma perícia por PP gasto", "observacao_en": "", "observacao_zh": ""},
+    {"id": "meditacao_psi", "nome": "Meditação", "nome_en": "Meditation", "nome_zh": "冥想", "esfera": "Sentidos", "arco": 1, "custo": 0, "observacao": "Recupera 1/4 dos PP em uma hora; apenas 1 vez por dia", "observacao_en": "", "observacao_zh": ""},
+    {"id": "meditacao_batalha", "nome": "Meditação de Batalha", "nome_en": "Battle Meditation", "nome_zh": "战斗冥想", "esfera": "Sentidos", "arco": 2, "custo": 3, "observacao": "Após pelo menos 2 rodadas de concentração, a primeira ação de combate é Fácil", "observacao_en": "", "observacao_zh": ""},
+    {"id": "psicometria", "nome": "Psicometria", "nome_en": "Psychometry", "nome_zh": "触物感知", "esfera": "Sentidos", "arco": 2, "custo": 3, "observacao": "3 PP para perceber alguns dias no passado; depois, 5 PP por mês adicional", "observacao_en": "", "observacao_zh": ""},
+    {"id": "detectar_psi", "nome": "Detectar", "nome_en": "Detect", "nome_zh": "侦测", "esfera": "Sentidos", "arco": 2, "custo": 2, "observacao": "Detecta um psíquico próximo ou rastros deixados por ele", "observacao_en": "", "observacao_zh": ""},
+    {"id": "visao_distante", "nome": "Visão Distante", "nome_en": "Remote Vision", "nome_zh": "远视", "esfera": "Sentidos", "arco": 3, "custo": 10, "observacao": "Produz impressões vagas de eventos distantes no tempo e/ou espaço", "observacao_en": "", "observacao_zh": ""},
+    {"id": "amizade", "nome": "Amizade", "nome_en": "Friendship", "nome_zh": "友善", "esfera": "Mente", "arco": 1, "custo": 2, "observacao": "Melhora a disposição social de um ser inteligente", "observacao_en": "", "observacao_zh": ""},
+    {"id": "defesa_mental", "nome": "Defesa Mental", "nome_en": "Mental Defense", "nome_zh": "精神防御", "esfera": "Mente", "arco": 1, "custo": 2, "observacao": "Proteção contra ataques psíquicos; 2 PP por cada 5 m²", "observacao_en": "", "observacao_zh": ""},
+    {"id": "empatia", "nome": "Empatia", "nome_en": "Empathy", "nome_zh": "共情", "esfera": "Mente", "arco": 1, "custo": 2, "observacao": "Percebe sentimentos e atitudes gerais; renovar custa 1 PP", "observacao_en": "", "observacao_zh": ""},
+    {"id": "grito_psiquico", "nome": "Grito Psíquico", "nome_en": "Psychic Scream", "nome_zh": "心灵尖啸", "esfera": "Mente", "arco": 1, "custo": 3, "observacao": "Interferência mental intensa; dificulta ou impede ações dos alvos", "observacao_en": "", "observacao_zh": ""},
+    {"id": "ler_mente", "nome": "Ler Mente", "nome_en": "Read Mind", "nome_zh": "读心", "esfera": "Mente", "arco": 2, "custo": 5, "observacao": "5 PP para pensamentos superficiais; 10 PP para investigação profunda", "observacao_en": "", "observacao_zh": ""},
+    {"id": "influenciar_mente", "nome": "Influenciar Mente", "nome_en": "Influence Mind", "nome_zh": "精神影响", "esfera": "Mente", "arco": 2, "custo": 5, "observacao": "O alvo segue uma sugestão simples sem hesitação", "observacao_en": "", "observacao_zh": ""},
+    {"id": "ocultar_mente", "nome": "Ocultar Mente", "nome_en": "Hide Mind", "nome_zh": "隐藏心灵", "esfera": "Mente", "arco": 2, "custo": 1, "observacao": "Oculta a assinatura psíquica; 1 PP por minuto", "observacao_en": "", "observacao_zh": ""},
+    {"id": "mente_acelerada", "nome": "Mente Acelerada", "nome_en": "Accelerated Mind", "nome_zh": "加速思维", "esfera": "Mente", "arco": 2, "custo": 5, "observacao": "Acelera compreensão, leitura, pesquisa e processos mentais", "observacao_en": "", "observacao_zh": ""},
+    {"id": "amnesia", "nome": "Amnésia", "nome_en": "Amnesia", "nome_zh": "失忆", "esfera": "Mente", "arco": 2, "custo": 4, "observacao": "Faz esquecer um evento menor recente; eventos importantes podem custar o dobro", "observacao_en": "", "observacao_zh": ""},
+    {"id": "controlar_mente", "nome": "Controlar Mente", "nome_en": "Control Mind", "nome_zh": "精神控制", "esfera": "Mente", "arco": 3, "custo": 10, "observacao": "Controla as ações de um ser inteligente; teste resistido contra Vontade", "observacao_en": "", "observacao_zh": ""},
+    {"id": "medo", "nome": "Medo", "nome_en": "Fear", "nome_zh": "恐惧", "esfera": "Mente", "arco": 3, "custo": 10, "observacao": "Provoca terror intenso; alvo deve resistir com Vontade", "observacao_en": "", "observacao_zh": ""},
+    {"id": "telepatia", "nome": "Telepatia", "nome_en": "Telepathy", "nome_zh": "心灵感应", "esfera": "Mente", "arco": 3, "custo": 10, "observacao": "Envia uma mensagem mental simples; +5 PP por tipo adicional de informação", "observacao_en": "", "observacao_zh": ""},
+    {"id": "cura_psi", "nome": "Cura", "nome_en": "Healing", "nome_zh": "治疗", "esfera": "Matéria", "arco": 1, "custo": 1, "observacao": "Recupera 1 PV por PP; usos de cura física prolongada possuem custo especial", "observacao_en": "", "observacao_zh": ""},
+    {"id": "localizar_psi", "nome": "Localizar", "nome_en": "Locate", "nome_zh": "定位", "esfera": "Matéria", "arco": 1, "custo": 2, "observacao": "Localiza mentalmente um objeto conhecido, como uma bússola", "observacao_en": "", "observacao_zh": ""},
+    {"id": "mover_objeto", "nome": "Mover Objeto", "nome_en": "Move Object", "nome_zh": "移动物体", "esfera": "Matéria", "arco": 1, "custo": 3, "observacao": "Move objeto até aproximadamente tamanho humano; custo aumenta com a massa", "observacao_en": "", "observacao_zh": ""},
+    {"id": "ilusao", "nome": "Ilusão", "nome_en": "Illusion", "nome_zh": "幻觉", "esfera": "Matéria", "arco": 1, "custo": 2, "observacao": "Ilusão realista para todos os sentidos; 2 PP por rodada", "observacao_en": "", "observacao_zh": ""},
+    {"id": "impulso", "nome": "Impulso", "nome_en": "Impulse", "nome_zh": "冲击", "esfera": "Matéria", "arco": 2, "custo": 2, "observacao": "Empurra violentamente um alvo de tamanho humano cerca de 5 metros", "observacao_en": "", "observacao_zh": ""},
+    {"id": "salto", "nome": "Salto", "nome_en": "Leap", "nome_zh": "跳跃", "esfera": "Matéria", "arco": 2, "custo": 4, "observacao": "Salta até 10 m horizontal ou verticalmente ou amortece uma queda; distância extra exige mais PP", "observacao_en": "", "observacao_zh": ""},
+    {"id": "reflexos", "nome": "Reflexos", "nome_en": "Reflexes", "nome_zh": "反射", "esfera": "Matéria", "arco": 2, "custo": 5, "observacao": "Reflexos extremamente rápidos; permite ações adicionais e reação contra disparos; custo por rodada", "observacao_en": "", "observacao_zh": ""},
+    {"id": "atordoar_psi", "nome": "Atordoar", "nome_en": "Stun", "nome_zh": "震慑", "esfera": "Matéria", "arco": 2, "custo": 2, "observacao": "Forma focalizada do Grito Psíquico; 2 PP por pessoa afetada por rodada", "observacao_en": "", "observacao_zh": ""},
+    {"id": "fluxo_marcial", "nome": "Fluxo Marcial", "nome_en": "Martial Flow", "nome_zh": "武流", "esfera": "Matéria", "arco": 2, "custo": 1, "observacao": "Após uma rolagem, gaste 1 PP por 1% para alterar o resultado em direção a um grau de sucesso melhor", "observacao_en": "", "observacao_zh": ""},
+    {"id": "agilidade_psi", "nome": "Agilidade", "nome_en": "Agility", "nome_zh": "敏捷强化", "esfera": "Matéria", "arco": 3, "custo": 5, "observacao": "Adiciona 10% em Atletismo, Acrobacia ou Combate Desarmado na rodada para cada 5 PP", "observacao_en": "", "observacao_zh": ""},
+    {"id": "aceleracao", "nome": "Aceleração", "nome_en": "Acceleration", "nome_zh": "加速", "esfera": "Matéria", "arco": 3, "custo": 10, "observacao": "Movimento extremamente rápido, Movimento 30 por uma rodada", "observacao_en": "", "observacao_zh": ""},
+    {"id": "doador_vida", "nome": "Doador da Vida", "nome_en": "Life Giver", "nome_zh": "生命赐予者", "esfera": "Matéria", "arco": 3, "custo": 12, "observacao": "Restaura 1 PV a um ser morto por causa não natural, até 2 minutos após a morte", "observacao_en": "", "observacao_zh": ""}
+];
+
 const itensPadrao = [
     { id: 'pistola_laser', nome: 'Pistola Laser', nome_en: 'Laser Pistol', nome_zh: '激光手枪', categoria: 'Armas', peso: 2, pa: 0, pv: 5, dano: '2d6', alcance: '60m', municao: 'Bateria', preco: 9000 },
     { id: 'rifle_laser', nome: 'Rifle Laser', nome_en: 'Laser Rifle', nome_zh: '激光步枪', categoria: 'Armas', peso: 4, pa: 0, pv: 8, dano: '2d8', alcance: '300m', municao: 'Bateria', preco: 18000 },
@@ -2799,6 +2887,7 @@ window.mostrarBancoAba = (abaId, btn) => {
     if (abaId === 'origens') renderizarBancoOrigens();
     if (abaId === 'carreiras') renderizarBancoCarreiras();
     if (abaId === 'especializacoes') renderizarBancoEspecializacoes();
+    if (abaId === 'poderesPsi') renderizarBancoPoderesPsi();
     if (abaId === 'itens') renderizarBancoItens();
 };
 
@@ -3042,6 +3131,107 @@ window.mudarEtapaPericias = () => {
     if (char) renderizarPericias(char);
 };
 
+function especializacaoPsiIdPorEsfera_(esfera) {
+    const chave = String(esfera || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    if (chave === 'sentidos') return 'psiquismo_sentidos';
+    if (chave === 'mente') return 'psiquismo_mente';
+    if (chave === 'materia') return 'psiquismo_materia';
+    return '';
+}
+
+function arcoPsiPorTreino_(treino) {
+    treino = Math.max(0, Math.floor(Number(treino) || 0));
+    if (treino <= 0) return 0;
+    if (treino <= 14) return 1;
+    if (treino <= 29) return 2;
+    return 3;
+}
+
+function getObservacaoPsi_(poder) {
+    if (!poder) return '';
+    if (idiomaAtual === 'en') return poder.observacao_en || poder.observacao || '';
+    if (idiomaAtual === 'zh') return poder.observacao_zh || poder.observacao || '';
+    return poder.observacao || '';
+}
+
+function renderizarPsiquismo_(char) {
+    const painel = document.getElementById('psiPanel');
+    const container = document.getElementById('psiPowersContainer');
+    const resumo = document.getElementById('psiPointsSummary');
+    if (!painel || !container || !resumo) return;
+    const possui = temPsiquismoInvestido_(char);
+    painel.classList.toggle('hidden', !possui);
+    if (!possui) return;
+
+    const max = pontosMagiaMax_(char);
+    const gastos = Math.max(0, Math.floor(Number(char?.pontosMagiaGastos || 0)));
+    const restantes = Math.max(0, max - gastos);
+    resumo.textContent = `Pontos de Magia: ${restantes} / ${max}`;
+
+    const esferas = ['Sentidos','Mente','Matéria'];
+    container.innerHTML = esferas.map(esfera => {
+        const espId = especializacaoPsiIdPorEsfera_(esfera);
+        const treino = totalTreinoPericia_((char?.especializacoes || {})[espId] || {});
+        if (treino <= 0) return '';
+        const arco = arcoPsiPorTreino_(treino);
+        const poderes = poderesPsiDB.filter(p => String(p.esfera||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase() === esfera.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase() && Number(p.arco||1) <= arco);
+        const cards = poderes.map(p => {
+            const custo = Math.max(0, Number(p.custo || 0));
+            const obs = getObservacaoPsi_(p);
+            return `<div style="padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.04);margin:8px 0;display:grid;grid-template-columns:minmax(160px,1fr) 90px auto;gap:10px;align-items:center;">
+                <div><strong style="color:#fff;">${escaparBanco_(getNome(p))}</strong><div style="color:#aaa;font-size:.88em;margin-top:4px;">Arco ${Number(p.arco||1)} · ${escaparBanco_(obs)}</div></div>
+                <input type="number" id="psiCost_${escaparBanco_(p.id)}" min="${custo}" step="1" value="${custo}" title="PP a gastar" style="width:82px;text-align:center;">
+                <button class="btn-small btn-select" onclick="usarPoderPsi('${escaparBanco_(p.id)}')">Usar</button>
+            </div>`;
+        }).join('');
+        return `<div style="margin:16px 0 20px;"><h4 style="color:#d8b4ff;margin:0 0 8px;">${esfera} · Treino ${treino} · Arco ${arco}</h4>${cards || '<div style="color:#888;">Nenhum poder disponível no banco.</div>'}</div>`;
+    }).join('');
+}
+
+window.usarPoderPsi = async (poderId) => {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    const poder = poderesPsiDB.find(p => p.id === poderId);
+    if (!char || !poder) return;
+    const espId = especializacaoPsiIdPorEsfera_(poder.esfera);
+    const treino = totalTreinoPericia_((char.especializacoes || {})[espId] || {});
+    const arco = arcoPsiPorTreino_(treino);
+    if (!espId || treino <= 0 || Number(poder.arco || 1) > arco) {
+        alert('O personagem ainda não tem acesso a este poder.');
+        return;
+    }
+    const minimo = Math.max(0, Number(poder.custo || 0));
+    const input = document.getElementById(`psiCost_${poderId}`);
+    const gasto = Math.max(0, Math.floor(Number(input?.value ?? minimo) || 0));
+    if (gasto < minimo) {
+        alert(`O custo mínimo deste poder é ${minimo} PP.`);
+        if (input) input.value = minimo;
+        return;
+    }
+    const max = pontosMagiaMax_(char);
+    const gastosAtuais = Math.max(0, Math.floor(Number(char.pontosMagiaGastos || 0)));
+    const restantes = Math.max(0, max - gastosAtuais);
+    if (gasto > restantes) {
+        alert(`Pontos de Magia insuficientes. Disponíveis: ${restantes}.`);
+        return;
+    }
+    char.pontosMagiaGastos = gastosAtuais + gasto;
+    await setDoc(doc(db,'personagens',currentCharId),{pontosMagiaGastos:char.pontosMagiaGastos},{merge:true});
+    await registrarHistoricoGeral_('Psiquismo', `${getNome(poder)} · ${poder.esfera} · Arco ${poder.arco} · Gasto ${gasto} PP`, {subtipo:'psiquismo',poderId:poder.id,esfera:poder.esfera,arco:Number(poder.arco||1),gastoPP:gasto});
+    atualizarPontosSorteEMagia_(char);
+    renderizarPsiquismo_(char);
+};
+
+window.restaurarPontosMagia = async (quantidade) => {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId); if (!char) return;
+    const atual = Math.max(0, Math.floor(Number(char.pontosMagiaGastos || 0)));
+    const q = Math.max(0, Math.floor(Number(quantidade) || 0));
+    char.pontosMagiaGastos = Math.max(0, atual - q);
+    await setDoc(doc(db,'personagens',currentCharId),{pontosMagiaGastos:char.pontosMagiaGastos},{merge:true});
+    atualizarPontosSorteEMagia_(char); renderizarPsiquismo_(char);
+}
+
 // ============================================
 // FUNÇÕES DO BANCO DE DADOS
 // ============================================
@@ -3120,6 +3310,61 @@ function renderizarBancoEspecializacoes() {
         </tr>`);
     el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Tipo','Fórmula','Uso','Ações'], linhas);
 }
+
+function renderizarBancoPoderesPsi() {
+    const el = document.getElementById('listaBancoPoderesPsi');
+    if (!el) return;
+    const linhas = [...poderesPsiDB]
+        .sort((a,b) => (String(a.esfera||'')+String(a.arco||0)+String(a.nome||'')).localeCompare(String(b.esfera||'')+String(b.arco||0)+String(b.nome||''),'pt'))
+        .map(p => `
+        <tr>
+            <td>${escaparBanco_(p.nome || '')}</td>
+            <td>${escaparBanco_(p.nome_en || '')}</td>
+            <td>${escaparBanco_(p.nome_zh || '')}</td>
+            <td>${escaparBanco_(p.esfera || '')}</td>
+            <td>${Number(p.arco || 1)}</td>
+            <td>${Number(p.custo || 0)}</td>
+            <td>${escaparBanco_(p.observacao || '')}</td>
+            <td class="actions"><button class="btn-small btn-select" onclick="editarPoderPsi('${escaparBanco_(p.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerPoderPsi('${escaparBanco_(p.id)}')">Remover</button></td>
+        </tr>`);
+    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Esfera','Arco','Custo','Observação','Ações'], linhas);
+}
+
+window.adicionarPoderPsi = async () => {
+    if (!userData || userData.role !== 'mestre') return;
+    const nome = prompt('Nome do poder (PT):'); if (!nome) return;
+    const nome_en = prompt('Name (EN):','') || '';
+    const nome_zh = prompt('名称 (中文):','') || '';
+    const esfera = prompt('Esfera (Sentidos/Mente/Matéria):','Sentidos') || 'Sentidos';
+    const arco = Math.max(1, Math.min(3, parseInt(prompt('Arco (1-3):','1')) || 1));
+    const custo = Math.max(0, Number(prompt('Custo mínimo em PP:','1')) || 0);
+    const observacao = prompt('Observação / regra:','') || '';
+    const id = slugId_(nome);
+    await setDoc(doc(db,'poderesPsi',id),{id,nome,nome_en,nome_zh,esfera,arco,custo,observacao});
+    await carregarBancosDeDados();
+};
+
+window.editarPoderPsi = async (id) => {
+    if (!userData || userData.role !== 'mestre') return;
+    const p = poderesPsiDB.find(x=>x.id===id); if (!p) return;
+    const nome = prompt('Nome do poder (PT):',p.nome||''); if (!nome) return;
+    const nome_en = prompt('Name (EN):',p.nome_en||'') ?? p.nome_en ?? '';
+    const nome_zh = prompt('名称 (中文):',p.nome_zh||'') ?? p.nome_zh ?? '';
+    const esfera = prompt('Esfera:',p.esfera||'Sentidos') || p.esfera || 'Sentidos';
+    const arco = Math.max(1,Math.min(3,parseInt(prompt('Arco (1-3):',String(p.arco||1)))||1));
+    const custo = Math.max(0,Number(prompt('Custo mínimo em PP:',String(p.custo||0)))||0);
+    const observacao = prompt('Observação / regra:',p.observacao||'') ?? p.observacao ?? '';
+    await setDoc(doc(db,'poderesPsi',id),{...p,nome,nome_en,nome_zh,esfera,arco,custo,observacao});
+    await carregarBancosDeDados();
+};
+
+window.removerPoderPsi = async (id) => {
+    if (!userData || userData.role !== 'mestre') return;
+    if (!confirm('Remover este poder psiônico?')) return;
+    await deleteDoc(doc(db,'poderesPsi',id));
+    poderesPsiDB = poderesPsiDB.filter(p=>p.id!==id);
+    renderizarBancoPoderesPsi();
+};
 
 function renderizarBancoItens() {
     const container = document.getElementById('listaBancoItens');
@@ -3502,6 +3747,18 @@ function normalizarLinhaImportacao_(tipo, bruto) {
         };
     }
 
+    if (tipo === 'poderesPsi') {
+        return {
+            ...comum,
+            esfera: String(bruto.esfera || '').trim(),
+            arco: Math.max(1, Math.min(3, parseInt(bruto.arco) || 1)),
+            custo: Math.max(0, parseNumero_(bruto.custo, 0)),
+            observacao: String(bruto.observacao || bruto.descricao || '').trim(),
+            observacao_en: String(bruto.observacao_en || bruto.descricao_en || '').trim(),
+            observacao_zh: String(bruto.observacao_zh || bruto.descricao_zh || '').trim()
+        };
+    }
+
     if (tipo === 'itens') {
         const usoBruto = bruto.uso ?? bruto.quantidade ?? '';
         return {
@@ -3584,6 +3841,7 @@ window.baixarTemplate = (tipo) => {
         origens: 'id;nome;nome_en;nome_zh;periciasBasicas;periciasProfissionais;especializacoes;descricao;descricao_en;descricao_zh\nurbano;Urbano;Urban;城市;costumes|dissimulacao|percepcao;;; ;;;',
         carreiras: 'id;nome;nome_en;nome_zh;periciasBasicas;periciasProfissionais;especializacoes;descricao;descricao_en;descricao_zh\nmilitar;Militar;Military;军事;atletismo|esquiva|combate_desarmado;armeiro|tatica;soldado_infantaria|arma_laser_pesada;;;',
         especializacoes: 'id;nome;nome_en;nome_zh;tipo;uso;formula;descricao;descricao_en;descricao_zh\ncombate_pistola_laser;Combate com Pistola Laser;Laser Pistol Combat;激光手枪战斗;Combate;Distância;DES+POD;;;',
+        poderesPsi: 'id;nome;nome_en;nome_zh;esfera;arco;custo;observacao;observacao_en;observacao_zh\nevitar_dano;Evitar Dano;Avoid Damage;避免伤害;Sentidos;1;1;1 PP por ponto de dano absorvido;;',
         itens: 'id;nome;nome_en;nome_zh;categoria;peso;preco;pa;pv;alcance;dano;municao;uso;destinoLocal;locaisProtegidos;nivelAcesso;material;unidade;imagem;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;9000;0;5;60 m;2d6;Bateria;100;Armas laser;;Restrito;Liga metálica;Peça;;;;'
     };
 
@@ -3903,6 +4161,10 @@ window.removerCarreira = removerCarreira;
 window.adicionarEspecializacao = adicionarEspecializacao;
 window.editarEspecializacao = editarEspecializacao;
 window.removerEspecializacao = removerEspecializacao;
+window.adicionarPoderPsi = adicionarPoderPsi;
+window.editarPoderPsi = editarPoderPsi;
+window.removerPoderPsi = removerPoderPsi;
+window.usarPoderPsi = usarPoderPsi;
 window.adicionarItemBanco = adicionarItemBanco;
 window.editarItemBanco = editarItemBanco;
 window.removerItemBanco = removerItemBanco;
