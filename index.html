@@ -4,6 +4,108 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
+        @media (max-width: 768px) {
+            .attributes-grid { grid-template-columns: repeat(2, 1fr); }
+            .character-header { justify-content: center; text-align: center; }
+            .skills-table { font-size: 0.85em; }
+        }
+
+        /* ============================================
+           CORREÇÃO: ALINHAMENTO DAS PERÍCIAS
+           ============================================ */
+
+        /* Banco de dados - layout melhor */
+        .db-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.2s;
+        }
+        .db-item:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(0,212,255,0.3);
+        }
+        .db-item-info {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .db-item-name {
+            font-weight: bold;
+            color: #fff;
+            min-width: 180px;
+            font-size: 1.05em;
+        }
+        .db-item-details {
+            color: #aaa;
+            font-size: 0.9em;
+            flex: 1;
+        }
+        .db-item-actions {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0;
+        }
+
+        /* Tabelas de perícias - alinhamento uniforme */
+        .skills-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            table-layout: fixed;
+        }
+        .skills-table th, .skills-table td {
+            padding: 10px 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            text-align: left;
+            vertical-align: middle;
+        }
+        .skills-table th {
+            background: rgba(0,212,255,0.2);
+            color: #fff;
+            font-weight: bold;
+        }
+        .skills-table td {
+            background: rgba(255,255,255,0.03);
+        }
+        /* Larguras fixas para cada coluna */
+        .skills-table th:nth-child(1), .skills-table td:nth-child(1) { width: 35%; }
+        .skills-table th:nth-child(2), .skills-table td:nth-child(2) { width: 20%; }
+        .skills-table th:nth-child(3), .skills-table td:nth-child(3) { width: 10%; text-align: center; }
+        .skills-table th:nth-child(4), .skills-table td:nth-child(4) { width: 15%; text-align: center; }
+        .skills-table th:nth-child(5), .skills-table td:nth-child(5) { width: 20%; text-align: center; }
+
+        .skills-table input[type="number"] {
+            width: 60px;
+            padding: 6px;
+            text-align: center;
+            background: rgba(0,212,255,0.15);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 5px;
+            color: #fff;
+            font-size: 1em;
+        }
+        .skills-table input[type="number"]:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(0,212,255,0.25);
+        }
+        .skill-total { 
+            color: #00d4ff; 
+            font-weight: bold; 
+            font-size: 1.1em;
+        }
+        .skill-invested { 
+            background: rgba(40,167,69,0.15) !important; 
+        }
+    </style> 
+</head>
     <style>
         /* ============================================
            SEÇÃO 1: ESTILOS GLOBAIS E FUNDO
@@ -816,10 +918,10 @@
                             </table>
 
                             <h4 style="color: #fff; margin: 20px 0 10px 0;">Especializações</h4>
-                            <table class="skills-table">
-                                <thead><tr><th>Especialização</th><th>Tipo</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
-                                <tbody id="corpoEspecializacoes"></tbody>
-                            </table>
+<table class="skills-table">
+    <thead><tr><th>Especialização</th><th>Tipo / Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
+    <tbody id="corpoEspecializacoes"></tbody>
+</table>
 
                             <button class="btn-save" onclick="salvarPericias()" style="margin-top: 20px;">💾 Salvar Perícias</button>
                         </div>
@@ -1792,19 +1894,31 @@ Espaço para anotações privadas do mestre.
             corpoEspecializacoes.innerHTML = '';
             
             const renderLinhaPericia = (p) => {
-                const base = calcularFormula(p.formula, attrs);
-                const dados = pericias[p.id] || { treinoTotal: 0, treinoEtapa: 0 };
-                const total = base + dados.treinoTotal;
-                const maxPermitido = maxTreinoEtapa;
-                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${p.nome}</td><td>${p.formula}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" oninput="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo.toLowerCase() === 'básica' ? 'basica' : 'profissional'}', ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
-            };
-            
-            const renderLinhaEspecializacao = (e) => {
-                const base = calcularFormula(e.formula, attrs);
-                const dados = especializacoes[e.id] || { treinoTotal: 0, treinoEtapa: 0 };
-                const total = base + dados.treinoTotal;
-                const maxPermitido = maxTreinoEtapa;
-                return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}"><td>${e.nome}</td><td>${e.uso}</td><td>${base}</td><td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" oninput="atualizarTreinoEspecializacao('${e.id}', this.value, ${etapa})"></td><td class="skill-total">${total}</td></tr>`;
+    const base = calcularFormula(p.formula, attrs);
+    const dados = pericias[p.id] || { treinoTotal: 0, treinoEtapa: 0 };
+    const total = base + dados.treinoTotal;
+    const maxPermitido = maxTreinoEtapa;
+    return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}">
+        <td>${p.nome}</td>
+        <td>${p.formula}</td>
+        <td>${base}</td>
+        <td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" oninput="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo.toLowerCase().includes('básica') ? 'basica' : 'profissional'}', ${etapa})"></td>
+        <td class="skill-total">${total}</td>
+    </tr>`;
+};
+
+const renderLinhaEspecializacao = (e) => {
+    const base = calcularFormula(e.formula, attrs);
+    const dados = especializacoes[e.id] || { treinoTotal: 0, treinoEtapa: 0 };
+    const total = base + dados.treinoTotal;
+    const maxPermitido = maxTreinoEtapa;
+    return `<tr class="${dados.treinoTotal > 0 ? 'skill-invested' : ''}">
+        <td>${e.nome}</td>
+        <td>${e.tipo} - ${e.formula}</td>
+        <td>${base}</td>
+        <td><input type="number" value="${dados.treinoEtapa || 0}" min="0" max="${maxPermitido}" oninput="atualizarTreinoEspecializacao('${e.id}', this.value, ${etapa})"></td>
+        <td class="skill-total">${total}</td>
+    </tr>`;
             };
             
             const periciasInvestidas = periciasDisponiveis.filter(p => pericias[p.id] && pericias[p.id].treinoTotal > 0);
@@ -2047,7 +2161,22 @@ Espaço para anotações privadas do mestre.
             if (abaId === 'itens') renderizarBancoItens();
         };
 
-        function renderizarBancoPericias() { document.getElementById('listaBancoPericias').innerHTML = periciasDB.map(p => `<div class="db-item"><div class="db-item-header"><strong>${p.nome}</strong> (${p.tipo}) - ${p.formula}<div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarPericia('${p.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerPericia('${p.id}')">Remover</button></div></div></div>`).join(''); }
+        function renderizarBancoPericias() { 
+    document.getElementById('listaBancoPericias').innerHTML = periciasDB
+        .sort((a, b) => a.nome.localeCompare(b.nome))
+        .map(p => `
+        <div class="db-item">
+            <div class="db-item-info">
+                <span class="db-item-name">${p.nome}</span>
+                <span class="db-item-details">(${p.tipo}) - ${p.formula}</span>
+            </div>
+            <div class="db-item-actions">
+                <button class="btn-small btn-edit" onclick="editarPericia('${p.id}')">Editar</button>
+                <button class="btn-small btn-delete" onclick="removerPericia('${p.id}')">Remover</button>
+            </div>
+        </div>
+    `).join(''); 
+}
         function renderizarBancoOrigens() { document.getElementById('listaBancoOrigens').innerHTML = origensDB.map(o => `<div class="db-item"><div class="db-item-header"><strong>${o.nome}</strong> - Perícias: ${o.periciasBasicas.join(', ')}<div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarOrigem('${o.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerOrigem('${o.id}')">Remover</button></div></div></div>`).join(''); }
         function renderizarBancoCarreiras() { document.getElementById('listaBancoCarreiras').innerHTML = carreirasDB.map(c => `<div class="db-item"><div class="db-item-header"><strong>${c.nome}</strong><div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarCarreira('${c.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerCarreira('${c.id}')">Remover</button></div></div><div>Básicas: ${c.periciasBasicas.join(', ')}</div><div>Profissionais: ${c.periciasProfissionais.join(', ')}</div><div>Especializações: ${(c.especializacoes || []).join(', ') || 'Nenhuma'}</div></div>`).join(''); }
         function renderizarBancoEspecializacoes() { document.getElementById('listaBancoEspecializacoes').innerHTML = especializacoesDB.map(e => `<div class="db-item"><div class="db-item-header"><strong>${e.nome}</strong> (${e.tipo}) - ${e.formula}<div class="db-item-actions"><button class="btn-small btn-edit" onclick="editarEspecializacao('${e.id}')">Editar</button><button class="btn-small btn-delete" onclick="removerEspecializacao('${e.id}')">Remover</button></div></div></div>`).join(''); }
