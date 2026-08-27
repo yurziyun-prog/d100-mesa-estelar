@@ -647,11 +647,11 @@
                                 <div style="margin:15px 0;color:#00d4ff;font-size:1.2em;">
                                     Valor da Perícia: <strong id="skillValue">—</strong>
                                 </div>
-                                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-                                    <button class="dice-btn" onclick="rolarPericia()" style="flex:1 1 320px;">🎲 Rolar Perícia</button>
-                                    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-                                        <span style="color:#ffd166;font-size:.95em;">Sorte: <strong id="rollLuckPoints">—</strong></span>
-                                        <button onclick="gastarPontoSorte()" style="border:none;border-radius:10px;padding:9px 14px;background:linear-gradient(135deg,#f1c40f,#d68910);color:#fff;font-weight:700;cursor:pointer;font-size:.92em;">⭐ Gastar</button>
+                                <div style="display:grid;grid-template-columns:minmax(220px,1.8fr) minmax(170px,.7fr);gap:14px;align-items:center;">
+                                    <button class="dice-btn" onclick="rolarPericia()" style="width:100%;min-height:58px;">🎲 Rolar Perícia</button>
+                                    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
+                                        <span style="color:#ffd166;font-size:1em;">Sorte: <strong id="rollLuckPoints">—</strong></span>
+                                        <button onclick="gastarPontoSorte()" style="border:none;border-radius:10px;padding:12px 18px;background:linear-gradient(135deg,#f1c40f,#d68910);color:#fff;font-weight:700;cursor:pointer;font-size:1em;min-width:118px;">⭐ Gastar</button>
                                     </div>
                                 </div>
                                 <small style="display:block;color:#aaa;margin-top:10px;">Todas as perícias básicas são permitidas. Profissionais e especializações aparecem quando o personagem possui investimento. O gasto de Sorte é registrado no histórico; o efeito narrativo/mecânico pode ser definido conforme a situação.</small>
@@ -679,8 +679,29 @@
                                 </div>
                             </div>
 
-                            <div id="psiRollHint" style="margin-top:20px;padding:14px 16px;background:rgba(139,92,246,0.10);border:1px solid rgba(139,92,246,0.30);border-radius:10px;color:#d9ccff;">
-                                <strong>🔮 Psiquismo:</strong> as especializações psiônicas investidas aparecem normalmente em Teste. A reserva de Pontos de Magia aparece na ficha quando houver Psiquismo. A seleção de poderes, arcos e custos será conectada ao banco de poderes em uma próxima etapa.
+                            <div id="psiRollPanel" class="hidden" style="margin-top:22px;padding:18px;background:rgba(139,92,246,0.10);border:1px solid rgba(139,92,246,0.35);border-radius:12px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+                                    <h4 style="margin:0;color:#d8b4ff;font-size:1.2em;">🔮 Poder Psiônico</h4>
+                                    <strong id="psiRollPoints" style="color:#fff;">PP: —</strong>
+                                </div>
+                                <div style="display:grid;grid-template-columns:minmax(170px,.7fr) minmax(230px,1.3fr) minmax(110px,.45fr);gap:12px;align-items:end;">
+                                    <div class="form-group" style="margin:0;">
+                                        <label>Esfera:</label>
+                                        <select id="psiRollSphere" onchange="atualizarPoderesPsiRolagem()"></select>
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label>Poder:</label>
+                                        <select id="psiRollPower" onchange="atualizarDetalhePsiRolagem()"></select>
+                                    </div>
+                                    <div class="form-group" style="margin:0;">
+                                        <label>PP a gastar:</label>
+                                        <input type="number" id="psiRollCost" min="0" step="1" value="0" style="text-align:center;">
+                                    </div>
+                                </div>
+                                <div id="psiRollDetail" style="margin:12px 0;padding:12px 14px;border-radius:9px;background:rgba(0,0,0,.18);color:#d9ccff;min-height:46px;"></div>
+                                <div style="display:flex;justify-content:flex-end;">
+                                    <button onclick="usarPoderPsiRolagem()" style="border:none;border-radius:10px;padding:12px 22px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;font-weight:700;cursor:pointer;font-size:1em;">✨ Usar Poder</button>
+                                </div>
                             </div>
 
                             <div style="margin-top:20px;padding:16px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:10px;">
@@ -1346,9 +1367,50 @@ window.salvarRecursos = async () => {
     renderizarMercado();
 };
 
+function normalizarPsi_(valor) {
+    return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+
+function encontrarEspecializacaoPsi_(char, esfera) {
+    const alvo = normalizarPsi_(esfera);
+    const mapaPadrao = {
+        sentidos:'psiquismo_sentidos',
+        mente:'psiquismo_mente',
+        materia:'psiquismo_materia'
+    };
+    const especializacoesChar = char?.especializacoes || {};
+    const idPadrao = mapaPadrao[alvo];
+    if (idPadrao && especializacoesChar[idPadrao]) {
+        return { id:idPadrao, dados:especializacoesChar[idPadrao] };
+    }
+
+    // Compatibilidade com IDs importados/antigos: procura pelo banco e pelo próprio ID.
+    for (const [id, dados] of Object.entries(especializacoesChar)) {
+        const registro = especializacoesDB.find(e => e.id === id);
+        const nomes = [
+            id,
+            registro?.nome,
+            registro?.nome_en,
+            registro?.nome_zh
+        ].map(normalizarPsi_).join(' ');
+        const ehPsi = nomes.includes('psiquismo') || nomes.includes('psychism') || nomes.includes('心灵');
+        const ehEsfera = alvo === 'materia'
+            ? (nomes.includes('materia') || nomes.includes('matter') || nomes.includes('物质'))
+            : alvo === 'mente'
+            ? (nomes.includes('mente') || nomes.includes('mind') || nomes.includes('心灵'))
+            : (nomes.includes('sentidos') || nomes.includes('senses') || nomes.includes('感官'));
+        if (ehPsi && ehEsfera) return { id, dados };
+    }
+    return null;
+}
+
+function treinoPsiEsfera_(char, esfera) {
+    const achado = encontrarEspecializacaoPsi_(char, esfera);
+    return achado ? totalTreinoPericia_(achado.dados || {}) : 0;
+}
+
 function temPsiquismoInvestido_(char) {
-    const ids = ['psiquismo_materia', 'psiquismo_mente', 'psiquismo_sentidos'];
-    return ids.some(id => totalTreinoPericia_((char?.especializacoes || {})[id] || {}) > 0);
+    return ['Sentidos','Mente','Matéria'].some(esfera => treinoPsiEsfera_(char, esfera) > 0);
 }
 
 function pontosMagiaMax_(char) {
@@ -1457,6 +1519,7 @@ function atualizarVisualizacao(data) {
     const recursosInput = document.getElementById('editRecursos');
     if (recursosInput) { recursosInput.value = Number(data.recursos || 0); recursosInput.disabled = !(userData && userData.role === 'mestre'); }
     atualizarPontosSorteEMagia_(data);
+    renderizarPsiRolagem_(data);
     
     renderizarInventario(data);
     renderizarCombate(data);
@@ -3005,7 +3068,10 @@ window.mostrarCharAba = (abaId, btn) => {
             renderizarPericias(char);
         }
         if (char && abaId === 'combate') renderizarCombate(char);
-        if (char && abaId === 'rolagem') atualizarListaPericias();
+        if (char && abaId === 'rolagem') {
+            atualizarListaPericias();
+            renderizarPsiRolagem_(char);
+        }
     }
 };
 
@@ -3289,6 +3355,118 @@ function getObservacaoPsi_(poder) {
     return poder.observacao || '';
 }
 
+
+function renderizarPsiRolagem_(char) {
+    const painel = document.getElementById('psiRollPanel');
+    const esferaSel = document.getElementById('psiRollSphere');
+    const pontos = document.getElementById('psiRollPoints');
+    if (!painel || !esferaSel || !pontos) return;
+
+    const esferas = ['Sentidos','Mente','Matéria'].filter(e => treinoPsiEsfera_(char, e) > 0);
+    painel.classList.toggle('hidden', esferas.length === 0);
+    if (!esferas.length) return;
+
+    const max = pontosMagiaMax_(char);
+    const gastos = Math.max(0, Math.floor(Number(char?.pontosMagiaGastos || 0)));
+    pontos.textContent = `PP: ${Math.max(0,max-gastos)} / ${max}`;
+
+    const anterior = esferaSel.value;
+    esferaSel.innerHTML = esferas.map(e => {
+        const treino = treinoPsiEsfera_(char,e);
+        const arco = arcoPsiPorTreino_(treino);
+        return `<option value="${e}">${e} · Arco ${arco}</option>`;
+    }).join('');
+    if (esferas.includes(anterior)) esferaSel.value = anterior;
+    atualizarPoderesPsiRolagem();
+}
+
+window.atualizarPoderesPsiRolagem = () => {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    const esferaSel = document.getElementById('psiRollSphere');
+    const poderSel = document.getElementById('psiRollPower');
+    if (!char || !esferaSel || !poderSel) return;
+
+    const esfera = esferaSel.value;
+    const treino = treinoPsiEsfera_(char, esfera);
+    const arco = arcoPsiPorTreino_(treino);
+    const poderes = poderesPsiDB
+        .filter(p => normalizarPsi_(p.esfera) === normalizarPsi_(esfera) && Number(p.arco || 1) <= arco)
+        .sort((a,b) => Number(a.arco||1)-Number(b.arco||1) || getNome(a).localeCompare(getNome(b)));
+
+    poderSel.innerHTML = poderes.length
+        ? poderes.map(p => `<option value="${escaparBanco_(p.id)}">${escaparBanco_(getNome(p))} · A${Number(p.arco||1)} · ${Number(p.custo||0)} PP</option>`).join('')
+        : '<option value="">Nenhum poder disponível</option>';
+    atualizarDetalhePsiRolagem();
+};
+
+window.atualizarDetalhePsiRolagem = () => {
+    const poderId = document.getElementById('psiRollPower')?.value || '';
+    const poder = poderesPsiDB.find(p => p.id === poderId);
+    const detalhe = document.getElementById('psiRollDetail');
+    const custo = document.getElementById('psiRollCost');
+    if (!detalhe || !custo) return;
+
+    if (!poder) {
+        detalhe.textContent = 'Nenhum poder disponível para esta esfera/arco.';
+        custo.value = 0;
+        custo.min = 0;
+        custo.disabled = true;
+        return;
+    }
+
+    const minimo = Math.max(0, Number(poder.custo || 0));
+    custo.disabled = false;
+    custo.min = minimo;
+    custo.value = minimo;
+    const obs = getObservacaoPsi_(poder);
+    detalhe.innerHTML = `<strong>${escaparBanco_(getNome(poder))}</strong> · ${escaparBanco_(poder.esfera)} · Arco ${Number(poder.arco||1)} · custo mínimo ${minimo} PP<br><span style="color:#b9add8;">${escaparBanco_(obs)}</span>`;
+};
+
+window.usarPoderPsiRolagem = async () => {
+    somMagico_();
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    const poderId = document.getElementById('psiRollPower')?.value || '';
+    const poder = poderesPsiDB.find(p => p.id === poderId);
+    if (!char || !poder) return;
+
+    const treino = treinoPsiEsfera_(char, poder.esfera);
+    const arco = arcoPsiPorTreino_(treino);
+    if (treino <= 0 || Number(poder.arco || 1) > arco) {
+        alert('O personagem ainda não tem acesso a este poder.');
+        return;
+    }
+
+    const minimo = Math.max(0, Number(poder.custo || 0));
+    const input = document.getElementById('psiRollCost');
+    const gasto = Math.max(0, Math.floor(Number(input?.value ?? minimo) || 0));
+    if (gasto < minimo) {
+        alert(`O custo mínimo deste poder é ${minimo} PP.`);
+        if (input) input.value = minimo;
+        return;
+    }
+
+    const max = pontosMagiaMax_(char);
+    const gastosAtuais = Math.max(0, Math.floor(Number(char.pontosMagiaGastos || 0)));
+    const restantes = Math.max(0, max - gastosAtuais);
+    if (gasto > restantes) {
+        alert(`Pontos de Magia insuficientes. Disponíveis: ${restantes}.`);
+        return;
+    }
+
+    char.pontosMagiaGastos = gastosAtuais + gasto;
+    await setDoc(doc(db,'personagens',currentCharId),{pontosMagiaGastos:char.pontosMagiaGastos},{merge:true});
+    await registrarHistoricoGeral_(
+        'Psiquismo',
+        `${getNome(poder)} · ${poder.esfera} · Arco ${Number(poder.arco||1)} · Gasto ${gasto} PP`,
+        {subtipo:'psiquismo',poderId:poder.id,esfera:poder.esfera,arco:Number(poder.arco||1),gastoPP:gasto}
+    );
+    atualizarPontosSorteEMagia_(char);
+    renderizarPsiRolagem_(char);
+    renderizarPsiquismo_(char);
+};
+
 function renderizarPsiquismo_(char) {
     const painel = document.getElementById('psiPanel');
     const container = document.getElementById('psiPowersContainer');
@@ -3305,8 +3483,7 @@ function renderizarPsiquismo_(char) {
 
     const esferas = ['Sentidos','Mente','Matéria'];
     container.innerHTML = esferas.map(esfera => {
-        const espId = especializacaoPsiIdPorEsfera_(esfera);
-        const treino = totalTreinoPericia_((char?.especializacoes || {})[espId] || {});
+        const treino = treinoPsiEsfera_(char, esfera);
         if (treino <= 0) return '';
         const arco = arcoPsiPorTreino_(treino);
         const poderes = poderesPsiDB.filter(p => String(p.esfera||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase() === esfera.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase() && Number(p.arco||1) <= arco);
@@ -3329,10 +3506,9 @@ window.usarPoderPsi = async (poderId) => {
     const char = userCharacters.find(c => c.id === currentCharId);
     const poder = poderesPsiDB.find(p => p.id === poderId);
     if (!char || !poder) return;
-    const espId = especializacaoPsiIdPorEsfera_(poder.esfera);
-    const treino = totalTreinoPericia_((char.especializacoes || {})[espId] || {});
+    const treino = treinoPsiEsfera_(char, poder.esfera);
     const arco = arcoPsiPorTreino_(treino);
-    if (!espId || treino <= 0 || Number(poder.arco || 1) > arco) {
+    if (treino <= 0 || Number(poder.arco || 1) > arco) {
         alert('O personagem ainda não tem acesso a este poder.');
         return;
     }
@@ -4316,6 +4492,10 @@ window.adicionarPoderPsi = adicionarPoderPsi;
 window.editarPoderPsi = editarPoderPsi;
 window.removerPoderPsi = removerPoderPsi;
 window.usarPoderPsi = usarPoderPsi;
+window.renderizarPsiRolagem_ = renderizarPsiRolagem_;
+window.atualizarPoderesPsiRolagem = atualizarPoderesPsiRolagem;
+window.atualizarDetalhePsiRolagem = atualizarDetalhePsiRolagem;
+window.usarPoderPsiRolagem = usarPoderPsiRolagem;
 window.adicionarItemBanco = adicionarItemBanco;
 window.editarItemBanco = editarItemBanco;
 window.removerItemBanco = removerItemBanco;
