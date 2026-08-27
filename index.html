@@ -127,6 +127,17 @@
         .inventory-slot.drag-over { border-color: #ffd700; background: rgba(255,215,0,0.2); }
         .inventory-slot img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
         .inventory-slot.full-width { grid-column: span 2; aspect-ratio: 3/1; }
+        .inventory-slot[draggable="true"] { cursor: grab; }
+        .inventory-slot[draggable="true"]:active { cursor: grabbing; }
+        .inventory-slot.drag-source { opacity: 0.5; }
+        .inventory-help { color:#aaa; font-size:0.9em; margin:0 0 15px; }
+        .db-table-wrap { width:100%; overflow-x:auto; border:1px solid rgba(255,255,255,0.12); border-radius:10px; }
+        .db-table { width:100%; min-width:1250px; border-collapse:collapse; background:rgba(0,0,0,0.12); }
+        .db-table th, .db-table td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.10); vertical-align:middle; text-align:left; }
+        .db-table th { color:#00d4ff; background:rgba(0,212,255,0.10); position:sticky; top:0; z-index:1; }
+        .db-table td { color:#ddd; }
+        .db-table .name-pt { color:#fff; font-weight:bold; }
+        .db-table .actions { white-space:nowrap; }
         
         .item-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); border: 2px solid #00d4ff; border-radius: 8px; padding: 10px; min-width: 200px; max-width: 300px; z-index: 100; display: none; font-size: 0.9em; pointer-events: none; }
         .inventory-slot:hover .item-tooltip { display: block; }
@@ -389,7 +400,13 @@
                     <div id="char-inventario" class="char-tab-content">
                         <div class="form-section">
                             <h3>🎒 Inventário</h3>
+                            <p class="inventory-help">Arraste os itens entre os compartimentos para movê-los. Soltar sobre um item ocupado troca as posições.</p>
                             <div class="inventory-container">
+                                <div class="inventory-compartment" style="grid-column: span 2;">
+                                    <h4>🧍 Equipado</h4>
+                                    <div class="capacity">12 itens equipados/acessíveis</div>
+                                    <div class="inventory-slots" id="inv-equipado"></div>
+                                </div>
                                 <div class="inventory-compartment">
                                     <h4>👛 Bolso</h4>
                                     <div class="capacity">2 kg | 2 itens</div>
@@ -728,10 +745,11 @@
                     </div>`;
                 }
             };
+            fillSlots('inv-equipado', 12, false, 'equipado');
             fillSlots('inv-bolso', 2, false, 'bolso');
             fillSlots('inv-mochila', 20, false, 'mochila');
-            fillSlots('inv-veiculo', 20, true, 'veiculo');
-            fillSlots('inv-casa', 50, true, 'casa');
+            fillSlots('inv-veiculo', 100, false, 'veiculo');
+            fillSlots('inv-casa', 50, false, 'casa');
         });
     </script>
 
@@ -979,7 +997,7 @@ window.novoPersonagem = async () => {
     const maxChars = userData.role === 'mestre' ? 999 : 5;
     if (userCharacters.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
     const charId = `char_${Date.now()}`;
-    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(100).fill(null), casa: Array(50).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
+    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(100).fill(null), casa: Array(50).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
     await carregarPersonagens(); currentCharId = charId;
     await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -1172,24 +1190,122 @@ function calcularAlturaPeso(tam, tipo) {
     return { altura: Math.round(base.altura), peso: Math.round(base.peso * fatorPeso) };
 }
 
+function normalizarInventario_(char) {
+    if (!char.inventario || typeof char.inventario !== 'object') char.inventario = {};
+    const tamanhos = { equipado: 12, bolso: 2, mochila: 20, veiculo: 100, casa: 50 };
+
+    Object.entries(tamanhos).forEach(([comp, tamanho]) => {
+        const atual = Array.isArray(char.inventario[comp]) ? char.inventario[comp] : [];
+        if (atual.length < tamanho) {
+            char.inventario[comp] = atual.concat(Array(tamanho - atual.length).fill(null));
+        } else {
+            char.inventario[comp] = atual.slice(0, tamanho);
+        }
+    });
+    return char.inventario;
+}
+
+function escaparHtmlInventario_(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function renderizarInventario(char) {
-    const inv = char.inventario || { bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(100).fill(null), casa: Array(50).fill(null) };
-    
-    ['bolso', 'mochila', 'veiculo', 'casa'].forEach(comp => {
+    const inv = normalizarInventario_(char);
+    const tamanhos = { equipado: 12, bolso: 2, mochila: 20, veiculo: 100, casa: 50 };
+
+    Object.keys(tamanhos).forEach(comp => {
         const container = document.getElementById(`inv-${comp}`);
         if (!container) return;
         const items = inv[comp] || [];
-        const maxSlots = comp === 'bolso' ? 2 : comp === 'mochila' ? 20 : comp === 'veiculo' ? 20 : 10;
-        
+        const maxSlots = tamanhos[comp];
+
         container.innerHTML = Array(maxSlots).fill(0).map((_, i) => {
             const item = items[i];
             if (item && item.nome) {
-                return `<div class="inventory-slot filled" onclick="editarItem('${comp}', ${i})">${item.imagem ? `<img src="${item.imagem}">` : '📦'}<div class="item-tooltip"><h5>${item.nome}</h5><p>${item.descricao || ''}</p><p>Peso: ${item.peso || 0}kg | PA: ${item.pa || 0} | PV: ${item.pv || 0}</p></div></div>`;
+                const nome = escaparHtmlInventario_(item.nome);
+                const desc = escaparHtmlInventario_(item.descricao || '');
+                const img = item.imagem ? `<img src="${escaparHtmlInventario_(item.imagem)}" alt="${nome}">` : '📦';
+                return `<div class="inventory-slot filled" draggable="true"
+                    ondragstart="iniciarArrastoInventario(event, '${comp}', ${i})"
+                    ondragend="finalizarArrastoInventario(event)"
+                    ondragover="permitirSoltarInventario(event)"
+                    ondrop="soltarInventario(event, '${comp}', ${i})"
+                    onclick="editarItem('${comp}', ${i})">${img}
+                    <div class="item-tooltip"><h5>${nome}</h5><p>${desc}</p><p>Peso: ${Number(item.peso || 0)}kg | PA: ${Number(item.pa || 0)} | PV: ${Number(item.pv || 0)}</p></div></div>`;
             }
-            return `<div class="inventory-slot" onclick="editarItem('${comp}', ${i})"><div class="item-tooltip"><h5>Vazio</h5><p>Clique para adicionar</p></div></div>`;
+            return `<div class="inventory-slot"
+                ondragover="permitirSoltarInventario(event)"
+                ondrop="soltarInventario(event, '${comp}', ${i})"
+                onclick="editarItem('${comp}', ${i})"><div class="item-tooltip"><h5>Vazio</h5><p>Arraste um item para cá ou clique para adicionar</p></div></div>`;
         }).join('');
     });
 }
+
+window.iniciarArrastoInventario = (event, compartment, index) => {
+    event.stopPropagation();
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('application/json', JSON.stringify({ compartment, index }));
+    event.dataTransfer.setData('text/plain', `${compartment}:${index}`);
+    event.currentTarget.classList.add('drag-source');
+};
+
+window.finalizarArrastoInventario = (event) => {
+    if (event?.currentTarget) event.currentTarget.classList.remove('drag-source');
+    document.querySelectorAll('.inventory-slot.drag-over').forEach(el => el.classList.remove('drag-over'));
+};
+
+window.permitirSoltarInventario = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = 'move';
+    if (event.currentTarget) event.currentTarget.classList.add('drag-over');
+};
+
+window.soltarInventario = async (event, destinoComp, destinoIndex) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.currentTarget) event.currentTarget.classList.remove('drag-over');
+    if (!currentCharId) return;
+
+    let origem;
+    try {
+        const bruto = event.dataTransfer.getData('application/json');
+        origem = bruto ? JSON.parse(bruto) : null;
+    } catch (_) { origem = null; }
+    if (!origem || origem.compartment == null || origem.index == null) return;
+
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    const inv = normalizarInventario_(char);
+    const origemComp = origem.compartment;
+    const origemIndex = Number(origem.index);
+    destinoIndex = Number(destinoIndex);
+
+    if (!inv[origemComp] || !inv[destinoComp]) return;
+    if (origemComp === destinoComp && origemIndex === destinoIndex) return;
+
+    const itemOrigem = inv[origemComp][origemIndex];
+    if (!itemOrigem) return;
+
+    const itemDestino = inv[destinoComp][destinoIndex] || null;
+    inv[destinoComp][destinoIndex] = itemOrigem;
+    inv[origemComp][origemIndex] = itemDestino;
+
+    char.inventario = inv;
+    renderizarInventario(char);
+
+    try {
+        await setDoc(doc(db, 'personagens', currentCharId), { inventario: inv }, { merge: true });
+    } catch (erro) {
+        console.error('Erro ao mover item:', erro);
+        alert('Não foi possível salvar a movimentação do item. Recarregue a ficha para restaurar os dados do servidor.');
+    }
+};
 
 function renderizarCombate(char) {
     const attrs = char.atributos || {};
@@ -1887,34 +2003,60 @@ function renderizarBancoItens() {
         return;
     }
 
-    container.innerHTML = [...itensDB]
-        .sort((a, b) => getNome(a).localeCompare(getNome(b)))
-        .map(i => {
-            const detalhes = [
-                i.categoria || 'Diversos',
-                `${Number(i.peso || 0)}kg`,
-                `PA: ${Number(i.pa || 0)}`,
-                `PV: ${Number(i.pv ?? 1)}`,
-                `Preço: ${Number(i.preco || 0)}`,
-                i.alcance ? `Alcance: ${i.alcance}` : '',
-                i.dano ? `Dano: ${i.dano}` : '',
-                i.municao ? `Munição: ${i.municao}` : '',
-                i.uso !== undefined && i.uso !== '' ? `Uso: ${i.uso}` : '',
-                i.nivelAcesso ? `Acesso: ${i.nivelAcesso}` : ''
-            ].filter(Boolean).join(' | ');
+    const esc = valor => String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 
-            return `
-                <div class="db-item">
-                    <div class="db-item-info">
-                        <span class="db-item-name">${getNome(i)}</span>
-                        <span class="db-item-details">${detalhes}</span>
-                    </div>
-                    <div class="db-item-actions">
-                        <button class="btn-small btn-select" onclick="editarItemBanco('${i.id}')">Editar</button>
-                        <button class="btn-small btn-delete" onclick="removerItemBanco('${i.id}')">Remover</button>
-                    </div>
-                </div>`;
-        }).join('');
+    const linhas = [...itensDB]
+        .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt'))
+        .map(i => `
+            <tr>
+                <td class="name-pt">${esc(i.nome || '')}</td>
+                <td>${esc(i.nome_en || '')}</td>
+                <td>${esc(i.nome_zh || '')}</td>
+                <td>${esc(i.categoria || 'Diversos')}</td>
+                <td>${Number(i.peso || 0)}</td>
+                <td>${Number(i.pa || 0)}</td>
+                <td>${Number(i.pv ?? 1)}</td>
+                <td>${Number(i.preco || 0)}</td>
+                <td>${esc(i.alcance || '')}</td>
+                <td>${esc(i.dano || '')}</td>
+                <td>${esc(i.municao || '')}</td>
+                <td>${esc(i.uso ?? '')}</td>
+                <td>${esc(i.nivelAcesso || i.acesso || '')}</td>
+                <td class="actions">
+                    <button class="btn-small btn-select" onclick="editarItemBanco('${esc(i.id)}')">Editar</button>
+                    <button class="btn-small btn-delete" onclick="removerItemBanco('${esc(i.id)}')">Remover</button>
+                </td>
+            </tr>`).join('');
+
+    container.innerHTML = `
+        <div class="db-table-wrap">
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th>Nome (PT)</th>
+                        <th>Name (EN)</th>
+                        <th>名称 (中文)</th>
+                        <th>Categoria</th>
+                        <th>kg</th>
+                        <th>PA</th>
+                        <th>PV</th>
+                        <th>Preço</th>
+                        <th>Alcance</th>
+                        <th>Dano</th>
+                        <th>Munição</th>
+                        <th>Uso</th>
+                        <th>Acesso</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>${linhas}</tbody>
+            </table>
+        </div>`;
 }
 
 function preencherModalItemBanco_(item = null) {
@@ -2327,9 +2469,10 @@ window.salvarItem = async () => {
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
     
-    const inv = char.inventario || { bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(100).fill(null), casa: Array(50).fill(null) };
+    const inv = normalizarInventario_(char);
     if (!inv[currentEditSlot.compartment]) {
-        inv[currentEditSlot.compartment] = currentEditSlot.compartment === 'bolso' ? Array(2).fill(null) : currentEditSlot.compartment === 'mochila' ? Array(20).fill(null) : currentEditSlot.compartment === 'veiculo' ? Array(100).fill(null) : Array(50).fill(null);
+        const tamanho = ({ equipado: 12, bolso: 2, mochila: 20, veiculo: 100, casa: 50 })[currentEditSlot.compartment] || 20;
+        inv[currentEditSlot.compartment] = Array(tamanho).fill(null);
     }
     
     inv[currentEditSlot.compartment][currentEditSlot.index] = {
