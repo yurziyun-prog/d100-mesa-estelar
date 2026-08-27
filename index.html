@@ -183,6 +183,14 @@
         .combat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
         .combat-section { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; border: 2px solid rgba(255,255,255,0.1); }
         .combat-section h4 { color: #00d4ff; margin-bottom: 15px; font-size: 1.2em; }
+        .combat-title-row { display:grid; grid-template-columns: 1fr 80px 80px; gap:10px; align-items:end; margin-bottom:15px; min-height:29px; }
+        .combat-title-row h4 { margin:0; }
+        .combat-title-col { color:#00d4ff; font-weight:bold; text-align:center; font-size:.92em; line-height:1.15; }
+        .inventory-title-row { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; margin-bottom:8px; }
+        .inventory-title-row h3 { margin:0; }
+        .inventory-resources-box { display:flex; align-items:center; gap:10px; margin-left:auto; padding:8px 12px; border:1px solid rgba(0,212,255,.35); background:rgba(0,212,255,.08); border-radius:10px; }
+        .inventory-resources-box label { color:#00d4ff; font-weight:bold; white-space:nowrap; }
+        .inventory-resources-box input { width:150px; padding:8px 10px; text-align:right; font-weight:bold; }
         .hit-location { display: grid; grid-template-columns: 1fr 80px 80px; gap: 10px; align-items: center; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 8px; }
         .hit-location-name { color: #fff; font-weight: bold; }
         .hit-location input { width: 100%; padding: 5px; text-align: center; background: rgba(0,212,255,0.2); border: 1px solid #00d4ff; border-radius: 5px; color: #fff; }
@@ -362,7 +370,6 @@
                                 <div class="stat-box"><div class="stat-label">Mod. Dano</div><div class="stat-value" id="statModDano">-1d2</div></div>
                                 <div class="stat-box"><div class="stat-label">Altura</div><div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div></div>
                                 <div class="stat-box"><div class="stat-label">Peso</div><div class="stat-value"><input type="number" id="editPeso" onchange="salvarAlturaPeso()"></div></div>
-                                <div class="stat-box"><div class="stat-label" data-i18n="resourcesLabel">Recursos</div><div class="stat-value"><input type="number" id="editRecursos" min="0" step="1" onchange="salvarRecursos()"></div></div>
                             </div>
                         </div>
 
@@ -448,7 +455,13 @@
                     <!-- INVENTÁRIO -->
                     <div id="char-inventario" class="char-tab-content">
                         <div class="form-section">
-                            <h3>🎒 Inventário</h3>
+                            <div class="inventory-title-row">
+                                <h3>🎒 Inventário</h3>
+                                <div class="inventory-resources-box">
+                                    <label for="editRecursos" data-i18n="resourcesLabel">Recursos</label>
+                                    <input type="number" id="editRecursos" min="0" step="1" onchange="salvarRecursos()" title="Somente o mestre pode alterar diretamente os recursos">
+                                </div>
+                            </div>
                             <p class="inventory-help">Arraste os itens entre os compartimentos para movê-los. Soltar sobre um item ocupado troca as posições.</p>
                             <div class="inventory-container">
                                 <div class="inventory-compartment" style="grid-column: span 2;">
@@ -486,16 +499,19 @@
                             <h3>⚔️ Combate</h3>
                             <div class="combat-grid">
                                 <div class="combat-section">
-                                    <h4>Pontos de Vida</h4>
-                                    <div style="display:grid; grid-template-columns: 1fr 80px 80px; gap:10px; margin-bottom:10px; font-weight:bold; color:#00d4ff;">
-                                        <span>Localização</span>
-                                        <span style="text-align:center;">PV Máx</span>
-                                        <span style="text-align:center;">PV Atual</span>
+                                    <div class="combat-title-row">
+                                        <h4>Pontos de Vida</h4>
+                                        <span class="combat-title-col">PV Máx</span>
+                                        <span class="combat-title-col">PV Atual</span>
                                     </div>
                                     <div id="hitLocations"></div>
                                 </div>
                                 <div class="combat-section">
-                                    <h4>Armadura (PA)</h4>
+                                    <div class="combat-title-row">
+                                        <h4>Armadura (PA)</h4>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
                                     <div id="armorLocations"></div>
                                 </div>
                                 <div class="combat-section">
