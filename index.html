@@ -310,16 +310,20 @@
                             <h3>Editar Personagem</h3>
                             <div class="form-group"><label>Nome:</label><input type="text" id="editName"></div>
                             <div class="form-group"><label>Raça:</label><input type="text" id="editRace" value="Humano"></div>
+                            <div class="form-group"><label>Gênero:</label><select id="editSex"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Hermafrodita">Hermafrodita</option><option value="Andrógeno">Andrógeno</option><option value="Neutro">Neutro</option></select></div>
+                            <div class="form-group"><label>Imagem do Personagem (URL):</label><input type="url" id="editCharImage" placeholder="https://..." oninput="previewImagemPersonagem()"></div>
+                            <div class="form-group"><label>Ou fazer upload:</label><input type="file" id="editCharImageFile" accept="image/*" onchange="handleCharacterImageUpload(event)"><small id="charImageUploadStatus" style="display:block; opacity:.75; margin-top:6px;"></small></div>
+                            <div class="form-group"><div class="avatar" id="editCharImagePreview" style="width:120px;height:120px;"><span>👤</span></div></div>
                             <div class="form-group"><label>Origem:</label><select id="editOrigin"></select></div>
                             <div class="form-group"><label>Carreira:</label><select id="editCareer"></select></div>
-                            <div class="form-group"><label>Tipo Corporal:</label><select id="editBodyType" onchange="calcularAlturaPesoAutomatico()"><option value="Leve">Leve</option><option value="Médio" selected>Médio</option><option value="Pesado">Pesado</option></select></div>
+                            <div class="form-group"><label>Tipo Corporal:</label><select id="editBodyType" onchange="calcularAlturaPesoDoFormulario()"><option value="Leve">Leve</option><option value="Médio" selected>Médio</option><option value="Pesado">Pesado</option></select></div>
                             
                             <div class="total-points"><div class="value" id="totalPoints">70</div><div class="limit">/ 80 pontos</div></div>
                             
                             <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; margin:20px 0;">
                                 <div><label>FOR</label><input type="number" id="editFOR" min="3" max="18" value="10" oninput="validarAtributos()"></div>
                                 <div><label>CON</label><input type="number" id="editCON" min="3" max="18" value="10" oninput="validarAtributos()"></div>
-                                <div><label>TAM</label><input type="number" id="editTAM" min="6" max="18" value="10" oninput="validarAtributos()"></div>
+                                <div><label>TAM</label><input type="number" id="editTAM" min="6" max="18" value="10" oninput="validarAtributos(); calcularAlturaPesoDoFormulario()"></div>
                                 <div><label>DES</label><input type="number" id="editDES" min="3" max="18" value="10" oninput="validarAtributos()"></div>
                                 <div><label>INT</label><input type="number" id="editINT" min="6" max="18" value="10" oninput="validarAtributos()"></div>
                                 <div><label>POD</label><input type="number" id="editPOD" min="3" max="18" value="10" oninput="validarAtributos()"></div>
@@ -983,6 +987,15 @@ window.calcularDerivados = () => {
     document.getElementById('statModDano').textContent = calcularModDano((attrs.FOR || 10) + bonus.FOR, (attrs.TAM || 10) + bonus.TAM);
 };
 
+window.calcularAlturaPesoDoFormulario = () => {
+    const tamInput = document.getElementById('editTAM');
+    const tipoInput = document.getElementById('editBodyType');
+    if (!tamInput || !tipoInput) return;
+    const calc = calcularAlturaPeso(parseInt(tamInput.value) || 10, tipoInput.value);
+    document.getElementById('editAltura').value = calc.altura;
+    document.getElementById('editPeso').value = calc.peso;
+};
+
 window.calcularAlturaPesoAutomatico = () => {
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
@@ -1033,6 +1046,9 @@ function atualizarVisualizacao(data) {
 function preencherFormulario(data) {
     document.getElementById('editName').value = data.nome || '';
     document.getElementById('editRace').value = data.raca || 'Humano';
+    document.getElementById('editSex').value = data.sexo || 'Masculino';
+    document.getElementById('editCharImage').value = data.imagem || '';
+    previewImagemPersonagem();
     document.getElementById('editOrigin').value = data.origem || 'urbano';
     document.getElementById('editCareer').value = data.carreira || 'militar';
     document.getElementById('editBodyType').value = data.tipoCorporal || 'Médio';
@@ -1056,6 +1072,8 @@ window.salvarPersonagem = async () => {
     const personagemData = {
         nome,
         raca: document.getElementById('editRace').value.trim(),
+        sexo: document.getElementById('editSex').value,
+        imagem: document.getElementById('editCharImage').value.trim() || null,
         origem: document.getElementById('editOrigin').value,
         carreira: document.getElementById('editCareer').value,
         tipoCorporal: document.getElementById('editBodyType').value,
@@ -1078,8 +1096,31 @@ window.salvarPersonagem = async () => {
 function calcularPA(int, des) { const soma = int + des; if (soma <= 12) return 1; if (soma <= 24) return 2; if (soma <= 36) return 3; return 3 + Math.floor((soma - 36) / 12); }
 function calcularModDano(forca, tam) { const soma = forca + tam; if (soma <= 5) return '-1d8'; if (soma <= 10) return '-1d6'; if (soma <= 15) return '-1d4'; if (soma <= 20) return '-1d2'; if (soma <= 25) return '+0'; if (soma <= 30) return '+1d2'; return '+1d4'; }
 function calcularAlturaPeso(tam, tipo) {
-    const tabela = { 10: { altura: 163, peso: tipo === 'Leve' ? 48 : tipo === 'Pesado' ? 82 : 64 } };
-    return tabela[tam] || { altura: 163, peso: 64 };
+    // Referência humanoide para TAM 6–18. Altura em cm e peso-base em kg.
+    // O tipo corporal altera o peso, não a altura. Valores fora da faixa são extrapolados.
+    const tabela = {
+        6:  { altura: 137, peso: 38 },
+        7:  { altura: 144, peso: 43 },
+        8:  { altura: 151, peso: 49 },
+        9:  { altura: 157, peso: 56 },
+        10: { altura: 163, peso: 64 },
+        11: { altura: 168, peso: 69 },
+        12: { altura: 172, peso: 73 },
+        13: { altura: 176, peso: 77 },
+        14: { altura: 179, peso: 80 },
+        15: { altura: 182, peso: 83 },
+        16: { altura: 186, peso: 88 },
+        17: { altura: 190, peso: 94 },
+        18: { altura: 194, peso: 100 }
+    };
+    tam = Math.round(Number(tam) || 10);
+    let base = tabela[tam];
+    if (!base) {
+        if (tam < 6) base = { altura: 137 + (tam - 6) * 7, peso: Math.max(10, 38 + (tam - 6) * 5) };
+        else base = { altura: 194 + (tam - 18) * 4, peso: 100 + (tam - 18) * 7 };
+    }
+    const fatorPeso = tipo === 'Leve' ? 0.80 : tipo === 'Pesado' ? 1.25 : 1;
+    return { altura: Math.round(base.altura), peso: Math.round(base.peso * fatorPeso) };
 }
 
 function renderizarInventario(char) {
@@ -1259,6 +1300,34 @@ window.rolarDanoArma = () => {
         <strong>Total: ${total}</strong>
     `;
     document.getElementById('rollResultBox').classList.remove('hidden');
+};
+
+window.previewImagemPersonagem = () => {
+    const input = document.getElementById('editCharImage');
+    const preview = document.getElementById('editCharImagePreview');
+    if (!input || !preview) return;
+    const url = input.value.trim();
+    preview.innerHTML = url ? `<img src="${url}" alt="Imagem do personagem" onerror="this.parentElement.innerHTML='<span>👤</span>'">` : '<span>👤</span>';
+};
+
+window.handleCharacterImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file || !currentUserUid) return;
+    const status = document.getElementById('charImageUploadStatus');
+    try {
+        if (status) status.textContent = 'Enviando imagem...';
+        const storageRef = ref(storage, `personagens/${currentUserUid}/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        document.getElementById('editCharImage').value = url;
+        previewImagemPersonagem();
+        if (currentCharId) await setDoc(doc(db, 'personagens', currentCharId), { imagem: url }, { merge: true });
+        if (status) status.textContent = 'Imagem enviada.';
+    } catch (error) {
+        console.error('Erro no upload da imagem do personagem:', error);
+        if (status) status.textContent = 'Erro ao enviar imagem.';
+        alert('Erro ao fazer upload da imagem do personagem.');
+    }
 };
 
 window.handleItemImageUpload = async (event) => {
