@@ -760,8 +760,9 @@
                     <div id="banco-pericias" class="tab-content active">
                         <h4 style="color:#fff; margin-bottom:15px;">Perícias do Sistema</h4>
                         <div class="import-section">
-                            <input type="file" id="importSkillsFile" accept=".csv" style="display:none" onchange="importarPlanilha('pericias', this)">
-                            <button class="btn-import" onclick="document.getElementById('importSkillsFile').click()">📥 Importar Planilha CSV</button>
+                            <input type="file" id="importSkillsFile" accept=".csv" style="display:none" onchange="importarPlanilha('pericias', this, this.dataset.modo === 'substituir')">
+                            <button class="btn-import" onclick="selecionarImportacaoBanco_('importSkillsFile', false)">📥 Importar/Atualizar CSV</button>
+                            <button class="btn-template" onclick="selecionarImportacaoBanco_('importSkillsFile', true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('pericias')">📄 Baixar Template</button>
                             <button class="btn-template" onclick="exportarBancoCSV('pericias')">📤 Exportar CSV</button>
                         </div>
@@ -772,8 +773,9 @@
                     <div id="banco-origens" class="tab-content">
                         <h4 style="color:#fff; margin-bottom:15px;">Origens do Sistema</h4>
                         <div class="import-section">
-                            <input type="file" id="importOriginsFile" accept=".csv" style="display:none" onchange="importarPlanilha('origens', this)">
-                            <button class="btn-import" onclick="document.getElementById('importOriginsFile').click()">📥 Importar Planilha CSV</button>
+                            <input type="file" id="importOriginsFile" accept=".csv" style="display:none" onchange="importarPlanilha('origens', this, this.dataset.modo === 'substituir')">
+                            <button class="btn-import" onclick="selecionarImportacaoBanco_('importOriginsFile', false)">📥 Importar/Atualizar CSV</button>
+                            <button class="btn-template" onclick="selecionarImportacaoBanco_('importOriginsFile', true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('origens')">📄 Baixar Template</button>
                             <button class="btn-template" onclick="exportarBancoCSV('origens')">📤 Exportar CSV</button>
                         </div>
@@ -784,8 +786,9 @@
                     <div id="banco-carreiras" class="tab-content">
                         <h4 style="color:#fff; margin-bottom:15px;">Carreiras do Sistema</h4>
                         <div class="import-section">
-                            <input type="file" id="importCareersFile" accept=".csv" style="display:none" onchange="importarPlanilha('carreiras', this)">
-                            <button class="btn-import" onclick="document.getElementById('importCareersFile').click()">📥 Importar Planilha CSV</button>
+                            <input type="file" id="importCareersFile" accept=".csv" style="display:none" onchange="importarPlanilha('carreiras', this, this.dataset.modo === 'substituir')">
+                            <button class="btn-import" onclick="selecionarImportacaoBanco_('importCareersFile', false)">📥 Importar/Atualizar CSV</button>
+                            <button class="btn-template" onclick="selecionarImportacaoBanco_('importCareersFile', true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('carreiras')">📄 Baixar Template</button>
                             <button class="btn-template" onclick="exportarBancoCSV('carreiras')">📤 Exportar CSV</button>
                         </div>
@@ -796,8 +799,9 @@
                     <div id="banco-especializacoes" class="tab-content">
                         <h4 style="color:#fff; margin-bottom:15px;">Especializações do Sistema</h4>
                         <div class="import-section">
-                            <input type="file" id="importSpecsFile" accept=".csv" style="display:none" onchange="importarPlanilha('especializacoes', this)">
-                            <button class="btn-import" onclick="document.getElementById('importSpecsFile').click()">📥 Importar Planilha CSV</button>
+                            <input type="file" id="importSpecsFile" accept=".csv" style="display:none" onchange="importarPlanilha('especializacoes', this, this.dataset.modo === 'substituir')">
+                            <button class="btn-import" onclick="selecionarImportacaoBanco_('importSpecsFile', false)">📥 Importar/Atualizar CSV</button>
+                            <button class="btn-template" onclick="selecionarImportacaoBanco_('importSpecsFile', true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('especializacoes')">📄 Baixar Template</button>
                             <button class="btn-template" onclick="exportarBancoCSV('especializacoes')">📤 Exportar CSV</button>
                         </div>
@@ -808,8 +812,9 @@
                     <div id="banco-poderesPsi" class="tab-content">
                         <h4 style="color:#fff; margin-bottom:15px;">Poderes Psiônicos</h4>
                         <div class="import-section">
-                            <input type="file" id="importPsiPowersFile" accept=".csv" style="display:none" onchange="importarPlanilha('poderesPsi', this)">
-                            <button class="btn-import" onclick="document.getElementById('importPsiPowersFile').click()">📥 Importar Planilha CSV</button>
+                            <input type="file" id="importPsiPowersFile" accept=".csv" style="display:none" onchange="importarPlanilha('poderesPsi', this, this.dataset.modo === 'substituir')">
+                            <button class="btn-import" onclick="selecionarImportacaoBanco_('importPsiPowersFile', false)">📥 Importar/Atualizar CSV</button>
+                            <button class="btn-template" onclick="selecionarImportacaoBanco_('importPsiPowersFile', true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('poderesPsi')">📄 Baixar Template</button>
                             <button class="btn-template" onclick="exportarBancoCSV('poderesPsi')">📤 Exportar CSV</button>
                         </div>
@@ -820,8 +825,9 @@
                     <div id="banco-itens" class="tab-content">
                         <h4 style="color:#fff; margin-bottom:15px;">Itens do Sistema</h4>
                         <div class="import-section">
-                            <input type="file" id="importItemsFile" accept=".csv" style="display:none" onchange="importarPlanilha('itens', this)">
-                            <button class="btn-import" onclick="document.getElementById('importItemsFile').click()">📥 Importar Planilha CSV</button>
+                            <input type="file" id="importItemsFile" accept=".csv" style="display:none" onchange="importarPlanilha('itens', this, this.dataset.modo === 'substituir')">
+                            <button class="btn-import" onclick="selecionarImportacaoBanco_('importItemsFile', false)">📥 Importar/Atualizar CSV</button>
+                            <button class="btn-template" onclick="selecionarImportacaoBanco_('importItemsFile', true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('itens')">📄 Baixar Template</button>
                             <button class="btn-template" onclick="exportarBancoCSV('itens')">📤 Exportar CSV</button>
                         </div>
@@ -4555,7 +4561,29 @@ function normalizarLinhaImportacao_(tipo, bruto) {
     return { ...bruto, ...comum };
 }
 
-window.importarPlanilha = async (tipo, input) => {
+
+window.selecionarImportacaoBanco_ = (inputId, substituir=false) => {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.dataset.modo = substituir ? 'substituir' : 'atualizar';
+    input.value = '';
+    input.click();
+};
+
+async function substituirColecaoPorDados_(tipo, dados) {
+    // Só começa a apagar depois que o CSV inteiro já foi lido e normalizado.
+    const existentes = await getDocs(collection(db, tipo));
+
+    for (const antigo of existentes.docs) {
+        await deleteDoc(doc(db, tipo, antigo.id));
+    }
+    for (const item of dados) {
+        await setDoc(doc(db, tipo, item.id), item);
+    }
+    return existentes.size;
+}
+
+window.importarPlanilha = async (tipo, input, substituir=false) => {
     if (!userData || userData.role !== 'mestre') {
         alert('Apenas o mestre pode importar bancos do sistema.');
         input.value = '';
@@ -4581,11 +4609,28 @@ window.importarPlanilha = async (tipo, input) => {
                     return;
                 }
 
-                for (const item of dados) {
-                    await setDoc(doc(db, tipo, item.id), item, { merge: true });
-                }
+                if (substituir) {
+                    const aviso =
+`⚠️ SUBSTITUIR BANCO: ${tipo}
 
-                alert(`✅ ${dados.length} registros de ${tipo} importados/atualizados.`);
+O banco atual será apagado e recriado usando SOMENTE os ${dados.length} registros deste CSV.
+
+Use esta opção para eliminar duplicatas e registros antigos.
+Personagens existentes não serão apagados, mas referências a IDs removidos podem deixar de encontrar o registro correspondente.
+
+Deseja continuar?`;
+                    if (!confirm(aviso)) return;
+
+                    const apagados = await substituirColecaoPorDados_(tipo, dados);
+                    somSalvar_();
+                    alert(`✅ Banco ${tipo} substituído: ${apagados} registros antigos removidos e ${dados.length} registros gravados.`);
+                } else {
+                    for (const item of dados) {
+                        await setDoc(doc(db, tipo, item.id), item, { merge: true });
+                    }
+                    somSalvar_();
+                    alert(`✅ ${dados.length} registros de ${tipo} importados/atualizados.`);
+                }
                 await carregarBancosDeDados();
             } catch (erro) {
                 console.error('Erro na importação:', erro);
