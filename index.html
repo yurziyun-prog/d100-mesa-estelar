@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v24: i18n completo + compatibilidade cruzada de armas -->
+    <!-- Mesa Estelar v24.1: i18n seguro + compatibilidade cruzada de armas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -5372,14 +5372,8 @@ function aplicarTraducaoInterface_(raiz=document.body) {
 }
 let observerI18nMesa_ = null;
 function iniciarObserverI18n_() {
-    if (observerI18nMesa_) return;
-    observerI18nMesa_ = new MutationObserver(muts=>{
-        if (idiomaAtual === 'pt') return;
-        muts.forEach(m=>m.addedNodes.forEach(n=>{
-            if (n.nodeType===1 || n.nodeType===3) aplicarTraducaoInterface_(n.nodeType===1 ? n : n.parentElement);
-        }));
-    });
-    observerI18nMesa_.observe(document.body,{childList:true,subtree:true});
+    // Desativado por segurança: a interface é traduzida quando o idioma muda
+    // e após os renderizadores principais. Isso evita observação contínua do DOM.
 }
 
 // Compatibilidade de famílias de arma.
@@ -5504,10 +5498,11 @@ window.mudarIdioma = (lang) => {
             preencherFormulario(char);
         }
     }
-    renderizarListaPersonagens();
-    if (document.getElementById('marketGrid')) renderizarMercado();
+    if (currentUserUid) {
+        renderizarListaPersonagens();
+        if (document.getElementById('marketGrid')) renderizarMercado();
+    }
     aplicarTraducaoInterface_(document.body);
-    iniciarObserverI18n_();
     if (currentCharId) {
         const charAtual = userCharacters.find(c => c.id === currentCharId);
         if (charAtual) {
