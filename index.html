@@ -540,6 +540,17 @@
                                         <select id="combatSkillSelect" onchange="atualizarPainelCombate()"></select>
                                     </div>
                                     <div class="form-group" style="margin-bottom:0;">
+                                        <label>Dificuldade circunstancial:</label>
+                                        <select id="combatDifficultySelect">
+                                            <option value="muito_facil">Muito Fácil</option>
+                                            <option value="facil">Fácil</option>
+                                            <option value="padrao" selected>Padrão</option>
+                                            <option value="dificil">Difícil</option>
+                                            <option value="formidavel">Formidável</option>
+                                            <option value="herculeo">Hercúleo</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:0;">
                                         <label>Equipamento:</label>
                                         <select id="combatWeaponSelect" onchange="mostrarDanoEquipamentoCombate()"></select>
                                     </div>
@@ -601,9 +612,22 @@
                             
                             <div class="skill-test-section">
                                 <h4>📊 Teste de Perícia</h4>
-                                <div class="form-group">
-                                    <label>Perícia:</label>
-                                    <select id="skillSelect" onchange="mostrarValorPericia()"></select>
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+                                    <div class="form-group">
+                                        <label>Perícia:</label>
+                                        <select id="skillSelect" onchange="mostrarValorPericia()"></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Dificuldade circunstancial:</label>
+                                        <select id="skillDifficultySelect">
+                                            <option value="muito_facil">Muito Fácil</option>
+                                            <option value="facil">Fácil</option>
+                                            <option value="padrao" selected>Padrão</option>
+                                            <option value="dificil">Difícil</option>
+                                            <option value="formidavel">Formidável</option>
+                                            <option value="herculeo">Hercúleo</option>
+                                        </select>
+                                    </div>
                                 </div>
                                 <div style="margin:15px 0;color:#00d4ff;font-size:1.2em;">
                                     Valor da Perícia: <strong id="skillValue">—</strong>
@@ -1771,9 +1795,16 @@ window.rolarCombateD100 = async () => {
     }
 
     const valorBase = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
-    const ajuste = aplicarFadigaEmPericia_(char, valorBase);
+    const dificuldadeEscolhidaId = document.getElementById('combatDifficultySelect')?.value || 'padrao';
+    const ajuste = aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeEscolhidaId);
     if (ajuste.bloqueado) {
         resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(ajuste.regra.nome)}: nenhuma atividade possível.`;
+        await registrarHistoricoCombate_(
+            'D100',
+            `${getNome(pericia)} bloqueado por fadiga (${ajuste.regra.nome}) · Dificuldade escolhida: ${ajuste.escolhida.nome}`,
+            { subtipo: 'periciaCombate', periciaId: pericia.id, bloqueado: true, fadiga: ajuste.regra.nome, dificuldadeEscolhida: ajuste.escolhida.nome }
+        );
+        resetarDificuldadeAposRolagem_('combatDifficultySelect');
         return;
     }
     const valor = ajuste.valor;
@@ -1781,14 +1812,15 @@ window.rolarCombateD100 = async () => {
     const r = classificarD100_(valor, roll);
     const margem = Math.abs(valor-roll);
     const nomePericia = getNome(pericia);
-    const fadigaTxt = valor !== valorBase ? ` · Fadiga ${ajuste.regra.grau} (${valorBase}→${valor})` : '';
-    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}${valor !== valorBase ? `<br><small>Fadiga: ${escaparHtmlInventario_(ajuste.regra.grau)} · ${valorBase} → ${valor}</small>` : ''}`;
+    const fadigaTxt = ajuste.degrausFadiga > 0 ? ` · Fadiga +${ajuste.degrausFadiga} degrau${ajuste.degrausFadiga > 1 ? 's' : ''}` : '';
+    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}<br><small>Dificuldade: ${escaparHtmlInventario_(ajuste.escolhida.nome)}${fadigaTxt} → <strong>${escaparHtmlInventario_(ajuste.efetiva.nome)}</strong> · ${valorBase} → ${valor}</small>`;
 
     await registrarHistoricoCombate_(
         'D100',
-        `${nomePericia}: ${roll} / ${valor} → ${r.grau} · Margem ${margem}${fadigaTxt}`,
-        { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome }
+        `${nomePericia}: ${roll} / ${valor} → ${r.grau} · Margem ${margem} · Dificuldade ${ajuste.escolhida.nome}${fadigaTxt} → ${ajuste.efetiva.nome} (${valorBase}→${valor})`,
+        { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome, dificuldadeEscolhida: ajuste.escolhida.nome, dificuldadeEfetiva: ajuste.efetiva.nome, degrausFadiga: ajuste.degrausFadiga }
     );
+    resetarDificuldadeAposRolagem_('combatDifficultySelect');
 
     let atual = Math.max(0, Number(char.combate.pontosAcaoAtuais ?? paInfo.max) - 1);
     char.combate.pontosAcaoAtuais = atual;
@@ -1986,11 +2018,50 @@ function obterRegraFadiga_(char) {
     return REGRAS_FADIGA[nivel] || REGRAS_FADIGA.Fresh;
 }
 
-function aplicarFadigaEmPericia_(char, valorBase) {
+const GRAUS_DIFICULDADE = [
+    { id: 'muito_facil', nome: 'Muito Fácil', multiplicador: 2 },
+    { id: 'facil', nome: 'Fácil', multiplicador: 1.5 },
+    { id: 'padrao', nome: 'Padrão', multiplicador: 1 },
+    { id: 'dificil', nome: 'Difícil', multiplicador: 2/3 },
+    { id: 'formidavel', nome: 'Formidável', multiplicador: 1/2 },
+    { id: 'herculeo', nome: 'Hercúleo', multiplicador: 1/10 }
+];
+
+function obterDegrausFadiga_(char) {
+    const nivel = char?.combate?.fadiga || 'Fresh';
+    const mapa = {
+        Fresh: 0,
+        Winded: 1,
+        Tired: 1,
+        Wearied: 2,
+        Exhausted: 2,
+        Debilitated: 3,
+        Incapacitated: 3
+    };
+    return mapa[nivel] ?? 99;
+}
+
+function obterGrauDificuldade_(id) {
+    return GRAUS_DIFICULDADE.find(g => g.id === id) || GRAUS_DIFICULDADE[2];
+}
+
+function aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeId) {
     const regra = obterRegraFadiga_(char);
-    if (!regra.multiplicador) return { valor: 0, bloqueado: true, regra };
-    const valor = Math.max(1, Math.floor((parseInt(valorBase) || 0) * regra.multiplicador));
-    return { valor, bloqueado: false, regra };
+    if (!regra.multiplicador) {
+        return { valor: 0, bloqueado: true, regra, escolhida: obterGrauDificuldade_(dificuldadeId), efetiva: null, degrausFadiga: 99 };
+    }
+    const escolhida = obterGrauDificuldade_(dificuldadeId);
+    const indiceEscolhido = GRAUS_DIFICULDADE.findIndex(g => g.id === escolhida.id);
+    const degrausFadiga = obterDegrausFadiga_(char);
+    const indiceEfetivo = Math.min(GRAUS_DIFICULDADE.length - 1, Math.max(0, indiceEscolhido + degrausFadiga));
+    const efetiva = GRAUS_DIFICULDADE[indiceEfetivo];
+    const valor = Math.max(1, Math.floor((parseInt(valorBase) || 0) * efetiva.multiplicador));
+    return { valor, bloqueado: false, regra, escolhida, efetiva, degrausFadiga };
+}
+
+function resetarDificuldadeAposRolagem_(idSelect) {
+    const select = document.getElementById(idSelect);
+    if (select) select.value = 'padrao';
 }
 
 function obterPAMaxCombate_(char) {
@@ -2221,30 +2292,33 @@ window.rolarPericia = async () => {
     const registro = banco.find(x => x.id === id);
     if (!registro) return;
     const valorBase = obterValorRegistroPericia_(char,id,tipo === 'esp');
-    const fadiga = aplicarFadigaEmPericia_(char, valorBase);
-    if (fadiga.bloqueado) {
-        document.getElementById('rollResultText').innerHTML = `<strong>${escaparHtmlInventario_(getNome(registro))}</strong><br>⚠️ ${escaparHtmlInventario_(fadiga.regra.nome)}: nenhuma atividade possível.`;
+    const dificuldadeEscolhidaId = document.getElementById('skillDifficultySelect')?.value || 'padrao';
+    const ajuste = aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeEscolhidaId);
+    if (ajuste.bloqueado) {
+        document.getElementById('rollResultText').innerHTML = `<strong>${escaparHtmlInventario_(getNome(registro))}</strong><br>⚠️ ${escaparHtmlInventario_(ajuste.regra.nome)}: nenhuma atividade possível.<br><small>Dificuldade escolhida: ${escaparHtmlInventario_(ajuste.escolhida.nome)}</small>`;
         document.getElementById('rollResultBox').classList.remove('hidden');
-        await registrarHistoricoGeral_('Teste', `${getNome(registro)} bloqueado por fadiga (${fadiga.regra.nome})`, { subtipo:'pericia', periciaId:id, bloqueado:true, fadiga:fadiga.regra.nome });
+        await registrarHistoricoGeral_('Teste', `${getNome(registro)} bloqueado por fadiga (${ajuste.regra.nome}) · Dificuldade escolhida: ${ajuste.escolhida.nome}`, { subtipo:'pericia', periciaId:id, bloqueado:true, fadiga:ajuste.regra.nome, dificuldadeEscolhida:ajuste.escolhida.nome });
+        resetarDificuldadeAposRolagem_('skillDifficultySelect');
         return;
     }
-    const skillValue = fadiga.valor;
+    const skillValue = ajuste.valor;
     const roll = Math.floor(Math.random() * 100) + 1;
     const r = classificarD100_(skillValue, roll);
     const margin = Math.abs(roll - skillValue);
-    const penalidadeTxt = skillValue !== valorBase ? `<br><small>Fadiga: ${escaparHtmlInventario_(fadiga.regra.grau)} · ${valorBase} → ${skillValue}</small>` : '';
+    const fadigaTxt = ajuste.degrausFadiga > 0 ? ` + ${ajuste.degrausFadiga} degrau${ajuste.degrausFadiga > 1 ? 's' : ''} de fadiga` : '';
     document.getElementById('rollResultText').innerHTML = `
         <strong>${escaparHtmlInventario_(getNome(registro))}</strong><br>
         Valor: ${skillValue} | D100: ${roll}<br>
-        <strong>${r.grau}</strong> | Margem: ${margin}
-        ${penalidadeTxt}
+        <strong>${r.grau}</strong> | Margem: ${margin}<br>
+        <small>Dificuldade: ${escaparHtmlInventario_(ajuste.escolhida.nome)}${escaparHtmlInventario_(fadigaTxt)} → <strong>${escaparHtmlInventario_(ajuste.efetiva.nome)}</strong> · ${valorBase} → ${skillValue}</small>
     `;
     document.getElementById('rollResultBox').classList.remove('hidden');
     await registrarHistoricoGeral_(
         'Teste',
-        `${getNome(registro)}: ${roll} / ${skillValue} → ${r.grau} · Margem ${margin}${skillValue !== valorBase ? ` · Fadiga ${fadiga.regra.grau} (${valorBase}→${skillValue})` : ''}`,
-        { subtipo:'pericia', periciaId:id, rolagem:roll, valorBase, valorEfetivo:skillValue, grau:r.grau, margem:margin, fadiga:fadiga.regra.nome }
+        `${getNome(registro)}: ${roll} / ${skillValue} → ${r.grau} · Margem ${margin} · Dificuldade ${ajuste.escolhida.nome}${fadigaTxt} → ${ajuste.efetiva.nome} (${valorBase}→${skillValue})`,
+        { subtipo:'pericia', periciaId:id, rolagem:roll, valorBase, valorEfetivo:skillValue, grau:r.grau, margem:margin, fadiga:ajuste.regra.nome, dificuldadeEscolhida:ajuste.escolhida.nome, dificuldadeEfetiva:ajuste.efetiva.nome, degrausFadiga:ajuste.degrausFadiga }
     );
+    resetarDificuldadeAposRolagem_('skillDifficultySelect');
 };
 
 window.rolarDanoArma = () => {
