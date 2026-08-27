@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v26: recursos iniciais, classe social e combate modular -->
+    <!-- Mesa Estelar v26.1: recursos iniciais sincronizados para jogadores -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -1653,7 +1653,9 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none';
             document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
             document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
-            if (userData.role === 'mestre') await carregarConfiguracoes();
+            // Configurações globais também afetam jogadores (recursos iniciais e modo de combate).
+            // A aba continua escondida para jogadores; eles apenas leem os valores.
+            await carregarConfiguracoes();
         }
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('appScreen').classList.remove('hidden');
@@ -1753,20 +1755,28 @@ async function carregarBancosDeDados() {
 }
 
 async function carregarConfiguracoes() {
+    const defaults = {
+        etapa1:80, etapa2:100, etapa3:100, etapa4:150,
+        minAttr:3, minAttrINT:6, maxAttr:18, maxTreino:30,
+        recursosIniciais:1000, modoCombate:'tatico'
+    };
     const configDoc = await getDoc(doc(db, "configuracoes", "sistema"));
-    if (configDoc.exists()) {
-        configuracoes = configDoc.data();
-        document.getElementById('configEtapa1').value = configuracoes.etapa1 || 80;
-        document.getElementById('configEtapa2').value = configuracoes.etapa2 || 100;
-        document.getElementById('configEtapa3').value = configuracoes.etapa3 || 100;
-        document.getElementById('configEtapa4').value = configuracoes.etapa4 || 150;
-        document.getElementById('configMinAttr').value = configuracoes.minAttr || 3;
-        document.getElementById('configMinAttrINT').value = configuracoes.minAttrINT || 6;
-        document.getElementById('configMaxAttr').value = configuracoes.maxAttr || 18;
-        document.getElementById('configMaxTreino').value = configuracoes.maxTreino || 30;
-        document.getElementById('configRecursosIniciais').value = Number.isFinite(Number(configuracoes.recursosIniciais)) ? Number(configuracoes.recursosIniciais) : 1000;
-        document.getElementById('configModoCombate').value = configuracoes.modoCombate === 'simplificado' ? 'simplificado' : 'tatico';
-    }
+    configuracoes = configDoc.exists() ? { ...defaults, ...configDoc.data() } : { ...defaults };
+
+    const setVal = (id, valor) => {
+        const el = document.getElementById(id);
+        if (el) el.value = valor;
+    };
+    setVal('configEtapa1', configuracoes.etapa1);
+    setVal('configEtapa2', configuracoes.etapa2);
+    setVal('configEtapa3', configuracoes.etapa3);
+    setVal('configEtapa4', configuracoes.etapa4);
+    setVal('configMinAttr', configuracoes.minAttr);
+    setVal('configMinAttrINT', configuracoes.minAttrINT);
+    setVal('configMaxAttr', configuracoes.maxAttr);
+    setVal('configMaxTreino', configuracoes.maxTreino);
+    setVal('configRecursosIniciais', Math.max(0, Math.floor(Number(configuracoes.recursosIniciais) || 0)));
+    setVal('configModoCombate', configuracoes.modoCombate === 'simplificado' ? 'simplificado' : 'tatico');
 }
 
 async function carregarRegras() {
@@ -1941,11 +1951,28 @@ window.novoPersonagem = async () => {
     const maxChars = userData.role === 'mestre' ? 999 : 5;
     const meusPersonagens = userCharacters.filter(c => c.dono === currentUserUid);
     if (meusPersonagens.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
+
+    // Busca o valor global mais recente imediatamente antes da criação.
+    // Assim uma alteração feita pelo mestre em outra conta/aba já vale para o próximo personagem.
+    try { await carregarConfiguracoes(); }
+    catch (erro) { console.warn('Não foi possível atualizar configurações antes da criação; usando cache local.', erro); }
+
+    const recursosIniciaisNovo = Math.max(0, Math.floor(Number(configuracoes.recursosIniciais ?? 1000) || 0));
     const charId = `char_${Date.now()}`;
-    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: Math.max(0, Math.floor(Number(configuracoes.recursosIniciais ?? 1000) || 0)), pontosSorte: null, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
+    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: recursosIniciaisNovo, pontosSorte: null, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
-    await carregarPersonagens(); currentCharId = charId;
+    currentCharId = charId;
     await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
+    await carregarPersonagens();
+
+    // Verificação defensiva: confirma visualmente o valor salvo no documento recém-criado.
+    const criado = userCharacters.find(c => c.id === charId);
+    if (criado && Number(criado.recursos) !== recursosIniciaisNovo) {
+        criado.recursos = recursosIniciaisNovo;
+        await setDoc(doc(db, "personagens", charId), { recursos: recursosIniciaisNovo }, { merge:true });
+    }
+    const recursosInput = document.getElementById('editRecursos');
+    if (recursosInput) recursosInput.value = recursosIniciaisNovo;
 };
 
 window.validarAtributos = () => {
