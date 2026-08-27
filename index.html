@@ -368,6 +368,8 @@
                                 <div class="stat-box"><div class="stat-label">Pontos de Ação</div><div class="stat-value" id="statPA">1</div></div>
                                 <div class="stat-box"><div class="stat-label">Iniciativa</div><div class="stat-value" id="statIniciativa">20</div></div>
                                 <div class="stat-box"><div class="stat-label">Mod. Dano</div><div class="stat-value" id="statModDano">-1d2</div></div>
+                                <div class="stat-box"><div class="stat-label">Pontos de Sorte</div><div class="stat-value"><input type="number" id="editPontosSorte" min="0" step="1" value="1" onchange="salvarPontosSorte()" style="width:100%;text-align:center;"></div></div>
+                                <div class="stat-box hidden" id="statMagiaBox"><div class="stat-label">Pontos de Magia</div><div class="stat-value" id="statPontosMagia">—</div></div>
                                 <div class="stat-box"><div class="stat-label">Altura</div><div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div></div>
                                 <div class="stat-box"><div class="stat-label">Peso</div><div class="stat-value"><input type="number" id="editPeso" onchange="salvarAlturaPeso()"></div></div>
                             </div>
@@ -466,27 +468,27 @@
                             <div class="inventory-container">
                                 <div class="inventory-compartment" style="grid-column: span 2;">
                                     <h4>🧍 Equipado</h4>
-                                    <div class="capacity">12 itens equipados/acessíveis</div>
+                                    <div class="capacity" id="capacity-equipado">Carga equipada</div>
                                     <div class="inventory-slots" id="inv-equipado"></div>
                                 </div>
                                 <div class="inventory-compartment">
                                     <h4>👛 Bolso</h4>
-                                    <div class="capacity">2 kg | 2 itens</div>
+                                    <div class="capacity" id="capacity-bolso">2 kg | 2 itens</div>
                                     <div class="inventory-slots" id="inv-bolso"></div>
                                 </div>
                                 <div class="inventory-compartment">
                                     <h4>🎒 Mochila</h4>
-                                    <div class="capacity">20 kg | 20 itens</div>
+                                    <div class="capacity" id="capacity-mochila">Mochila</div>
                                     <div class="inventory-slots" id="inv-mochila"></div>
                                 </div>
                                 <div class="inventory-compartment" style="grid-column: span 2;">
                                     <h4>🚗 Veículo/Nave</h4>
-                                    <div class="capacity">500 kg | 50 itens</div>
+                                    <div class="capacity" id="capacity-veiculo">50 itens | peso sem limite</div>
                                     <div class="inventory-slots" id="inv-veiculo"></div>
                                 </div>
                                 <div class="inventory-compartment" style="grid-column: span 2;">
                                     <h4>🏠 Casa/Base</h4>
-                                    <div class="capacity">100 itens</div>
+                                    <div class="capacity" id="capacity-casa">100 itens | peso sem limite</div>
                                     <div class="inventory-slots" id="inv-casa"></div>
                                 </div>
                             </div>
@@ -632,8 +634,12 @@
                                 <div style="margin:15px 0;color:#00d4ff;font-size:1.2em;">
                                     Valor da Perícia: <strong id="skillValue">—</strong>
                                 </div>
-                                <button class="dice-btn" onclick="rolarPericia()">🎲 Rolar Perícia</button>
-                                <small style="display:block;color:#aaa;margin-top:10px;">Todas as perícias básicas são permitidas. Profissionais e especializações aparecem quando o personagem possui investimento.</small>
+                                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+                                    <button class="dice-btn" onclick="rolarPericia()">🎲 Rolar Perícia</button>
+                                    <button class="dice-btn" onclick="gastarPontoSorte()" style="background:linear-gradient(135deg,#f1c40f,#d68910);">⭐ Gastar 1 Ponto de Sorte</button>
+                                    <span style="color:#ffd166;">Disponíveis: <strong id="rollLuckPoints">—</strong></span>
+                                </div>
+                                <small style="display:block;color:#aaa;margin-top:10px;">Todas as perícias básicas são permitidas. Profissionais e especializações aparecem quando o personagem possui investimento. O gasto de Sorte é registrado no histórico; o efeito narrativo/mecânico pode ser definido conforme a situação.</small>
                             </div>
                             
                             <div class="dice-roller" style="margin-top:30px;">
@@ -656,6 +662,10 @@
                                 <div class="roll-result hidden" id="rollResultBox">
                                     <div id="rollResultText"></div>
                                 </div>
+                            </div>
+
+                            <div id="psiRollHint" style="margin-top:20px;padding:14px 16px;background:rgba(139,92,246,0.10);border:1px solid rgba(139,92,246,0.30);border-radius:10px;color:#d9ccff;">
+                                <strong>🔮 Psiquismo:</strong> as especializações psiônicas investidas aparecem normalmente em Teste. A reserva de Pontos de Magia aparece na ficha quando houver Psiquismo. A seleção de poderes, arcos e custos será conectada ao banco de poderes em uma próxima etapa.
                             </div>
 
                             <div style="margin-top:20px;padding:16px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:10px;">
@@ -1152,7 +1162,7 @@ window.novoPersonagem = async () => {
     const maxChars = userData.role === 'mestre' ? 999 : 5;
     if (userCharacters.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
     const charId = `char_${Date.now()}`;
-    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
+    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: 0, pontosSorte: 1, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
     await carregarPersonagens(); currentCharId = charId;
     await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -1207,6 +1217,9 @@ window.calcularDerivados = () => {
     document.getElementById('statPA').textContent = calcularPA((attrs.INT || 10) + bonus.INT, (attrs.DES || 10) + bonus.DES);
     document.getElementById('statIniciativa').textContent = (attrs.INT || 10) + bonus.INT + (attrs.DES || 10) + bonus.DES;
     document.getElementById('statModDano').textContent = calcularModDano((attrs.FOR || 10) + bonus.FOR, (attrs.TAM || 10) + bonus.TAM);
+    char.bonus = { ...(char.bonus || {}), ...bonus };
+    atualizarPontosSorteEMagia_(char);
+    renderizarInventario(char);
 };
 
 window.calcularAlturaPesoDoFormulario = () => {
@@ -1250,6 +1263,66 @@ window.salvarRecursos = async () => {
     renderizarMercado();
 };
 
+function temPsiquismoInvestido_(char) {
+    const ids = ['psiquismo_materia', 'psiquismo_mente', 'psiquismo_sentidos'];
+    return ids.some(id => totalTreinoPericia_((char?.especializacoes || {})[id] || {}) > 0);
+}
+
+function pontosMagiaMax_(char) {
+    return Math.max(0, Math.floor(obterAtributoTotal_(char, 'POD')));
+}
+
+function atualizarPontosSorteEMagia_(char) {
+    const sorte = Math.max(0, Math.floor(Number(char?.pontosSorte ?? 1)));
+    const input = document.getElementById('editPontosSorte');
+    if (input) {
+        input.value = sorte;
+        input.disabled = !(userData && userData.role === 'mestre');
+    }
+    const rollLuck = document.getElementById('rollLuckPoints');
+    if (rollLuck) rollLuck.textContent = sorte;
+
+    const box = document.getElementById('statMagiaBox');
+    const alvo = document.getElementById('statPontosMagia');
+    const possuiPsi = temPsiquismoInvestido_(char);
+    if (box) box.classList.toggle('hidden', !possuiPsi);
+    if (alvo && possuiPsi) {
+        const max = pontosMagiaMax_(char);
+        const gastos = Math.max(0, Math.floor(Number(char?.pontosMagiaGastos || 0)));
+        alvo.textContent = `${Math.max(0, max - gastos)} / ${max}`;
+    }
+}
+
+window.salvarPontosSorte = async () => {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    if (!userData || userData.role !== 'mestre') {
+        atualizarPontosSorteEMagia_(char);
+        return;
+    }
+    const valor = Math.max(0, Math.floor(Number(document.getElementById('editPontosSorte')?.value) || 0));
+    char.pontosSorte = valor;
+    await setDoc(doc(db, 'personagens', currentCharId), { pontosSorte: valor }, { merge: true });
+    atualizarPontosSorteEMagia_(char);
+};
+
+window.gastarPontoSorte = async () => {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    const atual = Math.max(0, Math.floor(Number(char.pontosSorte ?? 1)));
+    if (atual <= 0) {
+        alert('O personagem não possui Pontos de Sorte disponíveis.');
+        return;
+    }
+    const novo = atual - 1;
+    char.pontosSorte = novo;
+    await setDoc(doc(db, 'personagens', currentCharId), { pontosSorte: novo }, { merge: true });
+    atualizarPontosSorteEMagia_(char);
+    await registrarHistoricoGeral_('Sorte', `Gastou 1 Ponto de Sorte · Restantes: ${novo}`, { subtipo:'sorte', gasto:1, restante:novo });
+};
+
 function atualizarVisualizacao(data) {
     document.getElementById('charName').textContent = data.nome || '-';
     document.getElementById('charRace').textContent = data.raca || '-';
@@ -1276,6 +1349,7 @@ function atualizarVisualizacao(data) {
     document.getElementById('editPeso').value = data.peso || calc.peso;
     const recursosInput = document.getElementById('editRecursos');
     if (recursosInput) { recursosInput.value = Number(data.recursos || 0); recursosInput.disabled = !(userData && userData.role === 'mestre'); }
+    atualizarPontosSorteEMagia_(data);
     
     renderizarInventario(data);
     renderizarCombate(data);
@@ -1386,9 +1460,64 @@ function escaparHtmlInventario_(valor) {
         .replace(/'/g, '&#039;');
 }
 
+function obterAtributoTotal_(char, nome) {
+    return Number(char?.atributos?.[nome] || 10) + Number(char?.bonus?.[nome] || 0);
+}
+
+function pesoItem_(item) {
+    return Math.max(0, Number(item?.peso || 0));
+}
+
+function pesoCompartimento_(inv, comp) {
+    return (Array.isArray(inv?.[comp]) ? inv[comp] : []).reduce((soma, item) => soma + (item ? pesoItem_(item) : 0), 0);
+}
+
+function limitePesoCompartimento_(char, comp) {
+    const forca = obterAtributoTotal_(char, 'FOR');
+    const tam = obterAtributoTotal_(char, 'TAM');
+    if (comp === 'bolso') return 2;
+    if (comp === 'mochila') return Math.max(0, 10 + forca + tam);
+    if (comp === 'equipado') return Math.max(0, forca + tam);
+    return Infinity;
+}
+
+function validarPesoCompartimento_(char, inv, comp, mensagem = true) {
+    const limite = limitePesoCompartimento_(char, comp);
+    if (!Number.isFinite(limite)) return true;
+    const peso = pesoCompartimento_(inv, comp);
+    if (peso <= limite + 1e-9) return true;
+    if (mensagem) alert(`${comp === 'mochila' ? 'Mochila' : comp === 'equipado' ? 'Equipado' : 'Bolso'} excederia o limite de peso: ${peso.toFixed(1)} kg / ${limite.toFixed(1)} kg.`);
+    return false;
+}
+
+function atualizarCapacidadesInventario_(char, inv) {
+    const defs = {
+        equipado: { id:'capacity-equipado', slots:12, nome:'Equipado' },
+        bolso: { id:'capacity-bolso', slots:2, nome:'Bolso' },
+        mochila: { id:'capacity-mochila', slots:20, nome:'Mochila' },
+        veiculo: { id:'capacity-veiculo', slots:50, nome:'Veículo/Nave' },
+        casa: { id:'capacity-casa', slots:100, nome:'Casa/Base' }
+    };
+    Object.entries(defs).forEach(([comp,d]) => {
+        const alvo = document.getElementById(d.id);
+        if (!alvo) return;
+        const peso = pesoCompartimento_(inv, comp);
+        const usados = (inv[comp] || []).filter(Boolean).length;
+        const limite = limitePesoCompartimento_(char, comp);
+        if (Number.isFinite(limite)) {
+            alvo.textContent = `${peso.toFixed(1)} / ${limite.toFixed(1)} kg | ${usados}/${d.slots} itens`;
+            alvo.style.color = peso > limite ? '#ff6b6b' : '';
+        } else {
+            alvo.textContent = `${peso.toFixed(1)} kg | ${usados}/${d.slots} itens | peso sem limite`;
+            alvo.style.color = '';
+        }
+    });
+}
+
 function renderizarInventario(char) {
     const inv = normalizarInventario_(char);
     const tamanhos = { equipado: 12, bolso: 2, mochila: 20, veiculo: 50, casa: 100 };
+    atualizarCapacidadesInventario_(char, inv);
 
     Object.keys(tamanhos).forEach(comp => {
         const container = document.getElementById(`inv-${comp}`);
@@ -1467,6 +1596,13 @@ window.soltarInventario = async (event, destinoComp, destinoIndex) => {
     const itemDestino = inv[destinoComp][destinoIndex] || null;
     inv[destinoComp][destinoIndex] = itemOrigem;
     inv[origemComp][origemIndex] = itemDestino;
+
+    if (!validarPesoCompartimento_(char, inv, destinoComp, true) || !validarPesoCompartimento_(char, inv, origemComp, true)) {
+        inv[origemComp][origemIndex] = itemOrigem;
+        inv[destinoComp][destinoIndex] = itemDestino;
+        renderizarInventario(char);
+        return;
+    }
 
     char.inventario = inv;
     renderizarInventario(char);
@@ -2589,6 +2725,13 @@ window.comprarItemMercado = async (itemId) => {
     const slot = inv[destino].findIndex(x => !x);
     if (slot < 0) { alert('Não há espaço livre nesse compartimento.'); return; }
 
+    const pesoNovo = pesoItem_(itemBanco);
+    const limiteDestino = limitePesoCompartimento_(char, destino);
+    if (Number.isFinite(limiteDestino) && pesoCompartimento_(inv, destino) + pesoNovo > limiteDestino + 1e-9) {
+        alert(`A compra excederia a capacidade de peso do compartimento: ${(pesoCompartimento_(inv, destino) + pesoNovo).toFixed(1)} kg / ${limiteDestino.toFixed(1)} kg.`);
+        return;
+    }
+
     inv[destino][slot] = {
         ...itemBanco,
         idBanco: itemBanco.id,
@@ -3617,7 +3760,8 @@ window.salvarItem = async () => {
         inv[currentEditSlot.compartment] = Array(tamanho).fill(null);
     }
     
-    inv[currentEditSlot.compartment][currentEditSlot.index] = {
+    const itemAnterior = inv[currentEditSlot.compartment][currentEditSlot.index] || null;
+    const novoItem = {
         nome: document.getElementById('modalItemNome').value.trim(),
         imagem: document.getElementById('modalItemImg').value.trim() || uploadedItemImage,
         descricao: document.getElementById('modalItemDesc').value.trim(),
@@ -3626,6 +3770,11 @@ window.salvarItem = async () => {
         pv: parseInt(document.getElementById('modalItemPV').value) || 0,
         dano: document.getElementById('modalItemDano').value.trim()
     };
+    inv[currentEditSlot.compartment][currentEditSlot.index] = novoItem;
+    if (!validarPesoCompartimento_(char, inv, currentEditSlot.compartment, true)) {
+        inv[currentEditSlot.compartment][currentEditSlot.index] = itemAnterior;
+        return;
+    }
     
     await setDoc(doc(db, "personagens", currentCharId), { inventario: inv }, { merge: true });
     await carregarPersonagens();
