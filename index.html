@@ -138,6 +138,16 @@
         .db-table td { color:#ddd; }
         .db-table .name-pt { color:#fff; font-weight:bold; }
         .db-table .actions { white-space:nowrap; }
+        .db-item-thumb { width:76px; height:76px; border-radius:10px; object-fit:cover; display:block; border:1px solid rgba(0,212,255,0.35); background:rgba(0,0,0,0.25); }
+        .db-item-thumb.placeholder { display:flex; align-items:center; justify-content:center; font-size:2em; color:#777; }
+        .db-item-main-row td { border-bottom:none; padding-bottom:5px; }
+        .db-item-meta-row td { padding-top:5px; color:#bdbdbd; background:rgba(255,255,255,0.018); }
+        .db-item-description { min-width:320px; max-width:520px; white-space:normal; line-height:1.4; }
+        .db-name-table { width:100%; min-width:1050px; border-collapse:collapse; background:rgba(0,0,0,0.12); }
+        .db-name-table th, .db-name-table td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.10); vertical-align:top; text-align:left; }
+        .db-name-table th { color:#00d4ff; background:rgba(0,212,255,0.10); }
+        .db-name-table td:first-child { color:#fff; font-weight:bold; }
+        .db-name-table .actions { white-space:nowrap; }
         
         .item-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); border: 2px solid #00d4ff; border-radius: 8px; padding: 10px; min-width: 200px; max-width: 300px; z-index: 100; display: none; font-size: 0.9em; pointer-events: none; }
         .inventory-slot:hover .item-tooltip { display: block; }
@@ -419,12 +429,12 @@
                                 </div>
                                 <div class="inventory-compartment" style="grid-column: span 2;">
                                     <h4>🚗 Veículo/Nave</h4>
-                                    <div class="capacity">500 kg | 100 itens</div>
+                                    <div class="capacity">500 kg | 50 itens</div>
                                     <div class="inventory-slots" id="inv-veiculo"></div>
                                 </div>
                                 <div class="inventory-compartment" style="grid-column: span 2;">
                                     <h4>🏠 Casa/Base</h4>
-                                    <div class="capacity">50 itens</div>
+                                    <div class="capacity">100 itens</div>
                                     <div class="inventory-slots" id="inv-casa"></div>
                                 </div>
                             </div>
@@ -696,7 +706,18 @@
             </div>
 
             <div class="form-group"><label>Destino / Local padrão:</label><input type="text" id="dbItemDestino" placeholder="Arco, Armas laser, inventário..."></div>
-            <div class="form-group"><label>Imagem (URL, opcional):</label><input type="text" id="dbItemImagem"></div>
+
+            <div style="display:grid; grid-template-columns:150px 1fr; gap:18px; align-items:start; margin-bottom:15px;">
+                <div>
+                    <label style="display:block; margin-bottom:7px; color:#aaa;">Imagem</label>
+                    <div id="dbItemImagemPreview" style="width:140px;height:140px;border:2px dashed rgba(255,255,255,0.25);border-radius:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:rgba(0,0,0,0.25);font-size:3em;">📦</div>
+                </div>
+                <div>
+                    <div class="form-group"><label>Imagem (URL, opcional):</label><input type="text" id="dbItemImagem" oninput="atualizarPreviewItemBanco()"></div>
+                    <div class="form-group"><label>Ou fazer upload:</label><input type="file" id="dbItemImagemArquivo" accept="image/*" onchange="handleDbItemImageUpload(event)"></div>
+                    <small style="color:#aaa;">A imagem ficará vinculada ao item e poderá ser usada automaticamente no inventário e no futuro Mercado.</small>
+                </div>
+            </div>
 
             <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
                 <div class="form-group"><label>Descrição / observações (PT):</label><textarea id="dbItemDescricao" rows="4"></textarea></div>
@@ -748,8 +769,8 @@
             fillSlots('inv-equipado', 12, false, 'equipado');
             fillSlots('inv-bolso', 2, false, 'bolso');
             fillSlots('inv-mochila', 20, false, 'mochila');
-            fillSlots('inv-veiculo', 100, false, 'veiculo');
-            fillSlots('inv-casa', 50, false, 'casa');
+            fillSlots('inv-veiculo', 50, false, 'veiculo');
+            fillSlots('inv-casa', 100, false, 'casa');
         });
     </script>
 
@@ -997,7 +1018,7 @@ window.novoPersonagem = async () => {
     const maxChars = userData.role === 'mestre' ? 999 : 5;
     if (userCharacters.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
     const charId = `char_${Date.now()}`;
-    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(100).fill(null), casa: Array(50).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
+    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
     await carregarPersonagens(); currentCharId = charId;
     await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -1192,7 +1213,7 @@ function calcularAlturaPeso(tam, tipo) {
 
 function normalizarInventario_(char) {
     if (!char.inventario || typeof char.inventario !== 'object') char.inventario = {};
-    const tamanhos = { equipado: 12, bolso: 2, mochila: 20, veiculo: 100, casa: 50 };
+    const tamanhos = { equipado: 12, bolso: 2, mochila: 20, veiculo: 50, casa: 100 };
 
     Object.entries(tamanhos).forEach(([comp, tamanho]) => {
         const atual = Array.isArray(char.inventario[comp]) ? char.inventario[comp] : [];
@@ -1216,7 +1237,7 @@ function escaparHtmlInventario_(valor) {
 
 function renderizarInventario(char) {
     const inv = normalizarInventario_(char);
-    const tamanhos = { equipado: 12, bolso: 2, mochila: 20, veiculo: 100, casa: 50 };
+    const tamanhos = { equipado: 12, bolso: 2, mochila: 20, veiculo: 50, casa: 100 };
 
     Object.keys(tamanhos).forEach(comp => {
         const container = document.getElementById(`inv-${comp}`);
@@ -1926,72 +1947,80 @@ window.mudarEtapaPericias = () => {
 // ============================================
 // FUNÇÕES DO BANCO DE DADOS
 // ============================================
-function renderizarBancoPericias() { 
-    document.getElementById('listaBancoPericias').innerHTML = periciasDB
-        .sort((a, b) => getNome(a).localeCompare(getNome(b)))
-        .map(p => `
-        <div class="db-item">
-            <div class="db-item-info">
-                <span class="db-item-name">${getNome(p)}</span>
-                <span class="db-item-details">(${p.tipo}) - ${p.formula}</span>
-            </div>
-            <div class="db-item-actions">
-                <button class="btn-small btn-select" onclick="editarPericia('${p.id}')">Editar</button>
-                <button class="btn-small btn-delete" onclick="removerPericia('${p.id}')">Remover</button>
-            </div>
-        </div>
-    `).join(''); 
+function escaparBanco_(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
-function renderizarBancoOrigens() { 
-    document.getElementById('listaBancoOrigens').innerHTML = origensDB
-        .sort((a, b) => getNome(a).localeCompare(getNome(b)))
-        .map(o => `
-        <div class="db-item">
-            <div class="db-item-info">
-                <span class="db-item-name">${getNome(o)}</span>
-                <span class="db-item-details">Perícias: ${o.periciasBasicas.join(', ')}</span>
-            </div>
-            <div class="db-item-actions">
-                <button class="btn-small btn-select" onclick="editarOrigem('${o.id}')">Editar</button>
-                <button class="btn-small btn-delete" onclick="removerOrigem('${o.id}')">Remover</button>
-            </div>
-        </div>
-    `).join(''); 
+function tabelaBancoNomes_(cabecalhos, linhas) {
+    return `<div class="db-table-wrap"><table class="db-name-table"><thead><tr>${cabecalhos.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${linhas.join('')}</tbody></table></div>`;
 }
 
-function renderizarBancoCarreiras() { 
-    document.getElementById('listaBancoCarreiras').innerHTML = carreirasDB
-        .sort((a, b) => getNome(a).localeCompare(getNome(b)))
-        .map(c => `
-        <div class="db-item">
-            <div class="db-item-info">
-                <span class="db-item-name">${getNome(c)}</span>
-                <span class="db-item-details">Básicas: ${c.periciasBasicas.join(', ')} | Prof: ${c.periciasProfissionais.join(', ')} | Esp: ${(c.especializacoes || []).join(', ') || 'Nenhuma'}</span>
-            </div>
-            <div class="db-item-actions">
-                <button class="btn-small btn-select" onclick="editarCarreira('${c.id}')">Editar</button>
-                <button class="btn-small btn-delete" onclick="removerCarreira('${c.id}')">Remover</button>
-            </div>
-        </div>
-    `).join(''); 
+function renderizarBancoPericias() {
+    const el = document.getElementById('listaBancoPericias');
+    if (!el) return;
+    const linhas = [...periciasDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt')).map(p => `
+        <tr>
+            <td>${escaparBanco_(p.nome || '')}</td>
+            <td>${escaparBanco_(p.nome_en || '')}</td>
+            <td>${escaparBanco_(p.nome_zh || '')}</td>
+            <td>${escaparBanco_(p.categoria || '')}</td>
+            <td>${escaparBanco_(p.tipo || '')}</td>
+            <td>${escaparBanco_(p.formula || '')}</td>
+            <td>${escaparBanco_(p.penalidadeArmadura ?? '')}</td>
+            <td class="actions"><button class="btn-small btn-select" onclick="editarPericia('${escaparBanco_(p.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerPericia('${escaparBanco_(p.id)}')">Remover</button></td>
+        </tr>`);
+    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Categoria','Tipo','Fórmula','Pen. Armadura','Ações'], linhas);
 }
 
-function renderizarBancoEspecializacoes() { 
-    document.getElementById('listaBancoEspecializacoes').innerHTML = especializacoesDB
-        .sort((a, b) => getNome(a).localeCompare(getNome(b)))
-        .map(e => `
-        <div class="db-item">
-            <div class="db-item-info">
-                <span class="db-item-name">${getNome(e)}</span>
-                <span class="db-item-details">(${e.tipo}) - ${e.formula} - ${e.uso}</span>
-            </div>
-            <div class="db-item-actions">
-                <button class="btn-small btn-select" onclick="editarEspecializacao('${e.id}')">Editar</button>
-                <button class="btn-small btn-delete" onclick="removerEspecializacao('${e.id}')">Remover</button>
-            </div>
-        </div>
-    `).join(''); 
+function renderizarBancoOrigens() {
+    const el = document.getElementById('listaBancoOrigens');
+    if (!el) return;
+    const linhas = [...origensDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt')).map(o => `
+        <tr>
+            <td>${escaparBanco_(o.nome || '')}</td>
+            <td>${escaparBanco_(o.nome_en || '')}</td>
+            <td>${escaparBanco_(o.nome_zh || '')}</td>
+            <td>${escaparBanco_((o.periciasBasicas || []).join(', '))}</td>
+            <td class="actions"><button class="btn-small btn-select" onclick="editarOrigem('${escaparBanco_(o.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerOrigem('${escaparBanco_(o.id)}')">Remover</button></td>
+        </tr>`);
+    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Perícias / Opções da Origem','Ações'], linhas);
+}
+
+function renderizarBancoCarreiras() {
+    const el = document.getElementById('listaBancoCarreiras');
+    if (!el) return;
+    const linhas = [...carreirasDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt')).map(c => `
+        <tr>
+            <td>${escaparBanco_(c.nome || '')}</td>
+            <td>${escaparBanco_(c.nome_en || '')}</td>
+            <td>${escaparBanco_(c.nome_zh || '')}</td>
+            <td>${escaparBanco_((c.periciasBasicas || []).join(', '))}</td>
+            <td>${escaparBanco_((c.periciasProfissionais || []).join(', '))}</td>
+            <td>${escaparBanco_((c.especializacoes || []).join(', ') || 'Nenhuma')}</td>
+            <td class="actions"><button class="btn-small btn-select" onclick="editarCarreira('${escaparBanco_(c.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerCarreira('${escaparBanco_(c.id)}')">Remover</button></td>
+        </tr>`);
+    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Básicas','Profissionais','Especializações','Ações'], linhas);
+}
+
+function renderizarBancoEspecializacoes() {
+    const el = document.getElementById('listaBancoEspecializacoes');
+    if (!el) return;
+    const linhas = [...especializacoesDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt')).map(e => `
+        <tr>
+            <td>${escaparBanco_(e.nome || '')}</td>
+            <td>${escaparBanco_(e.nome_en || '')}</td>
+            <td>${escaparBanco_(e.nome_zh || '')}</td>
+            <td>${escaparBanco_(e.tipo || '')}</td>
+            <td>${escaparBanco_(e.formula || '')}</td>
+            <td>${escaparBanco_(e.uso || '')}</td>
+            <td class="actions"><button class="btn-small btn-select" onclick="editarEspecializacao('${escaparBanco_(e.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerEspecializacao('${escaparBanco_(e.id)}')">Remover</button></td>
+        </tr>`);
+    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Tipo','Fórmula','Uso','Ações'], linhas);
 }
 
 function renderizarBancoItens() {
@@ -2003,55 +2032,56 @@ function renderizarBancoItens() {
         return;
     }
 
-    const esc = valor => String(valor ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-
+    const esc = escaparBanco_;
     const linhas = [...itensDB]
         .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt'))
-        .map(i => `
-            <tr>
-                <td class="name-pt">${esc(i.nome || '')}</td>
-                <td>${esc(i.nome_en || '')}</td>
-                <td>${esc(i.nome_zh || '')}</td>
-                <td>${esc(i.categoria || 'Diversos')}</td>
-                <td>${Number(i.peso || 0)}</td>
-                <td>${Number(i.pa || 0)}</td>
-                <td>${Number(i.pv ?? 1)}</td>
-                <td>${Number(i.preco || 0)}</td>
-                <td>${esc(i.alcance || '')}</td>
-                <td>${esc(i.dano || '')}</td>
-                <td>${esc(i.municao || '')}</td>
-                <td>${esc(i.uso ?? '')}</td>
-                <td>${esc(i.nivelAcesso || i.acesso || '')}</td>
-                <td class="actions">
-                    <button class="btn-small btn-select" onclick="editarItemBanco('${esc(i.id)}')">Editar</button>
-                    <button class="btn-small btn-delete" onclick="removerItemBanco('${esc(i.id)}')">Remover</button>
-                </td>
-            </tr>`).join('');
+        .map(i => {
+            const img = i.imagem
+                ? `<img class="db-item-thumb" src="${esc(i.imagem)}" alt="${esc(i.nome || '')}">`
+                : `<div class="db-item-thumb placeholder">📦</div>`;
+            const desc = i.descricao || i.observacoes || '';
+            const meta = [
+                i.peso !== undefined ? `${Number(i.peso || 0)} kg` : '',
+                `PA: ${Number(i.pa || 0)}`,
+                `PV: ${Number(i.pv ?? 1)}`,
+                i.preco !== undefined ? `Preço: ${Number(i.preco || 0)}` : '',
+                i.alcance ? `Alcance: ${i.alcance}` : '',
+                i.dano ? `Dano: ${i.dano}` : '',
+                i.municao ? `Munição: ${i.municao}` : '',
+                i.uso !== undefined && i.uso !== '' ? `Uso: ${i.uso}` : '',
+                (i.nivelAcesso || i.acesso) ? `Acesso: ${i.nivelAcesso || i.acesso}` : '',
+                i.material ? `Material: ${i.material}` : ''
+            ].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ');
+
+            return `
+                <tr class="db-item-main-row">
+                    <td rowspan="2">${img}</td>
+                    <td class="name-pt">${esc(i.nome || '')}</td>
+                    <td>${esc(i.nome_en || '')}</td>
+                    <td>${esc(i.nome_zh || '')}</td>
+                    <td>${esc(i.categoria || 'Diversos')}</td>
+                    <td class="db-item-description">${esc(desc)}</td>
+                </tr>
+                <tr class="db-item-meta-row">
+                    <td colspan="4">${meta}</td>
+                    <td class="actions">
+                        <button class="btn-small btn-select" onclick="editarItemBanco('${esc(i.id)}')">Editar</button>
+                        <button class="btn-small btn-delete" onclick="removerItemBanco('${esc(i.id)}')">Remover</button>
+                    </td>
+                </tr>`;
+        }).join('');
 
     container.innerHTML = `
         <div class="db-table-wrap">
-            <table class="db-table">
+            <table class="db-table" style="min-width:1180px;">
                 <thead>
                     <tr>
+                        <th>Imagem</th>
                         <th>Nome (PT)</th>
                         <th>Name (EN)</th>
                         <th>名称 (中文)</th>
                         <th>Categoria</th>
-                        <th>kg</th>
-                        <th>PA</th>
-                        <th>PV</th>
-                        <th>Preço</th>
-                        <th>Alcance</th>
-                        <th>Dano</th>
-                        <th>Munição</th>
-                        <th>Uso</th>
-                        <th>Acesso</th>
-                        <th>Ações</th>
+                        <th>Descrição / Observações</th>
                     </tr>
                 </thead>
                 <tbody>${linhas}</tbody>
@@ -2086,9 +2116,43 @@ function preencherModalItemBanco_(item = null) {
     set('dbItemDescricao', item?.descricao || item?.observacoes || '');
     set('dbItemDescricaoEn', item?.descricao_en || '');
     set('dbItemDescricaoZh', item?.descricao_zh || '');
+    atualizarPreviewItemBanco();
+
+    const arquivo = document.getElementById('dbItemImagemArquivo');
+    if (arquivo) arquivo.value = '';
 
     document.getElementById('dbItemModalTitulo').textContent = item ? `Editar Item — ${item.nome}` : 'Adicionar Item do Sistema';
 }
+
+window.atualizarPreviewItemBanco = () => {
+    const url = String(document.getElementById('dbItemImagem')?.value || '').trim();
+    const preview = document.getElementById('dbItemImagemPreview');
+    if (!preview) return;
+    if (!url) {
+        preview.innerHTML = '📦';
+        return;
+    }
+    preview.innerHTML = `<img src="${escaparBanco_(url)}" alt="Preview" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='⚠️'">`;
+};
+
+window.handleDbItemImageUpload = async (event) => {
+    if (!userData || userData.role !== 'mestre') {
+        alert('Apenas o mestre pode enviar imagens para o banco.');
+        return;
+    }
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+        const storageRef = ref(storage, `banco-itens/${Date.now()}_${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(snapshot.ref);
+        document.getElementById('dbItemImagem').value = url;
+        atualizarPreviewItemBanco();
+    } catch (error) {
+        console.error('Erro ao enviar imagem do item:', error);
+        alert('Não foi possível enviar a imagem.');
+    }
+};
 
 window.adicionarItemBanco = () => {
     if (!userData || userData.role !== 'mestre') {
@@ -2167,17 +2231,97 @@ window.salvarItemBancoModal = async () => {
     await carregarBancosDeDados();
 };
 
-// Adicionar
-window.adicionarPericia = async () => { const nome = prompt('Nome:'); if (!nome) return; const formula = prompt('Fórmula (ex: FOR+DES):'); if (!formula) return; const tipo = prompt('Tipo (Básica/Profissional):', 'Profissional'); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, nome_en: '', nome_zh: '', formula, tipo, categoria: 'Geral', especializavel: true, penalidadeArmadura: 0 }; await setDoc(doc(db, "pericias", id), nova); periciasDB.push(nova); renderizarBancoPericias(); };
-window.adicionarOrigem = async () => { const nome = prompt('Nome:'); if (!nome) return; const periciasStr = prompt('Perícias básicas (separadas por vírgula):'); const periciasBasicas = periciasStr ? periciasStr.split(',').map(s => s.trim()) : []; const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, nome_en: '', nome_zh: '', periciasBasicas }; await setDoc(doc(db, "origens", id), nova); origensDB.push(nova); popularSelects(); renderizarBancoOrigens(); };
-window.adicionarCarreira = async () => { const nome = prompt('Nome:'); if (!nome) return; const basicasStr = prompt('Perícias básicas (vírgula):'); const profissionaisStr = prompt('Perícias profissionais (vírgula):'); const especializacoesStr = prompt('Especializações (vírgula, vazio se nenhuma):', ''); const periciasBasicas = basicasStr ? basicasStr.split(',').map(s => s.trim()) : []; const periciasProfissionais = profissionaisStr ? profissionaisStr.split(',').map(s => s.trim()) : []; const especializacoes = especializacoesStr ? especializacoesStr.split(',').map(s => s.trim()) : []; const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, nome_en: '', nome_zh: '', periciasBasicas, periciasProfissionais, especializacoes }; await setDoc(doc(db, "carreiras", id), nova); carreirasDB.push(nova); popularSelects(); renderizarBancoCarreiras(); };
-window.adicionarEspecializacao = async () => { const nome = prompt('Nome:'); if (!nome) return; const formula = prompt('Fórmula:'); if (!formula) return; const uso = prompt('Uso (Distância/Corpo a corpo/Defesa/Teste):'); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, nome_en: '', nome_zh: '', formula, tipo: 'Combate', uso }; await setDoc(doc(db, "especializacoes", id), nova); especializacoesDB.push(nova); renderizarBancoEspecializacoes(); };
+// Adicionar / editar bancos multilíngues
+function pedirNomeMultilingue_(atual = {}) {
+    const nome = prompt('Nome (PT):', atual.nome || '');
+    if (!nome) return null;
+    const nome_en = prompt('Name (EN):', atual.nome_en || '') ?? atual.nome_en ?? '';
+    const nome_zh = prompt('名称 (中文):', atual.nome_zh || '') ?? atual.nome_zh ?? '';
+    return { nome: nome.trim(), nome_en: String(nome_en).trim(), nome_zh: String(nome_zh).trim() };
+}
 
-// Editar
-window.editarPericia = async (id) => { const p = periciasDB.find(x => x.id === id); if (!p) return; const nome = prompt('Nome:', p.nome); if (!nome) return; const formula = prompt('Fórmula:', p.formula); const tipo = prompt('Tipo:', p.tipo); await setDoc(doc(db, "pericias", id), { ...p, nome, formula, tipo }); await carregarBancosDeDados(); };
-window.editarOrigem = async (id) => { const o = origensDB.find(x => x.id === id); if (!o) return; const nome = prompt('Nome:', o.nome); if (!nome) return; const periciasStr = prompt('Perícias básicas:', o.periciasBasicas.join(', ')); const periciasBasicas = periciasStr.split(',').map(s => s.trim()); await setDoc(doc(db, "origens", id), { ...o, nome, periciasBasicas }); await carregarBancosDeDados(); popularSelects(); };
-window.editarCarreira = async (id) => { const c = carreirasDB.find(x => x.id === id); if (!c) return; const nome = prompt('Nome:', c.nome); if (!nome) return; const basicasStr = prompt('Perícias básicas:', c.periciasBasicas.join(', ')); const profissionaisStr = prompt('Perícias profissionais:', c.periciasProfissionais.join(', ')); const especializacoesStr = prompt('Especializações:', (c.especializacoes || []).join(', ')); const periciasBasicas = basicasStr.split(',').map(s => s.trim()); const periciasProfissionais = profissionaisStr.split(',').map(s => s.trim()); const especializacoes = especializacoesStr ? especializacoesStr.split(',').map(s => s.trim()) : []; await setDoc(doc(db, "carreiras", id), { ...c, nome, periciasBasicas, periciasProfissionais, especializacoes }); await carregarBancosDeDados(); popularSelects(); };
-window.editarEspecializacao = async (id) => { const e = especializacoesDB.find(x => x.id === id); if (!e) return; const nome = prompt('Nome:', e.nome); if (!nome) return; const formula = prompt('Fórmula:', e.formula); const uso = prompt('Uso:', e.uso); await setDoc(doc(db, "especializacoes", id), { ...e, nome, formula, uso }); await carregarBancosDeDados(); };
+window.adicionarPericia = async () => {
+    const nomes = pedirNomeMultilingue_(); if (!nomes) return;
+    const formula = prompt('Fórmula (ex: FOR+DES):'); if (!formula) return;
+    const tipo = prompt('Tipo (Básica/Profissional):', 'Profissional') || 'Profissional';
+    const categoria = prompt('Categoria:', 'Geral') || 'Geral';
+    const id = slugId_(nomes.nome);
+    const nova = { id, ...nomes, formula, tipo, categoria, especializavel: true, penalidadeArmadura: 0 };
+    await setDoc(doc(db, 'pericias', id), nova); await carregarBancosDeDados();
+};
+
+window.adicionarOrigem = async () => {
+    const nomes = pedirNomeMultilingue_(); if (!nomes) return;
+    const periciasStr = prompt('Perícias básicas/opções (IDs separados por vírgula):', '') || '';
+    const periciasBasicas = periciasStr.split(',').map(s=>s.trim()).filter(Boolean);
+    const id = slugId_(nomes.nome);
+    const nova = { id, ...nomes, periciasBasicas };
+    await setDoc(doc(db, 'origens', id), nova); await carregarBancosDeDados(); popularSelects();
+};
+
+window.adicionarCarreira = async () => {
+    const nomes = pedirNomeMultilingue_(); if (!nomes) return;
+    const basicasStr = prompt('Perícias básicas (IDs, vírgula):', '') || '';
+    const profissionaisStr = prompt('Perícias profissionais (IDs, vírgula):', '') || '';
+    const especializacoesStr = prompt('Especializações (IDs, vírgula):', '') || '';
+    const id = slugId_(nomes.nome);
+    const nova = { id, ...nomes,
+        periciasBasicas: basicasStr.split(',').map(s=>s.trim()).filter(Boolean),
+        periciasProfissionais: profissionaisStr.split(',').map(s=>s.trim()).filter(Boolean),
+        especializacoes: especializacoesStr.split(',').map(s=>s.trim()).filter(Boolean)
+    };
+    await setDoc(doc(db, 'carreiras', id), nova); await carregarBancosDeDados(); popularSelects();
+};
+
+window.adicionarEspecializacao = async () => {
+    const nomes = pedirNomeMultilingue_(); if (!nomes) return;
+    const formula = prompt('Fórmula:'); if (!formula) return;
+    const tipo = prompt('Tipo:', 'Combate') || 'Combate';
+    const uso = prompt('Uso (Teste/Corpo a corpo/Distância/Defesa ou combinações):', 'Teste') || 'Teste';
+    const id = slugId_(nomes.nome);
+    const nova = { id, ...nomes, formula, tipo, uso };
+    await setDoc(doc(db, 'especializacoes', id), nova); await carregarBancosDeDados();
+};
+
+window.editarPericia = async (id) => {
+    const p = periciasDB.find(x=>x.id===id); if (!p) return;
+    const nomes = pedirNomeMultilingue_(p); if (!nomes) return;
+    const formula = prompt('Fórmula:', p.formula) ?? p.formula;
+    const tipo = prompt('Tipo:', p.tipo) ?? p.tipo;
+    const categoria = prompt('Categoria:', p.categoria || 'Geral') ?? p.categoria;
+    await setDoc(doc(db,'pericias',id), {...p,...nomes,formula,tipo,categoria}); await carregarBancosDeDados();
+};
+
+window.editarOrigem = async (id) => {
+    const o = origensDB.find(x=>x.id===id); if (!o) return;
+    const nomes = pedirNomeMultilingue_(o); if (!nomes) return;
+    const lista = prompt('Perícias básicas/opções (IDs):', (o.periciasBasicas||[]).join(', ')) ?? '';
+    await setDoc(doc(db,'origens',id), {...o,...nomes,periciasBasicas:lista.split(',').map(s=>s.trim()).filter(Boolean)});
+    await carregarBancosDeDados(); popularSelects();
+};
+
+window.editarCarreira = async (id) => {
+    const c = carreirasDB.find(x=>x.id===id); if (!c) return;
+    const nomes = pedirNomeMultilingue_(c); if (!nomes) return;
+    const bas = prompt('Perícias básicas (IDs):',(c.periciasBasicas||[]).join(', ')) ?? '';
+    const prof = prompt('Perícias profissionais (IDs):',(c.periciasProfissionais||[]).join(', ')) ?? '';
+    const esp = prompt('Especializações (IDs):',(c.especializacoes||[]).join(', ')) ?? '';
+    await setDoc(doc(db,'carreiras',id), {...c,...nomes,
+        periciasBasicas:bas.split(',').map(s=>s.trim()).filter(Boolean),
+        periciasProfissionais:prof.split(',').map(s=>s.trim()).filter(Boolean),
+        especializacoes:esp.split(',').map(s=>s.trim()).filter(Boolean)
+    });
+    await carregarBancosDeDados(); popularSelects();
+};
+
+window.editarEspecializacao = async (id) => {
+    const e = especializacoesDB.find(x=>x.id===id); if (!e) return;
+    const nomes = pedirNomeMultilingue_(e); if (!nomes) return;
+    const formula = prompt('Fórmula:',e.formula) ?? e.formula;
+    const tipo = prompt('Tipo:',e.tipo) ?? e.tipo;
+    const uso = prompt('Uso:',e.uso) ?? e.uso;
+    await setDoc(doc(db,'especializacoes',id), {...e,...nomes,formula,tipo,uso}); await carregarBancosDeDados();
+};
 
 // Remover
 window.removerPericia = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "pericias", id)); periciasDB = periciasDB.filter(p => p.id !== id); renderizarBancoPericias(); };
@@ -2471,7 +2615,7 @@ window.salvarItem = async () => {
     
     const inv = normalizarInventario_(char);
     if (!inv[currentEditSlot.compartment]) {
-        const tamanho = ({ equipado: 12, bolso: 2, mochila: 20, veiculo: 100, casa: 50 })[currentEditSlot.compartment] || 20;
+        const tamanho = ({ equipado: 12, bolso: 2, mochila: 20, veiculo: 50, casa: 100 })[currentEditSlot.compartment] || 20;
         inv[currentEditSlot.compartment] = Array(tamanho).fill(null);
     }
     
