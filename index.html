@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v24.2: i18n explícito e seguro + compatibilidade de armas -->
+    <!-- Mesa Estelar v24.3: i18n de combate/rolagem/psi + compatibilidade de armas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -457,10 +457,10 @@
 
                             <div id="psiPanel" class="hidden" style="margin-top:28px;padding:20px;border:1px solid rgba(166,91,255,.35);border-radius:14px;background:rgba(96,45,150,.16);">
                                 <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:14px;">
-                                    <h3 style="margin:0;color:#d8b4ff;">🔮 Psiquismo</h3>
+                                    <h3 style="margin:0;color:#d8b4ff;" data-i18n="psychismTitle">🔮 Psiquismo</h3>
                                     <div id="psiPointsSummary" style="font-weight:bold;color:#fff;"></div>
                                 </div>
-                                <p style="color:#aaa;margin:0 0 16px;">Os poderes disponíveis dependem do treino na esfera: 1–14 = Arco 1, 15–29 = Arco 2, 30+ = Arco 3. O gasto é descontado dos Pontos de Magia.</p>
+                                <p style="color:#aaa;margin:0 0 16px;" data-i18n="psiTrainingHelp">Os poderes disponíveis dependem do treino na esfera: 1–14 = Arco 1, 15–29 = Arco 2, 30+ = Arco 3. O gasto é descontado dos Pontos de Magia.</p>
                                 <div id="psiPowersContainer"></div>
                             </div>
 
@@ -533,16 +533,16 @@
                                 <div class="combat-section">
                                     <h4 data-i18n="fatigueTitle">Fadiga</h4>
                                     <select id="fadigaLevel" onchange="salvarFadiga()">
-                                        <option value="Fresh">Descansado (Fresh)</option>
-                                        <option value="Winded">Ofegante (Winded)</option>
-                                        <option value="Tired">Cansado (Tired)</option>
-                                        <option value="Wearied">Fatigado (Wearied)</option>
-                                        <option value="Exhausted">Exausto (Exhausted)</option>
-                                        <option value="Debilitated">Debilitado (Debilitated)</option>
-                                        <option value="Incapacitated">Incapacitado (Incapacitated)</option>
-                                        <option value="Semi-Conscious">Semiconsciente (Semi-Conscious)</option>
-                                        <option value="Comatose">Comatoso (Comatose)</option>
-                                        <option value="Dead">Morto (Dead)</option>
+                                        <option value="Fresh" data-i18n="fatFresh">Descansado (Fresh)</option>
+                                        <option value="Winded" data-i18n="fatWinded">Ofegante (Winded)</option>
+                                        <option value="Tired" data-i18n="fatTired">Cansado (Tired)</option>
+                                        <option value="Wearied" data-i18n="fatWearied">Fatigado (Wearied)</option>
+                                        <option value="Exhausted" data-i18n="fatExhausted">Exausto (Exhausted)</option>
+                                        <option value="Debilitated" data-i18n="fatDebilitated">Debilitado (Debilitated)</option>
+                                        <option value="Incapacitated" data-i18n="fatIncapacitated">Incapacitado (Incapacitated)</option>
+                                        <option value="Semi-Conscious" data-i18n="fatSemiConscious">Semiconsciente (Semi-Conscious)</option>
+                                        <option value="Comatose" data-i18n="fatComatose">Comatoso (Comatose)</option>
+                                        <option value="Dead" data-i18n="fatDead">Morto (Dead)</option>
                                     </select>
                                     <div id="fadigaDescricao" style="margin-top:14px;padding:12px 14px;background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.10);border-radius:9px;color:#ddd;line-height:1.55;"></div>
                                 </div>
@@ -558,12 +558,12 @@
                                     <div class="form-group" style="margin-bottom:0;">
                                         <label data-i18n="circDifficulty">Dificuldade circunstancial:</label>
                                         <select id="combatDifficultySelect">
-                                            <option value="muito_facil">Muito Fácil</option>
-                                            <option value="facil">Fácil</option>
-                                            <option value="padrao" selected>Padrão</option>
-                                            <option value="dificil">Difícil</option>
-                                            <option value="formidavel">Formidável</option>
-                                            <option value="herculeo">Hercúleo</option>
+                                            <option value="muito_facil" data-i18n="diffVeryEasy">Muito Fácil</option>
+                                            <option value="facil" data-i18n="diffEasy">Fácil</option>
+                                            <option value="padrao" selected data-i18n="diffStandard">Padrão</option>
+                                            <option value="dificil" data-i18n="diffHard">Difícil</option>
+                                            <option value="formidavel" data-i18n="diffFormidable">Formidável</option>
+                                            <option value="herculeo" data-i18n="diffHerculean">Hercúleo</option>
                                         </select>
                                     </div>
                                     <div class="form-group" style="margin-bottom:0;">
@@ -620,9 +620,9 @@
                     <!-- ANOTAÇÕES -->
                     <div id="char-anotacoes" class="char-tab-content">
                         <div class="form-section">
-                            <h3>📔 Anotações</h3>
+                            <h3 data-i18n="notesTitle">📔 Anotações</h3>
                             <textarea id="charAnotacoes" rows="10" placeholder="Suas anotações..."></textarea>
-                            <h3 style="margin-top:20px; color:#ffd700;">⭐ Eventos Especiais</h3>
+                            <h3 style="margin-top:20px; color:#ffd700;" data-i18n="specialEventsTitle">⭐ Eventos Especiais</h3>
                             <textarea id="charEventos" rows="6" placeholder="Eventos especiais..."></textarea>
                             <button class="btn-save" onclick="salvarAnotacoes()" style="margin-top:15px;">💾 Salvar</button>
                         </div>
@@ -643,12 +643,12 @@
                                     <div class="form-group">
                                         <label data-i18n="circDifficulty">Dificuldade circunstancial:</label>
                                         <select id="skillDifficultySelect">
-                                            <option value="muito_facil">Muito Fácil</option>
-                                            <option value="facil">Fácil</option>
-                                            <option value="padrao" selected>Padrão</option>
-                                            <option value="dificil">Difícil</option>
-                                            <option value="formidavel">Formidável</option>
-                                            <option value="herculeo">Hercúleo</option>
+                                            <option value="muito_facil" data-i18n="diffVeryEasy">Muito Fácil</option>
+                                            <option value="facil" data-i18n="diffEasy">Fácil</option>
+                                            <option value="padrao" selected data-i18n="diffStandard">Padrão</option>
+                                            <option value="dificil" data-i18n="diffHard">Difícil</option>
+                                            <option value="formidavel" data-i18n="diffFormidable">Formidável</option>
+                                            <option value="herculeo" data-i18n="diffHerculean">Hercúleo</option>
                                         </select>
                                     </div>
                                 </div>
@@ -656,9 +656,9 @@
                                     Valor da Perícia: <strong id="skillValue">—</strong>
                                 </div>
                                 <div style="display:grid;grid-template-columns:minmax(220px,1.8fr) minmax(170px,.7fr);gap:14px;align-items:center;">
-                                    <button class="dice-btn" onclick="rolarPericia()" style="width:100%;min-height:58px;">🎲 Rolar Perícia</button>
+                                    <button class="dice-btn" onclick="rolarPericia()" style="width:100%;min-height:58px;" data-i18n="rollSkillBtn">🎲 Rolar Perícia</button>
                                     <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap;">
-                                        <span style="color:#ffd166;font-size:1em;">Sorte: <strong id="rollLuckPoints">—</strong></span>
+                                        <span style="color:#ffd166;font-size:1em;"><span data-i18n="luckLabel">Sorte:</span> <strong id="rollLuckPoints">—</strong></span>
                                         <button onclick="gastarPontoSorte()" style="border:none;border-radius:10px;padding:12px 18px;background:linear-gradient(135deg,#f1c40f,#d68910);color:#fff;font-weight:700;cursor:pointer;font-size:1em;min-width:118px;">⭐ Gastar</button>
                                     </div>
                                 </div>
@@ -667,9 +667,9 @@
                             
                             <div class="dice-roller" style="margin-top:30px;">
                                 <div class="dice-display" id="diceDisplay">🎲</div>
-                                <div id="rollResult" style="font-size:1.5em; margin-bottom:20px;">Clique para rolar</div>
+                                <div id="rollResult" style="font-size:1.5em; margin-bottom:20px;" data-i18n="clickToRoll">Clique para rolar</div>
                                 <div class="form-group" style="max-width:400px; margin:0 auto 20px;">
-                                    <label>Fórmula:</label>
+                                    <label data-i18n="formulaLabel">Fórmula:</label>
                                     <input type="text" id="damageFormula" value="1d100">
                                 </div>
                                 <div class="dice-buttons">
@@ -680,7 +680,7 @@
                                     <button class="dice-btn" onclick="rolarDado('d8')">D8</button>
                                     <button class="dice-btn" onclick="rolarDado('d6')">D6</button>
                                     <button class="dice-btn" onclick="rolarDado('d4')">D4</button>
-                                    <button class="dice-btn" onclick="rolarFormula()">🎲 Rolar Fórmula</button>
+                                    <button class="dice-btn" onclick="rolarFormula()" data-i18n="rollFormulaBtn">🎲 Rolar Fórmula</button>
                                 </div>
                                 <div class="roll-result hidden" id="rollResultBox">
                                     <div id="rollResultText"></div>
@@ -689,28 +689,28 @@
 
                             <div id="psiRollPanel" class="hidden" style="margin-top:22px;padding:18px;background:rgba(139,92,246,0.10);border:1px solid rgba(139,92,246,0.35);border-radius:12px;">
                                 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-                                    <h4 style="margin:0;color:#d8b4ff;font-size:1.2em;">🔮 Poder Psiônico</h4>
+                                    <h4 style="margin:0;color:#d8b4ff;font-size:1.2em;" data-i18n="psiPowerTitle">🔮 Poder Psiônico</h4>
                                     <strong id="psiRollPoints" style="color:#fff;">PP: —</strong>
                                 </div>
                                 <div style="display:grid;grid-template-columns:minmax(170px,.7fr) minmax(230px,1.3fr) minmax(110px,.45fr);gap:12px;align-items:end;">
                                     <div class="form-group" style="margin:0;">
-                                        <label>Esfera:</label>
+                                        <label data-i18n="sphereLabel">Esfera:</label>
                                         <select id="psiRollSphere" onchange="atualizarPoderesPsiRolagem()"></select>
                                     </div>
                                     <div class="form-group" style="margin:0;">
-                                        <label>Poder:</label>
+                                        <label data-i18n="powerLabel">Poder:</label>
                                         <select id="psiRollPower" onchange="atualizarDetalhePsiRolagem()"></select>
                                     </div>
                                     <div class="form-group" style="margin:0;">
-                                        <label>PP a gastar:</label>
+                                        <label data-i18n="ppSpendLabel">PP a gastar:</label>
                                         <input type="number" id="psiRollCost" min="0" step="1" value="0" style="text-align:center;">
                                     </div>
                                 </div>
                                 <div id="psiRollDetail" style="margin:12px 0;padding:12px 14px;border-radius:9px;background:rgba(0,0,0,.18);color:#d9ccff;min-height:46px;"></div>
                                 <div style="display:flex;justify-content:flex-end;">
-                                    <button onclick="usarPoderPsiRolagem()" style="border:none;border-radius:10px;padding:12px 22px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;font-weight:700;cursor:pointer;font-size:1em;">✨ Usar Poder</button>
+                                    <button onclick="usarPoderPsiRolagem()" style="border:none;border-radius:10px;padding:12px 22px;background:linear-gradient(135deg,#7c3aed,#a855f7);color:white;font-weight:700;cursor:pointer;font-size:1em;" data-i18n="usePowerBtn">✨ Usar Poder</button>
                                 </div>
-                                <small style="display:block;color:#9f91c7;margin-top:10px;">O custo e o uso são registrados automaticamente. Até a automação individual de cada poder, o efeito específico é aplicado narrativamente pelo jogador/mestre.</small>
+                                <small style="display:block;color:#9f91c7;margin-top:10px;" data-i18n="psiUsageHelp">O custo e o uso são registrados automaticamente. Até a automação individual de cada poder, o efeito específico é aplicado narrativamente pelo jogador/mestre.</small>
                             </div>
 
                             <div style="margin-top:20px;padding:16px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:10px;">
@@ -1252,6 +1252,118 @@ function somCaixaRegistradora_() {
 }
 
 
+
+
+Object.assign(traducoes.pt, {
+  notesTitle:'📔 Anotações', specialEventsTitle:'⭐ Eventos Especiais', rollSkillBtn:'🎲 Rolar Perícia',
+  luckLabel:'Sorte:', spendLuckBtn:'⭐ Gastar', clickToRoll:'Clique para rolar', formulaLabel:'Fórmula:',
+  rollFormulaBtn:'🎲 Rolar Fórmula', psiPowerTitle:'🔮 Poder Psiônico', sphereLabel:'Esfera:',
+  powerLabel:'Poder:', ppSpendLabel:'PP a gastar:', usePowerBtn:'✨ Usar Poder',
+  psiUsageHelp:'O custo e o uso são registrados automaticamente. Até a automação individual de cada poder, o efeito específico é aplicado narrativamente pelo jogador/mestre.',
+  psiTrainingHelp:'Os poderes disponíveis dependem do treino na esfera: 1–14 = Arco 1, 15–29 = Arco 2, 30+ = Arco 3. O gasto é descontado dos Pontos de Magia.',
+  psychismTitle:'🔮 Psiquismo', diffVeryEasy:'Muito Fácil', diffEasy:'Fácil', diffStandard:'Padrão',
+  diffHard:'Difícil', diffFormidable:'Formidável', diffHerculean:'Hercúleo',
+  fatFresh:'Descansado (Fresh)', fatWinded:'Ofegante (Winded)', fatTired:'Cansado (Tired)',
+  fatWearied:'Fatigado (Wearied)', fatExhausted:'Exausto (Exhausted)', fatDebilitated:'Debilitado (Debilitated)',
+  fatIncapacitated:'Incapacitado (Incapacitated)', fatSemiConscious:'Semiconsciente (Semi-Conscious)',
+  fatComatose:'Comatoso (Comatose)', fatDead:'Morto (Dead)',
+  testsLabel:'Testes:', movementLabel:'Movimento:', initiativeLabel:'Iniciativa:', actionPointsLabel:'Pontos de Ação:',
+  recoveryLabel:'Recuperação:', noPenalty:'Sem penalidade', noPenalties:'Sem penalidades', noActivity:'Nenhuma atividade',
+  noActivityPossible:'Nenhuma atividade possível', half:'Metade', immobile:'Imóvel', never:'Nunca',
+  minutes15:'15 minutos', hours3:'3 horas', hours6:'6 horas', hours12:'12 horas', hours18:'18 horas',
+  hours24:'24 horas', hours36:'36 horas', hours48:'48 horas',
+  bodyHead:'Cabeça', bodyChest:'Peito', bodyAbdomen:'Abdômen', bodyRightArm:'Braço Direito',
+  bodyLeftArm:'Braço Esquerdo', bodyRightLeg:'Perna Direita', bodyLeftLeg:'Perna Esquerda',
+  useBtn:'Usar', arc:'Arco', trainingWord:'Treino', magicPointsLabel:'Pontos de Magia',
+  noPowerAvailable:'Nenhum poder disponível', noPowerForArc:'Nenhum poder disponível para esta esfera/arco.',
+  minimumCost:'custo mínimo'
+});
+Object.assign(traducoes.en, {
+  notesTitle:'📔 Notes', specialEventsTitle:'⭐ Special Events', rollSkillBtn:'🎲 Roll Skill',
+  luckLabel:'Luck:', spendLuckBtn:'⭐ Spend', clickToRoll:'Click to roll', formulaLabel:'Formula:',
+  rollFormulaBtn:'🎲 Roll Formula', psiPowerTitle:'🔮 Psionic Power', sphereLabel:'Sphere:',
+  powerLabel:'Power:', ppSpendLabel:'PP to spend:', usePowerBtn:'✨ Use Power',
+  psiUsageHelp:'Cost and use are recorded automatically. Until each power is individually automated, its specific effect is applied narratively by the player/GM.',
+  psiTrainingHelp:'Available powers depend on training in the sphere: 1–14 = Arc 1, 15–29 = Arc 2, 30+ = Arc 3. The cost is deducted from Magic Points.',
+  psychismTitle:'🔮 Psychism', diffVeryEasy:'Very Easy', diffEasy:'Easy', diffStandard:'Standard',
+  diffHard:'Hard', diffFormidable:'Formidable', diffHerculean:'Herculean',
+  fatFresh:'Fresh', fatWinded:'Winded', fatTired:'Tired', fatWearied:'Wearied', fatExhausted:'Exhausted',
+  fatDebilitated:'Debilitated', fatIncapacitated:'Incapacitated', fatSemiConscious:'Semi-Conscious',
+  fatComatose:'Comatose', fatDead:'Dead',
+  testsLabel:'Tests:', movementLabel:'Movement:', initiativeLabel:'Initiative:', actionPointsLabel:'Action Points:',
+  recoveryLabel:'Recovery:', noPenalty:'No penalty', noPenalties:'No penalties', noActivity:'No activity',
+  noActivityPossible:'No activity possible', half:'Half', immobile:'Immobile', never:'Never',
+  minutes15:'15 minutes', hours3:'3 hours', hours6:'6 hours', hours12:'12 hours', hours18:'18 hours',
+  hours24:'24 hours', hours36:'36 hours', hours48:'48 hours',
+  bodyHead:'Head', bodyChest:'Chest', bodyAbdomen:'Abdomen', bodyRightArm:'Right Arm',
+  bodyLeftArm:'Left Arm', bodyRightLeg:'Right Leg', bodyLeftLeg:'Left Leg',
+  useBtn:'Use', arc:'Arc', trainingWord:'Training', magicPointsLabel:'Magic Points',
+  noPowerAvailable:'No power available', noPowerForArc:'No power available for this sphere/arc.',
+  minimumCost:'minimum cost'
+});
+Object.assign(traducoes.zh, {
+  notesTitle:'📔 笔记', specialEventsTitle:'⭐ 特殊事件', rollSkillBtn:'🎲 技能检定',
+  luckLabel:'幸运：', spendLuckBtn:'⭐ 使用', clickToRoll:'点击掷骰', formulaLabel:'公式：',
+  rollFormulaBtn:'🎲 掷公式', psiPowerTitle:'🔮 灵能力量', sphereLabel:'领域：',
+  powerLabel:'能力：', ppSpendLabel:'消耗PP：', usePowerBtn:'✨ 使用能力',
+  psiUsageHelp:'消耗与使用会自动记录。在每项能力完成独立自动化之前，具体效果由玩家或主持人根据叙事情况应用。',
+  psiTrainingHelp:'可用能力取决于该领域的训练值：1–14 = 阶段1，15–29 = 阶段2，30+ = 阶段3。消耗从魔法点中扣除。',
+  psychismTitle:'🔮 灵能', diffVeryEasy:'非常容易', diffEasy:'容易', diffStandard:'标准',
+  diffHard:'困难', diffFormidable:'艰巨', diffHerculean:'极难',
+  fatFresh:'精力充沛', fatWinded:'气喘', fatTired:'疲倦', fatWearied:'疲劳', fatExhausted:'精疲力竭',
+  fatDebilitated:'虚弱', fatIncapacitated:'失去行动能力', fatSemiConscious:'半昏迷',
+  fatComatose:'昏迷', fatDead:'死亡',
+  testsLabel:'检定：', movementLabel:'移动：', initiativeLabel:'先攻：', actionPointsLabel:'行动点：',
+  recoveryLabel:'恢复：', noPenalty:'无惩罚', noPenalties:'无惩罚', noActivity:'无法行动',
+  noActivityPossible:'无法进行任何行动', half:'减半', immobile:'无法移动', never:'永不',
+  minutes15:'15分钟', hours3:'3小时', hours6:'6小时', hours12:'12小时', hours18:'18小时',
+  hours24:'24小时', hours36:'36小时', hours48:'48小时',
+  bodyHead:'头部', bodyChest:'胸部', bodyAbdomen:'腹部', bodyRightArm:'右臂',
+  bodyLeftArm:'左臂', bodyRightLeg:'右腿', bodyLeftLeg:'左腿',
+  useBtn:'使用', arc:'阶段', trainingWord:'训练', magicPointsLabel:'魔法点',
+  noPowerAvailable:'没有可用能力', noPowerForArc:'此领域／阶段没有可用能力。',
+  minimumCost:'最低消耗'
+});
+
+function tr_(key) { return (traducoes[idiomaAtual] || traducoes.pt)[key] || (traducoes.pt[key] || key); }
+
+const BODY_LOC_KEYS_ = {
+  'Cabeça':'bodyHead','Peito':'bodyChest','Abdômen':'bodyAbdomen',
+  'Braço Direito':'bodyRightArm','Braço Esquerdo':'bodyLeftArm','Perna Direita':'bodyRightLeg','Perna Esquerda':'bodyLeftLeg'
+};
+function traduzirLocalCorpo_(nome) { return tr_(BODY_LOC_KEYS_[nome] || '') || nome; }
+
+function traduzirDificuldadeNome_(idOuNome) {
+  const txt = String(idOuNome || '');
+  const map = {
+    'muito_facil':'diffVeryEasy','Muito Fácil':'diffVeryEasy',
+    'facil':'diffEasy','Fácil':'diffEasy',
+    'padrao':'diffStandard','Padrão':'diffStandard',
+    'dificil':'diffHard','Difícil':'diffHard',
+    'formidavel':'diffFormidable','Formidável':'diffFormidable',
+    'herculeo':'diffHerculean','Hercúleo':'diffHerculean',
+    'Sem esperança':'noActivityPossible','Nenhuma atividade':'noActivity','Morto':'fatDead'
+  };
+  return tr_(map[txt] || '') || txt;
+}
+function traduzirMovimentoFadiga_(txt) {
+  const map = {
+    'Sem penalidade':'noPenalty','Sem penalidades':'noPenalties','Metade':'half','Imóvel':'immobile',
+    'Nenhuma atividade possível':'noActivityPossible'
+  };
+  if (map[txt]) return tr_(map[txt]);
+  if (/^-1 metro$/.test(txt)) return idiomaAtual==='en' ? '-1 meter' : idiomaAtual==='zh' ? '-1米' : txt;
+  if (/^-2 metros$/.test(txt)) return idiomaAtual==='en' ? '-2 meters' : idiomaAtual==='zh' ? '-2米' : txt;
+  return txt;
+}
+function traduzirRecuperacaoFadiga_(txt) {
+  const map={'15 minutos':'minutes15','3 horas':'hours3','6 horas':'hours6','12 horas':'hours12','18 horas':'hours18','24 horas':'hours24','36 horas':'hours36','48 horas':'hours48','Nunca':'never'};
+  return map[txt] ? tr_(map[txt]) : txt;
+}
+function traduzirNomeFadiga_(nivel) {
+  const map={Fresh:'fatFresh',Winded:'fatWinded',Tired:'fatTired',Wearied:'fatWearied',Exhausted:'fatExhausted',Debilitated:'fatDebilitated',Incapacitated:'fatIncapacitated','Semi-Conscious':'fatSemiConscious',Comatose:'fatComatose',Dead:'fatDead'};
+  return tr_(map[nivel] || '') || nivel;
+}
 
 function formatarFormulaIdioma_(formula) {
     let txt = String(formula || '').replace(/\*/g,'×');
@@ -3035,15 +3147,16 @@ function atualizarVisualFadiga_(char) {
     const alvo = document.getElementById('fadigaDescricao');
     if (!alvo) return;
     const r = obterRegraFadiga_(char);
-    const iniciativa = r.iniciativa === null ? 'Nenhuma atividade' : (r.iniciativa === 0 ? 'Sem penalidade' : `${r.iniciativa}`);
-    const pa = r.pa === null ? 'Nenhuma atividade' : (r.pa === 0 ? 'Sem penalidade' : `${r.pa}`);
+    const nivel = char?.combate?.fadiga || 'Fresh';
+    const iniciativa = r.iniciativa === null ? tr_('noActivity') : (r.iniciativa === 0 ? tr_('noPenalty') : `${r.iniciativa}`);
+    const pa = r.pa === null ? tr_('noActivity') : (r.pa === 0 ? tr_('noPenalty') : `${r.pa}`);
     alvo.innerHTML = `
-        <strong style="color:#ffd166;">${escaparHtmlInventario_(r.nome)}</strong><br>
-        <span><strong>Testes:</strong> ${escaparHtmlInventario_(r.grau)}</span><br>
-        <span><strong>Movimento:</strong> ${escaparHtmlInventario_(r.movimento)}</span><br>
-        <span><strong>Iniciativa:</strong> ${escaparHtmlInventario_(iniciativa)}</span><br>
-        <span><strong>Pontos de Ação:</strong> ${escaparHtmlInventario_(pa)}</span><br>
-        <span><strong>Recuperação:</strong> ${escaparHtmlInventario_(r.recuperacao)}</span>
+        <strong style="color:#ffd166;">${escaparHtmlInventario_(traduzirNomeFadiga_(nivel))}</strong><br>
+        <span><strong>${tr_('testsLabel')}</strong> ${escaparHtmlInventario_(traduzirDificuldadeNome_(r.grau))}</span><br>
+        <span><strong>${tr_('movementLabel')}</strong> ${escaparHtmlInventario_(traduzirMovimentoFadiga_(r.movimento))}</span><br>
+        <span><strong>${tr_('initiativeLabel')}</strong> ${escaparHtmlInventario_(iniciativa)}</span><br>
+        <span><strong>${tr_('actionPointsLabel')}</strong> ${escaparHtmlInventario_(pa)}</span><br>
+        <span><strong>${tr_('recoveryLabel')}</strong> ${escaparHtmlInventario_(traduzirRecuperacaoFadiga_(r.recuperacao))}</span>
     `;
 }
 
@@ -3088,7 +3201,7 @@ function renderizarCombate(char) {
         const temAtual = Object.prototype.hasOwnProperty.call(combat.hitLocations || {}, loc);
         const pvAtual = temAtual ? combat.hitLocations[loc] : pv;
         return `<div class="hit-location">
-            <span class="hit-location-name">${loc}</span>
+            <span class="hit-location-name">${traduzirLocalCorpo_(loc)}</span>
             <input type="number" value="${pv}" readonly>
             <input type="number" value="${pvAtual}" class="damage" onchange="salvarCombate('hitLocations', '${loc}', this.value)">
         </div>`;
@@ -3102,7 +3215,7 @@ function renderizarCombate(char) {
             ? `PA total ${total} = ${base} natural/manual + ${equipamento} de equipamento`
             : `PA manual/natural: ${base}`;
         return `<div class="hit-location">
-            <span class="hit-location-name">${loc}</span>
+            <span class="hit-location-name">${traduzirLocalCorpo_(loc)}</span>
             <input type="number" value="${total}" min="0" title="${explicacao}" onchange="salvarPATotal('${loc}', this.value, ${equipamento})">
         </div>`;
     }).join('');
@@ -3941,6 +4054,16 @@ function arcoPsiPorTreino_(treino) {
     return 3;
 }
 
+
+function traduzirEsferaPsi_(esfera) {
+    const n = normalizarPsi_(esfera);
+    const mapas = {
+      sentidos:{pt:'Sentidos',en:'Senses',zh:'感知'},
+      mente:{pt:'Mente',en:'Mind',zh:'心智'},
+      materia:{pt:'Matéria',en:'Matter',zh:'物质'}
+    };
+    return mapas[n]?.[idiomaAtual] || mapas[n]?.pt || esfera;
+}
 function getObservacaoPsi_(poder) {
     if (!poder) return '';
     if (idiomaAtual === 'en') return poder.observacao_en || poder.observacao || '';
@@ -3977,7 +4100,7 @@ function renderizarPsiRolagem_(char) {
     esferaSel.innerHTML = esferas.map(e => {
         const treino = treinoPsiEsfera_(char,e);
         const arco = arcoPsiPorTreino_(treino);
-        return `<option value="${e}">${e} · Arco ${arco}</option>`;
+        return `<option value="${e}">${traduzirEsferaPsi_(e)} · ${tr_('arc')} ${arco}</option>`;
     }).join('');
     if (esferas.includes(anterior)) esferaSel.value = anterior;
     atualizarPoderesPsiRolagem();
@@ -3999,7 +4122,7 @@ window.atualizarPoderesPsiRolagem = () => {
 
     poderSel.innerHTML = poderes.length
         ? poderes.map(p => `<option value="${escaparBanco_(p.id)}">${escaparBanco_(getNome(p))} · A${Number(p.arco||1)} · ${Number(p.custo||0)} PP</option>`).join('')
-        : '<option value="">Nenhum poder disponível</option>';
+        : `<option value="">${tr_('noPowerAvailable')}</option>`;
     atualizarDetalhePsiRolagem();
 };
 
@@ -4011,7 +4134,7 @@ window.atualizarDetalhePsiRolagem = () => {
     if (!detalhe || !custo) return;
 
     if (!poder) {
-        detalhe.textContent = 'Nenhum poder disponível para esta esfera/arco.';
+        detalhe.textContent = tr_('noPowerForArc');
         custo.value = 0;
         custo.min = 0;
         custo.disabled = true;
@@ -4023,7 +4146,7 @@ window.atualizarDetalhePsiRolagem = () => {
     custo.min = minimo;
     custo.value = minimo;
     const obs = getObservacaoPsi_(poder);
-    detalhe.innerHTML = `<strong>${escaparBanco_(getNome(poder))}</strong> · ${escaparBanco_(poder.esfera)} · Arco ${Number(poder.arco||1)} · custo mínimo ${minimo} PP<br><span style="color:#b9add8;">${escaparBanco_(obs)}</span>`;
+    detalhe.innerHTML = `<strong>${escaparBanco_(getNome(poder))}</strong> · ${escaparBanco_(traduzirEsferaPsi_(poder.esfera))} · ${tr_('arc')} ${Number(poder.arco||1)} · ${tr_('minimumCost')} ${minimo} PP<br><span style="color:#b9add8;">${escaparBanco_(obs)}</span>`;
 };
 
 window.usarPoderPsiRolagem = async () => {
@@ -4086,7 +4209,7 @@ function renderizarPsiquismo_(char) {
     const max = pontosMagiaMax_(char);
     const gastos = Math.max(0, Math.floor(Number(char?.pontosMagiaGastos || 0)));
     const restantes = Math.max(0, max - gastos);
-    resumo.textContent = `Pontos de Magia: ${restantes} / ${max}`;
+    resumo.textContent = `${tr_('magicPointsLabel')}: ${restantes} / ${max}`;
 
     const esferas = ['Sentidos','Mente','Matéria'];
     container.innerHTML = esferas.map(esfera => {
@@ -4100,7 +4223,7 @@ function renderizarPsiquismo_(char) {
             return `<div style="padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.04);margin:8px 0;display:grid;grid-template-columns:minmax(160px,1fr) 90px auto;gap:10px;align-items:center;">
                 <div><strong style="color:#fff;">${escaparBanco_(getNome(p))}</strong><div style="color:#aaa;font-size:.88em;margin-top:4px;">Arco ${Number(p.arco||1)} · ${escaparBanco_(obs)}</div></div>
                 <input type="number" id="psiCost_${escaparBanco_(p.id)}" min="${custo}" step="1" value="${custo}" title="PP a gastar" style="width:82px;text-align:center;">
-                <button class="btn-small btn-select" onclick="usarPoderPsi('${escaparBanco_(p.id)}')">Usar</button>
+                <button class="btn-small btn-select" onclick="usarPoderPsi('${escaparBanco_(p.id)}')">${tr_('useBtn')}</button>
             </div>`;
         }).join('');
         return `<div style="margin:16px 0 20px;"><h4 style="color:#d8b4ff;margin:0 0 8px;">${esfera} · Treino ${treino} · Arco ${arco}</h4>${cards || '<div style="color:#888;">Nenhum poder disponível no banco.</div>'}</div>`;
@@ -4244,9 +4367,11 @@ function renderizarBancoPoderesPsi() {
             <td>${Number(p.arco || 1)}</td>
             <td>${Number(p.custo || 0)}</td>
             <td>${escaparBanco_(p.observacao || '')}</td>
+            <td>${escaparBanco_(p.observacao_en || '')}</td>
+            <td>${escaparBanco_(p.observacao_zh || '')}</td>
             <td class="actions"><button class="btn-small btn-select" onclick="editarPoderPsi('${escaparBanco_(p.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerPoderPsi('${escaparBanco_(p.id)}')">Remover</button></td>
         </tr>`);
-    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Esfera','Arco','Custo','Observação','Ações'], linhas);
+    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Esfera','Arco','Custo','Observação PT','Observation EN','说明 中文','Ações'], linhas);
 }
 
 window.adicionarPoderPsi = async () => {
@@ -4257,9 +4382,11 @@ window.adicionarPoderPsi = async () => {
     const esfera = prompt('Esfera (Sentidos/Mente/Matéria):','Sentidos') || 'Sentidos';
     const arco = Math.max(1, Math.min(3, parseInt(prompt('Arco (1-3):','1')) || 1));
     const custo = Math.max(0, Number(prompt('Custo mínimo em PP:','1')) || 0);
-    const observacao = prompt('Observação / regra:','') || '';
+    const observacao = prompt('Observação / regra (PT):','') || '';
+    const observacao_en = prompt('Observation / rule (EN):','') || '';
+    const observacao_zh = prompt('说明 / 规则 (中文):','') || '';
     const id = slugId_(nome);
-    await setDoc(doc(db,'poderesPsi',id),{id,nome,nome_en,nome_zh,esfera,arco,custo,observacao});
+    await setDoc(doc(db,'poderesPsi',id),{id,nome,nome_en,nome_zh,esfera,arco,custo,observacao,observacao_en,observacao_zh});
     await carregarBancosDeDados();
 };
 
@@ -4272,8 +4399,10 @@ window.editarPoderPsi = async (id) => {
     const esfera = prompt('Esfera:',p.esfera||'Sentidos') || p.esfera || 'Sentidos';
     const arco = Math.max(1,Math.min(3,parseInt(prompt('Arco (1-3):',String(p.arco||1)))||1));
     const custo = Math.max(0,Number(prompt('Custo mínimo em PP:',String(p.custo||0)))||0);
-    const observacao = prompt('Observação / regra:',p.observacao||'') ?? p.observacao ?? '';
-    await setDoc(doc(db,'poderesPsi',id),{...p,nome,nome_en,nome_zh,esfera,arco,custo,observacao});
+    const observacao = prompt('Observação / regra (PT):',p.observacao||'') ?? p.observacao ?? '';
+    const observacao_en = prompt('Observation / rule (EN):',p.observacao_en||'') ?? p.observacao_en ?? '';
+    const observacao_zh = prompt('说明 / 规则 (中文):',p.observacao_zh||'') ?? p.observacao_zh ?? '';
+    await setDoc(doc(db,'poderesPsi',id),{...p,nome,nome_en,nome_zh,esfera,arco,custo,observacao,observacao_en,observacao_zh});
     await carregarBancosDeDados();
 };
 
@@ -5259,6 +5388,8 @@ window.mudarIdioma = (lang) => {
         if (charAtual) {
             popularSelects();
             renderizarPericias(charAtual);
+            renderizarCombate(charAtual);
+            renderizarPsiRolagem_(charAtual);
             popularEquipamentosCombate_(charAtual);
             atualizarListaPericias();
         }
