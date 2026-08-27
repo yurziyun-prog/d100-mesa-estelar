@@ -611,7 +611,7 @@
                                     </div>
                                 </div>
 
-                                <small style="display:block;color:#aaa;margin-top:10px;">Armas e escudos vêm exclusivamente de <strong>Equipado</strong>. Esquiva dispensa equipamento e Combate Desarmado usa Punhos. Munição física gasta 1 uso por D100; baterias/células gastam energia conforme o dano rolado. Recarregar consome uma munição compatível carregada pelo personagem.</small>
+                                <small style="display:block;color:#aaa;margin-top:10px;">Armas e escudos vêm exclusivamente de <strong>Equipado</strong>. Esquiva dispensa equipamento e Combate Desarmado usa Punhos. Munição física gasta 1 uso por D100. Baterias/células gastam por disparo conforme classe e qualidade da arma (pistolas 8/4/2; rifles 12/6/3; pesadas 16/8/4). Críticos causam dano máximo. Recarregar consome uma munição compatível carregada pelo personagem.</small>
                             </div>
                         </div>
                     </div>
@@ -887,9 +887,10 @@
                 <div class="form-group"><label>Dano:</label><input type="text" id="dbItemDano" placeholder="2d6, 1d8+Atordoar..."></div>
             </div>
 
-            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+            <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px;">
                 <div class="form-group"><label>Munição / recurso:</label><input type="text" id="dbItemMunicao" placeholder="Bateria, Célula, Cartuchos, ∞..."></div>
                 <div class="form-group"><label>Uso / carga:</label><input type="text" id="dbItemUso" placeholder="100, 20, Descartável..."></div>
+                <div class="form-group"><label>Qualidade padrão:</label><select id="dbItemQualidade"><option value="Básica">Básica</option><option value="Média">Média</option><option value="Superior">Superior</option></select></div>
                 <div class="form-group"><label>Material:</label><input type="text" id="dbItemMaterial"></div>
                 <div class="form-group"><label>Unidade:</label><input type="text" id="dbItemUnidade" placeholder="Peça, pacote, kg..."></div>
             </div>
@@ -1095,9 +1096,38 @@ function somLaser_(plasma=false) {
     gain.gain.setValueAtTime(plasma?.055:.035,t); gain.gain.exponentialRampToValueAtTime(.001,t+(plasma?.32:.20));
     osc.connect(gain).connect(ctx.destination); osc.start(t); osc.stop(t+(plasma?.33:.21));
 }
+
+function somSoco_() {
+    const ctx = obterAudioCtx_(); if (!ctx) return;
+    const agora = ctx.currentTime;
+    const buffer = ctx.createBuffer(1, Math.floor(ctx.sampleRate*.10), ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i=0;i<data.length;i++) {
+        const env = Math.exp(-i/(ctx.sampleRate*.018));
+        data[i] = (Math.random()*2-1) * env;
+    }
+    const src = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain();
+    filter.type='lowpass'; filter.frequency.value=520;
+    gain.gain.value=.12;
+    src.buffer=buffer; src.connect(filter).connect(gain).connect(ctx.destination); src.start(agora);
+}
+
+function somCriticoArma_(item, nomeEquip='') {
+    const tipo = tipoSomArma_(item, nomeEquip);
+    const tocar = () => {
+        if (tipo === 'plasma') return somLaser_(true);
+        if (tipo === 'laser') return somLaser_(false);
+        if (tipo === 'espada') return somEspada_();
+        if (tipo === 'soco') return somSoco_();
+        return somDado_();
+    };
+    tocar(); setTimeout(tocar, 105); setTimeout(tocar, 210);
+}
+
 function tipoSomArma_(item,nomeEquip='') {
     const texto=[nomeEquip,item?.nome,item?.nome_en,item?.nome_zh,item?.categoria,item?.dano,item?.municao]
       .filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    if(texto.includes('punho') || texto.includes('soco') || texto.includes('desarmado') || texto.includes('unarmed')) return 'soco';
     if(texto.includes('plasma')) return 'plasma';
     if(texto.includes('laser')||texto.includes('blaster')||texto.includes('energia')) return 'laser';
     if(['espada','sabre','adaga','faca','lamina','vibro','machado'].some(x=>texto.includes(x))) return 'espada';
@@ -1108,27 +1138,35 @@ function tocarSomDano_(item,nomeEquip) {
     if(tipo==='plasma') return somLaser_(true);
     if(tipo==='laser') return somLaser_(false);
     if(tipo==='espada') return somEspada_();
+    if(tipo==='soco') return somSoco_();
     return somDado_();
 }
 
 function somCaixaRegistradora_() {
     const ctx = obterAudioCtx_(); if (!ctx) return;
     const t = ctx.currentTime;
-    // Pequeno "clac"
-    const osc = ctx.createOscillator(), gain = ctx.createGain();
-    osc.type = 'square'; osc.frequency.value = 150;
-    gain.gain.setValueAtTime(.04, t);
-    gain.gain.exponentialRampToValueAtTime(.001, t+.06);
-    osc.connect(gain).connect(ctx.destination); osc.start(t); osc.stop(t+.065);
-    // Campainha
-    [880,1320].forEach((f,i)=>{
-        const o=ctx.createOscillator(), g=ctx.createGain();
-        o.type='sine'; o.frequency.value=f;
-        g.gain.setValueAtTime(.001,t+.08+i*.025);
-        g.gain.linearRampToValueAtTime(.045,t+.10+i*.025);
-        g.gain.exponentialRampToValueAtTime(.001,t+.42+i*.025);
+
+    // Gaveta abrindo: dois cliques secos.
+    [0, .075].forEach((atraso, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'square';
+        o.frequency.setValueAtTime(i ? 105 : 165, t + atraso);
+        g.gain.setValueAtTime(.055, t + atraso);
+        g.gain.exponentialRampToValueAtTime(.001, t + atraso + .045);
         o.connect(g).connect(ctx.destination);
-        o.start(t+.08+i*.025); o.stop(t+.44+i*.025);
+        o.start(t + atraso); o.stop(t + atraso + .05);
+    });
+
+    // O clássico "cha-ching": duas campainhas metálicas em sequência.
+    [1174.66, 1567.98].forEach((freq, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'triangle'; o.frequency.value = freq;
+        const inicio = t + .12 + i*.095;
+        g.gain.setValueAtTime(.001, inicio);
+        g.gain.linearRampToValueAtTime(.07, inicio + .012);
+        g.gain.exponentialRampToValueAtTime(.001, inicio + .52);
+        o.connect(g).connect(ctx.destination);
+        o.start(inicio); o.stop(inicio + .55);
     });
 }
 
@@ -1869,7 +1907,7 @@ function renderizarInventario(char) {
                     ondragover="permitirSoltarInventario(event)"
                     ondrop="soltarInventario(event, '${comp}', ${i})"
                     onclick="editarItem('${comp}', ${i})">${img}
-                    <div class="item-tooltip"><h5>${nome}</h5><p>${desc}</p><p>Peso: ${Number(item.peso || 0)}kg | PA: ${Number(item.pa || 0)} | PV: ${Number(item.pv || 0)}${itemUsaMunicao_(item) ? ` | Carga: ${cargaAtualArma_(item)}/${cargaMaxArma_(item)}` : (categoriaNormalizada_(item)==='municao' ? ` | Quantidade: ${Number(item.quantidade ?? item.uso ?? 1)}` : '')}</p></div></div>`;
+                    <div class="item-tooltip"><h5>${nome}</h5><p>${desc}</p><p>Peso: ${Number(item.peso || 0)}kg | PA: ${Number(item.pa || 0)} | PV: ${Number(item.pv || 0)}${categoriaNormalizada_(item)==='armas' ? ` | Qualidade: ${normalizarQualidade_(item.qualidade)}` : ''}${itemUsaMunicao_(item) ? ` | Carga: ${cargaAtualArma_(item)}/${cargaMaxArma_(item)}` : (categoriaNormalizada_(item)==='municao' ? ` | Quantidade: ${Number(item.quantidade ?? item.uso ?? 1)}` : '')}</p></div></div>`;
             }
             return `<div class="inventory-slot"
                 ondragover="permitirSoltarInventario(event)"
@@ -2044,6 +2082,42 @@ function itemUsaEnergia_(item) {
     return m.includes('bateria') || m.includes('celula') || m.includes('battery') || m.includes('energy cell') || m.includes('energia');
 }
 
+function normalizarQualidade_(q) {
+    const s = String(q || 'Básica').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+    if (s.startsWith('sup') || s.startsWith('alta') || s.startsWith('high')) return 'Superior';
+    if (s.startsWith('med') || s.startsWith('mid')) return 'Média';
+    return 'Básica';
+}
+
+function multiplicadorPrecoQualidade_(q) {
+    q = normalizarQualidade_(q);
+    return q === 'Superior' ? 4 : q === 'Média' ? 2 : 1;
+}
+
+function classeEnergeticaArma_(item) {
+    const txt = [item?.nome,item?.nome_en,item?.nome_zh,item?.categoria].filter(Boolean).join(' ')
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+    if (txt.includes('pesad') || txt.includes('heavy') || txt.includes('canhao') || txt.includes('cannon')) return 'pesada';
+    if (txt.includes('rifle') || txt.includes('fuzil') || txt.includes('carabina') || txt.includes('carbine')) return 'rifle';
+    return 'pistola';
+}
+
+function custoEnergiaDisparo_(item) {
+    if (!itemUsaEnergia_(item)) return 0;
+    const qualidade = normalizarQualidade_(item?.qualidade);
+    const classe = classeEnergeticaArma_(item);
+    const tabela = {
+        pistola: { 'Básica':8, 'Média':4, 'Superior':2 },
+        rifle:   { 'Básica':12,'Média':6, 'Superior':3 },
+        pesada:  { 'Básica':16,'Média':8, 'Superior':4 }
+    };
+    return tabela[classe][qualidade];
+}
+
+function precoComQualidade_(item, qualidade) {
+    return Math.max(0, Number(item?.preco || 0)) * multiplicadorPrecoQualidade_(qualidade);
+}
+
 function cargaMaxArma_(item) {
     if (!itemUsaMunicao_(item)) return Infinity;
     const explicita = Number(item?.cargaMax ?? item?.capacidadeMunicao ?? item?.uso);
@@ -2128,8 +2202,9 @@ function atualizarStatusMunicaoCombate_() {
         return;
     }
     const atual = cargaAtualArma_(item), max = cargaMaxArma_(item);
-    alvo.textContent = `${item.municao || 'Munição'}: ${atual} / ${max}`;
-    alvo.style.color = atual <= 0 ? '#ff6b6b' : '#7ee2a8';
+    const custoTxt = itemUsaEnergia_(item) ? ` · ${normalizarQualidade_(item.qualidade)} · -${custoEnergiaDisparo_(item)}/disparo` : '';
+    alvo.textContent = `${item.municao || 'Munição'}: ${atual} / ${max}${custoTxt}`;
+    alvo.style.color = (itemUsaEnergia_(item) ? atual < custoEnergiaDisparo_(item) : atual <= 0) ? '#ff6b6b' : '#7ee2a8';
     botao.style.display = '';
 }
 
@@ -2174,13 +2249,13 @@ function consumirMunicaoFisica_(item, qtd=1) {
     return {ok:true,gasto:qtd,restante:cargaAtualArma_(item)};
 }
 
-function consumirEnergiaPorDano_(item, danoRolado) {
-    if (!item || !itemUsaEnergia_(item)) return {ok:true,gasto:0,restante:Infinity,danoEfetivo:danoRolado};
+function consumirEnergiaDisparo_(item) {
+    if (!item || !itemUsaEnergia_(item)) return {ok:true,gasto:0,restante:Infinity};
+    const custo = custoEnergiaDisparo_(item);
     const antes = cargaAtualArma_(item);
-    if (antes <= 0) return {ok:false,gasto:0,restante:0,danoEfetivo:0};
-    const gasto = Math.min(antes, Math.max(0,Math.floor(Number(danoRolado)||0)));
-    definirCargaArma_(item, antes-gasto);
-    return {ok:true,gasto,restante:cargaAtualArma_(item),danoEfetivo:gasto,energiaAntes:antes};
+    if (antes < custo) return {ok:false,gasto:0,restante:antes,custo};
+    definirCargaArma_(item, antes-custo);
+    return {ok:true,gasto:custo,restante:cargaAtualArma_(item),custo};
 }
 
 function calcularFormulaPersonagem_(formula, char) {
@@ -2421,10 +2496,14 @@ window.rolarCombateD100 = async () => {
     }
 
     const armaUsada = encontrarEquipamentoCombate_(equip);
-    if (armaUsada && itemUsaMunicao_(armaUsada) && cargaAtualArma_(armaUsada) <= 0) {
-        resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(getNome(armaUsada))} está sem ${escaparHtmlInventario_(armaUsada.municao || 'munição')}. Recarregue antes de atacar.`;
-        atualizarStatusMunicaoCombate_();
-        return;
+    if (armaUsada && itemUsaMunicao_(armaUsada)) {
+        const carga = cargaAtualArma_(armaUsada);
+        const minimo = itemUsaEnergia_(armaUsada) ? custoEnergiaDisparo_(armaUsada) : 1;
+        if (carga < minimo) {
+            resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(getNome(armaUsada))} não tem ${escaparHtmlInventario_(armaUsada.municao || 'munição')} suficiente. Necessário: ${minimo}; disponível: ${carga}.`;
+            atualizarStatusMunicaoCombate_();
+            return;
+        }
     }
 
     const valorBase = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
@@ -2454,32 +2533,26 @@ window.rolarCombateD100 = async () => {
         { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome, dificuldadeEscolhida: ajuste.escolhida.nome, dificuldadeEfetiva: ajuste.efetiva.nome, degrausFadiga: ajuste.degrausFadiga }
     );
 
+    char.combate = char.combate || {};
+    char.combate.danoPendente = null;
+    char.combate.ultimoTesteDano = {
+        equipamentoId: equip,
+        periciaId: pericia.id,
+        grau: r.grau,
+        sucesso: !!r.sucesso,
+        consumido: false,
+        timestamp: new Date().toISOString()
+    };
+    await setDoc(doc(db,'personagens',currentCharId),{'combate.ultimoTesteDano':char.combate.ultimoTesteDano,'combate.danoPendente':null},{merge:true});
+
     if (armaUsada && itemUsaMunicao_(armaUsada)) {
         if (itemUsaEnergia_(armaUsada)) {
-            const exprEnergia = obterExpressaoDanoCombate_();
-            const rolagemEnergia = rolarExpressaoDanoCombate_(exprEnergia);
-            const energia = consumirEnergiaPorDano_(armaUsada, rolagemEnergia.total);
-            char.combate = char.combate || {};
-            char.combate.danoPendente = {
-                equipamentoId: equip,
-                equipamento: getNome(armaUsada),
-                expressao: exprEnergia,
-                totalRolado: rolagemEnergia.total,
-                totalEfetivo: energia.danoEfetivo,
-                detalhes: rolagemEnergia.detalhes,
-                efeitos: rolagemEnergia.efeitos,
-                energiaAntes: energia.energiaAntes,
-                energiaDepois: energia.restante,
-                timestamp: new Date().toISOString()
-            };
-            await setDoc(doc(db,'personagens',currentCharId),{
-                inventario:char.inventario,
-                'combate.danoPendente':char.combate.danoPendente
-            },{merge:true});
+            const consumo = consumirEnergiaDisparo_(armaUsada);
+            await setDoc(doc(db,'personagens',currentCharId),{inventario:char.inventario},{merge:true});
             await registrarHistoricoCombate_(
                 'Energia',
-                `${getNome(armaUsada)} consumiu ${energia.gasto} de energia · restante ${energia.restante}/${cargaMaxArma_(armaUsada)}`,
-                {subtipo:'energia',equipamento:getNome(armaUsada),gasto:energia.gasto,restante:energia.restante}
+                `${getNome(armaUsada)} (${normalizarQualidade_(armaUsada.qualidade)}) gastou ${consumo.gasto} de energia · restante ${consumo.restante}/${cargaMaxArma_(armaUsada)}`,
+                {subtipo:'energia',equipamento:getNome(armaUsada),qualidade:normalizarQualidade_(armaUsada.qualidade),gasto:consumo.gasto,restante:consumo.restante}
             );
         } else {
             const consumo = consumirMunicaoFisica_(armaUsada,1);
@@ -2538,6 +2611,32 @@ function rolarExpressaoDanoCombate_(expressao) {
     return {total:Math.max(0,total), bruto:total, detalhes, efeitos};
 }
 
+function maximizarExpressaoDanoCombate_(expressao) {
+    const tokens = String(expressao || '').match(/[+-]?[^+-]+/g) || [];
+    let total = 0;
+    const detalhes = [];
+    const efeitos = [];
+    tokens.forEach(token => {
+        token = token.trim();
+        let sinal = 1;
+        if (token.startsWith('-')) { sinal=-1; token=token.slice(1).trim(); }
+        else if (token.startsWith('+')) token=token.slice(1).trim();
+        const dado = token.match(/^(\d*)d(\d+)$/i);
+        if (dado) {
+            const qtd=parseInt(dado[1])||1, faces=parseInt(dado[2]);
+            // Para obter o maior dano total possível: dados positivos no máximo; penalidades negativas no mínimo.
+            const valorCada = sinal > 0 ? faces : 1;
+            const soma = qtd*valorCada*sinal;
+            total += soma;
+            detalhes.push(`${sinal<0?'-':''}${qtd}d${faces} [${Array(qtd).fill(valorCada).join(', ')}] MÁX`);
+            return;
+        }
+        if (/^\d+$/.test(token)) { total += sinal*parseInt(token); detalhes.push(`${sinal<0?'-':'+'}${token}`); return; }
+        if (token) efeitos.push(token);
+    });
+    return {total:Math.max(0,total), bruto:total, detalhes, efeitos, critico:true};
+}
+
 window.rolarDanoCombate = async () => {
     const resumo = document.getElementById('combatRollSummary');
     const expr = obterExpressaoDanoCombate_();
@@ -2551,53 +2650,26 @@ window.rolarDanoCombate = async () => {
     const equipValor = document.getElementById('combatWeaponSelect')?.value || '';
     const item = encontrarEquipamentoCombate_(equipValor);
     const nomeEquip = equipValor === 'desarmado' ? 'Punhos' : (item ? getNome(item) : 'Dano');
+    const ultimo = char?.combate?.ultimoTesteDano;
+    const critico = !!ultimo && ultimo.grau === 'Crítico' && !ultimo.consumido && String(ultimo.equipamentoId || '') === String(equipValor || '');
 
-    let r;
-    let notaEnergia = '';
-    const pendente = char?.combate?.danoPendente;
-    if (item && itemUsaEnergia_(item) && pendente && String(pendente.equipamentoId) === String(equipValor)) {
-        r = {
-            total: Number(pendente.totalEfetivo || 0),
-            bruto: Number(pendente.totalRolado || 0),
-            detalhes: Array.isArray(pendente.detalhes) ? pendente.detalhes : [],
-            efeitos: Array.isArray(pendente.efeitos) ? pendente.efeitos : []
-        };
-        if (Number(pendente.totalEfetivo) < Number(pendente.totalRolado)) {
-            notaEnergia = ` · dano rolado ${pendente.totalRolado}, limitado a ${pendente.totalEfetivo} pela energia disponível`;
-        }
-        char.combate.danoPendente = null;
-        await setDoc(doc(db,'personagens',currentCharId),{'combate.danoPendente':null},{merge:true});
-    } else {
-        if (item && itemUsaEnergia_(item)) {
-            if (cargaAtualArma_(item) <= 0) {
-                resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(nomeEquip)} está sem energia.`;
-                return;
-            }
-            const rolado = rolarExpressaoDanoCombate_(expr);
-            const energia = consumirEnergiaPorDano_(item, rolado.total);
-            r = {...rolado,total:energia.danoEfetivo};
-            if (energia.danoEfetivo < rolado.total) notaEnergia = ` · dano rolado ${rolado.total}, limitado a ${energia.danoEfetivo} pela energia disponível`;
-            await setDoc(doc(db,'personagens',currentCharId),{inventario:char.inventario},{merge:true});
-            await registrarHistoricoCombate_(
-                'Energia',
-                `${nomeEquip} consumiu ${energia.gasto} de energia · restante ${energia.restante}/${cargaMaxArma_(item)}`,
-                {subtipo:'energia',equipamento:nomeEquip,gasto:energia.gasto,restante:energia.restante}
-            );
-            renderizarInventario(char);
-            atualizarStatusMunicaoCombate_();
-        } else {
-            r = rolarExpressaoDanoCombate_(expr);
-        }
+    const r = critico ? maximizarExpressaoDanoCombate_(expr) : rolarExpressaoDanoCombate_(expr);
+    if (critico) somCriticoArma_(item,nomeEquip); else tocarSomDano_(item,nomeEquip);
+
+    if (ultimo && !ultimo.consumido) {
+        ultimo.consumido = true;
+        char.combate.ultimoTesteDano = ultimo;
+        await setDoc(doc(db,'personagens',currentCharId),{'combate.ultimoTesteDano':ultimo},{merge:true});
     }
 
-    tocarSomDano_(item, nomeEquip);
-    resumo.innerHTML = `<strong>Dano ${escaparHtmlInventario_(expr)}</strong> → <strong>${r.total}</strong>${notaEnergia ? `<br><small>${escaparHtmlInventario_(notaEnergia.replace(/^ · /,''))}</small>` : ''}${r.detalhes.length ? `<br><small>${escaparHtmlInventario_(r.detalhes.join(' · '))}</small>` : ''}${r.efeitos.length ? `<br><small>Efeito: ${escaparHtmlInventario_(r.efeitos.join(', '))}</small>` : ''}`;
+    const seloCritico = critico ? ' 💥 <strong>CRÍTICO: dano máximo!</strong>' : '';
+    resumo.innerHTML = `<strong>Dano ${escaparHtmlInventario_(expr)}</strong> → <strong>${r.total}</strong>${seloCritico}${r.detalhes.length ? `<br><small>${escaparHtmlInventario_(r.detalhes.join(' · '))}</small>` : ''}${r.efeitos.length ? `<br><small>Efeito: ${escaparHtmlInventario_(r.efeitos.join(', '))}</small>` : ''}`;
     const detalhesTexto = r.detalhes.length ? ` · ${r.detalhes.join(' · ')}` : '';
     const efeitosTexto = r.efeitos.length ? ` · Efeito: ${r.efeitos.join(', ')}` : '';
     await registrarHistoricoCombate_(
         'Dano',
-        `${nomeEquip}: ${expr} → ${r.total}${notaEnergia}${detalhesTexto}${efeitosTexto}`,
-        { subtipo: 'dano', equipamento: nomeEquip, expressao: expr, total: r.total, bruto:r.bruto, detalhes: r.detalhes, efeitos: r.efeitos }
+        `${nomeEquip}: ${expr} → ${r.total}${critico ? ' · CRÍTICO: dano máximo' : ''}${detalhesTexto}${efeitosTexto}`,
+        { subtipo:'dano', equipamento:nomeEquip, expressao:expr, total:r.total, critico, detalhes:r.detalhes, efeitos:r.efeitos }
     );
 };
 
@@ -3335,8 +3407,19 @@ window.renderizarMercado = () => {
         const preco = Math.max(0, Number(item.preco || 0));
         const imagem = item.imagem ? `<img src="${escaparBanco_(item.imagem)}" alt="${nome}">` : '<div class="market-card-placeholder">📦</div>';
         const detalhes = [item.categoria || '', item.peso != null ? `${item.peso} kg` : '', item.pa != null ? `PA ${item.pa}` : '', item.pv != null ? `PV ${item.pv}` : '', item.dano ? `Dano ${item.dano}` : '', item.nivelAcesso ? `Acesso ${item.nivelAcesso}` : ''].filter(Boolean).join(' • ');
-        return `<div class="market-card">${imagem}<div><h4>${nome}</h4><div class="market-meta">${escaparBanco_(detalhes)}</div>${desc ? `<div class="market-desc">${desc}</div>` : ''}<div><strong>${preco.toLocaleString('pt-BR')}</strong></div><button class="market-buy" onclick="comprarItemMercado('${escaparBanco_(item.id)}')">Comprar</button></div></div>`;
+        const ehArma = categoriaNormalizada_(item) === 'armas';
+        const qualidade = ehArma ? `<label style="display:block;margin:8px 0 4px;color:#aaa;font-size:.88em;">Qualidade</label><select id="marketQuality_${escaparBanco_(item.id)}" onchange="atualizarPrecoQualidadeMercado_('${escaparBanco_(item.id)}')" style="width:100%;padding:7px;border-radius:7px;background:rgba(255,255,255,.10);color:white;border:1px solid rgba(255,255,255,.18);"><option value="Básica">Básica ×1</option><option value="Média">Média ×2</option><option value="Superior">Superior ×4</option></select>` : '';
+        return `<div class="market-card">${imagem}<div><h4>${nome}</h4><div class="market-meta">${escaparBanco_(detalhes)}</div>${desc ? `<div class="market-desc">${desc}</div>` : ''}${qualidade}<div style="margin-top:8px;"><strong id="marketPrice_${escaparBanco_(item.id)}">${preco.toLocaleString('pt-BR')}</strong></div><button class="market-buy" onclick="comprarItemMercado('${escaparBanco_(item.id)}')">Comprar</button></div></div>`;
     }).join('') || '<p style="color:#aaa;">Nenhum item encontrado.</p>';
+};
+
+window.atualizarPrecoQualidadeMercado_ = (itemId) => {
+    const item = itensDB.find(i=>i.id===itemId); if(!item) return;
+    const sel = document.getElementById(`marketQuality_${itemId}`);
+    const out = document.getElementById(`marketPrice_${itemId}`);
+    if(!out) return;
+    const q = sel?.value || 'Básica';
+    out.textContent = precoComQualidade_(item,q).toLocaleString('pt-BR');
 };
 
 window.comprarItemMercado = async (itemId) => {
@@ -3344,7 +3427,9 @@ window.comprarItemMercado = async (itemId) => {
     if (!char) { alert('Selecione um personagem antes de comprar.'); return; }
     const itemBanco = itensDB.find(i => i.id === itemId);
     if (!itemBanco) { alert('Item não encontrado no banco.'); return; }
-    const preco = Math.max(0, Number(itemBanco.preco || 0));
+    const ehArma = categoriaNormalizada_(itemBanco) === 'armas';
+    const qualidade = ehArma ? normalizarQualidade_(document.getElementById(`marketQuality_${itemId}`)?.value || 'Básica') : '';
+    const preco = ehArma ? precoComQualidade_(itemBanco, qualidade) : Math.max(0, Number(itemBanco.preco || 0));
     const recursos = Math.max(0, Number(char.recursos || 0));
     if (recursos < preco) { alert(`Recursos insuficientes. Preço: ${preco} | Disponível: ${recursos}`); return; }
 
@@ -3369,6 +3454,7 @@ window.comprarItemMercado = async (itemId) => {
         origemAquisicao: 'compra',
         precoPago: preco,
         adquiridoEm: new Date().toISOString(),
+        ...(ehArma ? { qualidade } : {}),
         ...(itemUsaMunicao_(itemBanco) ? { cargaMax: cargaMaxArma_(itemBanco), cargaAtual: 0 } : {})
     };
     char.inventario = inv;
@@ -3379,7 +3465,7 @@ window.comprarItemMercado = async (itemId) => {
     const recursosInput = document.getElementById('editRecursos');
     if (recursosInput) recursosInput.value = char.recursos;
     renderizarMercado();
-    alert(`${getNome(itemBanco)} comprado por ${preco}.`);
+    alert(`${getNome(itemBanco)}${ehArma ? ` (${qualidade})` : ''} comprado por ${preco}.`);
 };
 
 // ============================================
@@ -3672,7 +3758,6 @@ window.atualizarTreinoEspecializacao = async (espId, valor, categoria) => {
 
 window.salvarPericias = async () => {
     somSalvar_();
-    alert('Perícias salvas automaticamente!');
 };
 window.mudarEtapaPericias = () => {
     if (!currentCharId) return;
@@ -4126,6 +4211,7 @@ function preencherModalItemBanco_(item = null) {
     set('dbItemDano', item?.dano || '');
     set('dbItemMunicao', item?.municao || '');
     set('dbItemUso', item?.uso ?? item?.quantidade ?? '');
+    set('dbItemQualidade', normalizarQualidade_(item?.qualidade || 'Básica'));
     set('dbItemMaterial', item?.material || '');
     set('dbItemUnidade', item?.unidade || '');
     set('dbItemDestino', item?.destinoLocal || item?.destino || '');
@@ -4234,6 +4320,7 @@ window.salvarItemBancoModal = async () => {
         dano: val('dbItemDano'),
         municao: val('dbItemMunicao'),
         uso: val('dbItemUso'),
+        qualidade: normalizarQualidade_(val('dbItemQualidade') || 'Básica'),
         nivelAcesso: val('dbItemAcesso'),
         material: val('dbItemMaterial'),
         unidade: val('dbItemUnidade'),
