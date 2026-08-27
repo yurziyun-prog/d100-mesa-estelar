@@ -524,7 +524,11 @@
                                         <option value="Exhausted">Exausto (Exhausted)</option>
                                         <option value="Debilitated">Debilitado (Debilitated)</option>
                                         <option value="Incapacitated">Incapacitado (Incapacitated)</option>
+                                        <option value="Semi-Conscious">Semiconsciente (Semi-Conscious)</option>
+                                        <option value="Comatose">Comatoso (Comatose)</option>
+                                        <option value="Dead">Morto (Dead)</option>
                                     </select>
+                                    <div id="fadigaDescricao" style="margin-top:14px;padding:12px 14px;background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.10);border-radius:9px;color:#ddd;line-height:1.55;"></div>
                                 </div>
                             </div>
 
@@ -546,6 +550,10 @@
                                     <div style="padding:12px 15px;background:rgba(231,76,60,0.10);border:1px solid rgba(231,76,60,0.35);border-radius:9px;">
                                         <span style="color:#aaa;">Dano:</span>
                                         <strong id="combatWeaponDamage" style="color:#ff8b7d;font-size:1.2em;">—</strong>
+                                    </div>
+                                    <div style="padding:12px 15px;background:rgba(255,193,7,0.10);border:1px solid rgba(255,193,7,0.35);border-radius:9px;text-align:center;">
+                                        <span style="color:#aaa;display:block;">Pontos de Ação</span>
+                                        <strong id="combatActionPoints" style="color:#ffd166;font-size:1.45em;">—</strong>
                                     </div>
                                 </div>
 
@@ -623,6 +631,16 @@
                                 </div>
                                 <div class="roll-result hidden" id="rollResultBox">
                                     <div id="rollResultText"></div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:20px;padding:16px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:10px;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">
+                                    <strong style="color:#00d4ff;font-size:1.05em;">🧾 Histórico de testes e dados</strong>
+                                    <small style="color:#888;">últimas 50</small>
+                                </div>
+                                <div id="generalRollHistory" style="display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;">
+                                    <div style="color:#888;">Nenhuma rolagem registrada.</div>
                                 </div>
                             </div>
                         </div>
@@ -722,6 +740,7 @@
                 <div class="form-section">
                     <h3>📖 Regras do Sistema</h3>
                     <div id="regrasViewMode" class="regras-view"></div>
+                    <div id="physicalEffortRules" style="margin-top:22px;"></div>
                     <div id="regrasEditMode" class="hidden">
                         <textarea id="regrasTexto" rows="20" style="width:100%; background:rgba(0,0,0,0.3); color:#fff; padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.2);"></textarea>
                     </div>
@@ -1236,6 +1255,7 @@ function atualizarVisualizacao(data) {
     
     renderizarInventario(data);
     renderizarCombate(data);
+    renderizarHistoricoGeral_(data);
 }
 
 function preencherFormulario(data) {
@@ -1736,22 +1756,51 @@ window.rolarCombateD100 = async () => {
     const pericia = obterPericiaCombateSelecionada_();
     const resumo = document.getElementById('combatRollSummary');
     if (!char || !pericia || !resumo) return;
+
+    const fadiga = obterRegraFadiga_(char);
+    const paInfo = garantirPontosAcaoCombate_(char);
+    if (paInfo.max <= 0 || !fadiga.multiplicador) {
+        resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(fadiga.nome)}: nenhuma ação de combate é possível.`;
+        return;
+    }
+
     const equip = document.getElementById('combatWeaponSelect')?.value || '';
     if (!['esquiva','combate_desarmado'].includes(pericia.id) && !equip) {
         resumo.innerHTML = '⚠️ Não há equipamento compatível equipado para esta perícia.';
         return;
     }
-    const valor = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
+
+    const valorBase = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
+    const ajuste = aplicarFadigaEmPericia_(char, valorBase);
+    if (ajuste.bloqueado) {
+        resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(ajuste.regra.nome)}: nenhuma atividade possível.`;
+        return;
+    }
+    const valor = ajuste.valor;
     const roll = Math.floor(Math.random()*100)+1;
     const r = classificarD100_(valor, roll);
     const margem = Math.abs(valor-roll);
     const nomePericia = getNome(pericia);
-    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}`;
+    const fadigaTxt = valor !== valorBase ? ` · Fadiga ${ajuste.regra.grau} (${valorBase}→${valor})` : '';
+    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}${valor !== valorBase ? `<br><small>Fadiga: ${escaparHtmlInventario_(ajuste.regra.grau)} · ${valorBase} → ${valor}</small>` : ''}`;
+
     await registrarHistoricoCombate_(
         'D100',
-        `${nomePericia}: ${roll} / ${valor} → ${r.grau} · Margem ${margem}`,
-        { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valor, grau: r.grau, margem }
+        `${nomePericia}: ${roll} / ${valor} → ${r.grau} · Margem ${margem}${fadigaTxt}`,
+        { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome }
     );
+
+    let atual = Math.max(0, Number(char.combate.pontosAcaoAtuais ?? paInfo.max) - 1);
+    char.combate.pontosAcaoAtuais = atual;
+    await setDoc(doc(db, 'personagens', currentCharId), { 'combate.pontosAcaoAtuais': atual }, { merge: true });
+    atualizarVisualPontosAcao_(char);
+
+    if (atual <= 0) {
+        char.combate.pontosAcaoAtuais = paInfo.max;
+        await setDoc(doc(db, 'personagens', currentCharId), { 'combate.pontosAcaoAtuais': paInfo.max }, { merge: true });
+        await registrarHistoricoCombate_('Novo turno', `Pontos de Ação restaurados: ${paInfo.max}`, { subtipo:'novoTurno', pontosAcao:paInfo.max });
+        atualizarVisualPontosAcao_(char);
+    }
 };
 
 function rolarExpressaoDanoCombate_(expressao) {
@@ -1827,15 +1876,23 @@ window.rolarLocalizacaoCombate = async () => {
 window.rolarIniciativaCombate = async () => {
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
-    const iniciativa = (char.atributos?.INT || 10) + (char.bonus?.INT || 0) + (char.atributos?.DES || 10) + (char.bonus?.DES || 0);
-    const dado = Math.floor(Math.random()*10)+1;
-    const total = iniciativa + dado;
+    const regra = obterRegraFadiga_(char);
     const resumo = document.getElementById('combatRollSummary');
-    if (resumo) resumo.innerHTML = `⚡ Iniciativa: 1d10 [<strong>${dado}</strong>] + ${iniciativa} = <strong>${total}</strong>`;
+    if (regra.iniciativa === null) {
+        if (resumo) resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(regra.nome)}: nenhuma atividade possível.`;
+        return;
+    }
+    const iniciativaBase = (char.atributos?.INT || 10) + (char.bonus?.INT || 0) + (char.atributos?.DES || 10) + (char.bonus?.DES || 0);
+    const penalidade = regra.iniciativa || 0;
+    const iniciativaEfetiva = Math.max(0, iniciativaBase + penalidade);
+    const dado = Math.floor(Math.random()*10)+1;
+    const total = iniciativaEfetiva + dado;
+    const fadigaTxt = penalidade ? ` (${penalidade} por fadiga)` : '';
+    if (resumo) resumo.innerHTML = `⚡ Iniciativa: 1d10 [<strong>${dado}</strong>] + ${iniciativaEfetiva}${fadigaTxt} = <strong>${total}</strong>`;
     await registrarHistoricoCombate_(
         'Iniciativa',
-        `1d10 [${dado}] + ${iniciativa} = ${total}`,
-        { subtipo: 'iniciativa', dado, iniciativaBase: iniciativa, total }
+        `1d10 [${dado}] + ${iniciativaEfetiva}${fadigaTxt} = ${total}`,
+        { subtipo: 'iniciativa', dado, iniciativaBase, penalidadeFadiga:penalidade, iniciativaEfetiva, total }
     );
 };
 
@@ -1869,6 +1926,113 @@ window.mostrarValorPericia = () => {
     const [tipo,id] = select.value.split(':');
     alvo.textContent = obterValorRegistroPericia_(char,id,tipo === 'esp');
 };
+
+
+const REGRAS_FADIGA = {
+    'Fresh': {
+        nome: 'Descansado (Fresh)', grau: 'Padrão', multiplicador: 1,
+        movimento: 'Sem penalidades', iniciativa: 0, pa: 0, recuperacao: '—',
+        descricao: 'Sem penalidades.'
+    },
+    'Winded': {
+        nome: 'Ofegante (Winded)', grau: 'Difícil', multiplicador: 2/3,
+        movimento: 'Sem penalidade', iniciativa: 0, pa: 0, recuperacao: '15 minutos',
+        descricao: 'Todos os testes de perícia passam para grau Difícil.'
+    },
+    'Tired': {
+        nome: 'Cansado (Tired)', grau: 'Difícil', multiplicador: 2/3,
+        movimento: '-1 metro', iniciativa: 0, pa: 0, recuperacao: '3 horas',
+        descricao: 'Testes em grau Difícil e movimento reduzido em 1 metro.'
+    },
+    'Wearied': {
+        nome: 'Fatigado (Wearied)', grau: 'Formidável', multiplicador: 1/2,
+        movimento: '-2 metros', iniciativa: -2, pa: 0, recuperacao: '6 horas',
+        descricao: 'Testes em grau Formidável, movimento -2 m e Iniciativa -2.'
+    },
+    'Exhausted': {
+        nome: 'Exausto (Exhausted)', grau: 'Formidável', multiplicador: 1/2,
+        movimento: 'Metade', iniciativa: -4, pa: -1, recuperacao: '12 horas',
+        descricao: 'Testes em grau Formidável, movimento pela metade, Iniciativa -4 e -1 Ponto de Ação.'
+    },
+    'Debilitated': {
+        nome: 'Debilitado (Debilitated)', grau: 'Hercúleo', multiplicador: 1/10,
+        movimento: 'Metade', iniciativa: -6, pa: -2, recuperacao: '18 horas',
+        descricao: 'Testes em grau Hercúleo, movimento pela metade, Iniciativa -6 e -2 Pontos de Ação.'
+    },
+    'Incapacitated': {
+        nome: 'Incapacitado (Incapacitated)', grau: 'Hercúleo', multiplicador: 1/10,
+        movimento: 'Imóvel', iniciativa: -8, pa: -3, recuperacao: '24 horas',
+        descricao: 'Testes em grau Hercúleo, personagem imóvel, Iniciativa -8 e -3 Pontos de Ação.'
+    },
+    'Semi-Conscious': {
+        nome: 'Semiconsciente (Semi-Conscious)', grau: 'Sem esperança', multiplicador: 0,
+        movimento: 'Nenhuma atividade possível', iniciativa: null, pa: null, recuperacao: '36 horas',
+        descricao: 'Nenhuma atividade é possível.'
+    },
+    'Comatose': {
+        nome: 'Comatoso (Comatose)', grau: 'Nenhuma atividade', multiplicador: 0,
+        movimento: 'Nenhuma atividade possível', iniciativa: null, pa: null, recuperacao: '48 horas',
+        descricao: 'Nenhuma atividade é possível.'
+    },
+    'Dead': {
+        nome: 'Morto (Dead)', grau: 'Morto', multiplicador: 0,
+        movimento: '—', iniciativa: null, pa: null, recuperacao: 'Nunca',
+        descricao: 'O personagem está morto.'
+    }
+};
+
+function obterRegraFadiga_(char) {
+    const nivel = char?.combate?.fadiga || 'Fresh';
+    return REGRAS_FADIGA[nivel] || REGRAS_FADIGA.Fresh;
+}
+
+function aplicarFadigaEmPericia_(char, valorBase) {
+    const regra = obterRegraFadiga_(char);
+    if (!regra.multiplicador) return { valor: 0, bloqueado: true, regra };
+    const valor = Math.max(1, Math.floor((parseInt(valorBase) || 0) * regra.multiplicador));
+    return { valor, bloqueado: false, regra };
+}
+
+function obterPAMaxCombate_(char) {
+    const regra = obterRegraFadiga_(char);
+    if (regra.pa === null) return 0;
+    const attrs = char?.atributos || {};
+    const bonus = char?.bonus || {};
+    const base = calcularPA((attrs.INT || 10) + (bonus.INT || 0), (attrs.DES || 10) + (bonus.DES || 0));
+    return Math.max(0, base + (regra.pa || 0));
+}
+
+function garantirPontosAcaoCombate_(char) {
+    if (!char.combate) char.combate = {};
+    const max = obterPAMaxCombate_(char);
+    let atual = Number(char.combate.pontosAcaoAtuais);
+    if (!Number.isFinite(atual) || atual < 0 || atual > max) atual = max;
+    char.combate.pontosAcaoAtuais = atual;
+    return { atual, max };
+}
+
+function atualizarVisualFadiga_(char) {
+    const alvo = document.getElementById('fadigaDescricao');
+    if (!alvo) return;
+    const r = obterRegraFadiga_(char);
+    const iniciativa = r.iniciativa === null ? 'Nenhuma atividade' : (r.iniciativa === 0 ? 'Sem penalidade' : `${r.iniciativa}`);
+    const pa = r.pa === null ? 'Nenhuma atividade' : (r.pa === 0 ? 'Sem penalidade' : `${r.pa}`);
+    alvo.innerHTML = `
+        <strong style="color:#ffd166;">${escaparHtmlInventario_(r.nome)}</strong><br>
+        <span><strong>Testes:</strong> ${escaparHtmlInventario_(r.grau)}</span><br>
+        <span><strong>Movimento:</strong> ${escaparHtmlInventario_(r.movimento)}</span><br>
+        <span><strong>Iniciativa:</strong> ${escaparHtmlInventario_(iniciativa)}</span><br>
+        <span><strong>Pontos de Ação:</strong> ${escaparHtmlInventario_(pa)}</span><br>
+        <span><strong>Recuperação:</strong> ${escaparHtmlInventario_(r.recuperacao)}</span>
+    `;
+}
+
+function atualizarVisualPontosAcao_(char) {
+    const alvo = document.getElementById('combatActionPoints');
+    if (!alvo) return;
+    const { atual, max } = garantirPontosAcaoCombate_(char);
+    alvo.textContent = `${atual} / ${max}`;
+}
 
 function renderizarCombate(char) {
     const attrs = char.atributos || {};
@@ -1915,6 +2079,8 @@ function renderizarCombate(char) {
     }).join('');
 
     document.getElementById('fadigaLevel').value = combat.fadiga || 'Fresh';
+    atualizarVisualFadiga_(char);
+    atualizarVisualPontosAcao_(char);
     popularEquipamentosCombate_(char);
     renderizarHistoricoCombate_(char);
 }
@@ -1945,9 +2111,61 @@ window.salvarCombate = async (tipo, local, valor) => {
 
 window.salvarFadiga = async () => {
     if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
     const fadiga = document.getElementById('fadigaLevel').value;
-    await setDoc(doc(db, "personagens", currentCharId), { 'combate.fadiga': fadiga }, { merge: true });
+    if (!char.combate) char.combate = {};
+    char.combate.fadiga = fadiga;
+    const max = obterPAMaxCombate_(char);
+    const atual = Number(char.combate.pontosAcaoAtuais);
+    char.combate.pontosAcaoAtuais = Number.isFinite(atual) ? Math.min(Math.max(0, atual), max) : max;
+    await setDoc(doc(db, "personagens", currentCharId), { combate: char.combate }, { merge: true });
+    atualizarVisualFadiga_(char);
+    atualizarVisualPontosAcao_(char);
 };
+
+
+function renderizarHistoricoGeral_(char) {
+    const alvo = document.getElementById('generalRollHistory');
+    if (!alvo) return;
+    const historico = Array.isArray(char?.historicoRolagensGerais) ? char.historicoRolagensGerais : [];
+    if (!historico.length) {
+        alvo.innerHTML = '<div style="color:#888;">Nenhuma rolagem registrada.</div>';
+        return;
+    }
+    alvo.innerHTML = historico.slice(0, 50).map(reg => {
+        const hora = formatarHoraHistoricoCombate_(reg.timestamp);
+        const tipo = escaparHtmlInventario_(reg.tipo || 'Rolagem');
+        const texto = escaparHtmlInventario_(reg.texto || '');
+        return `<div style="display:grid;grid-template-columns:82px 120px 1fr;gap:10px;align-items:start;padding:8px 10px;background:rgba(255,255,255,0.035);border-radius:7px;border:1px solid rgba(255,255,255,0.06);">
+            <span style="color:#888;font-size:0.88em;white-space:nowrap;">${hora}</span>
+            <strong style="color:#d8c7ff;font-size:0.9em;">${tipo}</strong>
+            <span style="color:#ddd;line-height:1.35;">${texto}</span>
+        </div>`;
+    }).join('');
+}
+
+async function registrarHistoricoGeral_(tipo, texto, dados = {}) {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    const registro = {
+        id: `general_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        tipo: String(tipo || 'Rolagem'),
+        texto: String(texto || ''),
+        timestamp: new Date().toISOString(),
+        ...dados
+    };
+    const atual = Array.isArray(char.historicoRolagensGerais) ? char.historicoRolagensGerais : [];
+    const novo = [registro, ...atual].slice(0, 50);
+    char.historicoRolagensGerais = novo;
+    renderizarHistoricoGeral_(char);
+    try {
+        await setDoc(doc(db, 'personagens', currentCharId), { historicoRolagensGerais: novo }, { merge: true });
+    } catch (erro) {
+        console.error('Erro ao salvar histórico geral:', erro);
+    }
+}
 
 window.salvarAnotacoes = async () => {
     if (!currentCharId) return;
@@ -1957,16 +2175,17 @@ window.salvarAnotacoes = async () => {
     alert('Salvo!');
 };
 
-window.rolarDado = (tipo) => {
+window.rolarDado = async (tipo) => {
     const faces = parseInt(tipo.replace('d', ''));
     const resultado = Math.floor(Math.random() * faces) + 1;
     document.getElementById('diceDisplay').textContent = `🎲 ${resultado}`;
     document.getElementById('rollResult').textContent = `${tipo.toUpperCase()}: ${resultado}`;
     document.getElementById('rollResultBox').classList.remove('hidden');
     document.getElementById('rollResultText').innerHTML = `<strong>${tipo.toUpperCase()}:</strong> ${resultado}`;
+    await registrarHistoricoGeral_('Dado', `${tipo.toUpperCase()} → ${resultado}`, { subtipo:'dadoLivre', dado:tipo.toUpperCase(), resultado });
 };
 
-window.rolarFormula = () => {
+window.rolarFormula = async () => {
     const formula = document.getElementById('damageFormula').value || '1d100';
     const partes = formula.split('+').map(p => p.trim());
     let total = 0;
@@ -1990,9 +2209,10 @@ window.rolarFormula = () => {
     document.getElementById('rollResult').textContent = `${formula} = ${total}`;
     document.getElementById('rollResultBox').classList.remove('hidden');
     document.getElementById('rollResultText').innerHTML = `<strong>${formula}</strong> = ${total}<br><small>${detalhes.join(' + ')}</small>`;
+    await registrarHistoricoGeral_('Fórmula', `${formula} = ${total}${detalhes.length ? ` · ${detalhes.join(' + ')}` : ''}`, { subtipo:'formula', formula, total, detalhes });
 };
 
-window.rolarPericia = () => {
+window.rolarPericia = async () => {
     const char = userCharacters.find(c => c.id === currentCharId);
     const select = document.getElementById('skillSelect');
     if (!char || !select?.value) return;
@@ -2000,16 +2220,31 @@ window.rolarPericia = () => {
     const banco = tipo === 'esp' ? especializacoesDB : periciasDB;
     const registro = banco.find(x => x.id === id);
     if (!registro) return;
-    const skillValue = obterValorRegistroPericia_(char,id,tipo === 'esp');
+    const valorBase = obterValorRegistroPericia_(char,id,tipo === 'esp');
+    const fadiga = aplicarFadigaEmPericia_(char, valorBase);
+    if (fadiga.bloqueado) {
+        document.getElementById('rollResultText').innerHTML = `<strong>${escaparHtmlInventario_(getNome(registro))}</strong><br>⚠️ ${escaparHtmlInventario_(fadiga.regra.nome)}: nenhuma atividade possível.`;
+        document.getElementById('rollResultBox').classList.remove('hidden');
+        await registrarHistoricoGeral_('Teste', `${getNome(registro)} bloqueado por fadiga (${fadiga.regra.nome})`, { subtipo:'pericia', periciaId:id, bloqueado:true, fadiga:fadiga.regra.nome });
+        return;
+    }
+    const skillValue = fadiga.valor;
     const roll = Math.floor(Math.random() * 100) + 1;
     const r = classificarD100_(skillValue, roll);
     const margin = Math.abs(roll - skillValue);
+    const penalidadeTxt = skillValue !== valorBase ? `<br><small>Fadiga: ${escaparHtmlInventario_(fadiga.regra.grau)} · ${valorBase} → ${skillValue}</small>` : '';
     document.getElementById('rollResultText').innerHTML = `
         <strong>${escaparHtmlInventario_(getNome(registro))}</strong><br>
         Valor: ${skillValue} | D100: ${roll}<br>
         <strong>${r.grau}</strong> | Margem: ${margin}
+        ${penalidadeTxt}
     `;
     document.getElementById('rollResultBox').classList.remove('hidden');
+    await registrarHistoricoGeral_(
+        'Teste',
+        `${getNome(registro)}: ${roll} / ${skillValue} → ${r.grau} · Margem ${margin}${skillValue !== valorBase ? ` · Fadiga ${fadiga.regra.grau} (${valorBase}→${skillValue})` : ''}`,
+        { subtipo:'pericia', periciaId:id, rolagem:roll, valorBase, valorEfetivo:skillValue, grau:r.grau, margem:margin, fadiga:fadiga.regra.nome }
+    );
 };
 
 window.rolarDanoArma = () => {
@@ -3152,6 +3387,46 @@ window.baixarTemplate = (tipo) => {
 // ============================================
 function renderizarRegras() {
     document.getElementById('regrasViewMode').innerHTML = formatarMarkdown(regrasTexto);
+    const esforco = document.getElementById('physicalEffortRules');
+    if (esforco) {
+        esforco.innerHTML = `
+            <div style="padding:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;">
+                <h3 style="color:#00d4ff;margin:0 0 14px;">Tabela de Esforço Físico</h3>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;min-width:760px;">
+                        <thead>
+                            <tr style="background:rgba(0,212,255,0.13);">
+                                <th style="padding:10px;text-align:left;">Esforço</th>
+                                <th style="padding:10px;text-align:left;">Por quanto tempo?</th>
+                                <th style="padding:10px;text-align:left;">Exemplo</th>
+                                <th style="padding:10px;text-align:left;">Teste de perícia</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>Leve</strong></td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">CON em horas</td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Atividade que não impõe esforço ao corpo. Atividades razoáveis em ritmo constante.</td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Teste Muito Fácil contra Atletismo, Força Bruta ou Resistência, conforme a tarefa.</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>Médio</strong></td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">CON em minutos</td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Trabalho manual; exercício físico sustentado.</td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Como acima, mas em grau Fácil.</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>Extenuante</strong></td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">CON em segundos, arredondado para a próxima Rodada de Combate</td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Combate; lutar contra os elementos; atividade física em circunstâncias extremamente adversas.</td>
+                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Teste Padrão contra Atletismo, Força Bruta ou Resistência, conforme a tarefa.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <small style="display:block;color:#aaa;margin-top:10px;">Atletismo para exercício, Força Bruta para levantamento pesado e Resistência para atividades gerais/combate, conforme a situação.</small>
+            </div>`;
+    }
     const btnEditar = document.getElementById('btnEditarRegras');
     if (userData && userData.role === 'mestre') {
         btnEditar.style.display = 'block';
