@@ -645,6 +645,55 @@
         </div>
     </div>
 
+    <!-- MODAL DO BANCO DE ITENS -->
+    <div class="modal-overlay" id="dbItemModal">
+        <div class="modal-content" style="max-width:900px;">
+            <h3 id="dbItemModalTitulo">Item do Sistema</h3>
+            <input type="hidden" id="dbItemIdOriginal">
+
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+                <div class="form-group"><label>Nome (PT):</label><input type="text" id="dbItemNome"></div>
+                <div class="form-group"><label>Nome (EN):</label><input type="text" id="dbItemNomeEn"></div>
+                <div class="form-group"><label>Nome (中文):</label><input type="text" id="dbItemNomeZh"></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+                <div class="form-group"><label>Categoria:</label><input type="text" id="dbItemCategoria" placeholder="Armas, Armaduras, Ferramentas..."></div>
+                <div class="form-group"><label>Peso (kg):</label><input type="number" id="dbItemPeso" step="0.1" min="0"></div>
+                <div class="form-group"><label>Preço:</label><input type="number" id="dbItemPreco" step="1" min="0"></div>
+                <div class="form-group"><label>Nível de acesso:</label><input type="text" id="dbItemAcesso" placeholder="Livre, Licença, Restrito..."></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+                <div class="form-group"><label>PA (dureza):</label><input type="number" id="dbItemPA" step="1" min="0"></div>
+                <div class="form-group"><label>PV (integridade):</label><input type="number" id="dbItemPV" step="1" min="0"></div>
+                <div class="form-group"><label>Alcance:</label><input type="text" id="dbItemAlcance" placeholder="Corpo a corpo, 60 m..."></div>
+                <div class="form-group"><label>Dano:</label><input type="text" id="dbItemDano" placeholder="2d6, 1d8+Atordoar..."></div>
+            </div>
+
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
+                <div class="form-group"><label>Munição / recurso:</label><input type="text" id="dbItemMunicao" placeholder="Bateria, Célula, Cartuchos, ∞..."></div>
+                <div class="form-group"><label>Uso / carga:</label><input type="text" id="dbItemUso" placeholder="100, 20, Descartável..."></div>
+                <div class="form-group"><label>Material:</label><input type="text" id="dbItemMaterial"></div>
+                <div class="form-group"><label>Unidade:</label><input type="text" id="dbItemUnidade" placeholder="Peça, pacote, kg..."></div>
+            </div>
+
+            <div class="form-group"><label>Destino / Local padrão:</label><input type="text" id="dbItemDestino" placeholder="Arco, Armas laser, inventário..."></div>
+            <div class="form-group"><label>Imagem (URL, opcional):</label><input type="text" id="dbItemImagem"></div>
+
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;">
+                <div class="form-group"><label>Descrição / observações (PT):</label><textarea id="dbItemDescricao" rows="4"></textarea></div>
+                <div class="form-group"><label>Description (EN):</label><textarea id="dbItemDescricaoEn" rows="4"></textarea></div>
+                <div class="form-group"><label>说明 (中文):</label><textarea id="dbItemDescricaoZh" rows="4"></textarea></div>
+            </div>
+
+            <div class="modal-buttons">
+                <button class="btn-confirm" onclick="salvarItemBancoModal()">💾 Salvar</button>
+                <button class="btn-cancel" onclick="fecharItemBancoModal()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE ITEM -->
     <div class="modal-overlay" id="itemModal">
         <div class="modal-content">
@@ -1829,36 +1878,164 @@ function renderizarBancoEspecializacoes() {
     `).join(''); 
 }
 
-function renderizarBancoItens() { 
-    document.getElementById('listaBancoItens').innerHTML = itensDB.length ? itensDB
+function renderizarBancoItens() {
+    const container = document.getElementById('listaBancoItens');
+    if (!container) return;
+
+    if (!itensDB.length) {
+        container.innerHTML = '<p style="color:#aaa;">Nenhum item cadastrado</p>';
+        return;
+    }
+
+    container.innerHTML = [...itensDB]
         .sort((a, b) => getNome(a).localeCompare(getNome(b)))
-        .map(i => `
-        <div class="db-item">
-            <div class="db-item-info">
-                <span class="db-item-name">${getNome(i)}</span>
-                <span class="db-item-details">${i.peso}kg | PA: ${i.pa} | PV: ${i.pv} | Dano: ${i.dano || '-'}</span>
-            </div>
-            <div class="db-item-actions">
-                <button class="btn-small btn-select" onclick="editarItemBanco('${i.id}')">Editar</button>
-                <button class="btn-small btn-delete" onclick="removerItemBanco('${i.id}')">Remover</button>
-            </div>
-        </div>
-    `).join('') : '<p style="color: #aaa;">Nenhum item cadastrado</p>'; 
+        .map(i => {
+            const detalhes = [
+                i.categoria || 'Diversos',
+                `${Number(i.peso || 0)}kg`,
+                `PA: ${Number(i.pa || 0)}`,
+                `PV: ${Number(i.pv ?? 1)}`,
+                `Preço: ${Number(i.preco || 0)}`,
+                i.alcance ? `Alcance: ${i.alcance}` : '',
+                i.dano ? `Dano: ${i.dano}` : '',
+                i.municao ? `Munição: ${i.municao}` : '',
+                i.uso !== undefined && i.uso !== '' ? `Uso: ${i.uso}` : '',
+                i.nivelAcesso ? `Acesso: ${i.nivelAcesso}` : ''
+            ].filter(Boolean).join(' | ');
+
+            return `
+                <div class="db-item">
+                    <div class="db-item-info">
+                        <span class="db-item-name">${getNome(i)}</span>
+                        <span class="db-item-details">${detalhes}</span>
+                    </div>
+                    <div class="db-item-actions">
+                        <button class="btn-small btn-select" onclick="editarItemBanco('${i.id}')">Editar</button>
+                        <button class="btn-small btn-delete" onclick="removerItemBanco('${i.id}')">Remover</button>
+                    </div>
+                </div>`;
+        }).join('');
 }
+
+function preencherModalItemBanco_(item = null) {
+    const set = (id, valor = '') => {
+        const el = document.getElementById(id);
+        if (el) el.value = valor ?? '';
+    };
+
+    set('dbItemIdOriginal', item?.id || '');
+    set('dbItemNome', item?.nome || '');
+    set('dbItemNomeEn', item?.nome_en || '');
+    set('dbItemNomeZh', item?.nome_zh || '');
+    set('dbItemCategoria', item?.categoria || 'Diversos');
+    set('dbItemPeso', item?.peso ?? 0);
+    set('dbItemPreco', item?.preco ?? 0);
+    set('dbItemAcesso', item?.nivelAcesso || item?.acesso || '');
+    set('dbItemPA', item?.pa ?? 0);
+    set('dbItemPV', item?.pv ?? 1);
+    set('dbItemAlcance', item?.alcance || '');
+    set('dbItemDano', item?.dano || '');
+    set('dbItemMunicao', item?.municao || '');
+    set('dbItemUso', item?.uso ?? item?.quantidade ?? '');
+    set('dbItemMaterial', item?.material || '');
+    set('dbItemUnidade', item?.unidade || '');
+    set('dbItemDestino', item?.destinoLocal || item?.destino || '');
+    set('dbItemImagem', item?.imagem || '');
+    set('dbItemDescricao', item?.descricao || item?.observacoes || '');
+    set('dbItemDescricaoEn', item?.descricao_en || '');
+    set('dbItemDescricaoZh', item?.descricao_zh || '');
+
+    document.getElementById('dbItemModalTitulo').textContent = item ? `Editar Item — ${item.nome}` : 'Adicionar Item do Sistema';
+}
+
+window.adicionarItemBanco = () => {
+    if (!userData || userData.role !== 'mestre') {
+        alert('Apenas o mestre pode alterar o banco de itens.');
+        return;
+    }
+    preencherModalItemBanco_(null);
+    document.getElementById('dbItemModal').classList.add('active');
+};
+
+window.editarItemBanco = (id) => {
+    if (!userData || userData.role !== 'mestre') {
+        alert('Apenas o mestre pode alterar o banco de itens.');
+        return;
+    }
+    const item = itensDB.find(x => x.id === id);
+    if (!item) return;
+    preencherModalItemBanco_(item);
+    document.getElementById('dbItemModal').classList.add('active');
+};
+
+window.fecharItemBancoModal = () => {
+    document.getElementById('dbItemModal').classList.remove('active');
+};
+
+window.salvarItemBancoModal = async () => {
+    if (!userData || userData.role !== 'mestre') {
+        alert('Apenas o mestre pode alterar o banco de itens.');
+        return;
+    }
+
+    const val = id => String(document.getElementById(id)?.value || '').trim();
+    const num = (id, padrao = 0) => {
+        const bruto = val(id).replace(',', '.');
+        if (!bruto) return padrao;
+        const n = Number(bruto);
+        return Number.isFinite(n) ? n : padrao;
+    };
+
+    const nome = val('dbItemNome');
+    if (!nome) {
+        alert('Informe o nome em português.');
+        return;
+    }
+
+    const idOriginal = val('dbItemIdOriginal');
+    const id = idOriginal || slugId_(nome);
+    if (!id) return;
+
+    const item = {
+        id,
+        nome,
+        nome_en: val('dbItemNomeEn'),
+        nome_zh: val('dbItemNomeZh'),
+        categoria: val('dbItemCategoria') || 'Diversos',
+        peso: num('dbItemPeso', 0),
+        preco: num('dbItemPreco', 0),
+        pa: Math.max(0, Math.trunc(num('dbItemPA', 0))),
+        pv: Math.max(0, Math.trunc(num('dbItemPV', 1))),
+        alcance: val('dbItemAlcance'),
+        dano: val('dbItemDano'),
+        municao: val('dbItemMunicao'),
+        uso: val('dbItemUso'),
+        nivelAcesso: val('dbItemAcesso'),
+        material: val('dbItemMaterial'),
+        unidade: val('dbItemUnidade'),
+        destinoLocal: val('dbItemDestino'),
+        imagem: val('dbItemImagem'),
+        descricao: val('dbItemDescricao'),
+        descricao_en: val('dbItemDescricaoEn'),
+        descricao_zh: val('dbItemDescricaoZh')
+    };
+
+    await setDoc(doc(db, 'itens', id), item, { merge: true });
+    document.getElementById('dbItemModal').classList.remove('active');
+    await carregarBancosDeDados();
+};
 
 // Adicionar
 window.adicionarPericia = async () => { const nome = prompt('Nome:'); if (!nome) return; const formula = prompt('Fórmula (ex: FOR+DES):'); if (!formula) return; const tipo = prompt('Tipo (Básica/Profissional):', 'Profissional'); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, nome_en: '', nome_zh: '', formula, tipo, categoria: 'Geral', especializavel: true, penalidadeArmadura: 0 }; await setDoc(doc(db, "pericias", id), nova); periciasDB.push(nova); renderizarBancoPericias(); };
 window.adicionarOrigem = async () => { const nome = prompt('Nome:'); if (!nome) return; const periciasStr = prompt('Perícias básicas (separadas por vírgula):'); const periciasBasicas = periciasStr ? periciasStr.split(',').map(s => s.trim()) : []; const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, nome_en: '', nome_zh: '', periciasBasicas }; await setDoc(doc(db, "origens", id), nova); origensDB.push(nova); popularSelects(); renderizarBancoOrigens(); };
 window.adicionarCarreira = async () => { const nome = prompt('Nome:'); if (!nome) return; const basicasStr = prompt('Perícias básicas (vírgula):'); const profissionaisStr = prompt('Perícias profissionais (vírgula):'); const especializacoesStr = prompt('Especializações (vírgula, vazio se nenhuma):', ''); const periciasBasicas = basicasStr ? basicasStr.split(',').map(s => s.trim()) : []; const periciasProfissionais = profissionaisStr ? profissionaisStr.split(',').map(s => s.trim()) : []; const especializacoes = especializacoesStr ? especializacoesStr.split(',').map(s => s.trim()) : []; const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, nome_en: '', nome_zh: '', periciasBasicas, periciasProfissionais, especializacoes }; await setDoc(doc(db, "carreiras", id), nova); carreirasDB.push(nova); popularSelects(); renderizarBancoCarreiras(); };
 window.adicionarEspecializacao = async () => { const nome = prompt('Nome:'); if (!nome) return; const formula = prompt('Fórmula:'); if (!formula) return; const uso = prompt('Uso (Distância/Corpo a corpo/Defesa/Teste):'); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const nova = { id, nome, nome_en: '', nome_zh: '', formula, tipo: 'Combate', uso }; await setDoc(doc(db, "especializacoes", id), nova); especializacoesDB.push(nova); renderizarBancoEspecializacoes(); };
-window.adicionarItemBanco = async () => { const nome = prompt('Nome:'); if (!nome) return; const peso = parseFloat(prompt('Peso (kg):', '1')) || 1; const pa = parseInt(prompt('PA:', '0')) || 0; const pv = parseInt(prompt('PV:', '1')) || 1; const dano = prompt('Dano (ex: 2d6):', ''); const id = nome.toLowerCase().replace(/[^a-z0-9]/g, '_'); const novo = { id, nome, nome_en: '', nome_zh: '', peso, pa, pv, dano }; await setDoc(doc(db, "itens", id), novo); itensDB.push(novo); renderizarBancoItens(); };
 
 // Editar
 window.editarPericia = async (id) => { const p = periciasDB.find(x => x.id === id); if (!p) return; const nome = prompt('Nome:', p.nome); if (!nome) return; const formula = prompt('Fórmula:', p.formula); const tipo = prompt('Tipo:', p.tipo); await setDoc(doc(db, "pericias", id), { ...p, nome, formula, tipo }); await carregarBancosDeDados(); };
 window.editarOrigem = async (id) => { const o = origensDB.find(x => x.id === id); if (!o) return; const nome = prompt('Nome:', o.nome); if (!nome) return; const periciasStr = prompt('Perícias básicas:', o.periciasBasicas.join(', ')); const periciasBasicas = periciasStr.split(',').map(s => s.trim()); await setDoc(doc(db, "origens", id), { ...o, nome, periciasBasicas }); await carregarBancosDeDados(); popularSelects(); };
 window.editarCarreira = async (id) => { const c = carreirasDB.find(x => x.id === id); if (!c) return; const nome = prompt('Nome:', c.nome); if (!nome) return; const basicasStr = prompt('Perícias básicas:', c.periciasBasicas.join(', ')); const profissionaisStr = prompt('Perícias profissionais:', c.periciasProfissionais.join(', ')); const especializacoesStr = prompt('Especializações:', (c.especializacoes || []).join(', ')); const periciasBasicas = basicasStr.split(',').map(s => s.trim()); const periciasProfissionais = profissionaisStr.split(',').map(s => s.trim()); const especializacoes = especializacoesStr ? especializacoesStr.split(',').map(s => s.trim()) : []; await setDoc(doc(db, "carreiras", id), { ...c, nome, periciasBasicas, periciasProfissionais, especializacoes }); await carregarBancosDeDados(); popularSelects(); };
 window.editarEspecializacao = async (id) => { const e = especializacoesDB.find(x => x.id === id); if (!e) return; const nome = prompt('Nome:', e.nome); if (!nome) return; const formula = prompt('Fórmula:', e.formula); const uso = prompt('Uso:', e.uso); await setDoc(doc(db, "especializacoes", id), { ...e, nome, formula, uso }); await carregarBancosDeDados(); };
-window.editarItemBanco = async (id) => { const i = itensDB.find(x => x.id === id); if (!i) return; const nome = prompt('Nome:', i.nome); if (!nome) return; const peso = parseFloat(prompt('Peso:', i.peso)); const pa = parseInt(prompt('PA:', i.pa)); const pv = parseInt(prompt('PV:', i.pv)); const dano = prompt('Dano:', i.dano || ''); await setDoc(doc(db, "itens", id), { ...i, nome, peso, pa, pv, dano }); await carregarBancosDeDados(); };
 
 // Remover
 window.removerPericia = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "pericias", id)); periciasDB = periciasDB.filter(p => p.id !== id); renderizarBancoPericias(); };
@@ -1940,20 +2117,25 @@ function normalizarLinhaImportacao_(tipo, bruto) {
     }
 
     if (tipo === 'itens') {
+        const usoBruto = bruto.uso ?? bruto.quantidade ?? '';
         return {
             ...comum,
             categoria: String(bruto.categoria || 'Diversos').trim(),
             peso: parseNumero_(bruto.peso, 0),
             pa: parseNumero_(bruto.pa ?? bruto.PA, 0),
             pv: parseNumero_(bruto.pv ?? bruto.PV, 1),
-            dano: String(bruto.dano || '').trim(),
+            preco: parseNumero_(bruto.preco ?? bruto.valor ?? bruto.valorBase, 0),
             alcance: String(bruto.alcance || '').trim(),
-            municao: String(bruto.municao || '').trim(),
-            quantidade: parseNumero_(bruto.quantidade ?? bruto.uso, 0),
-            preco: parseNumero_(bruto.preco, 0),
+            dano: String(bruto.dano || '').trim(),
+            municao: String(bruto.municao || bruto.recurso || '').trim(),
+            uso: String(usoBruto).trim(),
+            quantidade: parseNumero_(bruto.quantidade, 0),
+            destinoLocal: String(bruto.destinoLocal || bruto.destino || bruto.local || '').trim(),
             nivelAcesso: String(bruto.nivelAcesso || bruto.acesso || '').trim(),
             material: String(bruto.material || '').trim(),
-            descricao: String(bruto.descricao || '').trim(),
+            unidade: String(bruto.unidade || '').trim(),
+            imagem: String(bruto.imagem || bruto.urlImagem || '').trim(),
+            descricao: String(bruto.descricao || bruto.observacoes || '').trim(),
             descricao_en: String(bruto.descricao_en || '').trim(),
             descricao_zh: String(bruto.descricao_zh || '').trim()
         };
@@ -2015,7 +2197,7 @@ window.baixarTemplate = (tipo) => {
         origens: 'id;nome;nome_en;nome_zh;periciasBasicas;periciasProfissionais;especializacoes;descricao;descricao_en;descricao_zh\nurbano;Urbano;Urban;城市;costumes|dissimulacao|percepcao;;; ;;;',
         carreiras: 'id;nome;nome_en;nome_zh;periciasBasicas;periciasProfissionais;especializacoes;descricao;descricao_en;descricao_zh\nmilitar;Militar;Military;军事;atletismo|esquiva|combate_desarmado;armeiro|tatica;soldado_infantaria|arma_laser_pesada;;;',
         especializacoes: 'id;nome;nome_en;nome_zh;tipo;uso;formula;descricao;descricao_en;descricao_zh\ncombate_pistola_laser;Combate com Pistola Laser;Laser Pistol Combat;激光手枪战斗;Combate;Distância;DES+POD;;;',
-        itens: 'id;nome;nome_en;nome_zh;categoria;peso;pa;pv;dano;alcance;municao;quantidade;preco;nivelAcesso;material;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;0;5;2d6;60 m;Bateria;0;9000;Restrito;;;;'
+        itens: 'id;nome;nome_en;nome_zh;categoria;peso;preco;pa;pv;alcance;dano;municao;uso;destinoLocal;nivelAcesso;material;unidade;imagem;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;9000;0;5;60 m;2d6;Bateria;100;Armas laser;Restrito;Liga metálica;Peça;;;;'
     };
 
     const conteudo = '\uFEFF' + (templates[tipo] || '');
@@ -2286,6 +2468,8 @@ window.removerEspecializacao = removerEspecializacao;
 window.adicionarItemBanco = adicionarItemBanco;
 window.editarItemBanco = editarItemBanco;
 window.removerItemBanco = removerItemBanco;
+window.fecharItemBancoModal = fecharItemBancoModal;
+window.salvarItemBancoModal = salvarItemBancoModal;
 window.editarRegras = editarRegras;
 window.salvarRegras = salvarRegras;
 window.cancelarEdicaoRegras = cancelarEdicaoRegras;
