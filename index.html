@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v24.1: i18n seguro + compatibilidade cruzada de armas -->
+    <!-- Mesa Estelar v24.2: i18n explícito e seguro + compatibilidade de armas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -302,7 +302,7 @@
                 <button class="tab-btn" id="configTabBtn" onclick="mostrarAba('config', this)" data-i18n="tabConfig" style="display:none;">⚙️ Config</button>
                 <button class="tab-btn hidden" id="bancoTabBtn" onclick="mostrarAba('banco', this)" data-i18n="tabBanco">📚 Banco de Dados</button>
                 <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
-                <button class="tab-btn hidden" id="escudoTabBtn" onclick="mostrarAba('escudo', this)">🛡️ Escudo do Mestre</button>
+                <button class="tab-btn hidden" id="escudoTabBtn" onclick="mostrarAba('escudo', this)" data-i18n="tabGM">🛡️ Escudo do Mestre</button>
             </div>
 
             <!-- ABA MERCADO -->
@@ -311,13 +311,13 @@
                     <h2 data-i18n="marketTitle">🛒 Mercado</h2>
                     <p data-i18n="marketIntro">Compre itens do banco de dados para o personagem atualmente selecionado.</p>
                     <div class="market-toolbar">
-                        <input type="text" id="marketSearch" placeholder="Buscar item..." oninput="renderizarMercado()">
-                        <select id="marketCategory" onchange="renderizarMercado()"><option value="">Todas as categorias</option></select>
+                        <input type="text" id="marketSearch" data-i18n-placeholder="marketSearchPlaceholder" placeholder="Buscar item..." oninput="renderizarMercado()">
+                        <select id="marketCategory" onchange="renderizarMercado()"><option value="" data-i18n="allCategories">Todas as categorias</option></select>
                         <select id="marketDestination">
-                            <option value="mochila">Mochila</option>
-                            <option value="bolso">Bolso</option>
-                            <option value="veiculo">Veículo/Nave</option>
-                            <option value="casa">Casa/Base</option>
+                            <option value="mochila" data-i18n="backpack">Mochila</option>
+                            <option value="bolso" data-i18n="pocket">Bolso</option>
+                            <option value="veiculo" data-i18n="vehicleShip">Veículo/Nave</option>
+                            <option value="casa" data-i18n="homeBase">Casa/Base</option>
                         </select>
                         <div class="market-balance"><span data-i18n="resourcesLabel">Recursos</span>: <span id="marketBalance">0</span></div>
                     </div>
@@ -336,12 +336,12 @@
 
                 <div id="characterSection" class="hidden">
                     <div class="char-tabs">
-                        <button class="char-tab-btn active" onclick="mostrarCharAba('personagem', this)">📄 Personagem</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('pericias', this)">📚 Perícias</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)">🎒 Inventário</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('combate', this)">⚔️ Combate</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)">📔 Anotações</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)">🎲 Rolagem</button>
+                        <button class="char-tab-btn active" onclick="mostrarCharAba('personagem', this)" data-i18n="charTabCharacter">📄 Personagem</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('pericias', this)" data-i18n="charTabSkills">📚 Perícias</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)" data-i18n="charTabInventory">🎒 Inventário</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('combate', this)" data-i18n="charTabCombat">⚔️ Combate</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)" data-i18n="charTabNotes">📔 Anotações</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)" data-i18n="charTabRolls">🎲 Rolagem</button>
                     </div>
 
                     <!-- PERSONAGEM -->
@@ -356,101 +356,101 @@
                             </div>
 
                             <div class="attributes-grid">
-                                <div class="attr-card"><div class="attr-label">FOR</div><div class="attr-value" id="valFOR">10</div><div class="attr-bonus"><input type="number" id="bonusFOR" value="0" onchange="calcularDerivados()"></div></div>
-                                <div class="attr-card"><div class="attr-label">CON</div><div class="attr-value" id="valCON">10</div><div class="attr-bonus"><input type="number" id="bonusCON" value="0" onchange="calcularDerivados()"></div></div>
-                                <div class="attr-card"><div class="attr-label">TAM</div><div class="attr-value" id="valTAM">10</div><div class="attr-bonus"><input type="number" id="bonusTAM" value="0" onchange="calcularDerivados()"></div></div>
-                                <div class="attr-card"><div class="attr-label">DES</div><div class="attr-value" id="valDES">10</div><div class="attr-bonus"><input type="number" id="bonusDES" value="0" onchange="calcularDerivados()"></div></div>
-                                <div class="attr-card"><div class="attr-label">INT</div><div class="attr-value" id="valINT">10</div><div class="attr-bonus"><input type="number" id="bonusINT" value="0" onchange="calcularDerivados()"></div></div>
-                                <div class="attr-card"><div class="attr-label">POD</div><div class="attr-value" id="valPOD">10</div><div class="attr-bonus"><input type="number" id="bonusPOD" value="0" onchange="calcularDerivados()"></div></div>
-                                <div class="attr-card"><div class="attr-label">CAR</div><div class="attr-value" id="valCAR">10</div><div class="attr-bonus"><input type="number" id="bonusCAR" value="0" onchange="calcularDerivados()"></div></div>
+                                <div class="attr-card"><div class="attr-label" data-i18n="FOR">FOR</div><div class="attr-value" id="valFOR">10</div><div class="attr-bonus"><input type="number" id="bonusFOR" value="0" onchange="calcularDerivados()"></div></div>
+                                <div class="attr-card"><div class="attr-label" data-i18n="CON">CON</div><div class="attr-value" id="valCON">10</div><div class="attr-bonus"><input type="number" id="bonusCON" value="0" onchange="calcularDerivados()"></div></div>
+                                <div class="attr-card"><div class="attr-label" data-i18n="TAM">TAM</div><div class="attr-value" id="valTAM">10</div><div class="attr-bonus"><input type="number" id="bonusTAM" value="0" onchange="calcularDerivados()"></div></div>
+                                <div class="attr-card"><div class="attr-label" data-i18n="DES">DES</div><div class="attr-value" id="valDES">10</div><div class="attr-bonus"><input type="number" id="bonusDES" value="0" onchange="calcularDerivados()"></div></div>
+                                <div class="attr-card"><div class="attr-label" data-i18n="INT">INT</div><div class="attr-value" id="valINT">10</div><div class="attr-bonus"><input type="number" id="bonusINT" value="0" onchange="calcularDerivados()"></div></div>
+                                <div class="attr-card"><div class="attr-label" data-i18n="POD">POD</div><div class="attr-value" id="valPOD">10</div><div class="attr-bonus"><input type="number" id="bonusPOD" value="0" onchange="calcularDerivados()"></div></div>
+                                <div class="attr-card"><div class="attr-label" data-i18n="CAR">CAR</div><div class="attr-value" id="valCAR">10</div><div class="attr-bonus"><input type="number" id="bonusCAR" value="0" onchange="calcularDerivados()"></div></div>
                             </div>
 
                             <div class="derived-stats">
-                                <div class="stat-box"><div class="stat-label">Pontos de Ação</div><div class="stat-value" id="statPA">1</div></div>
-                                <div class="stat-box"><div class="stat-label">Iniciativa</div><div class="stat-value" id="statIniciativa">20</div></div>
-                                <div class="stat-box"><div class="stat-label">Mod. Dano</div><div class="stat-value" id="statModDano">-1d2</div></div>
-                                <div class="stat-box"><div class="stat-label">Mod. Experiência</div><div class="stat-value" id="statModExp">0</div></div>
-                                <div class="stat-box"><div class="stat-label">Taxa de Recuperação</div><div class="stat-value" id="statTaxaRecup">2</div></div>
-                                <div class="stat-box"><div class="stat-label">Movimento</div><div class="stat-value" id="statMovimento">6</div></div>
-                                <div class="stat-box"><div class="stat-label">Pontos de Sorte</div><div class="stat-value"><input type="number" id="editPontosSorte" min="0" step="1" value="1" onchange="salvarPontosSorte()" style="width:100%;text-align:center;"></div></div>
-                                <div class="stat-box hidden" id="statMagiaBox"><div class="stat-label">Pontos de Magia</div><div class="stat-value" id="statPontosMagia">—</div></div>
-                                <div class="stat-box"><div class="stat-label">Altura</div><div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div></div>
-                                <div class="stat-box"><div class="stat-label">Peso</div><div class="stat-value"><input type="number" id="editPeso" onchange="salvarAlturaPeso()"></div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="pa">Pontos de Ação</div><div class="stat-value" id="statPA">1</div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="iniciativa">Iniciativa</div><div class="stat-value" id="statIniciativa">20</div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="modDano">Mod. Dano</div><div class="stat-value" id="statModDano">-1d2</div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="modExp">Mod. Experiência</div><div class="stat-value" id="statModExp">0</div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="taxaRecup">Taxa de Recuperação</div><div class="stat-value" id="statTaxaRecup">2</div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="movement">Movimento</div><div class="stat-value" id="statMovimento">6</div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="pontosSorte">Pontos de Sorte</div><div class="stat-value"><input type="number" id="editPontosSorte" min="0" step="1" value="1" onchange="salvarPontosSorte()" style="width:100%;text-align:center;"></div></div>
+                                <div class="stat-box hidden" id="statMagiaBox"><div class="stat-label" data-i18n="magicPoints">Pontos de Magia</div><div class="stat-value" id="statPontosMagia">—</div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="altura">Altura</div><div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="peso">Peso</div><div class="stat-value"><input type="number" id="editPeso" onchange="salvarAlturaPeso()"></div></div>
                             </div>
                         </div>
 
                         <div class="form-section">
-                            <h3>Editar Personagem</h3>
-                            <div class="form-group"><label>Nome:</label><input type="text" id="editName"></div>
-                            <div class="form-group"><label>Raça:</label><input type="text" id="editRace" value="Humano"></div>
-                            <div class="form-group"><label>Gênero:</label><select id="editSex"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Hermafrodita">Hermafrodita</option><option value="Andrógeno">Andrógeno</option><option value="Neutro">Neutro</option></select></div>
-                            <div class="form-group"><label>Imagem do Personagem (URL):</label><input type="url" id="editCharImage" placeholder="https://..." oninput="previewImagemPersonagem()"></div>
-                            <div class="form-group"><label>Ou fazer upload:</label><input type="file" id="editCharImageFile" accept="image/*" onchange="handleCharacterImageUpload(event)"><small id="charImageUploadStatus" style="display:block; opacity:.75; margin-top:6px;"></small></div>
+                            <h3 data-i18n="editChar2">Editar Personagem</h3>
+                            <div class="form-group"><label data-i18n="nameLabel">Nome:</label><input type="text" id="editName"></div>
+                            <div class="form-group"><label data-i18n="race">Raça:</label><input type="text" id="editRace" value="Humano"></div>
+                            <div class="form-group"><label data-i18n="genderLabel">Gênero:</label><select id="editSex"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Hermafrodita">Hermafrodita</option><option value="Andrógeno">Andrógeno</option><option value="Neutro">Neutro</option></select></div>
+                            <div class="form-group"><label data-i18n="charImageUrl">Imagem do Personagem (URL):</label><input type="url" id="editCharImage" placeholder="https://..." oninput="previewImagemPersonagem()"></div>
+                            <div class="form-group"><label data-i18n="orUpload">Ou fazer upload:</label><input type="file" id="editCharImageFile" accept="image/*" onchange="handleCharacterImageUpload(event)"><small id="charImageUploadStatus" style="display:block; opacity:.75; margin-top:6px;"></small></div>
                             <div class="form-group"><div class="avatar" id="editCharImagePreview" style="width:120px;height:120px;"><span>👤</span></div></div>
-                            <div class="form-group"><label>Origem:</label><select id="editOrigin"></select></div>
-                            <div class="form-group"><label>Carreira:</label><select id="editCareer"></select></div>
-                            <div class="form-group"><label>Tipo Corporal:</label><select id="editBodyType" onchange="calcularAlturaPesoDoFormulario()"><option value="Leve">Leve</option><option value="Médio" selected>Médio</option><option value="Pesado">Pesado</option></select></div>
+                            <div class="form-group"><label data-i18n="origin">Origem:</label><select id="editOrigin"></select></div>
+                            <div class="form-group"><label data-i18n="career">Carreira:</label><select id="editCareer"></select></div>
+                            <div class="form-group"><label data-i18n="bodyType">Tipo Corporal:</label><select id="editBodyType" onchange="calcularAlturaPesoDoFormulario()"><option value="Leve">Leve</option><option value="Médio" selected>Médio</option><option value="Pesado">Pesado</option></select></div>
                             
                             <div class="total-points"><div class="value" id="totalPoints">70</div><div class="limit">/ 80 pontos</div></div>
                             
                             <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; margin:20px 0;">
-                                <div><label>FOR</label><input type="number" id="editFOR" min="3" max="18" value="10" oninput="validarAtributos()"></div>
-                                <div><label>CON</label><input type="number" id="editCON" min="3" max="18" value="10" oninput="validarAtributos()"></div>
-                                <div><label>TAM</label><input type="number" id="editTAM" min="6" max="18" value="10" oninput="validarAtributos(); calcularAlturaPesoDoFormulario()"></div>
-                                <div><label>DES</label><input type="number" id="editDES" min="3" max="18" value="10" oninput="validarAtributos()"></div>
-                                <div><label>INT</label><input type="number" id="editINT" min="6" max="18" value="10" oninput="validarAtributos()"></div>
-                                <div><label>POD</label><input type="number" id="editPOD" min="3" max="18" value="10" oninput="validarAtributos()"></div>
-                                <div><label>CAR</label><input type="number" id="editCAR" min="3" max="18" value="10" oninput="validarAtributos()"></div>
+                                <div><label data-i18n="FOR">FOR</label><input type="number" id="editFOR" min="3" max="18" value="10" oninput="validarAtributos()"></div>
+                                <div><label data-i18n="CON">CON</label><input type="number" id="editCON" min="3" max="18" value="10" oninput="validarAtributos()"></div>
+                                <div><label data-i18n="TAM">TAM</label><input type="number" id="editTAM" min="6" max="18" value="10" oninput="validarAtributos(); calcularAlturaPesoDoFormulario()"></div>
+                                <div><label data-i18n="DES">DES</label><input type="number" id="editDES" min="3" max="18" value="10" oninput="validarAtributos()"></div>
+                                <div><label data-i18n="INT">INT</label><input type="number" id="editINT" min="6" max="18" value="10" oninput="validarAtributos()"></div>
+                                <div><label data-i18n="POD">POD</label><input type="number" id="editPOD" min="3" max="18" value="10" oninput="validarAtributos()"></div>
+                                <div><label data-i18n="CAR">CAR</label><input type="number" id="editCAR" min="3" max="18" value="10" oninput="validarAtributos()"></div>
                             </div>
                             
-                            <button class="btn-save" onclick="salvarPersonagem()">💾 Salvar</button>
+                            <button class="btn-save" onclick="salvarPersonagem()" data-i18n="saveSimple">💾 Salvar</button>
                         </div>
                     </div>
 
                     <!-- PERÍCIAS -->
                     <div id="char-pericias" class="char-tab-content">
                         <div class="form-section">
-                            <h3>📚 Perícias</h3>
+                            <h3 data-i18n="skillsTitle">📚 Perícias</h3>
                             <div class="etapa-indicator">
-                                <h4>Investimento: <span id="periciasEtapaLabel">Origem</span></h4>
+                                <h4><span data-i18n="investmentLabel">Investimento:</span> <span id="periciasEtapaLabel">Origem</span></h4>
                                 <div class="pontos-restantes" id="pontosRestantesBox">
-                                    Pontos disponíveis: <span id="periciasPontosRestantes">100</span> / <span id="periciasPontosTotal">100</span>
-                                    <br><small>Total investido nesta categoria: <span id="periciasTotalInvestido">0</span></small>
+                                    <span data-i18n="availablePoints">Pontos disponíveis:</span> <span id="periciasPontosRestantes">100</span> / <span id="periciasPontosTotal">100</span>
+                                    <br><small><span data-i18n="investedCategory">Total investido nesta categoria:</span> <span id="periciasTotalInvestido">0</span></small>
                                 </div>
                             </div>
                             
                             <div class="form-group">
-                                <label>Ver perícias de:</label>
+                                <label data-i18n="viewSkillsFrom">Ver perícias de:</label>
                                 <select id="periciasEtapa" onchange="mudarEtapaPericias()">
-                                    <option value="origem">Origem</option>
-                                    <option value="carreira">Carreira</option>
-                                    <option value="hobbie">Hobbie</option>
-                                    <option value="todas">Todas</option>
+                                    <option value="origem" data-i18n="originOption">Origem</option>
+                                    <option value="carreira" data-i18n="careerOption">Carreira</option>
+                                    <option value="hobbie" data-i18n="hobbyOption">Hobbie</option>
+                                    <option value="todas" data-i18n="allOption">Todas</option>
                                 </select>
                                 <small style="display:block;color:#aaa;margin-top:8px;">O limite de treino vale por categoria de investimento. Uma mesma perícia pode receber pontos em Origem, Carreira e Hobbie.</small>
                             </div>
 
-                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias com Investimento</h4>
+                            <h4 style="color: #fff; margin: 20px 0 10px 0;"> <span data-i18n="investedSkills">Perícias com Investimento</span></h4>
                             <table class="skills-table">
-                                <thead><tr><th>Perícia</th><th>Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
+                                <thead><tr><th data-i18n="skillCol">Perícia</th><th data-i18n="formulaCol">Fórmula</th><th data-i18n="baseCol">Base</th><th data-i18n="trainingCol">Treino</th><th data-i18n="totalCol">Total</th></tr></thead>
                                 <tbody id="corpoPericiasInvestidas"></tbody>
                             </table>
 
-                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias Básicas Disponíveis</h4>
+                            <h4 style="color: #fff; margin: 20px 0 10px 0;"> <span data-i18n="basicSkillsAvailable">Perícias Básicas Disponíveis</span></h4>
                             <table class="skills-table">
-                                <thead><tr><th>Perícia</th><th>Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
+                                <thead><tr><th data-i18n="skillCol">Perícia</th><th data-i18n="formulaCol">Fórmula</th><th data-i18n="baseCol">Base</th><th data-i18n="trainingCol">Treino</th><th data-i18n="totalCol">Total</th></tr></thead>
                                 <tbody id="corpoPericiasBasicas"></tbody>
                             </table>
 
-                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Perícias Profissionais Disponíveis</h4>
+                            <h4 style="color: #fff; margin: 20px 0 10px 0;"> <span data-i18n="professionalSkillsAvailable">Perícias Profissionais Disponíveis</span></h4>
                             <table class="skills-table">
-                                <thead><tr><th>Perícia</th><th>Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
+                                <thead><tr><th data-i18n="skillCol">Perícia</th><th data-i18n="formulaCol">Fórmula</th><th data-i18n="baseCol">Base</th><th data-i18n="trainingCol">Treino</th><th data-i18n="totalCol">Total</th></tr></thead>
                                 <tbody id="corpoPericiasProfissionais"></tbody>
                             </table>
 
-                            <h4 style="color: #fff; margin: 20px 0 10px 0;">Especializações</h4>
+                            <h4 style="color: #fff; margin: 20px 0 10px 0;"> <span data-i18n="specializations">Especializações</span></h4>
                             <table class="skills-table">
-                                <thead><tr><th>Especialização</th><th>Tipo / Fórmula</th><th>Base</th><th>Treino</th><th>Total</th></tr></thead>
+                                <thead><tr><th data-i18n="specializationCol">Especialização</th><th data-i18n="typeFormulaCol">Tipo / Fórmula</th><th data-i18n="baseCol">Base</th><th data-i18n="trainingCol">Treino</th><th data-i18n="totalCol">Total</th></tr></thead>
                                 <tbody id="corpoEspecializacoes"></tbody>
                             </table>
 
@@ -464,7 +464,7 @@
                                 <div id="psiPowersContainer"></div>
                             </div>
 
-                            <button class="btn-save" onclick="salvarPericias()" style="margin-top: 20px;">💾 Salvar Perícias</button>
+                            <button class="btn-save" onclick="salvarPericias()" style="margin-top: 20px;" data-i18n="saveSkills">💾 Salvar Perícias</button>
                         </div>
                     </div>
 
@@ -472,7 +472,7 @@
                     <div id="char-inventario" class="char-tab-content">
                         <div class="form-section">
                             <div class="inventory-title-row">
-                                <h3>🎒 Inventário</h3>
+                                <h3 data-i18n="inventoryTitle">🎒 Inventário</h3>
                                 <div class="inventory-resources-box">
                                     <label for="editRecursos" data-i18n="resourcesLabel">Recursos</label>
                                     <input type="number" id="editRecursos" min="0" step="1" onchange="salvarRecursos()" title="Somente o mestre pode alterar diretamente os recursos">
@@ -512,26 +512,26 @@
                     <!-- COMBATE -->
                     <div id="char-combate" class="char-tab-content">
                         <div class="form-section">
-                            <h3>⚔️ Combate</h3>
+                            <h3 data-i18n="combatTitle">⚔️ Combate</h3>
                             <div class="combat-grid">
                                 <div class="combat-section">
                                     <div class="combat-title-row">
-                                        <h4>Pontos de Vida</h4>
-                                        <span class="combat-title-col">PV Máx</span>
-                                        <span class="combat-title-col">PV Atual</span>
+                                        <h4 data-i18n="hpTitle">Pontos de Vida</h4>
+                                        <span class="combat-title-col" data-i18n="maxHp">PV Máx</span>
+                                        <span class="combat-title-col" data-i18n="currentHp">PV Atual</span>
                                     </div>
                                     <div id="hitLocations"></div>
                                 </div>
                                 <div class="combat-section">
                                     <div class="combat-title-row">
-                                        <h4>Armadura (PA)</h4>
+                                        <h4 data-i18n="armorTitle">Armadura (PA)</h4>
                                         <span></span>
                                         <span></span>
                                     </div>
                                     <div id="armorLocations"></div>
                                 </div>
                                 <div class="combat-section">
-                                    <h4>Fadiga</h4>
+                                    <h4 data-i18n="fatigueTitle">Fadiga</h4>
                                     <select id="fadigaLevel" onchange="salvarFadiga()">
                                         <option value="Fresh">Descansado (Fresh)</option>
                                         <option value="Winded">Ofegante (Winded)</option>
@@ -549,14 +549,14 @@
                             </div>
 
                             <div class="combat-section" style="margin-top:20px;">
-                                <h4>🎯 Painel de Combate</h4>
+                                <h4 data-i18n="combatPanel">🎯 Painel de Combate</h4>
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;align-items:end;">
                                     <div class="form-group" style="margin-bottom:0;">
-                                        <label>Perícia de combate:</label>
+                                        <label data-i18n="combatSkillLabel">Perícia de combate:</label>
                                         <select id="combatSkillSelect" onchange="atualizarPainelCombate()"></select>
                                     </div>
                                     <div class="form-group" style="margin-bottom:0;">
-                                        <label>Dificuldade circunstancial:</label>
+                                        <label data-i18n="circDifficulty">Dificuldade circunstancial:</label>
                                         <select id="combatDifficultySelect">
                                             <option value="muito_facil">Muito Fácil</option>
                                             <option value="facil">Fácil</option>
@@ -567,35 +567,35 @@
                                         </select>
                                     </div>
                                     <div class="form-group" style="margin-bottom:0;">
-                                        <label>Equipamento:</label>
+                                        <label data-i18n="equipmentLabel">Equipamento:</label>
                                         <select id="combatWeaponSelect" onchange="mostrarDanoEquipamentoCombate()"></select>
                                     </div>
                                     <div style="padding:12px 15px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.30);border-radius:9px;">
-                                        <span style="color:#aaa;">Valor:</span>
+                                        <span style="color:#aaa;" data-i18n="valueLabel">Valor:</span>
                                         <strong id="combatSkillValue" style="color:#00d4ff;font-size:1.25em;">—</strong>
                                     </div>
                                     <div style="padding:12px 15px;background:rgba(231,76,60,0.10);border:1px solid rgba(231,76,60,0.35);border-radius:9px;">
-                                        <span style="color:#aaa;">Dano:</span>
+                                        <span style="color:#aaa;" data-i18n="damageLabel">Dano:</span>
                                         <strong id="combatWeaponDamage" style="color:#ff8b7d;font-size:1.2em;">—</strong>
                                     </div>
                                     <div style="padding:10px 12px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.28);border-radius:9px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
                                         <div>
-                                            <span style="color:#aaa;display:block;font-size:.88em;">Munição / Carga</span>
+                                            <span style="color:#aaa;display:block;font-size:.88em;" data-i18n="ammoCharge">Munição / Carga</span>
                                             <strong id="combatAmmoStatus" style="color:#7ee2a8;font-size:1.05em;">—</strong>
                                         </div>
-                                        <button id="combatReloadBtn" onclick="recarregarArmaCombate()" style="display:none;border:none;border-radius:8px;padding:8px 11px;background:#2980b9;color:#fff;font-weight:700;cursor:pointer;">🔋 Recarregar</button>
+                                        <button id="combatReloadBtn" onclick="recarregarArmaCombate()" style="display:none;border:none;border-radius:8px;padding:8px 11px;background:#2980b9;color:#fff;font-weight:700;cursor:pointer;" data-i18n="reloadBtn">🔋 Recarregar</button>
                                     </div>
                                     <div style="padding:12px 15px;background:rgba(255,193,7,0.10);border:1px solid rgba(255,193,7,0.35);border-radius:9px;text-align:center;">
-                                        <span style="color:#aaa;display:block;">Pontos de Ação</span>
+                                        <span style="color:#aaa;display:block;" data-i18n="pa">Pontos de Ação</span>
                                         <strong id="combatActionPoints" style="color:#ffd166;font-size:1.45em;">—</strong>
                                     </div>
                                 </div>
 
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px;">
-                                    <button class="dice-btn" onclick="rolarCombateD100()">🎲 D100 de Combate</button>
-                                    <button class="dice-btn" onclick="rolarDanoCombate()" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">💥 Dano</button>
-                                    <button class="dice-btn" onclick="rolarLocalizacaoCombate()" style="background:linear-gradient(135deg,#3498db,#2471a3);">🎯 Localização D20</button>
-                                    <button class="dice-btn" onclick="rolarIniciativaCombate()" style="background:linear-gradient(135deg,#f39c12,#d68910);">⚡ Iniciativa</button>
+                                    <button class="dice-btn" onclick="rolarCombateD100()" data-i18n="combatRollBtn">🎲 D100 de Combate</button>
+                                    <button class="dice-btn" onclick="rolarDanoCombate()" style="background:linear-gradient(135deg,#e74c3c,#c0392b);" data-i18n="damageBtn">💥 Dano</button>
+                                    <button class="dice-btn" onclick="rolarLocalizacaoCombate()" style="background:linear-gradient(135deg,#3498db,#2471a3);" data-i18n="hitLocationBtn">🎯 Localização D20</button>
+                                    <button class="dice-btn" onclick="rolarIniciativaCombate()" style="background:linear-gradient(135deg,#f39c12,#d68910);" data-i18n="initiativeBtn">⚡ Iniciativa</button>
                                 </div>
 
                                 <div id="combatRollSummary" style="margin-top:15px;padding:14px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#ddd;min-height:52px;">
@@ -631,17 +631,17 @@
                     <!-- ROLAGEM -->
                     <div id="char-rolagem" class="char-tab-content">
                         <div class="form-section">
-                            <h3>🎲 Rolagem de Dados</h3>
+                            <h3 data-i18n="diceRollTitle">🎲 Rolagem de Dados</h3>
                             
                             <div class="skill-test-section">
-                                <h4>📊 Teste de Perícia</h4>
+                                <h4 data-i18n="skillTestTitle">📊 Teste de Perícia</h4>
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
                                     <div class="form-group">
-                                        <label>Perícia:</label>
+                                        <label data-i18n="skillLabel">Perícia:</label>
                                         <select id="skillSelect" onchange="mostrarValorPericia()"></select>
                                     </div>
                                     <div class="form-group">
-                                        <label>Dificuldade circunstancial:</label>
+                                        <label data-i18n="circDifficulty">Dificuldade circunstancial:</label>
                                         <select id="skillDifficultySelect">
                                             <option value="muito_facil">Muito Fácil</option>
                                             <option value="facil">Fácil</option>
@@ -920,7 +920,7 @@
                 </div>
                 <div>
                     <div class="form-group"><label>Imagem (URL, opcional):</label><input type="text" id="dbItemImagem" oninput="atualizarPreviewItemBanco()"></div>
-                    <div class="form-group"><label>Ou fazer upload:</label><input type="file" id="dbItemImagemArquivo" accept="image/*" onchange="handleDbItemImageUpload(event)"></div>
+                    <div class="form-group"><label data-i18n="orUpload">Ou fazer upload:</label><input type="file" id="dbItemImagemArquivo" accept="image/*" onchange="handleDbItemImageUpload(event)"></div>
                     <small style="color:#aaa;">A imagem ficará vinculada ao item e poderá ser usada automaticamente no inventário e no futuro Mercado.</small>
                 </div>
             </div>
@@ -1038,7 +1038,75 @@ const traducoes = {
     pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', tabMercado: '🛒 Mercado', marketTitle: '🛒 Mercado', marketIntro: 'Compre itens do banco de dados para o personagem atualmente selecionado.', resourcesLabel: 'Recursos', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: ' Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Origem:', pointsEtapa3: 'Carreira:', pointsEtapa4: 'Hobbie:', saveConfig: ' Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: ' Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
     en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', tabMercado: '🛒 Market', marketTitle: '🛒 Market', marketIntro: 'Buy database items for the currently selected character.', resourcesLabel: 'Resources', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Origin:', pointsEtapa3: 'Career:', pointsEtapa4: 'Hobby:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: ' Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
     zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: ' 角色卡', tabConfig: '️ 设置', tabBanco: ' 数据库', tabRegras: ' 规则', tabMercado: '🛒 市场', marketTitle: '🛒 市场', marketIntro: '为当前选择的角色购买数据库中的物品。', resourcesLabel: '资源', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '起源：', pointsEtapa3: '职业：', pointsEtapa4: '爱好：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
+
 };
+
+Object.assign(traducoes.pt, {
+  charTabCharacter:'📄 Personagem', charTabSkills:'📚 Perícias', charTabInventory:'🎒 Inventário', charTabCombat:'⚔️ Combate',
+  charTabNotes:'📔 Anotações', charTabRolls:'🎲 Rolagem', tabGM:'🛡️ Escudo do Mestre',
+  editChar2:'Editar Personagem', nameLabel:'Nome:', genderLabel:'Gênero:', charImageUrl:'Imagem do Personagem (URL):',
+  orUpload:'Ou fazer upload:', saveSimple:'💾 Salvar', skillsTitle:'📚 Perícias', investmentLabel:'Investimento:',
+  availablePoints:'Pontos disponíveis:', investedCategory:'Total investido nesta categoria:', viewSkillsFrom:'Ver perícias de:',
+  originOption:'Origem', careerOption:'Carreira', hobbyOption:'Hobbie', allOption:'Todas',
+  investedSkills:'Perícias com Investimento', basicSkillsAvailable:'Perícias Básicas Disponíveis',
+  professionalSkillsAvailable:'Perícias Profissionais Disponíveis', specializations:'Especializações',
+  skillCol:'Perícia', formulaCol:'Fórmula', baseCol:'Base', trainingCol:'Treino', totalCol:'Total',
+  specializationCol:'Especialização', typeFormulaCol:'Tipo / Fórmula', saveSkills:'💾 Salvar Perícias',
+  inventoryTitle:'🎒 Inventário', combatTitle:'⚔️ Combate', hpTitle:'Pontos de Vida', maxHp:'PV Máx',
+  currentHp:'PV Atual', armorTitle:'Armadura (PA)', fatigueTitle:'Fadiga', combatPanel:'🎯 Painel de Combate',
+  combatSkillLabel:'Perícia de combate:', circDifficulty:'Dificuldade circunstancial:', equipmentLabel:'Equipamento:',
+  valueLabel:'Valor:', damageLabel:'Dano:', ammoCharge:'Munição / Carga', reloadBtn:'🔋 Recarregar',
+  combatRollBtn:'🎲 D100 de Combate', damageBtn:'💥 Dano', hitLocationBtn:'🎯 Localização D20',
+  initiativeBtn:'⚡ Iniciativa', diceRollTitle:'🎲 Rolagem de Dados', skillTestTitle:'📊 Teste de Perícia', skillLabel:'Perícia:',
+  movement:'Movimento', magicPoints:'Pontos de Magia', marketSearchPlaceholder:'Buscar item...', allCategories:'Todas as categorias',
+  backpack:'Mochila', pocket:'Bolso', vehicleShip:'Veículo/Nave', homeBase:'Casa/Base',
+  noEquipment:'Nenhum equipamento', fists:'Punhos', noCompatibleEquipment:'Nenhum equipamento compatível',
+  mismatch1:'⚠️ +1 grau', mismatch2:'⚠️ +2 graus'
+});
+Object.assign(traducoes.en, {
+  charTabCharacter:'📄 Character', charTabSkills:'📚 Skills', charTabInventory:'🎒 Inventory', charTabCombat:'⚔️ Combat',
+  charTabNotes:'📔 Notes', charTabRolls:'🎲 Rolls', tabGM:'🛡️ GM Screen',
+  editChar2:'Edit Character', nameLabel:'Name:', genderLabel:'Gender:', charImageUrl:'Character Image (URL):',
+  orUpload:'Or upload:', saveSimple:'💾 Save', skillsTitle:'📚 Skills', investmentLabel:'Investment:',
+  availablePoints:'Available points:', investedCategory:'Total invested in this category:', viewSkillsFrom:'View skills from:',
+  originOption:'Origin', careerOption:'Career', hobbyOption:'Hobby', allOption:'All',
+  investedSkills:'Invested Skills', basicSkillsAvailable:'Available Basic Skills',
+  professionalSkillsAvailable:'Available Professional Skills', specializations:'Specializations',
+  skillCol:'Skill', formulaCol:'Formula', baseCol:'Base', trainingCol:'Training', totalCol:'Total',
+  specializationCol:'Specialization', typeFormulaCol:'Type / Formula', saveSkills:'💾 Save Skills',
+  inventoryTitle:'🎒 Inventory', combatTitle:'⚔️ Combat', hpTitle:'Hit Points', maxHp:'Max HP',
+  currentHp:'Current HP', armorTitle:'Armor (AP)', fatigueTitle:'Fatigue', combatPanel:'🎯 Combat Panel',
+  combatSkillLabel:'Combat skill:', circDifficulty:'Circumstantial difficulty:', equipmentLabel:'Equipment:',
+  valueLabel:'Value:', damageLabel:'Damage:', ammoCharge:'Ammo / Charge', reloadBtn:'🔋 Reload',
+  combatRollBtn:'🎲 Combat D100', damageBtn:'💥 Damage', hitLocationBtn:'🎯 Hit Location D20',
+  initiativeBtn:'⚡ Initiative', diceRollTitle:'🎲 Dice Roller', skillTestTitle:'📊 Skill Test', skillLabel:'Skill:',
+  movement:'Movement', magicPoints:'Magic Points', marketSearchPlaceholder:'Search item...', allCategories:'All categories',
+  backpack:'Backpack', pocket:'Pocket', vehicleShip:'Vehicle/Ship', homeBase:'Home/Base',
+  noEquipment:'No equipment', fists:'Fists', noCompatibleEquipment:'No compatible equipment',
+  mismatch1:'⚠️ +1 step', mismatch2:'⚠️ +2 steps'
+});
+Object.assign(traducoes.zh, {
+  charTabCharacter:'📄 角色', charTabSkills:'📚 技能', charTabInventory:'🎒 物品栏', charTabCombat:'⚔️ 战斗',
+  charTabNotes:'📔 笔记', charTabRolls:'🎲 掷骰', tabGM:'🛡️ 主持人屏幕',
+  editChar2:'编辑角色', nameLabel:'姓名：', genderLabel:'性别：', charImageUrl:'角色图片（URL）：',
+  orUpload:'或上传：', saveSimple:'💾 保存', skillsTitle:'📚 技能', investmentLabel:'投入：',
+  availablePoints:'可用点数：', investedCategory:'本类别已投入：', viewSkillsFrom:'查看技能来源：',
+  originOption:'起源', careerOption:'职业', hobbyOption:'爱好', allOption:'全部',
+  investedSkills:'已投入技能', basicSkillsAvailable:'可用基础技能',
+  professionalSkillsAvailable:'可用专业技能', specializations:'专长',
+  skillCol:'技能', formulaCol:'公式', baseCol:'基础', trainingCol:'训练', totalCol:'总值',
+  specializationCol:'专长', typeFormulaCol:'类型／公式', saveSkills:'💾 保存技能',
+  inventoryTitle:'🎒 物品栏', combatTitle:'⚔️ 战斗', hpTitle:'生命值', maxHp:'最大生命',
+  currentHp:'当前生命', armorTitle:'护甲（AP）', fatigueTitle:'疲劳', combatPanel:'🎯 战斗面板',
+  combatSkillLabel:'战斗技能：', circDifficulty:'情境难度：', equipmentLabel:'装备：',
+  valueLabel:'数值：', damageLabel:'伤害：', ammoCharge:'弹药／能量', reloadBtn:'🔋 装填',
+  combatRollBtn:'🎲 战斗D100', damageBtn:'💥 伤害', hitLocationBtn:'🎯 命中部位D20',
+  initiativeBtn:'⚡ 先攻', diceRollTitle:'🎲 掷骰', skillTestTitle:'📊 技能检定', skillLabel:'技能：',
+  movement:'移动', magicPoints:'魔法点', marketSearchPlaceholder:'搜索物品...', allCategories:'全部类别',
+  backpack:'背包', pocket:'口袋', vehicleShip:'载具／飞船', homeBase:'住所／基地',
+  noEquipment:'无装备', fists:'拳脚', noCompatibleEquipment:'没有兼容装备',
+  mismatch1:'⚠️ +1级', mismatch2:'⚠️ +2级'
+});
 
 function getNome(item) {
     const key = `nome_${idiomaAtual}`;
@@ -1184,6 +1252,17 @@ function somCaixaRegistradora_() {
 }
 
 
+
+function formatarFormulaIdioma_(formula) {
+    let txt = String(formula || '').replace(/\*/g,'×');
+    const mapa = idiomaAtual === 'en'
+      ? {FOR:'STR',CON:'CON',TAM:'SIZ',DES:'DEX',INT:'INT',POD:'POW',CAR:'CHA'}
+      : idiomaAtual === 'zh'
+      ? {FOR:'力量',CON:'体质',TAM:'体型',DES:'敏捷',INT:'智力',POD:'意志',CAR:'魅力'}
+      : {FOR:'FOR',CON:'CON',TAM:'TAM',DES:'DES',INT:'INT',POD:'POD',CAR:'CAR'};
+    for (const [a,b] of Object.entries(mapa)) txt = txt.replace(new RegExp(a,'g'), b);
+    return txt;
+}
 
 function getDescricao(item) {
     if (!item) return '';
@@ -1637,7 +1716,7 @@ window.gastarPontoSorte = async () => {
 
 function atualizarVisualizacao(data) {
     document.getElementById('charName').textContent = data.nome || '-';
-    document.getElementById('charRace').textContent = traduzirRacaExibicao_(data.raca || '-');
+    document.getElementById('charRace').textContent = data.raca || '-';
     const origemObj = origensDB.find(o => o.id === data.origem);
     const carreiraObj = carreirasDB.find(c => c.id === data.carreira);
     document.getElementById('charOrigin').textContent = origemObj ? getNome(origemObj) : '-';
@@ -2310,6 +2389,58 @@ function obterPericiasCombate_(char) {
     ];
 }
 
+
+function familiaArmaCompat_(item) {
+    const n = normalizarTextoCombate_([item?.id,item?.nome,item?.nome_en,item?.nome_zh,item?.descricao].filter(Boolean).join(' '));
+    if (/escudo|shield/.test(n)) return 'escudo';
+    if (/granada|grenade|arremesso|throw/.test(n)) return 'arremesso';
+    if (/arco|bow/.test(n)) return 'arco';
+    if (/escopeta|shotgun/.test(n)) return 'escopeta';
+    if (/submetralhadora|submachine/.test(n)) return 'submetralhadora';
+    if (/sniper|precisao|precision|anti.?material/.test(n)) return 'precisao';
+    if (/laser/.test(n) && /pesad|heavy/.test(n)) return 'laser_pesada';
+    if (/laser/.test(n) && /pistola|pistol|palm/.test(n)) return 'laser_pistola';
+    if (/laser/.test(n) && /rifle|fuzil|carabina|carbine/.test(n)) return 'laser_rifle';
+    if (/blaster|phaser|disrupt|disintegr|sonic/.test(n)) return 'energia';
+    if (/pistola|revolver|pistol|handgun|\.38|9mm|\.45|\.357|\.44/.test(n)) return 'pistola';
+    if (/fuzil|rifle|carabina|carbine|5\.56|7\.62/.test(n)) return 'rifle';
+    if (/metralhadora pesada|heavy machine|canhao portatil|launcher/.test(n)) return 'pesada';
+    if (/plasma|vibro/.test(n) && /espada|sword|blade|lamina/.test(n)) return 'plasma_vibro';
+    if (/lanca|alabarda|spear|halberd|polearm/.test(n)) return 'haste';
+    if (/faca|adaga|dagger|knife/.test(n)) return 'branca_curta';
+    if (/espada|sabre|saber|machado|sword|axe/.test(n)) return 'branca_longa';
+    if (itemEhCorpoACorpo_(item)) return 'improvisada';
+    return 'desconhecida';
+}
+const FAMILIAS_ESPECIALIZACAO_COMPAT_ = {
+  armas_brancas_curtas:['branca_curta'], armas_brancas_longas:['branca_longa'], armas_haste:['haste'],
+  armas_improvisadas:['improvisada'], armas_arremesso:['arremesso'], arqueiro:['arco'],
+  pistolas_revolveres:['pistola'], fuzis_carabinas:['rifle'], escopetas:['escopeta'],
+  submetralhadoras:['submetralhadora'], armas_pesadas:['pesada'], atirador_elite:['precisao'],
+  combate_pistola_laser:['laser_pistola'], pistolas_laser:['laser_pistola'], rifles_laser:['laser_rifle'],
+  arma_laser_pesada:['laser_pesada'], armas_energia:['energia'], esgrima_plasma_vibro:['plasma_vibro']
+};
+function penalidadeCompatibilidadeArma_(pericia, item) {
+    if (!pericia || !item || ['esquiva','combate_desarmado','briga_pugilismo'].includes(pericia.id)) return 0;
+    const fam = familiaArmaCompat_(item);
+    const exatas = FAMILIAS_ESPECIALIZACAO_COMPAT_[pericia.id] || [];
+    if (exatas.includes(fam)) return 0;
+    const proximas = {
+      atirador_elite:['rifle'], fuzis_carabinas:['precisao'],
+      pistolas_revolveres:['submetralhadora'], submetralhadoras:['pistola'],
+      combate_pistola_laser:['energia'], pistolas_laser:['energia'],
+      rifles_laser:['energia','laser_pesada'], arma_laser_pesada:['laser_rifle','energia'],
+      armas_energia:['laser_pistola','laser_rifle','laser_pesada']
+    };
+    if ((proximas[pericia.id] || []).includes(fam)) return 1;
+    return 2;
+}
+function rotuloCompatArma_(graus) {
+    if (!graus) return '';
+    const t = traducoes[idiomaAtual] || traducoes.pt;
+    return ' ' + (graus === 1 ? t.mismatch1 : t.mismatch2);
+}
+
 function equipamentoCompativelComPericia_(item, pericia) {
     if (!item || !pericia) return false;
     const uso = normalizarTextoCombate_(pericia.uso || pericia.usoCombate);
@@ -2348,17 +2479,16 @@ function popularEquipamentosCombate_(char) {
     if (!pericia) {
         opcoes = [{value:'', label:'—'}];
     } else if (pericia.id === 'esquiva') {
-        opcoes = [{value:'nenhum', label:uiTxt_('noneEquipment')}];
+        opcoes = [{value:'nenhum', label:(traducoes[idiomaAtual]||traducoes.pt).noEquipment}];
     } else if (pericia.id === 'combate_desarmado') {
-        opcoes = [{value:'desarmado', label:uiTxt_('fists')}];
+        opcoes = [{value:'desarmado', label:(traducoes[idiomaAtual]||traducoes.pt).fists}];
     } else {
         const compativeis = equipados.filter(i => equipamentoCompativelComPericia_(i, pericia));
         opcoes = compativeis.map((item, i) => {
             const id = item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`;
-            const graus = penalidadeCompatibilidadeArma_(pericia, item);
-            return {value:String(id), label:`${getNome(item)}${rotuloPenalidadeCompatibilidade_(graus)}`};
+            return {value:String(id), label:getNome(item)+rotuloCompatArma_(penalidadeCompatibilidadeArma_(pericia,item))};
         });
-        if (!opcoes.length) opcoes = [{value:'', label:uiTxt_('noCompatibleEquipment')}];
+        if (!opcoes.length) opcoes = [{value:'', label:(traducoes[idiomaAtual]||traducoes.pt).noCompatibleEquipment}];
     }
 
     select.innerHTML = opcoes.map(o => `<option value="${escaparHtmlInventario_(o.value)}">${escaparHtmlInventario_(o.label)}</option>`).join('');
@@ -2411,17 +2541,14 @@ window.atualizarPainelCombate = () => {
         const atual = selectEquip.value;
         const equipados = obterItensEquipados_(char).filter(itemEhArmaOuEscudo_);
         let opcoes;
-        if (pericia.id === 'esquiva') opcoes = [{value:'nenhum',label:uiTxt_('noneEquipment')}];
-        else if (pericia.id === 'combate_desarmado') opcoes = [{value:'desarmado',label:uiTxt_('fists')}];
+        if (pericia.id === 'esquiva') opcoes = [{value:'nenhum',label:'Nenhum equipamento'}];
+        else if (pericia.id === 'combate_desarmado') opcoes = [{value:'desarmado',label:'Punhos'}];
         else {
-            opcoes = equipados.filter(i => equipamentoCompativelComPericia_(i, pericia)).map((item,i) => {
-                const graus = penalidadeCompatibilidadeArma_(pericia, item);
-                return {
-                    value:String(item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`),
-                    label:`${getNome(item)}${rotuloPenalidadeCompatibilidade_(graus)}`
-                };
-            });
-            if (!opcoes.length) opcoes = [{value:'',label:uiTxt_('noCompatibleEquipment')}];
+            opcoes = equipados.filter(i => equipamentoCompativelComPericia_(i, pericia)).map((item,i) => ({
+                value:String(item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`),
+                label:getNome(item)+rotuloCompatArma_(penalidadeCompatibilidadeArma_(pericia,item))
+            }));
+            if (!opcoes.length) opcoes = [{value:'',label:(traducoes[idiomaAtual]||traducoes.pt).noCompatibleEquipment}];
         }
         selectEquip.innerHTML = opcoes.map(o => `<option value="${escaparHtmlInventario_(o.value)}">${escaparHtmlInventario_(o.label)}</option>`).join('');
         if ([...selectEquip.options].some(o => o.value === atual)) selectEquip.value = atual;
@@ -2436,19 +2563,15 @@ window.mostrarDanoEquipamentoCombate = () => {
     const char = userCharacters.find(c => c.id === currentCharId);
     const pericia = obterPericiaCombateSelecionada_();
     const item = encontrarEquipamentoCombate_(document.getElementById('combatWeaponSelect')?.value || '');
-    const valorAlvo = document.getElementById('combatSkillValue');
-    if (char && pericia && valorAlvo) {
+    const valorEl = document.getElementById('combatSkillValue');
+    if (char && pericia && valorEl) {
         const bruto = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
         const graus = item ? penalidadeCompatibilidadeArma_(pericia, item) : 0;
         if (graus > 0) {
             const idx = Math.min(GRAUS_DIFICULDADE.length - 1, 2 + graus);
             const efetivo = Math.max(1, Math.floor(bruto * GRAUS_DIFICULDADE[idx].multiplicador));
-            valorAlvo.textContent = `${bruto} → ${efetivo}`;
-            valorAlvo.title = `${uiTxt_('weaponMismatch')}: +${graus} ${uiTxt_('difficultySteps')}`;
-        } else {
-            valorAlvo.textContent = bruto;
-            valorAlvo.title = '';
-        }
+            valorEl.textContent = `${bruto} → ${efetivo}`;
+        } else valorEl.textContent = bruto;
     }
     atualizarStatusMunicaoCombate_();
 };
@@ -2543,9 +2666,8 @@ window.rolarCombateD100 = async () => {
 
     const valorBase = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
     const dificuldadeEscolhidaId = document.getElementById('combatDifficultySelect')?.value || 'padrao';
-    let ajuste = aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeEscolhidaId);
     const grausCompatibilidade = armaUsada ? penalidadeCompatibilidadeArma_(pericia, armaUsada) : 0;
-    ajuste = aplicarPenalidadeCompatibilidade_(ajuste, valorBase, grausCompatibilidade);
+    const ajuste = aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeEscolhidaId, grausCompatibilidade);
     if (ajuste.bloqueado) {
         resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(ajuste.regra.nome)}: nenhuma atividade possível.`;
         await registrarHistoricoCombate_(
@@ -2561,14 +2683,14 @@ window.rolarCombateD100 = async () => {
     const r = classificarD100_(valor, roll);
     const margem = Math.abs(valor-roll);
     const nomePericia = getNome(pericia);
-    const fadigaTxt = ajuste.degrausFadiga > 0 ? ` · ${uiTxt_('fatigue')} +${ajuste.degrausFadiga}` : '';
-    const compatTxt = grausCompatibilidade > 0 ? ` · ${uiTxt_('weaponMismatch')} +${grausCompatibilidade}` : '';
-    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${traduzirResultadoD100_(r.grau)}</strong> · ${uiTxt_('margin')} ${margem}<br><small>${uiTxt_('difficulty')}: ${traduzirDificuldade_(ajuste.escolhida.id)}${fadigaTxt}${compatTxt} → <strong>${traduzirDificuldade_(ajuste.efetiva.id)}</strong> · ${valorBase} → ${valor}</small>`;
+    const fadigaTxt = ajuste.degrausFadiga > 0 ? ` · Fadiga +${ajuste.degrausFadiga} degrau${ajuste.degrausFadiga > 1 ? 's' : ''}` : '';
+    const compatTxt = grausCompatibilidade > 0 ? ` · Compatibilidade de arma +${grausCompatibilidade} grau${grausCompatibilidade > 1 ? 's' : ''}` : '';
+    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}<br><small>Dificuldade: ${escaparHtmlInventario_(ajuste.escolhida.nome)}${fadigaTxt}${compatTxt} → <strong>${escaparHtmlInventario_(ajuste.efetiva.nome)}</strong> · ${valorBase} → ${valor}</small>`;
 
     await registrarHistoricoCombate_(
         'D100',
         `${nomePericia}: ${roll} / ${valor} → ${r.grau} · Margem ${margem} · Dificuldade ${ajuste.escolhida.nome}${fadigaTxt}${compatTxt} → ${ajuste.efetiva.nome} (${valorBase}→${valor})`,
-        { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome, dificuldadeEscolhida: ajuste.escolhida.nome, dificuldadeEfetiva: ajuste.efetiva.nome, degrausFadiga: ajuste.degrausFadiga, penalidadeCompatibilidade: grausCompatibilidade, equipamentoId: armaUsada?.id || null }
+        { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome, dificuldadeEscolhida: ajuste.escolhida.nome, dificuldadeEfetiva: ajuste.efetiva.nome, degrausFadiga: ajuste.degrausFadiga, penalidadeCompatibilidade: grausCompatibilidade }
     );
 
     char.combate = char.combate || {};
@@ -2872,7 +2994,7 @@ function obterGrauDificuldade_(id) {
     return GRAUS_DIFICULDADE.find(g => g.id === id) || GRAUS_DIFICULDADE[2];
 }
 
-function aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeId) {
+function aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeId, degrausExtras = 0) {
     const regra = obterRegraFadiga_(char);
     if (!regra.multiplicador) {
         return { valor: 0, bloqueado: true, regra, escolhida: obterGrauDificuldade_(dificuldadeId), efetiva: null, degrausFadiga: 99 };
@@ -2880,10 +3002,10 @@ function aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeId) {
     const escolhida = obterGrauDificuldade_(dificuldadeId);
     const indiceEscolhido = GRAUS_DIFICULDADE.findIndex(g => g.id === escolhida.id);
     const degrausFadiga = obterDegrausFadiga_(char);
-    const indiceEfetivo = Math.min(GRAUS_DIFICULDADE.length - 1, Math.max(0, indiceEscolhido + degrausFadiga));
+    const indiceEfetivo = Math.min(GRAUS_DIFICULDADE.length - 1, Math.max(0, indiceEscolhido + degrausFadiga + Math.max(0, parseInt(degrausExtras)||0)));
     const efetiva = GRAUS_DIFICULDADE[indiceEfetivo];
     const valor = Math.max(1, Math.floor((parseInt(valorBase) || 0) * efetiva.multiplicador));
-    return { valor, bloqueado: false, regra, escolhida, efetiva, degrausFadiga };
+    return { valor, bloqueado: false, regra, escolhida, efetiva, degrausFadiga, degrausExtras: Math.max(0, parseInt(degrausExtras)||0) };
 }
 
 function resetarDificuldadeAposRolagem_(idSelect) {
@@ -2966,7 +3088,7 @@ function renderizarCombate(char) {
         const temAtual = Object.prototype.hasOwnProperty.call(combat.hitLocations || {}, loc);
         const pvAtual = temAtual ? combat.hitLocations[loc] : pv;
         return `<div class="hit-location">
-            <span class="hit-location-name">${traduzirTextoFixo_(loc)}</span>
+            <span class="hit-location-name">${loc}</span>
             <input type="number" value="${pv}" readonly>
             <input type="number" value="${pvAtual}" class="damage" onchange="salvarCombate('hitLocations', '${loc}', this.value)">
         </div>`;
@@ -2980,7 +3102,7 @@ function renderizarCombate(char) {
             ? `PA total ${total} = ${base} natural/manual + ${equipamento} de equipamento`
             : `PA manual/natural: ${base}`;
         return `<div class="hit-location">
-            <span class="hit-location-name">${traduzirTextoFixo_(loc)}</span>
+            <span class="hit-location-name">${loc}</span>
             <input type="number" value="${total}" min="0" title="${explicacao}" onchange="salvarPATotal('${loc}', this.value, ${equipamento})">
         </div>`;
     }).join('');
@@ -3417,7 +3539,7 @@ function atualizarCategoriasMercado_() {
     if (!select) return;
     const atual = select.value;
     const categorias = [...new Set(itensDB.map(i => String(i.categoria || 'Diversos').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
-    select.innerHTML = '<option value="">Todas as categorias</option>' + categorias.map(c => `<option value="${escaparBanco_(c)}">${escaparBanco_(c)}</option>`).join('');
+    select.innerHTML = '<option value="" data-i18n="allCategories">Todas as categorias</option>' + categorias.map(c => `<option value="${escaparBanco_(c)}">${escaparBanco_(c)}</option>`).join('');
     if ([...select.options].some(o => o.value === atual)) select.value = atual;
 }
 
@@ -3669,12 +3791,8 @@ function renderizarPericias(char) {
         ...Object.values(pericias), ...Object.values(especializacoes)
     ].reduce((soma, dados) => soma + investimentoNaVisao(dados), 0);
 
-    const rotulos = {
-        pt: { origem: 'Origem', carreira: 'Carreira', hobbie: 'Hobbie', todas: 'Todas' },
-        en: { origem: 'Origin', carreira: 'Career', hobbie: 'Hobby', todas: 'All' },
-        zh: { origem: '起源', carreira: '职业', hobbie: '爱好', todas: '全部' }
-    };
-    document.getElementById('periciasEtapaLabel').textContent = (rotulos[idiomaAtual] || rotulos.pt)[visao] || (rotulos[idiomaAtual] || rotulos.pt).origem;
+    const rotulos = { origem: 'Origem', carreira: 'Carreira', hobbie: 'Hobbie', todas: 'Todas' };
+    document.getElementById('periciasEtapaLabel').textContent = rotulos[visao] || 'Origem';
 
     const pontosBox = document.getElementById('pontosRestantesBox');
     if (visao === 'todas') {
@@ -3720,7 +3838,7 @@ function renderizarPericias(char) {
         const input = somenteLeitura
             ? `<span>${treinoTotal}</span>`
             : `<input type="number" value="${treinoVisao}" min="0" max="${maxTreinoCategoria}" oninput="atualizarTreinoEspecializacao('${e.id}', this.value, '${visao}')">`;
-        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(e)}</td><td>${traduzirTipoPericia_(e.tipo)} - ${formatarFormulaIdioma_(e.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
+        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(e)}</td><td>${e.tipo} - ${formatarFormulaIdioma_(e.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
 
     const estaInvestidaNestaVisao = (dados) => visao === 'todas' ? totalTreinoPericia_(dados) > 0 : investimentoNaVisao(dados) > 0;
@@ -5099,370 +5217,6 @@ window.fecharModal = () => {
     uploadedItemImage = null;
 };
 
-
-// ============================================
-// I18N DE INTERFACE + COMPATIBILIDADE DE ARMAS
-// ============================================
-
-const UI_EXTRA = {
-    pt: {
-        noCompatibleEquipment:'Nenhum equipamento compatível', noneEquipment:'Nenhum equipamento', fists:'Punhos',
-        fatigue:'Fadiga', weaponMismatch:'Arma não ideal', margin:'Margem', difficulty:'Dificuldade',
-        difficultySteps:'degrau(s) de dificuldade', exactWeapon:'adequada', relatedWeapon:'relacionada',
-        offWeapon:'improvisada', skills:'Perícias', skill:'Perícia', formula:'Fórmula', base:'Base', training:'Treino', total:'Total'
-    },
-    en: {
-        noCompatibleEquipment:'No compatible equipment', noneEquipment:'No equipment', fists:'Fists',
-        fatigue:'Fatigue', weaponMismatch:'Weapon mismatch', margin:'Margin', difficulty:'Difficulty',
-        difficultySteps:'difficulty step(s)', exactWeapon:'matched', relatedWeapon:'related',
-        offWeapon:'off-specialty', skills:'Skills', skill:'Skill', formula:'Formula', base:'Base', training:'Training', total:'Total'
-    },
-    zh: {
-        noCompatibleEquipment:'没有兼容装备', noneEquipment:'无装备', fists:'拳脚',
-        fatigue:'疲劳', weaponMismatch:'武器不匹配', margin:'差值', difficulty:'难度',
-        difficultySteps:'级难度', exactWeapon:'匹配', relatedWeapon:'相关',
-        offWeapon:'非专长', skills:'技能', skill:'技能', formula:'公式', base:'基础', training:'训练', total:'总值'
-    }
-};
-function uiTxt_(k) { return (UI_EXTRA[idiomaAtual] || UI_EXTRA.pt)[k] || UI_EXTRA.pt[k] || k; }
-
-const ATRIBUTOS_I18N = {
-    pt:{FOR:'FOR',CON:'CON',TAM:'TAM',DES:'DES',INT:'INT',POD:'POD',CAR:'CAR'},
-    en:{FOR:'STR',CON:'CON',TAM:'SIZ',DES:'DEX',INT:'INT',POD:'POW',CAR:'CHA'},
-    zh:{FOR:'力量',CON:'体质',TAM:'体型',DES:'敏捷',INT:'智力',POD:'意志',CAR:'魅力'}
-};
-function formatarFormulaIdioma_(formula) {
-    let s = String(formula || '');
-    const mapa = ATRIBUTOS_I18N[idiomaAtual] || ATRIBUTOS_I18N.pt;
-    ['FOR','CON','TAM','DES','INT','POD','CAR'].forEach(a => {
-        s = s.replace(new RegExp(a,'g'), mapa[a]);
-    });
-    return s.replace(/\*/g, '×');
-}
-function traduzirTipoPericia_(tipo) {
-    const n = normalizarTextoCombate_(tipo);
-    const mapa = {
-        combate:{pt:'Combate',en:'Combat',zh:'战斗'}, psi:{pt:'Psi',en:'Psi',zh:'灵能'},
-        magia:{pt:'Magia',en:'Magic',zh:'魔法'}
-    };
-    return (mapa[n]?.[idiomaAtual]) || tipo || '';
-}
-function traduzirRacaExibicao_(raca) {
-    const n = normalizarTextoCombate_(raca);
-    if (n === 'humano' || n === 'human' || n === '人类') return {pt:'Humano',en:'Human',zh:'人类'}[idiomaAtual] || 'Humano';
-    return raca;
-}
-function traduzirDificuldade_(id) {
-    const m = {
-        muito_facil:{pt:'Muito Fácil',en:'Very Easy',zh:'非常容易'},
-        facil:{pt:'Fácil',en:'Easy',zh:'容易'},
-        padrao:{pt:'Padrão',en:'Standard',zh:'标准'},
-        dificil:{pt:'Difícil',en:'Hard',zh:'困难'},
-        formidavel:{pt:'Formidável',en:'Formidable',zh:'艰巨'},
-        herculeo:{pt:'Hercúleo',en:'Herculean',zh:'极难'}
-    };
-    return m[id]?.[idiomaAtual] || m[id]?.pt || id;
-}
-function traduzirResultadoD100_(grau) {
-    const m = {
-        'Fiasco':{pt:'Fiasco',en:'Fumble',zh:'大失败'},
-        'Crítico':{pt:'Crítico',en:'Critical',zh:'大成功'},
-        'Sucesso':{pt:'Sucesso',en:'Success',zh:'成功'},
-        'Falha':{pt:'Falha',en:'Failure',zh:'失败'}
-    };
-    return m[grau]?.[idiomaAtual] || grau;
-}
-
-// Dicionário para todos os rótulos fixos mais usados. O sistema marca os nós
-// na primeira passagem e passa a alterná-los entre PT/EN/ZH sem perder a chave.
-const UI_TEXT_MAP = {
-    '📄 Personagem':['📄 Personagem','📄 Character','📄 角色'],
-    '📚 Perícias':['📚 Perícias','📚 Skills','📚 技能'],
-    '🎒 Inventário':['🎒 Inventário','🎒 Inventory','🎒 物品栏'],
-    '⚔️ Combate':['⚔️ Combate','⚔️ Combat','⚔️ 战斗'],
-    '📔 Anotações':['📔 Anotações','📔 Notes','📔 笔记'],
-    '🎲 Rolagem':['🎲 Rolagem','🎲 Rolls','🎲 掷骰'],
-    '🛡️ Escudo do Mestre':['🛡️ Escudo do Mestre','🛡️ GM Screen','🛡️ 主持人屏幕'],
-    'Editar Personagem':['Editar Personagem','Edit Character','编辑角色'],
-    'Nome:':['Nome:','Name:','姓名：'],
-    'Raça:':['Raça:','Race:','种族：'],
-    'Gênero:':['Gênero:','Gender:','性别：'],
-    'Imagem do Personagem (URL):':['Imagem do Personagem (URL):','Character Image (URL):','角色图片（URL）：'],
-    'Ou fazer upload:':['Ou fazer upload:','Or upload:','或上传：'],
-    'Origem:':['Origem:','Origin:','起源：'],
-    'Carreira:':['Carreira:','Career:','职业：'],
-    'Tipo Corporal:':['Tipo Corporal:','Body Type:','体型：'],
-    'Masculino':['Masculino','Male','男性'],
-    'Feminino':['Feminino','Female','女性'],
-    'Hermafrodita':['Hermafrodita','Hermaphrodite','雌雄同体'],
-    'Andrógeno':['Andrógeno','Androgynous','中性'],
-    'Neutro':['Neutro','Neutral','无性别'],
-    'Leve':['Leve','Light','轻型'],
-    'Médio':['Médio','Medium','中型'],
-    'Pesado':['Pesado','Heavy','重型'],
-    '💾 Salvar':['💾 Salvar','💾 Save','💾 保存'],
-    'Pontos de Ação':['Pontos de Ação','Action Points','行动点'],
-    'Iniciativa':['Iniciativa','Initiative','先攻'],
-    'Mod. Dano':['Mod. Dano','Damage Mod.','伤害修正'],
-    'Mod. Experiência':['Mod. Experiência','Experience Mod.','经验修正'],
-    'Taxa de Recuperação':['Taxa de Recuperação','Healing Rate','恢复率'],
-    'Movimento':['Movimento','Movement','移动'],
-    'Pontos de Sorte':['Pontos de Sorte','Luck Points','幸运点'],
-    'Pontos de Magia':['Pontos de Magia','Magic Points','魔法点'],
-    'Altura':['Altura','Height','身高'],
-    'Peso':['Peso','Weight','体重'],
-    'Investimento:':['Investimento:','Investment:','投入：'],
-    'Pontos disponíveis:':['Pontos disponíveis:','Available points:','可用点数：'],
-    'Total investido nesta categoria:':['Total investido nesta categoria:','Total invested in this category:','本类别已投入：'],
-    'Ver perícias de:':['Ver perícias de:','View skills from:','查看技能来源：'],
-    'Origem':['Origem','Origin','起源'],
-    'Carreira':['Carreira','Career','职业'],
-    'Hobbie':['Hobbie','Hobby','爱好'],
-    'Todas':['Todas','All','全部'],
-    'Perícias com Investimento':['Perícias com Investimento','Invested Skills','已投入技能'],
-    'Perícias Básicas Disponíveis':['Perícias Básicas Disponíveis','Available Basic Skills','可用基础技能'],
-    'Perícias Profissionais Disponíveis':['Perícias Profissionais Disponíveis','Available Professional Skills','可用专业技能'],
-    'Especializações':['Especializações','Specializations','专长'],
-    'Perícia':['Perícia','Skill','技能'],
-    'Especialização':['Especialização','Specialization','专长'],
-    'Fórmula':['Fórmula','Formula','公式'],
-    'Tipo / Fórmula':['Tipo / Fórmula','Type / Formula','类型／公式'],
-    'Base':['Base','Base','基础'],
-    'Treino':['Treino','Training','训练'],
-    'Total':['Total','Total','总值'],
-    '🔮 Psiquismo':['🔮 Psiquismo','🔮 Psychism','🔮 灵能'],
-    '💾 Salvar Perícias':['💾 Salvar Perícias','💾 Save Skills','💾 保存技能'],
-    '🎒 Inventário':['🎒 Inventário','🎒 Inventory','🎒 物品栏'],
-    '🧍 Equipado':['🧍 Equipado','🧍 Equipped','🧍 已装备'],
-    '👛 Bolso':['👛 Bolso','👛 Pocket','👛 口袋'],
-    '🎒 Mochila':['🎒 Mochila','🎒 Backpack','🎒 背包'],
-    '🚗 Veículo/Nave':['🚗 Veículo/Nave','🚗 Vehicle/Ship','🚗 载具／飞船'],
-    '🏠 Casa/Base':['🏠 Casa/Base','🏠 Home/Base','🏠 住所／基地'],
-    'Pontos de Vida':['Pontos de Vida','Hit Points','生命值'],
-    'PV Máx':['PV Máx','Max HP','最大生命'],
-    'PV Atual':['PV Atual','Current HP','当前生命'],
-    'Armadura (PA)':['Armadura (PA)','Armor (AP)','护甲（AP）'],
-    'Fadiga':['Fadiga','Fatigue','疲劳'],
-    '🎯 Painel de Combate':['🎯 Painel de Combate','🎯 Combat Panel','🎯 战斗面板'],
-    'Perícia de combate:':['Perícia de combate:','Combat skill:','战斗技能：'],
-    'Dificuldade circunstancial:':['Dificuldade circunstancial:','Circumstantial difficulty:','情境难度：'],
-    'Equipamento:':['Equipamento:','Equipment:','装备：'],
-    'Valor:':['Valor:','Value:','数值：'],
-    'Dano:':['Dano:','Damage:','伤害：'],
-    'Munição / Carga':['Munição / Carga','Ammo / Charge','弹药／能量'],
-    '🔋 Recarregar':['🔋 Recarregar','🔋 Reload','🔋 装填'],
-    '🎲 D100 de Combate':['🎲 D100 de Combate','🎲 Combat D100','🎲 战斗D100'],
-    '💥 Dano':['💥 Dano','💥 Damage','💥 伤害'],
-    '🎯 Localização D20':['🎯 Localização D20','🎯 Hit Location D20','🎯 命中部位D20'],
-    '⚡ Iniciativa':['⚡ Iniciativa','⚡ Initiative','⚡ 先攻'],
-    '🧾 Histórico de rolagens':['🧾 Histórico de rolagens','🧾 Roll History','🧾 掷骰记录'],
-    'últimas 50':['últimas 50','last 50','最近50次'],
-    'Nenhuma rolagem registrada.':['Nenhuma rolagem registrada.','No rolls recorded.','尚无掷骰记录。'],
-    '📔 Anotações':['📔 Anotações','📔 Notes','📔 笔记'],
-    '⭐ Eventos Especiais':['⭐ Eventos Especiais','⭐ Special Events','⭐ 特殊事件'],
-    '🎲 Rolagem de Dados':['🎲 Rolagem de Dados','🎲 Dice Roller','🎲 掷骰'],
-    '📊 Teste de Perícia':['📊 Teste de Perícia','📊 Skill Test','📊 技能检定'],
-    'Perícia:':['Perícia:','Skill:','技能：'],
-    '🎲 Rolar Perícia':['🎲 Rolar Perícia','🎲 Roll Skill','🎲 技能检定'],
-    'Sorte:':['Sorte:','Luck:','幸运：'],
-    '⭐ Gastar':['⭐ Gastar','⭐ Spend','⭐ 使用'],
-    '🛒 Mercado':['🛒 Mercado','🛒 Market','🛒 市场'],
-    'Todas as categorias':['Todas as categorias','All categories','全部类别'],
-    'Mochila':['Mochila','Backpack','背包'],
-    'Bolso':['Bolso','Pocket','口袋'],
-    'Veículo/Nave':['Veículo/Nave','Vehicle/Ship','载具／飞船'],
-    'Casa/Base':['Casa/Base','Home/Base','住所／基地'],
-    'Qualidade':['Qualidade','Quality','品质'],
-    'Básica ×1':['Básica ×1','Basic ×1','基础 ×1'],
-    'Média ×2':['Média ×2','Standard ×2','标准 ×2'],
-    'Superior ×4':['Superior ×4','Superior ×4','优良 ×4'],
-    'Comprar':['Comprar','Buy','购买'],
-    '📖 Regras do Sistema':['📖 Regras do Sistema','📖 System Rules','📖 系统规则'],
-    '⚙️ Configurações do Sistema (Mestre)':['⚙️ Configurações do Sistema (Mestre)','⚙️ System Settings (GM)','⚙️ 系统设置（主持人）'],
-    '📚 Banco de Dados':['📚 Banco de Dados','📚 Database','📚 数据库'],
-    'Perícias':['Perícias','Skills','技能'],
-    'Origens':['Origens','Origins','起源'],
-    'Carreiras':['Carreiras','Careers','职业'],
-    'Poderes Psi':['Poderes Psi','Psi Powers','灵能力量'],
-    'Itens':['Itens','Items','物品'],
-    'Cabeça':['Cabeça','Head','头部'],
-    'Peito':['Peito','Chest','胸部'],
-    'Abdômen':['Abdômen','Abdomen','腹部'],
-    'Braço Direito':['Braço Direito','Right Arm','右臂'],
-    'Braço Esquerdo':['Braço Esquerdo','Left Arm','左臂'],
-    'Perna Direita':['Perna Direita','Right Leg','右腿'],
-    'Perna Esquerda':['Perna Esquerda','Left Leg','左腿'],
-    'Muito Fácil':['Muito Fácil','Very Easy','非常容易'],
-    'Fácil':['Fácil','Easy','容易'],
-    'Padrão':['Padrão','Standard','标准'],
-    'Difícil':['Difícil','Hard','困难'],
-    'Formidável':['Formidável','Formidable','艰巨'],
-    'Hercúleo':['Hercúleo','Herculean','极难'],
-    'Descansado (Fresh)':['Descansado (Fresh)','Fresh','精力充沛'],
-    'Ofegante (Winded)':['Ofegante (Winded)','Winded','气喘'],
-    'Cansado (Tired)':['Cansado (Tired)','Tired','疲倦'],
-    'Fatigado (Wearied)':['Fatigado (Wearied)','Wearied','疲劳'],
-    'Exausto (Exhausted)':['Exausto (Exhausted)','Exhausted','精疲力竭'],
-    'Debilitado (Debilitated)':['Debilitado (Debilitated)','Debilitated','虚弱'],
-    'Incapacitado (Incapacitated)':['Incapacitado (Incapacitated)','Incapacitated','失去行动能力'],
-    'Semiconsciente (Semi-Conscious)':['Semiconsciente (Semi-Conscious)','Semi-Conscious','半昏迷'],
-    'Comatoso (Comatose)':['Comatoso (Comatose)','Comatose','昏迷'],
-    'Morto (Dead)':['Morto (Dead)','Dead','死亡']
-};
-const UI_TEXT_INDEX = {};
-Object.entries(UI_TEXT_MAP).forEach(([pt, vals]) => {
-    UI_TEXT_INDEX[pt] = pt;
-    UI_TEXT_INDEX[vals[1]] = pt;
-    UI_TEXT_INDEX[vals[2]] = pt;
-});
-function traduzirTextoFixo_(pt) {
-    const vals = UI_TEXT_MAP[pt];
-    if (!vals) return pt;
-    return vals[idiomaAtual === 'en' ? 1 : idiomaAtual === 'zh' ? 2 : 0];
-}
-function aplicarTraducaoInterface_(raiz=document.body) {
-    if (!raiz) return;
-    const walker = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-    nodes.forEach(node => {
-        const pai = node.parentElement;
-        if (!pai || ['SCRIPT','STYLE','TEXTAREA'].includes(pai.tagName)) return;
-        const bruto = node.nodeValue || '';
-        const limpo = bruto.trim();
-        if (!limpo) return;
-        let chave = node.__mesaI18nKey || UI_TEXT_INDEX[limpo];
-        if (!chave) return;
-        node.__mesaI18nKey = chave;
-        const traduzido = traduzirTextoFixo_(chave);
-        const inicio = bruto.match(/^\s*/)?.[0] || '';
-        const fim = bruto.match(/\s*$/)?.[0] || '';
-        node.nodeValue = inicio + traduzido + fim;
-    });
-    const placeholders = {
-        'Buscar item...':['Buscar item...','Search item...','搜索物品...'],
-        'Suas anotações...':['Suas anotações...','Your notes...','你的笔记...'],
-        'Eventos especiais...':['Eventos especiais...','Special events...','特殊事件...']
-    };
-    document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach(el=>{
-        const cur = el.placeholder;
-        let key = el.dataset.i18nAutoPlaceholder;
-        if (!key) {
-            for (const [pt, vals] of Object.entries(placeholders)) {
-                if ([pt,...vals].includes(cur)) { key = pt; break; }
-            }
-            if (key) el.dataset.i18nAutoPlaceholder = key;
-        }
-        if (key) {
-            const vals = placeholders[key];
-            el.placeholder = vals[idiomaAtual === 'en' ? 1 : idiomaAtual === 'zh' ? 2 : 0];
-        }
-    });
-    // Atributos da frente da ficha e do editor.
-    const mapaA = ATRIBUTOS_I18N[idiomaAtual] || ATRIBUTOS_I18N.pt;
-    document.querySelectorAll('.attr-card .attr-label').forEach((el,i)=>{
-        const ids=['FOR','CON','TAM','DES','INT','POD','CAR'];
-        if (ids[i]) el.textContent = mapaA[ids[i]];
-    });
-    ['FOR','CON','TAM','DES','INT','POD','CAR'].forEach(a=>{
-        const input=document.getElementById(`edit${a}`);
-        const lab=input?.previousElementSibling;
-        if (lab && lab.tagName==='LABEL') lab.textContent=mapaA[a];
-    });
-}
-let observerI18nMesa_ = null;
-function iniciarObserverI18n_() {
-    // Desativado por segurança: a interface é traduzida quando o idioma muda
-    // e após os renderizadores principais. Isso evita observação contínua do DOM.
-}
-
-// Compatibilidade de famílias de arma.
-// 0 = especialização correta; 1 = família próxima; 2 = arma fora da especialidade.
-function familiaArma_(item) {
-    const n = normalizarTextoCombate_([item?.id,item?.nome,item?.nome_en,item?.nome_zh,item?.descricao].filter(Boolean).join(' '));
-    if (/escudo|shield/.test(n)) return 'escudo';
-    if (/granada|grenade|arremesso|throw/.test(n)) return 'arremesso';
-    if (/arco|bow/.test(n)) return 'arco';
-    if (/escopeta|shotgun/.test(n)) return 'escopeta';
-    if (/submetralhadora|submachine/.test(n)) return 'submetralhadora';
-    if (/sniper|precisao|precision|anti.?material/.test(n)) return 'precisao';
-    if (/laser/.test(n) && /pesad|heavy/.test(n)) return 'laser_pesada';
-    if (/laser/.test(n) && /pistola|pistol|palm/.test(n)) return 'laser_pistola';
-    if (/laser/.test(n) && /rifle|fuzil|carabina|carbine/.test(n)) return 'laser_rifle';
-    if (/blaster|phaser|disrupt|disintegr|sonic/.test(n)) return 'energia';
-    if (/pistola|revolver|pistol|handgun|\.38|9mm|\.45|\.357|\.44/.test(n)) return 'pistola';
-    if (/fuzil|rifle|carabina|carbine|5\.56|7\.62/.test(n)) return 'rifle';
-    if (/metralhadora pesada|heavy machine|canhao portatil|launcher/.test(n)) return 'pesada';
-    if (/plasma|vibro/.test(n) && /espada|sword|blade|lamina/.test(n)) return 'plasma_vibro';
-    if (/lanca|alabarda|spear|halberd|polearm/.test(n)) return 'haste';
-    if (/faca|adaga|dagger|knife/.test(n)) return 'branca_curta';
-    if (/espada|sabre|saber|machado|sword|axe/.test(n)) return 'branca_longa';
-    if (itemEhCorpoACorpo_(item)) return 'improvisada';
-    return 'desconhecida';
-}
-const FAMILIAS_ESPECIALIZACAO = {
-    armas_brancas_curtas:['branca_curta'],
-    armas_brancas_longas:['branca_longa'],
-    armas_haste:['haste'],
-    armas_improvisadas:['improvisada'],
-    armas_arremesso:['arremesso'],
-    arqueiro:['arco'],
-    pistolas_revolveres:['pistola'],
-    fuzis_carabinas:['rifle'],
-    escopetas:['escopeta'],
-    submetralhadoras:['submetralhadora'],
-    armas_pesadas:['pesada'],
-    artilharia:['artilharia'],
-    atirador_elite:['precisao'],
-    combate_pistola_laser:['laser_pistola'],
-    pistolas_laser:['laser_pistola'],
-    rifles_laser:['laser_rifle'],
-    arma_laser_pesada:['laser_pesada'],
-    armas_energia:['energia'],
-    esgrima_plasma_vibro:['plasma_vibro']
-};
-function penalidadeCompatibilidadeArma_(pericia,item) {
-    if (!pericia || !item) return 0;
-    if (pericia.id === 'esquiva') return 0;
-    if (pericia.id === 'combate_desarmado' || pericia.id === 'briga_pugilismo') return 2;
-    const fam = familiaArma_(item);
-    if (fam === 'escudo' && normalizarTextoCombate_(pericia.uso || '').includes('defesa')) return 0;
-    const exatas = FAMILIAS_ESPECIALIZACAO[pericia.id] || [];
-    if (exatas.includes(fam)) return 0;
-
-    // Relações próximas que preservam boa parte da técnica.
-    const proximas = {
-        atirador_elite:['rifle'],
-        fuzis_carabinas:['precisao'],
-        pistolas_revolveres:['submetralhadora'],
-        submetralhadoras:['pistola'],
-        combate_pistola_laser:['energia'],
-        pistolas_laser:['energia'],
-        rifles_laser:['energia','laser_pesada'],
-        arma_laser_pesada:['laser_rifle','energia'],
-        armas_energia:['laser_pistola','laser_rifle','laser_pesada']
-    };
-    if ((proximas[pericia.id] || []).includes(fam)) return 1;
-
-    // Se continua no mesmo modo de combate, é permitido, porém com forte penalidade.
-    const uso = normalizarTextoCombate_(pericia.uso || pericia.usoCombate);
-    if (itemEhCorpoACorpo_(item) && (uso.includes('corpo a corpo') || uso.includes('defesa'))) return 2;
-    if (!itemEhCorpoACorpo_(item) && uso.includes('distancia')) return 2;
-    return 99;
-}
-function rotuloPenalidadeCompatibilidade_(graus) {
-    if (!graus || graus >= 99) return '';
-    if (graus === 1) return idiomaAtual==='zh' ? ' ⚠️ +1级' : idiomaAtual==='en' ? ' ⚠️ +1 step' : ' ⚠️ +1 grau';
-    return idiomaAtual==='zh' ? ' ⚠️ +2级' : idiomaAtual==='en' ? ' ⚠️ +2 steps' : ' ⚠️ +2 graus';
-}
-function aplicarPenalidadeCompatibilidade_(ajuste, valorBase, graus) {
-    if (!ajuste || ajuste.bloqueado || !graus || graus >= 99) return ajuste;
-    const indiceAtual = GRAUS_DIFICULDADE.findIndex(g=>g.id===ajuste.efetiva?.id);
-    const indiceNovo = Math.min(GRAUS_DIFICULDADE.length-1, Math.max(0, indiceAtual + graus));
-    const efetiva = GRAUS_DIFICULDADE[indiceNovo];
-    return {...ajuste, efetiva, valor:Math.max(1,Math.floor((parseInt(valorBase)||0)*efetiva.multiplicador)), degrausCompatibilidade:graus};
-}
-
 // ============================================
 // IDIOMA
 // ============================================
@@ -5498,14 +5252,12 @@ window.mudarIdioma = (lang) => {
             preencherFormulario(char);
         }
     }
-    if (currentUserUid) {
-        renderizarListaPersonagens();
-        if (document.getElementById('marketGrid')) renderizarMercado();
-    }
-    aplicarTraducaoInterface_(document.body);
+    renderizarListaPersonagens();
+    if (document.getElementById('marketGrid')) renderizarMercado();
     if (currentCharId) {
         const charAtual = userCharacters.find(c => c.id === currentCharId);
         if (charAtual) {
+            popularSelects();
             renderizarPericias(charAtual);
             popularEquipamentosCombate_(charAtual);
             atualizarListaPericias();
