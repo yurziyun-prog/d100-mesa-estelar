@@ -368,6 +368,9 @@
                                 <div class="stat-box"><div class="stat-label">Pontos de Ação</div><div class="stat-value" id="statPA">1</div></div>
                                 <div class="stat-box"><div class="stat-label">Iniciativa</div><div class="stat-value" id="statIniciativa">20</div></div>
                                 <div class="stat-box"><div class="stat-label">Mod. Dano</div><div class="stat-value" id="statModDano">-1d2</div></div>
+                                <div class="stat-box"><div class="stat-label">Mod. Experiência</div><div class="stat-value" id="statModExp">0</div></div>
+                                <div class="stat-box"><div class="stat-label">Taxa de Recuperação</div><div class="stat-value" id="statTaxaRecup">2</div></div>
+                                <div class="stat-box"><div class="stat-label">Movimento</div><div class="stat-value" id="statMovimento">6</div></div>
                                 <div class="stat-box"><div class="stat-label">Pontos de Sorte</div><div class="stat-value"><input type="number" id="editPontosSorte" min="0" step="1" value="1" onchange="salvarPontosSorte()" style="width:100%;text-align:center;"></div></div>
                                 <div class="stat-box hidden" id="statMagiaBox"><div class="stat-label">Pontos de Magia</div><div class="stat-value" id="statPontosMagia">—</div></div>
                                 <div class="stat-box"><div class="stat-label">Altura</div><div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div></div>
@@ -645,9 +648,11 @@
                                     Valor da Perícia: <strong id="skillValue">—</strong>
                                 </div>
                                 <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-                                    <button class="dice-btn" onclick="rolarPericia()">🎲 Rolar Perícia</button>
-                                    <button class="dice-btn" onclick="gastarPontoSorte()" style="background:linear-gradient(135deg,#f1c40f,#d68910);">⭐ Gastar 1 Ponto de Sorte</button>
-                                    <span style="color:#ffd166;">Disponíveis: <strong id="rollLuckPoints">—</strong></span>
+                                    <button class="dice-btn" onclick="rolarPericia()" style="flex:1 1 320px;">🎲 Rolar Perícia</button>
+                                    <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                                        <span style="color:#ffd166;font-size:.95em;">Sorte: <strong id="rollLuckPoints">—</strong></span>
+                                        <button onclick="gastarPontoSorte()" style="border:none;border-radius:10px;padding:9px 14px;background:linear-gradient(135deg,#f1c40f,#d68910);color:#fff;font-weight:700;cursor:pointer;font-size:.92em;">⭐ Gastar</button>
+                                    </div>
                                 </div>
                                 <small style="display:block;color:#aaa;margin-top:10px;">Todas as perícias básicas são permitidas. Profissionais e especializações aparecem quando o personagem possui investimento. O gasto de Sorte é registrado no histórico; o efeito narrativo/mecânico pode ser definido conforme a situação.</small>
                             </div>
@@ -997,6 +1002,42 @@ function getNome(item) {
     return item[key] || item.nome;
 }
 
+
+let audioCtxMesaEstelar_ = null;
+function obterAudioCtx_() {
+    try {
+        if (!audioCtxMesaEstelar_) audioCtxMesaEstelar_ = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtxMesaEstelar_.state === 'suspended') audioCtxMesaEstelar_.resume();
+        return audioCtxMesaEstelar_;
+    } catch (_) { return null; }
+}
+function somDado_() {
+    const ctx = obterAudioCtx_(); if (!ctx) return;
+    const agora = ctx.currentTime;
+    for (let i=0;i<5;i++) {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(130 + Math.random()*220, agora+i*.035);
+        gain.gain.setValueAtTime(.055, agora+i*.035);
+        gain.gain.exponentialRampToValueAtTime(.001, agora+i*.035+.07);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(agora+i*.035); osc.stop(agora+i*.035+.075);
+    }
+}
+function somMagico_() {
+    const ctx = obterAudioCtx_(); if (!ctx) return;
+    const agora = ctx.currentTime;
+    [523.25,659.25,783.99,1046.5].forEach((freq,i)=>{
+        const osc=ctx.createOscillator(), gain=ctx.createGain();
+        osc.type='sine'; osc.frequency.value=freq;
+        gain.gain.setValueAtTime(.001,agora+i*.06);
+        gain.gain.linearRampToValueAtTime(.07,agora+i*.06+.025);
+        gain.gain.exponentialRampToValueAtTime(.001,agora+i*.06+.35);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(agora+i*.06); osc.stop(agora+i*.06+.37);
+    });
+}
+
 function getDescricao(item) {
     if (!item) return '';
     if (idiomaAtual === 'en') return item.descricao_en || item.descricao || '';
@@ -1020,9 +1061,9 @@ onAuthStateChanged(auth, async (user) => {
         }
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('appScreen').classList.remove('hidden');
-        await carregarBancosDeDados();
-        await carregarRegras();
-        await carregarEscudo();
+        try { await carregarBancosDeDados(); } catch (erro) { console.error('Erro parcial ao carregar bancos:', erro); }
+        try { await carregarRegras(); } catch (erro) { console.error('Erro ao carregar regras:', erro); }
+        try { await carregarEscudo(); } catch (erro) { console.error('Erro ao carregar escudo:', erro); }
         await carregarPersonagens();
     } else {
         currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
@@ -1086,14 +1127,19 @@ async function carregarBancosDeDados() {
         especializacoesDB = []; espSnap.forEach(doc => especializacoesDB.push({ id: doc.id, ...doc.data() }));
     }
 
-    const psiSnap = await getDocs(collection(db, "poderesPsi"));
-    if (psiSnap.empty) {
-        poderesPsiDB = [...poderesPsiPadrao];
-        if (userData && userData.role === 'mestre') {
-            for (const p of poderesPsiPadrao) await setDoc(doc(db, "poderesPsi", p.id), p);
+    try {
+        const psiSnap = await getDocs(collection(db, "poderesPsi"));
+        if (psiSnap.empty) {
+            poderesPsiDB = [...poderesPsiPadrao];
+            if (userData && userData.role === 'mestre') {
+                for (const p of poderesPsiPadrao) await setDoc(doc(db, "poderesPsi", p.id), p);
+            }
+        } else {
+            poderesPsiDB = []; psiSnap.forEach(doc => poderesPsiDB.push({ id: doc.id, ...doc.data() }));
         }
-    } else {
-        poderesPsiDB = []; psiSnap.forEach(doc => poderesPsiDB.push({ id: doc.id, ...doc.data() }));
+    } catch (erro) {
+        console.warn('Poderes Psi indisponíveis no Firestore; usando banco local temporário.', erro);
+        poderesPsiDB = [...poderesPsiPadrao];
     }
 
     const itensSnap = await getDocs(collection(db, "itens"));
@@ -1249,7 +1295,10 @@ window.calcularDerivados = () => {
     });
     
     document.getElementById('statPA').textContent = calcularPA((attrs.INT || 10) + bonus.INT, (attrs.DES || 10) + bonus.DES);
-    document.getElementById('statIniciativa').textContent = (attrs.INT || 10) + bonus.INT + (attrs.DES || 10) + bonus.DES;
+    document.getElementById('statIniciativa').textContent = calcularIniciativa((attrs.INT || 10) + bonus.INT, (attrs.DES || 10) + bonus.DES);
+    document.getElementById('statTaxaRecup').textContent = calcularTaxaRecuperacao((attrs.CON || 10) + bonus.CON);
+    document.getElementById('statModExp').textContent = calcularModExperiencia((attrs.CAR || 10) + bonus.CAR);
+    document.getElementById('statMovimento').textContent = Number(char.movimentoBase || 6);
     document.getElementById('statModDano').textContent = calcularModDano((attrs.FOR || 10) + bonus.FOR, (attrs.TAM || 10) + bonus.TAM);
     char.bonus = { ...(char.bonus || {}), ...bonus };
     atualizarPontosSorteEMagia_(char);
@@ -1361,6 +1410,7 @@ window.salvarPontosSorte = async () => {
 };
 
 window.gastarPontoSorte = async () => {
+    somMagico_();
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
@@ -1395,7 +1445,10 @@ function atualizarVisualizacao(data) {
     });
     
     document.getElementById('statPA').textContent = calcularPA((attrs.INT || 10) + (bonus.INT || 0), (attrs.DES || 10) + (bonus.DES || 0));
-    document.getElementById('statIniciativa').textContent = (attrs.INT || 10) + (bonus.INT || 0) + (attrs.DES || 10) + (bonus.DES || 0);
+    document.getElementById('statIniciativa').textContent = calcularIniciativa((attrs.INT || 10) + (bonus.INT || 0), (attrs.DES || 10) + (bonus.DES || 0));
+    document.getElementById('statTaxaRecup').textContent = calcularTaxaRecuperacao((attrs.CON || 10) + (bonus.CON || 0));
+    document.getElementById('statModExp').textContent = calcularModExperiencia((attrs.CAR || 10) + (bonus.CAR || 0));
+    document.getElementById('statMovimento').textContent = Number(data.movimentoBase || 6);
     document.getElementById('statModDano').textContent = calcularModDano((attrs.FOR || 10) + (bonus.FOR || 0), (attrs.TAM || 10) + (bonus.TAM || 0));
     
     const calc = calcularAlturaPeso((attrs.TAM || 10) + (bonus.TAM || 0), data.tipoCorporal || 'Médio');
@@ -1460,34 +1513,100 @@ window.salvarPersonagem = async () => {
     alert('Salvo!');
 };
 
-function calcularPA(int, des) { const soma = int + des; if (soma <= 12) return 1; if (soma <= 24) return 2; if (soma <= 36) return 3; return 3 + Math.floor((soma - 36) / 12); }
-function calcularModDano(forca, tam) { const soma = forca + tam; if (soma <= 5) return '-1d8'; if (soma <= 10) return '-1d6'; if (soma <= 15) return '-1d4'; if (soma <= 20) return '-1d2'; if (soma <= 25) return '+0'; if (soma <= 30) return '+1d2'; return '+1d4'; }
+function calcularPA(int, des) {
+    const soma = Number(int || 0) + Number(des || 0);
+    if (soma <= 12) return 1;
+    if (soma <= 24) return 2;
+    if (soma <= 36) return 3;
+    return 3 + Math.floor((soma - 36) / 12);
+}
+
+function calcularIniciativa(int, des) {
+    // Mythras: média de INT e DES. Arredondamos para cima para números .5.
+    return Math.ceil((Number(int || 0) + Number(des || 0)) / 2);
+}
+
+function calcularTaxaRecuperacao(con) {
+    con = Number(con || 0);
+    if (con <= 6) return 1;
+    if (con <= 12) return 2;
+    if (con <= 18) return 3;
+    return 3 + Math.floor((con - 13) / 6);
+}
+
+function calcularModExperiencia(car) {
+    car = Number(car || 0);
+    if (car <= 6) return -1;
+    if (car <= 12) return 0;
+    if (car <= 18) return 1;
+    return 1 + Math.floor((car - 13) / 6);
+}
+
+function calcularModDano(forca, tam) {
+    const soma = Number(forca || 0) + Number(tam || 0);
+    if (soma <= 5) return '-1d8';
+    if (soma <= 10) return '-1d6';
+    if (soma <= 15) return '-1d4';
+    if (soma <= 20) return '-1d2';
+    if (soma <= 25) return '+0';
+    if (soma <= 30) return '+1d2';
+    if (soma <= 35) return '+1d4';
+    if (soma <= 40) return '+1d6';
+    if (soma <= 45) return '+1d8';
+    if (soma <= 50) return '+1d10';
+    if (soma <= 60) return '+1d12';
+    if (soma <= 70) return '+2d6';
+    if (soma <= 80) return '+1d8+1d6';
+    if (soma <= 90) return '+2d8';
+    if (soma <= 100) return '+1d10+1d8';
+    if (soma <= 110) return '+2d10';
+    if (soma <= 120) return '+2d10+1d2';
+    if (soma <= 130) return '+2d10+1d4';
+    // Continuação da progressão: a cada +10, aumenta um passo simples.
+    const extra = Math.floor((soma - 121) / 10);
+    return `+2d10+1d${Math.min(12, 4 + extra * 2)}`;
+}
+
 function calcularAlturaPeso(tam, tipo) {
-    // Referência humanoide para TAM 6–18. Altura em cm e peso-base em kg.
-    // O tipo corporal altera o peso, não a altura. Valores fora da faixa são extrapolados.
+    // Tabela oficial de SIZ: usamos o ponto médio de cada faixa para autopreenchimento.
+    // O usuário continua podendo editar altura e peso manualmente.
     const tabela = {
-        6:  { altura: 137, peso: 38 },
-        7:  { altura: 144, peso: 43 },
-        8:  { altura: 151, peso: 49 },
-        9:  { altura: 157, peso: 56 },
-        10: { altura: 163, peso: 64 },
-        11: { altura: 168, peso: 69 },
-        12: { altura: 172, peso: 73 },
-        13: { altura: 176, peso: 77 },
-        14: { altura: 179, peso: 80 },
-        15: { altura: 182, peso: 83 },
-        16: { altura: 186, peso: 88 },
-        17: { altura: 190, peso: 94 },
-        18: { altura: 194, peso: 100 }
+        1:{h:[1,45],l:[1,5],m:[1,7],p:[1,9]},
+        2:{h:[46,80],l:[6,10],m:[8,14],p:[10,18]},
+        3:{h:[81,105],l:[11,15],m:[15,21],p:[19,27]},
+        4:{h:[106,120],l:[16,20],m:[22,28],p:[28,36]},
+        5:{h:[121,130],l:[21,25],m:[29,35],p:[37,45]},
+        6:{h:[131,140],l:[26,30],m:[36,42],p:[46,54]},
+        7:{h:[141,150],l:[31,35],m:[43,49],p:[55,63]},
+        8:{h:[151,155],l:[36,40],m:[50,56],p:[64,72]},
+        9:{h:[156,160],l:[41,45],m:[57,63],p:[73,81]},
+        10:{h:[161,165],l:[46,50],m:[64,70],p:[82,90]},
+        11:{h:[166,170],l:[51,55],m:[71,77],p:[91,99]},
+        12:{h:[171,175],l:[56,60],m:[78,84],p:[100,108]},
+        13:{h:[176,180],l:[61,65],m:[85,91],p:[109,117]},
+        14:{h:[181,185],l:[66,70],m:[92,98],p:[118,126]},
+        15:{h:[186,190],l:[71,75],m:[99,105],p:[127,135]},
+        16:{h:[191,195],l:[76,80],m:[106,112],p:[136,144]},
+        17:{h:[196,200],l:[81,85],m:[113,119],p:[145,153]},
+        18:{h:[201,205],l:[86,90],m:[120,126],p:[154,162]},
+        19:{h:[206,210],l:[91,95],m:[127,133],p:[163,171]},
+        20:{h:[211,215],l:[96,100],m:[134,140],p:[172,180]},
+        21:{h:[216,220],l:[101,105],m:[141,147],p:[181,189]}
     };
-    tam = Math.round(Number(tam) || 10);
-    let base = tabela[tam];
-    if (!base) {
-        if (tam < 6) base = { altura: 137 + (tam - 6) * 7, peso: Math.max(10, 38 + (tam - 6) * 5) };
-        else base = { altura: 194 + (tam - 18) * 4, peso: 100 + (tam - 18) * 7 };
+    tam = Math.max(1, Math.round(Number(tam) || 10));
+    let faixa = tabela[Math.min(tam,21)];
+    if (tam > 21) {
+        const extra = tam - 21;
+        faixa = {
+            h:[216 + extra*5,220 + extra*5],
+            l:[101 + extra*5,105 + extra*5],
+            m:[141 + extra*7,147 + extra*7],
+            p:[181 + extra*9,189 + extra*9]
+        };
     }
-    const fatorPeso = tipo === 'Leve' ? 0.80 : tipo === 'Pesado' ? 1.25 : 1;
-    return { altura: Math.round(base.altura), peso: Math.round(base.peso * fatorPeso) };
+    const meio = a => Math.round((a[0]+a[1])/2);
+    const chave = tipo === 'Leve' ? 'l' : tipo === 'Pesado' ? 'p' : 'm';
+    return { altura: meio(faixa.h), peso: meio(faixa[chave]) };
 }
 
 function normalizarInventario_(char) {
@@ -1966,6 +2085,7 @@ async function registrarHistoricoCombate_(tipo, texto, dados = {}) {
 }
 
 window.rolarCombateD100 = async () => {
+    somDado_();
     const char = userCharacters.find(c => c.id === currentCharId);
     const pericia = obterPericiaCombateSelecionada_();
     const resumo = document.getElementById('combatRollSummary');
@@ -2055,6 +2175,7 @@ function rolarExpressaoDanoCombate_(expressao) {
 }
 
 window.rolarDanoCombate = async () => {
+    somDado_();
     const resumo = document.getElementById('combatRollSummary');
     const expr = obterExpressaoDanoCombate_();
     if (!resumo) return;
@@ -2077,6 +2198,7 @@ window.rolarDanoCombate = async () => {
 };
 
 window.rolarLocalizacaoCombate = async () => {
+    somDado_();
     const roll = Math.floor(Math.random()*20)+1;
     let local;
     if (roll <= 3) local = 'Perna Direita';
@@ -2096,6 +2218,7 @@ window.rolarLocalizacaoCombate = async () => {
 };
 
 window.rolarIniciativaCombate = async () => {
+    somDado_();
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
     const regra = obterRegraFadiga_(char);
@@ -2302,14 +2425,23 @@ function renderizarCombate(char) {
     const tamTotal = (attrs.TAM || 10) + (bonus.TAM || 0);
     const soma = conTotal + tamTotal;
 
+    const colunaPV = soma <= 5 ? 0 : soma <= 10 ? 1 : soma <= 15 ? 2 : soma <= 20 ? 3 : soma <= 25 ? 4 : soma <= 30 ? 5 : soma <= 35 ? 6 : 7;
+    const incrementoPV = soma > 40 ? Math.ceil((soma - 40) / 5) : 0;
+    const tabelaPV = {
+        perna:[1,2,3,4,5,6,7,8],
+        abdomen:[2,3,4,5,6,7,8,9],
+        peito:[3,4,5,6,7,8,9,10],
+        braco:[1,1,2,3,4,5,6,7],
+        cabeca:[1,2,3,4,5,6,7,8]
+    };
     const hitLocations = {
-        'Cabeça': Math.max(1, Math.floor(soma / 4)),
-        'Peito': Math.max(3, Math.floor(soma / 2.5)),
-        'Abdômen': Math.max(2, Math.floor(soma / 3)),
-        'Braço Direito': Math.max(1, Math.floor(soma / 5)),
-        'Braço Esquerdo': Math.max(1, Math.floor(soma / 5)),
-        'Perna Direita': Math.max(1, Math.floor(soma / 5)),
-        'Perna Esquerda': Math.max(1, Math.floor(soma / 5))
+        'Cabeça': tabelaPV.cabeca[colunaPV] + incrementoPV,
+        'Peito': tabelaPV.peito[colunaPV] + incrementoPV,
+        'Abdômen': tabelaPV.abdomen[colunaPV] + incrementoPV,
+        'Braço Direito': tabelaPV.braco[colunaPV] + incrementoPV,
+        'Braço Esquerdo': tabelaPV.braco[colunaPV] + incrementoPV,
+        'Perna Direita': tabelaPV.perna[colunaPV] + incrementoPV,
+        'Perna Esquerda': tabelaPV.perna[colunaPV] + incrementoPV
     };
 
     const combat = char.combate || { hitLocations: {}, armor: {}, fadiga: 'Fresh' };
@@ -2437,6 +2569,7 @@ window.salvarAnotacoes = async () => {
 };
 
 window.rolarDado = async (tipo) => {
+    somDado_();
     const faces = parseInt(tipo.replace('d', ''));
     const resultado = Math.floor(Math.random() * faces) + 1;
     document.getElementById('diceDisplay').textContent = `🎲 ${resultado}`;
@@ -2447,6 +2580,7 @@ window.rolarDado = async (tipo) => {
 };
 
 window.rolarFormula = async () => {
+    somDado_();
     const formula = document.getElementById('damageFormula').value || '1d100';
     const partes = formula.split('+').map(p => p.trim());
     let total = 0;
@@ -2474,6 +2608,7 @@ window.rolarFormula = async () => {
 };
 
 window.rolarPericia = async () => {
+    somDado_();
     const char = userCharacters.find(c => c.id === currentCharId);
     const select = document.getElementById('skillSelect');
     if (!char || !select?.value) return;
@@ -3189,6 +3324,7 @@ function renderizarPsiquismo_(char) {
 }
 
 window.usarPoderPsi = async (poderId) => {
+    somMagico_();
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
     const poder = poderesPsiDB.find(p => p.id === poderId);
@@ -3900,6 +4036,21 @@ function renderizarRegras() {
                     </table>
                 </div>
                 <small style="display:block;color:#aaa;margin-top:10px;">Atletismo para exercício, Força Bruta para levantamento pesado e Resistência para atividades gerais/combate, conforme a situação.</small>
+                <div style="margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);">
+                    <h3 style="color:#00d4ff;margin:0 0 12px;">Resumo de Derivados (Mythras)</h3>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;color:#ddd;">
+                        <div><strong>Pontos de Ação:</strong> INT+DES: ≤12=1; 13–24=2; 25–36=3; +1 a cada 12.</div>
+                        <div><strong>Iniciativa:</strong> média de INT e DES; a rolagem de combate usa 1d10 + Iniciativa.</div>
+                        <div><strong>Pontos de Sorte:</strong> POD ≤6=1; 7–12=2; 13–18=3; +1 a cada 6 POD.</div>
+                        <div><strong>Pontos de Magia:</strong> iguais ao POD para personagens capazes de utilizar poderes.</div>
+                        <div><strong>Recuperação:</strong> CON ≤6=1; 7–12=2; 13–18=3; +1 a cada 6 CON.</div>
+                        <div><strong>Mod. Experiência:</strong> CAR ≤6=-1; 7–12=0; 13–18=+1; +1 a cada 6 CAR.</div>
+                        <div><strong>Mod. Dano:</strong> determinado por FOR+TAM conforme a tabela oficial; progride de valores negativos até múltiplos dados.</div>
+                        <div><strong>Movimento:</strong> valor-base da espécie; humano padrão = 6 m.</div>
+                        <div><strong>PV por localização:</strong> derivados de CON+TAM e da tabela de localização corporal.</div>
+                        <div><strong>Altura/Peso:</strong> faixa determinada por TAM e tipo corporal; os valores automáticos usam o centro da faixa e podem ser editados.</div>
+                    </div>
+                </div>
             </div>`;
     }
     const btnEditar = document.getElementById('btnEditarRegras');
