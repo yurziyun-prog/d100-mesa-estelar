@@ -982,7 +982,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, query, where, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
@@ -1290,8 +1290,9 @@ async function carregarBancosDeDados() {
 
     const itensSnap = await getDocs(collection(db, "itens"));
     if (itensSnap.empty) {
-        for (const i of itensPadrao) await setDoc(doc(db, "itens", i.id), i);
-        itensDB = [...itensPadrao];
+        // Não recria mais automaticamente os itens antigos.
+        // Bancos vazios devem permanecer vazios até importação explícita do mestre.
+        itensDB = [];
     } else {
         itensDB = []; itensSnap.forEach(doc => itensDB.push({ id: doc.id, ...doc.data() }));
     }
@@ -4570,17 +4571,57 @@ window.selecionarImportacaoBanco_ = (inputId, substituir=false) => {
     input.click();
 };
 
+function chaveNomeBanco_(valor) {
+    return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+}
+
 async function substituirColecaoPorDados_(tipo, dados) {
-    // Só começa a apagar depois que o CSV inteiro já foi lido e normalizado.
     const existentes = await getDocs(collection(db, tipo));
 
-    for (const antigo of existentes.docs) {
-        await deleteDoc(doc(db, tipo, antigo.id));
+    // Firestore limita batches a 500 operações.
+    const totalOperacoes = existentes.size + dados.length;
+    if (totalOperacoes > 450) {
+        throw new Error(`Substituição segura excede o limite desta versão (${totalOperacoes} operações).`);
     }
+
+    // Preserva imagens existentes quando o CSV deixa a imagem vazia.
+    if (tipo === 'itens') {
+        const porId = new Map();
+        const porNome = new Map();
+        existentes.forEach(snap => {
+            const d = { id:snap.id, ...snap.data() };
+            porId.set(String(d.id), d);
+            porNome.set(chaveNomeBanco_(d.nome), d);
+        });
+
+        dados = dados.map(novo => {
+            if (String(novo.imagem || '').trim()) return novo;
+            const antigo = porId.get(String(novo.id)) || porNome.get(chaveNomeBanco_(novo.nome));
+            const imagemAntiga = String(antigo?.imagem || antigo?.urlImagem || '').trim();
+            return imagemAntiga ? { ...novo, imagem: imagemAntiga } : novo;
+        });
+    }
+
+    // Uma única transação de escrita: ou tudo muda, ou nada muda.
+    const batch = writeBatch(db);
+    existentes.forEach(snap => batch.delete(doc(db, tipo, snap.id)));
     for (const item of dados) {
-        await setDoc(doc(db, tipo, item.id), item);
+        batch.set(doc(db, tipo, item.id), item);
     }
-    return existentes.size;
+    await batch.commit();
+
+    // Verificação pós-importação.
+    const depois = await getDocs(collection(db, tipo));
+    const idsEsperados = new Set(dados.map(d => String(d.id)));
+    const idsObtidos = new Set(depois.docs.map(d => String(d.id)));
+    const faltando = [...idsEsperados].filter(id => !idsObtidos.has(id));
+    const extras = [...idsObtidos].filter(id => !idsEsperados.has(id));
+
+    if (faltando.length || extras.length || depois.size !== dados.length) {
+        throw new Error(`Verificação falhou. Esperados=${dados.length}, encontrados=${depois.size}, faltando=${faltando.join(',')}, extras=${extras.join(',')}`);
+    }
+
+    return { apagados: existentes.size, gravados: depois.size };
 }
 
 window.importarPlanilha = async (tipo, input, substituir=false) => {
@@ -4621,11 +4662,13 @@ Personagens existentes não serão apagados, mas referências a IDs removidos po
 Deseja continuar?`;
                     if (!confirm(aviso)) return;
 
-                    const apagados = await substituirColecaoPorDados_(tipo, dados);
+                    const resultado = await substituirColecaoPorDados_(tipo, dados);
                     somSalvar_();
-                    alert(`✅ Banco ${tipo} substituído: ${apagados} registros antigos removidos e ${dados.length} registros gravados.`);
+                    alert(`✅ Banco ${tipo} substituído e verificado: ${resultado.apagados} registros antigos removidos e ${resultado.gravados} registros gravados.`);
                 } else {
-                    for (const item of dados) {
+                    for (const itemOriginal of dados) {
+                        const item = { ...itemOriginal };
+                        if (tipo === 'itens' && !String(item.imagem || '').trim()) delete item.imagem;
                         await setDoc(doc(db, tipo, item.id), item, { merge: true });
                     }
                     somSalvar_();
