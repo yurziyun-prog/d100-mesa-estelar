@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v24.4: histórico e regras multilíngues -->
+    <!-- Mesa Estelar v25: controle de fichas dos jogadores pelo mestre -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -335,6 +335,7 @@
                 </div>
 
                 <div id="characterSection" class="hidden">
+                    <div id="masterCharacterControlBanner" class="hidden" style="margin:0 0 14px;padding:12px 16px;border-radius:10px;background:rgba(255,193,7,.10);border:1px solid rgba(255,193,7,.35);color:#ffd166;font-weight:600;"></div>
                     <div class="char-tabs">
                         <button class="char-tab-btn active" onclick="mostrarCharAba('personagem', this)" data-i18n="charTabCharacter">📄 Personagem</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('pericias', this)" data-i18n="charTabSkills">📚 Perícias</button>
@@ -1513,6 +1514,29 @@ Object.assign(traducoes.zh, {
   derivedSummary:'衍生属性摘要（Mythras）'
 });
 
+
+Object.assign(traducoes.pt, {
+  allCharacters:'Todos os Personagens', noCharactersMaster:'Nenhum personagem cadastrado.',
+  playerCharacterBadge:'Jogador', masterCharacterBadge:'Meu personagem', npcBadge:'NPC',
+  unnamedCharacter:'Sem Nome', masterEditingPlayerSheet:'Você está controlando a ficha de outro jogador. Alterações serão salvas diretamente na ficha dele.',
+  deleteOtherCharacterWarning:'ATENÇÃO: esta ficha pertence a outro jogador. Deseja realmente apagá-la?',
+  cannotUndo:'Esta ação não pode ser desfeita.'
+});
+Object.assign(traducoes.en, {
+  allCharacters:'All Characters', noCharactersMaster:'No characters registered.',
+  playerCharacterBadge:'Player', masterCharacterBadge:'My character', npcBadge:'NPC',
+  unnamedCharacter:'Unnamed', masterEditingPlayerSheet:"You are controlling another player's sheet. Changes are saved directly to their character.",
+  deleteOtherCharacterWarning:"WARNING: this sheet belongs to another player. Do you really want to delete it?",
+  cannotUndo:'This action cannot be undone.'
+});
+Object.assign(traducoes.zh, {
+  allCharacters:'全部角色', noCharactersMaster:'尚无角色。',
+  playerCharacterBadge:'玩家', masterCharacterBadge:'我的角色', npcBadge:'NPC',
+  unnamedCharacter:'未命名', masterEditingPlayerSheet:'你正在控制另一名玩家的角色卡。所做修改会直接保存到该角色。',
+  deleteOtherCharacterWarning:'警告：此角色卡属于另一名玩家。确定要删除吗？',
+  cannotUndo:'此操作无法撤销。'
+});
+
 function tr_(key) { return (traducoes[idiomaAtual] || traducoes.pt)[key] || (traducoes.pt[key] || key); }
 
 const BODY_LOC_KEYS_ = {
@@ -1745,20 +1769,76 @@ function renderizarBancoDados() {
 }
 
 async function carregarPersonagens() {
-    const q = query(collection(db, "personagens"), where("dono", "==", currentUserUid));
-    const querySnapshot = await getDocs(q);
-    userCharacters = []; querySnapshot.forEach((doc) => { userCharacters.push({ id: doc.id, ...doc.data() }); });
+    let querySnapshot;
+    if (userData && userData.role === 'mestre') {
+        // O mestre carrega todas as fichas. As regras do Firestore continuam sendo a barreira real de segurança.
+        querySnapshot = await getDocs(collection(db, "personagens"));
+    } else {
+        const q = query(collection(db, "personagens"), where("dono", "==", currentUserUid));
+        querySnapshot = await getDocs(q);
+    }
+
+    userCharacters = [];
+    querySnapshot.forEach((docSnap) => {
+        userCharacters.push({ id: docSnap.id, ...docSnap.data() });
+    });
+
+    // Para o mestre, mantém as próprias fichas primeiro; depois jogadores/NPCs em ordem alfabética.
+    userCharacters.sort((a,b) => {
+        if (userData && userData.role === 'mestre') {
+            const aMeu = a.dono === currentUserUid ? 0 : 1;
+            const bMeu = b.dono === currentUserUid ? 0 : 1;
+            if (aMeu !== bMeu) return aMeu - bMeu;
+        }
+        return String(a.nome || '').localeCompare(String(b.nome || ''), idiomaAtual === 'zh' ? 'zh' : idiomaAtual === 'en' ? 'en' : 'pt-BR');
+    });
+
+    // Não deixa uma seleção antiga apontar para uma ficha que já não está acessível.
+    if (currentCharId && !userCharacters.some(c => c.id === currentCharId)) currentCharId = null;
+
     renderizarListaPersonagens();
 }
 
 function renderizarListaPersonagens() {
     const container = document.getElementById('charList');
     const t = traducoes[idiomaAtual];
-    if (userCharacters.length === 0) { container.innerHTML = `<p style="text-align: center; color: #aaa; padding: 20px;">${t.noChars}</p>`; document.getElementById('characterSection').classList.add('hidden'); return; }
+    const isMaster = userData && userData.role === 'mestre';
+    const titulo = document.querySelector('.char-manager h3');
+    if (titulo) titulo.textContent = isMaster ? tr_('allCharacters') : t.myCharacters;
+
+    if (userCharacters.length === 0) {
+        container.innerHTML = `<p style="text-align:center;color:#aaa;padding:20px;">${isMaster ? tr_('noCharactersMaster') : t.noChars}</p>`;
+        document.getElementById('characterSection').classList.add('hidden');
+        return;
+    }
+
     container.innerHTML = userCharacters.map(char => {
         const isActive = char.id === currentCharId;
-        return `<div class="char-item ${isActive ? 'active' : ''}" onclick="selecionarPersonagem('${char.id}')"><div class="char-item-avatar">${char.imagem ? `<img src="${char.imagem}" alt="${char.nome}">` : '👤'}</div><div class="char-item-name">${char.nome || 'Sem Nome'}</div><div class="char-item-actions"><button class="btn-small btn-select" onclick="event.stopPropagation(); selecionarPersonagem('${char.id}')">${t.selectChar}</button><button class="btn-small btn-delete" onclick="event.stopPropagation(); deletarPersonagem('${char.id}')">${t.deleteChar}</button></div></div>`;
+        const meu = char.dono === currentUserUid;
+        const tipo = String(char.tipo || 'pc').toLowerCase();
+        let badge = '';
+        if (isMaster) {
+            if (tipo === 'npc') {
+                badge = `<div style="margin:6px 0 2px;"><span style="display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(155,89,182,.22);border:1px solid rgba(155,89,182,.45);color:#e5c7ff;font-size:.75em;">${tr_('npcBadge')}</span></div>`;
+            } else if (meu) {
+                badge = `<div style="margin:6px 0 2px;"><span style="display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(0,212,255,.14);border:1px solid rgba(0,212,255,.38);color:#8feaff;font-size:.75em;">${tr_('masterCharacterBadge')}</span></div>`;
+            } else {
+                const donoCurto = char.dono ? String(char.dono).slice(-6) : '—';
+                badge = `<div style="margin:6px 0 2px;"><span style="display:inline-block;padding:3px 8px;border-radius:999px;background:rgba(40,167,69,.16);border:1px solid rgba(40,167,69,.4);color:#8ff0a8;font-size:.75em;">${tr_('playerCharacterBadge')}</span> <span title="${escaparHtmlInventario_(char.dono || '')}" style="color:#777;font-size:.72em;">#${escaparHtmlInventario_(donoCurto)}</span></div>`;
+            }
+        }
+
+        return `<div class="char-item ${isActive ? 'active' : ''}" onclick="selecionarPersonagem('${char.id}')">
+            <div class="char-item-avatar">${char.imagem ? `<img src="${escaparHtmlInventario_(char.imagem)}" alt="${escaparHtmlInventario_(char.nome || '')}">` : '👤'}</div>
+            <div class="char-item-name">${escaparHtmlInventario_(char.nome || tr_('unnamedCharacter'))}</div>
+            ${badge}
+            <div class="char-item-actions">
+                <button class="btn-small btn-select" onclick="event.stopPropagation(); selecionarPersonagem('${char.id}')">${t.selectChar}</button>
+                <button class="btn-small btn-delete" onclick="event.stopPropagation(); deletarPersonagem('${char.id}')">${t.deleteChar}</button>
+            </div>
+        </div>`;
     }).join('');
+
     if (currentCharId) {
         const char = userCharacters.find(c => c.id === currentCharId);
         if (char) {
@@ -1766,9 +1846,10 @@ function renderizarListaPersonagens() {
             atualizarVisualizacao(char);
             preencherFormulario(char);
         }
-    } else { document.getElementById('characterSection').classList.add('hidden'); }
+    } else {
+        document.getElementById('characterSection').classList.add('hidden');
+    }
 }
-
 window.selecionarPersonagem = async (charId) => {
     currentCharId = charId;
 
@@ -1789,11 +1870,29 @@ window.selecionarPersonagem = async (charId) => {
     }
 };
 
-window.deletarPersonagem = async (charId) => { const t = traducoes[idiomaAtual]; if (!confirm(t.confirmDelete)) return; await deleteDoc(doc(db, "personagens", charId)); if (charId === currentCharId) { currentCharId = null; await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: null }, { merge: true }); } await carregarPersonagens(); alert(t.deleted); };
+window.deletarPersonagem = async (charId) => {
+    const t = traducoes[idiomaAtual];
+    const alvo = userCharacters.find(c => c.id === charId);
+    const isMaster = userData && userData.role === 'mestre';
+    const ehDeOutro = isMaster && alvo && alvo.dono !== currentUserUid;
+    const pergunta = ehDeOutro
+        ? `${tr_('deleteOtherCharacterWarning')}\n\n${alvo.nome || tr_('unnamedCharacter')}\n\n${tr_('cannotUndo')}`
+        : t.confirmDelete;
+    if (!confirm(pergunta)) return;
+
+    await deleteDoc(doc(db, "personagens", charId));
+    if (charId === currentCharId) {
+        currentCharId = null;
+        await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: null }, { merge: true });
+    }
+    await carregarPersonagens();
+    alert(t.deleted);
+};
 
 window.novoPersonagem = async () => {
     const maxChars = userData.role === 'mestre' ? 999 : 5;
-    if (userCharacters.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
+    const meusPersonagens = userCharacters.filter(c => c.dono === currentUserUid);
+    if (meusPersonagens.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
     const charId = `char_${Date.now()}`;
     const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: 0, pontosSorte: null, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
@@ -2023,6 +2122,18 @@ window.gastarPontoSorte = async () => {
 };
 
 function atualizarVisualizacao(data) {
+    const bannerMestre = document.getElementById('masterCharacterControlBanner');
+    if (bannerMestre) {
+        const controlandoOutro = userData && userData.role === 'mestre' && data.dono && data.dono !== currentUserUid;
+        if (controlandoOutro) {
+            bannerMestre.classList.remove('hidden');
+            bannerMestre.textContent = `🛡️ ${tr_('masterEditingPlayerSheet')}`;
+        } else {
+            bannerMestre.classList.add('hidden');
+            bannerMestre.textContent = '';
+        }
+    }
+
     document.getElementById('charName').textContent = data.nome || '-';
     document.getElementById('charRace').textContent = data.raca || '-';
     const origemObj = origensDB.find(o => o.id === data.origem);
