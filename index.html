@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v25: controle de fichas dos jogadores pelo mestre -->
+    <!-- Mesa Estelar v26: recursos iniciais, classe social e combate modular -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -377,6 +377,10 @@
                                 <div class="stat-box hidden" id="statMagiaBox"><div class="stat-label" data-i18n="magicPoints">Pontos de Magia</div><div class="stat-value" id="statPontosMagia">—</div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="altura">Altura</div><div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="peso">Peso</div><div class="stat-value"><input type="number" id="editPeso" onchange="salvarAlturaPeso()"></div></div>
+                                <div class="stat-box" style="min-width:190px;">
+                                    <div class="stat-label" data-i18n="socialClass">Classe Social</div>
+                                    <div class="stat-value"><input type="text" id="editClasseSocialFrente" onchange="salvarClasseSocial()" style="font-size:.72em;width:100%;"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -731,7 +735,7 @@
             <!-- CONFIG -->
             <div id="config" class="tab-content">
                 <div class="form-section">
-                    <h3>⚙️ Configurações do Sistema (Mestre)</h3>
+                    <h3 data-i18n="configTitle">⚙️ Configurações do Sistema (Mestre)</h3>
                     <div class="form-group"><label>Etapa 1 - Características:</label><input type="number" id="configEtapa1" value="80"></div>
                     <div class="form-group"><label>Origem:</label><input type="number" id="configEtapa2" value="100"></div>
                     <div class="form-group"><label>Carreira:</label><input type="number" id="configEtapa3" value="100"></div>
@@ -740,7 +744,20 @@
                     <div class="form-group"><label>Limite Mínimo INT/TAM:</label><input type="number" id="configMinAttrINT" value="6"></div>
                     <div class="form-group"><label>Limite Máximo Atributos:</label><input type="number" id="configMaxAttr" value="18"></div>
                     <div class="form-group"><label>Máximo de Treino por Perícia/Categoria:</label><input type="number" id="configMaxTreino" value="30"></div>
-                    <button class="btn-save" onclick="salvarConfiguracoes()">💾 Salvar Configurações</button>
+                    <div class="form-group">
+                        <label data-i18n="initialResourcesConfig">Recursos iniciais para novos personagens:</label>
+                        <input type="number" id="configRecursosIniciais" value="1000" min="0" step="1">
+                        <small data-i18n="initialResourcesHelp" style="display:block;color:#aaa;margin-top:7px;">Aplicado apenas quando uma nova ficha é criada. Alterações posteriores são individuais.</small>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="combatModeConfig">Modo de combate:</label>
+                        <select id="configModoCombate">
+                            <option value="tatico" data-i18n="combatModeTactical">Tático — PV e PA por partes do corpo</option>
+                            <option value="simplificado" data-i18n="combatModeSimple">Simplificado — PV e PA gerais</option>
+                        </select>
+                        <small data-i18n="combatModeHelp" style="display:block;color:#aaa;margin-top:7px;">A mudança vale para fichas de jogadores e NPCs. Os valores do outro modo são preservados ao alternar.</small>
+                    </div>
+                    <button class="btn-save" onclick="salvarConfiguracoes()" data-i18n="saveConfig">💾 Salvar Configurações</button>
                 </div>
             </div>
 
@@ -1006,7 +1023,7 @@ let userData = null;
 let idiomaAtual = 'pt';
 let currentCharId = null;
 let userCharacters = [];
-let configuracoes = { etapa1: 80, etapa2: 100, etapa3: 100, etapa4: 150, minAttr: 3, minAttrINT: 6, maxAttr: 18, maxTreino: 30 };
+let configuracoes = { etapa1: 80, etapa2: 100, etapa3: 100, etapa4: 150, minAttr: 3, minAttrINT: 6, maxAttr: 18, maxTreino: 30, recursosIniciais: 1000, modoCombate: 'tatico' };
 let periciasDB = [];
 let origensDB = [];
 let carreirasDB = [];
@@ -1537,6 +1554,35 @@ Object.assign(traducoes.zh, {
   cannotUndo:'此操作无法撤销。'
 });
 
+
+Object.assign(traducoes.pt, {
+  initialResourcesConfig:'Recursos iniciais para novos personagens:',
+  initialResourcesHelp:'Aplicado apenas quando uma nova ficha é criada. Alterações posteriores são individuais.',
+  combatModeConfig:'Modo de combate:',
+  combatModeTactical:'Tático — PV e PA por partes do corpo',
+  combatModeSimple:'Simplificado — PV e PA gerais',
+  combatModeHelp:'A mudança vale para fichas de jogadores e NPCs. Os valores do outro modo são preservados ao alternar.',
+  masterOnlyField:'Somente o mestre pode alterar este campo.'
+});
+Object.assign(traducoes.en, {
+  initialResourcesConfig:'Starting resources for new characters:',
+  initialResourcesHelp:'Applied only when a new sheet is created. Later changes are individual.',
+  combatModeConfig:'Combat mode:',
+  combatModeTactical:'Tactical — HP and AP by body location',
+  combatModeSimple:'Simplified — general HP and AP',
+  combatModeHelp:'This change applies to player and NPC sheets. Values from the other mode are preserved when switching.',
+  masterOnlyField:'Only the GM can change this field.'
+});
+Object.assign(traducoes.zh, {
+  initialResourcesConfig:'新角色初始资源：',
+  initialResourcesHelp:'仅在创建新角色卡时应用。之后的资源修改按角色单独进行。',
+  combatModeConfig:'战斗模式：',
+  combatModeTactical:'战术 — 按身体部位计算生命值与护甲',
+  combatModeSimple:'简化 — 使用总生命值与总护甲',
+  combatModeHelp:'此设置同时适用于玩家与NPC角色卡。切换模式时会保留另一模式的数据。',
+  masterOnlyField:'只有主持人可以修改此字段。'
+});
+
 function tr_(key) { return (traducoes[idiomaAtual] || traducoes.pt)[key] || (traducoes.pt[key] || key); }
 
 const BODY_LOC_KEYS_ = {
@@ -1718,6 +1764,8 @@ async function carregarConfiguracoes() {
         document.getElementById('configMinAttrINT').value = configuracoes.minAttrINT || 6;
         document.getElementById('configMaxAttr').value = configuracoes.maxAttr || 18;
         document.getElementById('configMaxTreino').value = configuracoes.maxTreino || 30;
+        document.getElementById('configRecursosIniciais').value = Number.isFinite(Number(configuracoes.recursosIniciais)) ? Number(configuracoes.recursosIniciais) : 1000;
+        document.getElementById('configModoCombate').value = configuracoes.modoCombate === 'simplificado' ? 'simplificado' : 'tatico';
     }
 }
 
@@ -1894,7 +1942,7 @@ window.novoPersonagem = async () => {
     const meusPersonagens = userCharacters.filter(c => c.dono === currentUserUid);
     if (meusPersonagens.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
     const charId = `char_${Date.now()}`;
-    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: 0, pontosSorte: null, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
+    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: Math.max(0, Math.floor(Number(configuracoes.recursosIniciais ?? 1000) || 0)), pontosSorte: null, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
     await carregarPersonagens(); currentCharId = charId;
     await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -1998,6 +2046,17 @@ window.salvarRecursos = async () => {
     await setDoc(doc(db, 'personagens', currentCharId), { recursos }, { merge: true });
     renderizarMercado();
 };
+
+window.salvarClasseSocial = async () => {
+    if (!currentCharId || !(userData && userData.role === 'mestre')) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    const classeSocial = String(document.getElementById('editClasseSocialFrente')?.value || '').trim();
+    char.classeSocial = classeSocial;
+    await setDoc(doc(db, 'personagens', currentCharId), { classeSocial }, { merge:true });
+    somSalvar_();
+};
+
 
 function normalizarPsi_(valor) {
     return String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
@@ -2162,6 +2221,13 @@ function atualizarVisualizacao(data) {
     document.getElementById('editPeso').value = data.peso || calc.peso;
     const recursosInput = document.getElementById('editRecursos');
     if (recursosInput) { recursosInput.value = Number(data.recursos || 0); recursosInput.disabled = !(userData && userData.role === 'mestre'); }
+
+    const classeSocialFrente = document.getElementById('editClasseSocialFrente');
+    if (classeSocialFrente) {
+        classeSocialFrente.value = data.classeSocial || '';
+        classeSocialFrente.disabled = !(userData && userData.role === 'mestre');
+        classeSocialFrente.title = (userData && userData.role === 'mestre') ? '' : tr_('masterOnlyField');
+    }
     atualizarPontosSorteEMagia_(data);
     renderizarPsiRolagem_(data);
     renderizarPsiquismo_(data);
@@ -3549,7 +3615,114 @@ function atualizarVisualPontosAcao_(char) {
     alvo.textContent = `${atual} / ${max}`;
 }
 
+
+function modoCombateAtual_() {
+    return configuracoes?.modoCombate === 'simplificado' ? 'simplificado' : 'tatico';
+}
+
+function calcularPVGlobalMax_(char) {
+    const a = char?.atributos || {};
+    const b = char?.bonus || {};
+    const con = Number(a.CON || 10) + Number(b.CON || 0);
+    const tam = Number(a.TAM || 10) + Number(b.TAM || 0);
+    return Math.max(1, Math.ceil((con + tam) / 2));
+}
+
+function calcularPAGlobalEquipado_(char) {
+    const locais = ['Cabeça','Peito','Abdômen','Braço Direito','Braço Esquerdo','Perna Direita','Perna Esquerda'];
+    const pa = calcularPAEquipado_(char, locais);
+    // Média ponderada das regiões. Evita que apenas um capacete proteja o corpo inteiro,
+    // mas permite que armaduras de torso tenham impacto relevante no modo simplificado.
+    const pesos = {
+        'Cabeça':0.10, 'Peito':0.25, 'Abdômen':0.20,
+        'Braço Direito':0.10, 'Braço Esquerdo':0.10,
+        'Perna Direita':0.125, 'Perna Esquerda':0.125
+    };
+    const media = locais.reduce((acc,loc)=>acc + Number(pa[loc] || 0) * pesos[loc], 0);
+    return Math.max(0, Math.round(media));
+}
+
+function renderizarCombateSimplificado_(char) {
+    const combat = char.combate || {};
+    if (!char.combate) char.combate = combat;
+
+    const pvMax = calcularPVGlobalMax_(char);
+    if (!Number.isFinite(Number(combat.pvGlobalAtual))) combat.pvGlobalAtual = pvMax;
+    combat.pvGlobalAtual = Math.max(0, Math.min(pvMax, Number(combat.pvGlobalAtual)));
+
+    const paEquip = calcularPAGlobalEquipado_(char);
+    const paManual = Math.max(0, Number(combat.armorGlobalManual || 0));
+    const paTotal = paManual + paEquip;
+
+    const hpTitle = idiomaAtual === 'en' ? 'General Hit Points' : idiomaAtual === 'zh' ? '总生命值' : 'Pontos de Vida Gerais';
+    const apTitle = idiomaAtual === 'en' ? 'General Armor (AP)' : idiomaAtual === 'zh' ? '总护甲（AP）' : 'Armadura Geral (PA)';
+    const maxTxt = idiomaAtual === 'en' ? 'Max' : idiomaAtual === 'zh' ? '最大' : 'Máx';
+    const curTxt = idiomaAtual === 'en' ? 'Current' : idiomaAtual === 'zh' ? '当前' : 'Atual';
+
+    document.getElementById('hitLocations').innerHTML = `
+        <div style="padding:14px;background:rgba(0,0,0,.18);border-radius:10px;">
+            <div style="color:#00d4ff;font-weight:700;margin-bottom:10px;">${hpTitle}</div>
+            <div style="display:grid;grid-template-columns:1fr 110px 110px;gap:10px;align-items:center;">
+                <strong>${hpTitle}</strong>
+                <div><small style="color:#aaa;">${maxTxt}</small><input type="number" value="${pvMax}" readonly style="margin-top:4px;"></div>
+                <div><small style="color:#aaa;">${curTxt}</small><input type="number" value="${combat.pvGlobalAtual}" class="damage" min="0" max="${pvMax}" onchange="salvarPVGlobal(this.value)" style="margin-top:4px;"></div>
+            </div>
+        </div>`;
+
+    document.getElementById('armorLocations').innerHTML = `
+        <div style="padding:14px;background:rgba(0,0,0,.18);border-radius:10px;">
+            <div style="color:#00d4ff;font-weight:700;margin-bottom:10px;">${apTitle}</div>
+            <div style="display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:center;">
+                <strong>${apTitle}</strong>
+                <input type="number" value="${paTotal}" min="0" title="${paManual} manual + ${paEquip} equipamento" onchange="salvarPAGlobal(this.value, ${paEquip})">
+            </div>
+            <small style="display:block;color:#888;margin-top:8px;">${idiomaAtual==='en' ? `Equipment contribution: ${paEquip}` : idiomaAtual==='zh' ? `装备贡献：${paEquip}` : `Contribuição do equipamento: ${paEquip}`}</small>
+        </div>`;
+
+    const hpHeader = document.querySelector('#char-combate .combat-grid .combat-section:nth-child(1) .combat-title-row');
+    const armorHeader = document.querySelector('#char-combate .combat-grid .combat-section:nth-child(2) .combat-title-row');
+    if (hpHeader) hpHeader.style.display = 'none';
+    if (armorHeader) armorHeader.style.display = 'none';
+
+    document.getElementById('fadigaLevel').value = combat.fadiga || 'Fresh';
+    atualizarVisualFadiga_(char);
+    atualizarVisualPontosAcao_(char);
+    popularEquipamentosCombate_(char);
+    renderizarHistoricoCombate_(char);
+}
+
+window.salvarPVGlobal = async (valor) => {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    if (!char.combate) char.combate = {};
+    const max = calcularPVGlobalMax_(char);
+    char.combate.pvGlobalAtual = Math.max(0, Math.min(max, parseInt(valor) || 0));
+    await setDoc(doc(db,'personagens',currentCharId), { combate:char.combate }, { merge:true });
+    somSalvar_();
+};
+
+window.salvarPAGlobal = async (valorTotal, paEquipamento) => {
+    if (!currentCharId) return;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    if (!char.combate) char.combate = {};
+    char.combate.armorGlobalManual = Math.max(0, (parseInt(valorTotal) || 0) - (parseInt(paEquipamento) || 0));
+    await setDoc(doc(db,'personagens',currentCharId), { combate:char.combate }, { merge:true });
+    renderizarCombate(char);
+};
+
 function renderizarCombate(char) {
+    if (modoCombateAtual_() === 'simplificado') {
+        renderizarCombateSimplificado_(char);
+        return;
+    }
+
+    const hpHeader = document.querySelector('#char-combate .combat-grid .combat-section:nth-child(1) .combat-title-row');
+    const armorHeader = document.querySelector('#char-combate .combat-grid .combat-section:nth-child(2) .combat-title-row');
+    if (hpHeader) hpHeader.style.display = '';
+    if (armorHeader) armorHeader.style.display = '';
+
     const attrs = char.atributos || {};
     const bonus = char.bonus || {};
     const conTotal = (attrs.CON || 10) + (bonus.CON || 0);
@@ -5817,9 +5990,13 @@ window.salvarConfiguracoes = async () => {
         minAttr: parseInt(document.getElementById('configMinAttr').value),
         minAttrINT: parseInt(document.getElementById('configMinAttrINT').value),
         maxAttr: parseInt(document.getElementById('configMaxAttr').value),
-        maxTreino: parseInt(document.getElementById('configMaxTreino').value)
+        maxTreino: parseInt(document.getElementById('configMaxTreino').value),
+        recursosIniciais: Math.max(0, Math.floor(Number(document.getElementById('configRecursosIniciais').value) || 0)),
+        modoCombate: document.getElementById('configModoCombate').value === 'simplificado' ? 'simplificado' : 'tatico'
     };
     await setDoc(doc(db, "configuracoes", "sistema"), configuracoes);
+    const charAtual = userCharacters.find(c => c.id === currentCharId);
+    if (charAtual) renderizarCombate(charAtual);
     alert('Configurações salvas!');
 };
 
