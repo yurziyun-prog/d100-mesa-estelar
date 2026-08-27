@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v24.3: i18n de combate/rolagem/psi + compatibilidade de armas -->
+    <!-- Mesa Estelar v24.4: histórico e regras multilíngues -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -604,8 +604,8 @@
 
                                 <div style="margin-top:16px;padding:16px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:10px;">
                                     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">
-                                        <strong style="color:#00d4ff;font-size:1.05em;">🧾 Histórico de rolagens</strong>
-                                        <small style="color:#888;">últimas 50</small>
+                                        <strong style="color:#00d4ff;font-size:1.05em;" data-i18n="combatHistoryTitle">🧾 Histórico de rolagens</strong>
+                                        <small style="color:#888;" data-i18n="last50">últimas 50</small>
                                     </div>
                                     <div id="combatRollHistory" style="display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;">
                                         <div style="color:#888;">Nenhuma rolagem registrada.</div>
@@ -715,8 +715,8 @@
 
                             <div style="margin-top:20px;padding:16px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.10);border-radius:10px;">
                                 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;">
-                                    <strong style="color:#00d4ff;font-size:1.05em;">🧾 Histórico de testes e dados</strong>
-                                    <small style="color:#888;">últimas 50</small>
+                                    <strong style="color:#00d4ff;font-size:1.05em;" data-i18n="generalHistoryTitle">🧾 Histórico de testes e dados</strong>
+                                    <small style="color:#888;" data-i18n="last50">últimas 50</small>
                                 </div>
                                 <div id="generalRollHistory" style="display:flex;flex-direction:column;gap:7px;max-height:300px;overflow-y:auto;">
                                     <div style="color:#888;">Nenhuma rolagem registrada.</div>
@@ -848,9 +848,9 @@
                         <textarea id="regrasTexto" rows="20" style="width:100%; background:rgba(0,0,0,0.3); color:#fff; padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.2);"></textarea>
                     </div>
                     <div style="margin-top:15px; display:flex; gap:10px;">
-                        <button class="btn-save" onclick="editarRegras()" id="btnEditarRegras">✏️ Editar Regras</button>
-                        <button class="btn-save hidden" onclick="salvarRegras()" id="btnSalvarRegras" style="background:linear-gradient(135deg, #00d4ff, #0099cc);">💾 Salvar Regras</button>
-                        <button class="btn-save hidden" onclick="cancelarEdicaoRegras()" id="btnCancelarRegras" style="background:linear-gradient(135deg, #6c757d, #495057);">❌ Cancelar</button>
+                        <button class="btn-save" onclick="editarRegras()" id="btnEditarRegras" data-i18n="editRulesBtn">✏️ Editar Regras</button>
+                        <button class="btn-save hidden" onclick="salvarRegras()" id="btnSalvarRegras" style="background:linear-gradient(135deg, #00d4ff, #0099cc);" data-i18n="saveRulesBtn">💾 Salvar Regras</button>
+                        <button class="btn-save hidden" onclick="cancelarEdicaoRegras()" id="btnCancelarRegras" style="background:linear-gradient(135deg, #6c757d, #495057);" data-i18n="cancelBtn">❌ Cancelar</button>
                     </div>
                 </div>
             </div>
@@ -867,7 +867,7 @@
                     <div style="margin-top:15px; display:flex; gap:10px;">
                         <button class="btn-save" onclick="editarEscudo()" id="btnEditarEscudo" style="background:linear-gradient(135deg, #ffd700, #ffaa00); color:#000;">✏️ Editar Escudo</button>
                         <button class="btn-save hidden" onclick="salvarEscudo()" id="btnSalvarEscudo" style="background:linear-gradient(135deg, #28a745, #218838);">💾 Salvar Escudo</button>
-                        <button class="btn-save hidden" onclick="cancelarEdicaoEscudo()" id="btnCancelarEscudo" style="background:linear-gradient(135deg, #6c757d, #495057);">❌ Cancelar</button>
+                        <button class="btn-save hidden" onclick="cancelarEdicaoEscudo()" id="btnCancelarEscudo" style="background:linear-gradient(135deg, #6c757d, #495057);" data-i18n="cancelBtn">❌ Cancelar</button>
                     </div>
                 </div>
             </div>
@@ -933,7 +933,7 @@
 
             <div class="modal-buttons">
                 <button class="btn-confirm" onclick="salvarItemBancoModal()">💾 Salvar</button>
-                <button class="btn-cancel" onclick="fecharItemBancoModal()">❌ Cancelar</button>
+                <button class="btn-cancel" onclick="fecharItemBancoModal()" data-i18n="cancelBtn">❌ Cancelar</button>
             </div>
         </div>
     </div>
@@ -954,7 +954,7 @@
             </div>
             <div class="modal-buttons">
                 <button class="btn-confirm" onclick="salvarItem()">💾 Salvar</button>
-                <button class="btn-cancel" onclick="fecharModal()">❌ Cancelar</button>
+                <button class="btn-cancel" onclick="fecharModal()" data-i18n="cancelBtn">❌ Cancelar</button>
                 <button class="btn-delete" onclick="removerItemAtual()" style="margin-left:auto;">🗑️ Remover</button>
             </div>
         </div>
@@ -1013,6 +1013,117 @@ let especializacoesDB = [];
 let poderesPsiDB = [];
 let itensDB = [];
 let regrasTexto = '';
+let regrasTextoPT = '';
+let regrasTextoEN = '';
+let regrasTextoZH = '';
+
+const REGRAS_PADRAO_EN = `# D100 System Rules - Mesa Estelar RPG
+
+## Character Creation
+
+### Stage 1 - Characteristics (80 pts)
+Distribute points among STR, CON, SIZ, DEX, INT, POW and CHA.
+- Minimum 3 (6 for INT and SIZ).
+- The total at creation is 80 points.
+
+### Stage 2 - Origin
+Origin represents the environment and culture in which the character was raised. Invest in the Basic and Professional skills allowed by that Origin.
+
+### Stage 3 - Career
+Career represents formal or practical professional training. Invest in the skills and specializations available to that Career.
+
+### Stage 4 - Hobby
+Hobby points represent interests, informal training and abilities developed outside origin and career.
+
+## D100 Tests
+Roll 1d100 against the effective skill value.
+- Critical: roll within the critical range.
+- Success: roll equal to or below the skill.
+- Failure: roll above the skill.
+- Fumble: 100.
+
+Circumstantial difficulty modifies the effective value. Fatigue and using an unsuitable weapon can shift difficulty further.
+
+## Combat
+Combat uses Action Points. Each combat D100 action spends 1 Action Point. When the current pool reaches zero, a new turn begins and the pool is restored.
+
+Weapons should normally be used with the appropriate combat specialization. A related weapon imposes +1 difficulty step; a substantially different weapon of the same broad combat mode imposes +2 steps.
+
+Damage, armor and Hit Points are tracked by body location.
+
+## Fatigue
+Fatigue progressively worsens tests and may reduce movement, Initiative and Action Points. Severe fatigue can prevent action entirely.
+
+## Luck Points
+Luck Points may be spent during play. The expenditure is recorded in the character history.
+
+## Psychism
+Psychic spheres are Senses, Mind and Matter. Training unlocks powers by Arc:
+- 1-14: Arc 1
+- 15-29: Arc 2
+- 30+: Arc 3
+Using powers spends Magic Points.
+
+## Inventory and Market
+Equipment is stored in Equipped, Pocket, Backpack, Vehicle/Ship or Home/Base. Weight and slot limits apply where appropriate. Purchases spend the character's Resources.
+
+## Derived Characteristics
+Action Points, Initiative, Damage Modifier, Experience Modifier, Healing Rate, Movement, Luck Points and location HP are derived from the character's characteristics according to the system tables.
+`;
+
+const REGRAS_PADRAO_ZH = `# D100系统规则 - 星际桌游RPG
+
+## 角色创建
+
+### 阶段1 - 属性（80点）
+在力量、体质、体型、敏捷、智力、意志和魅力之间分配点数。
+- 最低为3（智力和体型最低为6）。
+- 创建角色时总计80点。
+
+### 阶段2 - 起源
+起源代表角色成长的环境与文化。角色可在该起源允许的基础技能和专业技能中投入点数。
+
+### 阶段3 - 职业
+职业代表正式或实践性的专业训练。角色可在该职业允许的技能与专长中投入点数。
+
+### 阶段4 - 爱好
+爱好点代表角色在起源和职业之外培养的兴趣、非正式训练与能力。
+
+## D100检定
+掷1d100，与技能的有效数值比较。
+- 大成功：骰值落在大成功范围内。
+- 成功：骰值小于或等于技能值。
+- 失败：骰值高于技能值。
+- 大失败：掷出100。
+
+情境难度会调整有效技能值。疲劳以及使用不合适的武器还会进一步提高难度。
+
+## 战斗
+战斗使用行动点。每次战斗D100行动消耗1点行动点。当当前行动点降至0时，新回合开始并恢复行动点。
+
+武器通常应使用对应的战斗专长。使用相关武器提高1级难度；使用同一大类战斗方式中明显不同的武器提高2级难度。
+
+伤害、护甲与生命值按身体部位分别记录。
+
+## 疲劳
+疲劳会逐步提高检定难度，并可能降低移动、先攻和行动点。严重疲劳时角色可能完全无法行动。
+
+## 幸运点
+幸运点可在游戏中消耗。消耗会记录在角色历史中。
+
+## 灵能
+灵能分为感知、心智与物质三个领域。训练值按阶段解锁能力：
+- 1-14：阶段1
+- 15-29：阶段2
+- 30+：阶段3
+使用能力会消耗魔法点。
+
+## 物品栏与市场
+装备可存放于已装备、口袋、背包、载具/飞船或住所/基地。适用时受到重量与格数限制。购买物品会消耗角色的资源。
+
+## 衍生属性
+行动点、先攻、伤害修正、经验修正、恢复率、移动、幸运点与各部位生命值均根据角色属性和系统表计算。
+`;
 let escudoTexto = '';
 let currentEditSlot = { compartment: null, index: null };
 let uploadedItemImage = null;
@@ -1325,6 +1436,83 @@ Object.assign(traducoes.zh, {
   minimumCost:'最低消耗'
 });
 
+
+Object.assign(traducoes.pt, {
+  combatHistoryTitle:'🧾 Histórico de rolagens', generalHistoryTitle:'🧾 Histórico de testes e dados',
+  last50:'últimas 50', noRolls:'Nenhuma rolagem registrada.', rollType:'Rolagem', testType:'Teste',
+  dieType:'Dado', formulaType:'Fórmula', psychismType:'Psiquismo', damageType:'Dano',
+  locationType:'Localização', initiativeType:'Iniciativa', ammoType:'Munição', energyType:'Energia',
+  newTurnType:'Novo turno', luckType:'Sorte', success:'Sucesso', failure:'Falha', critical:'Crítico',
+  fumble:'Fiasco', marginWord:'Margem', difficultyWord:'Dificuldade', fatigueWord:'Fadiga',
+  weaponCompatibility:'Compatibilidade de arma', spentWord:'Gasto', remainingWord:'Restante',
+  restoredAP:'Pontos de Ação restaurados', insufficientActivity:'nenhuma atividade possível',
+  blockedByFatigue:'bloqueado por fadiga', chosenDifficulty:'Dificuldade escolhida',
+  rulesTitle:'📖 Regras do Sistema', editRulesBtn:'✏️ Editar Regras', saveRulesBtn:'💾 Salvar Regras',
+  cancelBtn:'❌ Cancelar', physicalEffortTitle:'Tabela de Esforço Físico', effortCol:'Esforço',
+  durationCol:'Por quanto tempo?', exampleCol:'Exemplo', skillTestCol:'Teste de perícia',
+  effortLight:'Leve', effortMedium:'Médio', effortStrenuous:'Extenuante',
+  lightDuration:'CON em horas', mediumDuration:'CON em minutos',
+  strenuousDuration:'CON em segundos, arredondado para a próxima Rodada de Combate',
+  lightExample:'Atividade que não impõe esforço ao corpo. Atividades razoáveis em ritmo constante.',
+  mediumExample:'Trabalho manual; exercício físico sustentado.',
+  strenuousExample:'Combate; lutar contra os elementos; atividade física em circunstâncias extremamente adversas.',
+  lightTest:'Teste Muito Fácil contra Atletismo, Força Bruta ou Resistência, conforme a tarefa.',
+  mediumTest:'Como acima, mas em grau Fácil.',
+  strenuousTest:'Teste Padrão contra Atletismo, Força Bruta ou Resistência, conforme a tarefa.',
+  effortNote:'Atletismo para exercício, Força Bruta para levantamento pesado e Resistência para atividades gerais/combate, conforme a situação.',
+  derivedSummary:'Resumo de Derivados (Mythras)'
+});
+Object.assign(traducoes.en, {
+  combatHistoryTitle:'🧾 Roll History', generalHistoryTitle:'🧾 Test & Dice History',
+  last50:'last 50', noRolls:'No rolls recorded.', rollType:'Roll', testType:'Test',
+  dieType:'Die', formulaType:'Formula', psychismType:'Psychism', damageType:'Damage',
+  locationType:'Hit Location', initiativeType:'Initiative', ammoType:'Ammo', energyType:'Energy',
+  newTurnType:'New Turn', luckType:'Luck', success:'Success', failure:'Failure', critical:'Critical',
+  fumble:'Fumble', marginWord:'Margin', difficultyWord:'Difficulty', fatigueWord:'Fatigue',
+  weaponCompatibility:'Weapon mismatch', spentWord:'Spent', remainingWord:'Remaining',
+  restoredAP:'Action Points restored', insufficientActivity:'no activity possible',
+  blockedByFatigue:'blocked by fatigue', chosenDifficulty:'Chosen difficulty',
+  rulesTitle:'📖 System Rules', editRulesBtn:'✏️ Edit Rules', saveRulesBtn:'💾 Save Rules',
+  cancelBtn:'❌ Cancel', physicalEffortTitle:'Physical Effort Table', effortCol:'Effort',
+  durationCol:'For how long?', exampleCol:'Example', skillTestCol:'Skill test',
+  effortLight:'Light', effortMedium:'Medium', effortStrenuous:'Strenuous',
+  lightDuration:'CON in hours', mediumDuration:'CON in minutes',
+  strenuousDuration:'CON in seconds, rounded to the next Combat Round',
+  lightExample:'Activity that places little strain on the body. Reasonable activities at a steady pace.',
+  mediumExample:'Manual labor; sustained physical exercise.',
+  strenuousExample:'Combat; fighting the elements; physical activity in extremely adverse conditions.',
+  lightTest:'Very Easy test against Athletics, Brawn or Endurance, depending on the task.',
+  mediumTest:'As above, but at Easy difficulty.',
+  strenuousTest:'Standard test against Athletics, Brawn or Endurance, depending on the task.',
+  effortNote:'Use Athletics for exercise, Brawn for heavy lifting, and Endurance for general/combat activity, as appropriate.',
+  derivedSummary:'Derived Characteristics Summary (Mythras)'
+});
+Object.assign(traducoes.zh, {
+  combatHistoryTitle:'🧾 掷骰记录', generalHistoryTitle:'🧾 检定与骰子记录',
+  last50:'最近50次', noRolls:'尚无掷骰记录。', rollType:'掷骰', testType:'检定',
+  dieType:'骰子', formulaType:'公式', psychismType:'灵能', damageType:'伤害',
+  locationType:'命中部位', initiativeType:'先攻', ammoType:'弹药', energyType:'能量',
+  newTurnType:'新回合', luckType:'幸运', success:'成功', failure:'失败', critical:'大成功',
+  fumble:'大失败', marginWord:'差值', difficultyWord:'难度', fatigueWord:'疲劳',
+  weaponCompatibility:'武器不匹配', spentWord:'消耗', remainingWord:'剩余',
+  restoredAP:'行动点已恢复', insufficientActivity:'无法行动',
+  blockedByFatigue:'因疲劳而无法进行', chosenDifficulty:'所选难度',
+  rulesTitle:'📖 系统规则', editRulesBtn:'✏️ 编辑规则', saveRulesBtn:'💾 保存规则',
+  cancelBtn:'❌ 取消', physicalEffortTitle:'体力消耗表', effortCol:'强度',
+  durationCol:'持续多久？', exampleCol:'示例', skillTestCol:'技能检定',
+  effortLight:'轻度', effortMedium:'中度', effortStrenuous:'剧烈',
+  lightDuration:'以CON计小时', mediumDuration:'以CON计分钟',
+  strenuousDuration:'以CON计秒，并向上取整至下一战斗轮',
+  lightExample:'对身体几乎没有负担的活动。以稳定节奏进行的一般活动。',
+  mediumExample:'体力劳动；持续性的体育活动。',
+  strenuousExample:'战斗；对抗恶劣环境；在极端不利条件下进行体力活动。',
+  lightTest:'根据任务，以非常容易难度检定运动、蛮力或耐力。',
+  mediumTest:'同上，但难度为容易。',
+  strenuousTest:'根据任务，以标准难度检定运动、蛮力或耐力。',
+  effortNote:'锻炼使用运动，重物搬运使用蛮力，一般活动或战斗耐久使用耐力，视情况而定。',
+  derivedSummary:'衍生属性摘要（Mythras）'
+});
+
 function tr_(key) { return (traducoes[idiomaAtual] || traducoes.pt)[key] || (traducoes.pt[key] || key); }
 
 const BODY_LOC_KEYS_ = {
@@ -1512,11 +1700,19 @@ async function carregarConfiguracoes() {
 async function carregarRegras() {
     const regrasDoc = await getDoc(doc(db, "configuracoes", "regras"));
     if (regrasDoc.exists()) {
-        regrasTexto = regrasDoc.data().texto || '';
+        const rd = regrasDoc.data() || {};
+        regrasTextoPT = rd.texto_pt || rd.texto || '';
+        regrasTextoEN = rd.texto_en || REGRAS_PADRAO_EN;
+        regrasTextoZH = rd.texto_zh || REGRAS_PADRAO_ZH;
     } else {
-        regrasTexto = '# Regras do Sistema\n\nEm desenvolvimento...';
-        await setDoc(doc(db, "configuracoes", "regras"), { texto: regrasTexto });
+        regrasTextoPT = '# Regras do Sistema\n\nEm desenvolvimento...';
+        regrasTextoEN = REGRAS_PADRAO_EN;
+        regrasTextoZH = REGRAS_PADRAO_ZH;
+        await setDoc(doc(db, "configuracoes", "regras"), {
+            texto: regrasTextoPT, texto_pt: regrasTextoPT, texto_en: regrasTextoEN, texto_zh: regrasTextoZH
+        });
     }
+    regrasTexto = idiomaAtual === 'en' ? regrasTextoEN : idiomaAtual === 'zh' ? regrasTextoZH : regrasTextoPT;
     renderizarRegras();
 }
 
@@ -2703,18 +2899,93 @@ function formatarHoraHistoricoCombate_(iso) {
     return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
 
+
+function traduzirGrauD100_(grau) {
+    const m = {'Sucesso':'success','Falha':'failure','Crítico':'critical','Fiasco':'fumble',
+               'Success':'success','Failure':'failure','Critical':'critical','Fumble':'fumble'};
+    return tr_(m[grau] || '') || grau || '';
+}
+function traduzirTipoHistorico_(tipo) {
+    const m = {
+      'Rolagem':'rollType','D100':'rollType','Teste':'testType','Dado':'dieType','Fórmula':'formulaType',
+      'Psiquismo':'psychismType','Dano':'damageType','Localização':'locationType','Iniciativa':'initiativeType',
+      'Munição':'ammoType','Energia':'energyType','Novo turno':'newTurnType','Sorte':'luckType'
+    };
+    return tr_(m[tipo] || '') || tipo || tr_('rollType');
+}
+function procurarNomeBancoPorId_(id, bancos) {
+    if (!id) return '';
+    for (const banco of bancos) {
+        const obj = (banco || []).find(x => x.id === id);
+        if (obj) return getNome(obj);
+    }
+    return '';
+}
+function traduzirNomeEquipHistorico_(nome) {
+    if (!nome) return '';
+    if (nome === 'Punhos') return (traducoes[idiomaAtual]||traducoes.pt).fists || nome;
+    const n = normalizarTextoCombate_(nome);
+    const item = (itensDB || []).find(i => [i.nome,i.nome_en,i.nome_zh].some(v => normalizarTextoCombate_(v) === n));
+    return item ? getNome(item) : nome;
+}
+function formatarRegistroHistorico_(reg, combate=false) {
+    const d = reg || {};
+    const subtipo = d.subtipo || '';
+    if (subtipo === 'pericia' || subtipo === 'periciaCombate') {
+        const nome = procurarNomeBancoPorId_(d.periciaId, [periciasDB, especializacoesDB]) || '';
+        if (d.bloqueado) {
+            return `${nome} ${tr_('blockedByFatigue')} · ${tr_('chosenDifficulty')}: ${traduzirDificuldadeNome_(d.dificuldadeEscolhida)}`;
+        }
+        if (Number.isFinite(Number(d.rolagem)) && Number.isFinite(Number(d.valorEfetivo))) {
+            const grau = traduzirGrauD100_(d.grau);
+            const margem = Number.isFinite(Number(d.margem)) ? ` · ${tr_('marginWord')} ${d.margem}` : '';
+            const dif1 = traduzirDificuldadeNome_(d.dificuldadeEscolhida);
+            const dif2 = traduzirDificuldadeNome_(d.dificuldadeEfetiva);
+            const fad = Number(d.degrausFadiga||0) > 0 ? ` · ${tr_('fatigueWord')} +${d.degrausFadiga}` : '';
+            const comp = Number(d.penalidadeCompatibilidade||0) > 0 ? ` · ${tr_('weaponCompatibility')} +${d.penalidadeCompatibilidade}` : '';
+            const valores = Number.isFinite(Number(d.valorBase)) ? ` (${d.valorBase}→${d.valorEfetivo})` : '';
+            return `${nome}: ${d.rolagem} / ${d.valorEfetivo} → ${grau}${margem} · ${tr_('difficultyWord')} ${dif1}${fad}${comp} → ${dif2}${valores}`;
+        }
+    }
+    if (subtipo === 'psiquismo') {
+        const poder = (poderesPsiDB || []).find(p => p.id === d.poderId);
+        const nome = poder ? getNome(poder) : '';
+        const esfera = traduzirEsferaPsi_(d.esfera || poder?.esfera || '');
+        return `${nome} · ${esfera} · ${tr_('arc')} ${d.arco || 1} · ${tr_('spentWord')} ${d.gastoPP ?? 0} PP`;
+    }
+    if (subtipo === 'dadoLivre') return `${d.dado || ''} → ${d.resultado ?? ''}`;
+    if (subtipo === 'formula') return `${d.formula || ''} = ${d.total ?? ''}${Array.isArray(d.detalhes)&&d.detalhes.length ? ` · ${d.detalhes.join(' + ')}` : ''}`;
+    if (subtipo === 'localizacao') return `D20 ${d.rolagem ?? ''} → ${traduzirLocalCorpo_(d.local || '')}`;
+    if (subtipo === 'iniciativa') {
+        const fad = Number(d.penalidadeFadiga||0) ? ` (${tr_('fatigueWord')} ${d.penalidadeFadiga})` : '';
+        return `1d10 [${d.dado ?? ''}] + ${d.iniciativaEfetiva ?? ''}${fad} = ${d.total ?? ''}`;
+    }
+    if (subtipo === 'dano') {
+        const eq = traduzirNomeEquipHistorico_(d.equipamento || '');
+        const crit = d.critico ? ` · ${tr_('critical')}` : '';
+        return `${eq}: ${d.expressao || ''} → ${d.total ?? ''}${crit}${Array.isArray(d.detalhes)&&d.detalhes.length ? ` · ${d.detalhes.join(' · ')}` : ''}`;
+    }
+    if (subtipo === 'novoTurno') return `${tr_('restoredAP')}: ${d.pontosAcao ?? ''}`;
+    if (subtipo === 'energia' || subtipo === 'municao') {
+        const eq = traduzirNomeEquipHistorico_(d.equipamento || '');
+        return `${eq} · ${tr_('spentWord')} ${d.gasto ?? ''} · ${tr_('remainingWord')} ${d.restante ?? ''}`;
+    }
+    if (subtipo === 'sorte') return `${tr_('spentWord')} ${d.gasto ?? 1} · ${tr_('remainingWord')} ${d.restante ?? ''}`;
+    return d.texto || '';
+}
+
 function renderizarHistoricoCombate_(char) {
     const alvo = document.getElementById('combatRollHistory');
     if (!alvo) return;
     const historico = Array.isArray(char?.historicoRolagens) ? char.historicoRolagens : [];
     if (!historico.length) {
-        alvo.innerHTML = '<div style="color:#888;">Nenhuma rolagem registrada.</div>';
+        alvo.innerHTML = `<div style="color:#888;">${escaparHtmlInventario_(tr_('noRolls'))}</div>`;
         return;
     }
     alvo.innerHTML = historico.slice(0, 50).map(reg => {
         const hora = formatarHoraHistoricoCombate_(reg.timestamp);
-        const tipo = escaparHtmlInventario_(reg.tipo || 'Rolagem');
-        const texto = escaparHtmlInventario_(reg.texto || '');
+        const tipo = escaparHtmlInventario_(traduzirTipoHistorico_(reg.tipo || 'Rolagem'));
+        const texto = escaparHtmlInventario_(formatarRegistroHistorico_(reg, true));
         return `<div style="display:grid;grid-template-columns:82px 120px 1fr;gap:10px;align-items:start;padding:8px 10px;background:rgba(255,255,255,0.035);border-radius:7px;border:1px solid rgba(255,255,255,0.06);">
             <span style="color:#888;font-size:0.88em;white-space:nowrap;">${hora}</span>
             <strong style="color:#d8c7ff;font-size:0.9em;">${tipo}</strong>
@@ -3273,13 +3544,13 @@ function renderizarHistoricoGeral_(char) {
     if (!alvo) return;
     const historico = Array.isArray(char?.historicoRolagensGerais) ? char.historicoRolagensGerais : [];
     if (!historico.length) {
-        alvo.innerHTML = '<div style="color:#888;">Nenhuma rolagem registrada.</div>';
+        alvo.innerHTML = `<div style="color:#888;">${escaparHtmlInventario_(tr_('noRolls'))}</div>`;
         return;
     }
     alvo.innerHTML = historico.slice(0, 50).map(reg => {
         const hora = formatarHoraHistoricoCombate_(reg.timestamp);
-        const tipo = escaparHtmlInventario_(reg.tipo || 'Rolagem');
-        const texto = escaparHtmlInventario_(reg.texto || '');
+        const tipo = escaparHtmlInventario_(traduzirTipoHistorico_(reg.tipo || 'Rolagem'));
+        const texto = escaparHtmlInventario_(formatarRegistroHistorico_(reg, false));
         return `<div style="display:grid;grid-template-columns:82px 120px 1fr;gap:10px;align-items:start;padding:8px 10px;background:rgba(255,255,255,0.035);border-radius:7px;border:1px solid rgba(255,255,255,0.06);">
             <span style="color:#888;font-size:0.88em;white-space:nowrap;">${hora}</span>
             <strong style="color:#d8c7ff;font-size:0.9em;">${tipo}</strong>
@@ -5133,70 +5404,82 @@ window.baixarTemplate = (tipo) => {
 // REGRAS E ESCUDO
 // ============================================
 function renderizarRegras() {
+    regrasTexto = idiomaAtual === 'en' ? (regrasTextoEN || REGRAS_PADRAO_EN)
+               : idiomaAtual === 'zh' ? (regrasTextoZH || REGRAS_PADRAO_ZH)
+               : (regrasTextoPT || regrasTexto || '');
     document.getElementById('regrasViewMode').innerHTML = formatarMarkdown(regrasTexto);
     const esforco = document.getElementById('physicalEffortRules');
     if (esforco) {
+        const attr = idiomaAtual === 'en'
+          ? {STR:'STR',CON:'CON',SIZ:'SIZ',DEX:'DEX',INT:'INT',POW:'POW',CHA:'CHA'}
+          : idiomaAtual === 'zh'
+          ? {STR:'力量',CON:'体质',SIZ:'体型',DEX:'敏捷',INT:'智力',POW:'意志',CHA:'魅力'}
+          : {STR:'FOR',CON:'CON',SIZ:'TAM',DEX:'DES',INT:'INT',POW:'POD',CHA:'CAR'};
+        const derived = idiomaAtual === 'en' ? [
+          `<strong>Action Points:</strong> ${attr.INT}+${attr.DEX}: ≤12=1; 13–24=2; 25–36=3; +1 per 12.`,
+          `<strong>Initiative:</strong> average of ${attr.INT} and ${attr.DEX}; combat roll uses 1d10 + Initiative.`,
+          `<strong>Luck Points:</strong> ${attr.POW} ≤6=1; 7–12=2; 13–18=3; +1 per 6 ${attr.POW}.`,
+          `<strong>Magic Points:</strong> equal to ${attr.POW} for characters able to use powers.`,
+          `<strong>Healing Rate:</strong> ${attr.CON} ≤6=1; 7–12=2; 13–18=3; +1 per 6 ${attr.CON}.`,
+          `<strong>Experience Mod.:</strong> ${attr.CHA} ≤6=-1; 7–12=0; 13–18=+1; +1 per 6 ${attr.CHA}.`,
+          `<strong>Damage Mod.:</strong> determined by ${attr.STR}+${attr.SIZ} using the official table.`,
+          `<strong>Movement:</strong> species base value; standard human = 6 m.`,
+          `<strong>HP by location:</strong> derived from ${attr.CON}+${attr.SIZ} and the body-location table.`,
+          `<strong>Height/Weight:</strong> range determined by ${attr.SIZ} and body type; automatic values use the midpoint and may be edited.`
+        ] : idiomaAtual === 'zh' ? [
+          `<strong>行动点：</strong>${attr.INT}+${attr.DEX}：≤12=1；13–24=2；25–36=3；之后每12点+1。`,
+          `<strong>先攻：</strong>${attr.INT}与${attr.DEX}的平均值；战斗先攻掷1d10 + 先攻。`,
+          `<strong>幸运点：</strong>${attr.POW}≤6=1；7–12=2；13–18=3；之后每6点${attr.POW}+1。`,
+          `<strong>魔法点：</strong>能够使用能力的角色，其魔法点等于${attr.POW}。`,
+          `<strong>恢复率：</strong>${attr.CON}≤6=1；7–12=2；13–18=3；之后每6点${attr.CON}+1。`,
+          `<strong>经验修正：</strong>${attr.CHA}≤6=-1；7–12=0；13–18=+1；之后每6点${attr.CHA}+1。`,
+          `<strong>伤害修正：</strong>按照官方表由${attr.STR}+${attr.SIZ}决定。`,
+          `<strong>移动：</strong>由物种基础值决定；标准人类为6米。`,
+          `<strong>各部位生命值：</strong>根据${attr.CON}+${attr.SIZ}及身体部位表计算。`,
+          `<strong>身高/体重：</strong>由${attr.SIZ}和体型决定范围；自动值取区间中点且可编辑。`
+        ] : [
+          `<strong>Pontos de Ação:</strong> ${attr.INT}+${attr.DEX}: ≤12=1; 13–24=2; 25–36=3; +1 a cada 12.`,
+          `<strong>Iniciativa:</strong> média de ${attr.INT} e ${attr.DEX}; a rolagem de combate usa 1d10 + Iniciativa.`,
+          `<strong>Pontos de Sorte:</strong> ${attr.POW} ≤6=1; 7–12=2; 13–18=3; +1 a cada 6 ${attr.POW}.`,
+          `<strong>Pontos de Magia:</strong> iguais ao ${attr.POW} para personagens capazes de utilizar poderes.`,
+          `<strong>Recuperação:</strong> ${attr.CON} ≤6=1; 7–12=2; 13–18=3; +1 a cada 6 ${attr.CON}.`,
+          `<strong>Mod. Experiência:</strong> ${attr.CHA} ≤6=-1; 7–12=0; 13–18=+1; +1 a cada 6 ${attr.CHA}.`,
+          `<strong>Mod. Dano:</strong> determinado por ${attr.STR}+${attr.SIZ} conforme a tabela oficial.`,
+          `<strong>Movimento:</strong> valor-base da espécie; humano padrão = 6 m.`,
+          `<strong>PV por localização:</strong> derivados de ${attr.CON}+${attr.SIZ} e da tabela de localização corporal.`,
+          `<strong>Altura/Peso:</strong> faixa determinada por ${attr.SIZ} e tipo corporal; os valores automáticos usam o centro da faixa e podem ser editados.`
+        ];
         esforco.innerHTML = `
             <div style="padding:18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;">
-                <h3 style="color:#00d4ff;margin:0 0 14px;">Tabela de Esforço Físico</h3>
+                <h3 style="color:#00d4ff;margin:0 0 14px;">${tr_('physicalEffortTitle')}</h3>
                 <div style="overflow-x:auto;">
                     <table style="width:100%;border-collapse:collapse;min-width:760px;">
-                        <thead>
-                            <tr style="background:rgba(0,212,255,0.13);">
-                                <th style="padding:10px;text-align:left;">Esforço</th>
-                                <th style="padding:10px;text-align:left;">Por quanto tempo?</th>
-                                <th style="padding:10px;text-align:left;">Exemplo</th>
-                                <th style="padding:10px;text-align:left;">Teste de perícia</th>
-                            </tr>
-                        </thead>
+                        <thead><tr style="background:rgba(0,212,255,0.13);">
+                            <th style="padding:10px;text-align:left;">${tr_('effortCol')}</th>
+                            <th style="padding:10px;text-align:left;">${tr_('durationCol')}</th>
+                            <th style="padding:10px;text-align:left;">${tr_('exampleCol')}</th>
+                            <th style="padding:10px;text-align:left;">${tr_('skillTestCol')}</th>
+                        </tr></thead>
                         <tbody>
-                            <tr>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>Leve</strong></td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">CON em horas</td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Atividade que não impõe esforço ao corpo. Atividades razoáveis em ritmo constante.</td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Teste Muito Fácil contra Atletismo, Força Bruta ou Resistência, conforme a tarefa.</td>
-                            </tr>
-                            <tr>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>Médio</strong></td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">CON em minutos</td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Trabalho manual; exercício físico sustentado.</td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Como acima, mas em grau Fácil.</td>
-                            </tr>
-                            <tr>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>Extenuante</strong></td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">CON em segundos, arredondado para a próxima Rodada de Combate</td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Combate; lutar contra os elementos; atividade física em circunstâncias extremamente adversas.</td>
-                                <td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">Teste Padrão contra Atletismo, Força Bruta ou Resistência, conforme a tarefa.</td>
-                            </tr>
+                            <tr><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>${tr_('effortLight')}</strong></td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('lightDuration')}</td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('lightExample')}</td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('lightTest')}</td></tr>
+                            <tr><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>${tr_('effortMedium')}</strong></td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('mediumDuration')}</td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('mediumExample')}</td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('mediumTest')}</td></tr>
+                            <tr><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);"><strong>${tr_('effortStrenuous')}</strong></td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('strenuousDuration')}</td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('strenuousExample')}</td><td style="padding:10px;border-top:1px solid rgba(255,255,255,.08);">${tr_('strenuousTest')}</td></tr>
                         </tbody>
                     </table>
                 </div>
-                <small style="display:block;color:#aaa;margin-top:10px;">Atletismo para exercício, Força Bruta para levantamento pesado e Resistência para atividades gerais/combate, conforme a situação.</small>
+                <small style="display:block;color:#aaa;margin-top:10px;">${tr_('effortNote')}</small>
                 <div style="margin-top:20px;padding-top:18px;border-top:1px solid rgba(255,255,255,.12);">
-                    <h3 style="color:#00d4ff;margin:0 0 12px;">Resumo de Derivados (Mythras)</h3>
+                    <h3 style="color:#00d4ff;margin:0 0 12px;">${tr_('derivedSummary')}</h3>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;color:#ddd;">
-                        <div><strong>Pontos de Ação:</strong> INT+DES: ≤12=1; 13–24=2; 25–36=3; +1 a cada 12.</div>
-                        <div><strong>Iniciativa:</strong> média de INT e DES; a rolagem de combate usa 1d10 + Iniciativa.</div>
-                        <div><strong>Pontos de Sorte:</strong> POD ≤6=1; 7–12=2; 13–18=3; +1 a cada 6 POD.</div>
-                        <div><strong>Pontos de Magia:</strong> iguais ao POD para personagens capazes de utilizar poderes.</div>
-                        <div><strong>Recuperação:</strong> CON ≤6=1; 7–12=2; 13–18=3; +1 a cada 6 CON.</div>
-                        <div><strong>Mod. Experiência:</strong> CAR ≤6=-1; 7–12=0; 13–18=+1; +1 a cada 6 CAR.</div>
-                        <div><strong>Mod. Dano:</strong> determinado por FOR+TAM conforme a tabela oficial; progride de valores negativos até múltiplos dados.</div>
-                        <div><strong>Movimento:</strong> valor-base da espécie; humano padrão = 6 m.</div>
-                        <div><strong>PV por localização:</strong> derivados de CON+TAM e da tabela de localização corporal.</div>
-                        <div><strong>Altura/Peso:</strong> faixa determinada por TAM e tipo corporal; os valores automáticos usam o centro da faixa e podem ser editados.</div>
+                        ${derived.map(x=>`<div>${x}</div>`).join('')}
                     </div>
                 </div>
             </div>`;
     }
     const btnEditar = document.getElementById('btnEditarRegras');
-    if (userData && userData.role === 'mestre') {
-        btnEditar.style.display = 'block';
-    } else {
-        btnEditar.style.display = 'none';
-    }
+    if (userData && userData.role === 'mestre') btnEditar.style.display = 'block';
+    else btnEditar.style.display = 'none';
 }
-
 function renderizarEscudo() {
     document.getElementById('escudoViewMode').innerHTML = formatarMarkdown(escudoTexto);
 }
@@ -5214,6 +5497,7 @@ function formatarMarkdown(texto) {
 
 window.editarRegras = () => {
     if (userData.role !== 'mestre') { alert('Apenas o mestre!'); return; }
+    regrasTexto = idiomaAtual === 'en' ? regrasTextoEN : idiomaAtual === 'zh' ? regrasTextoZH : regrasTextoPT;
     document.getElementById('regrasTexto').value = regrasTexto;
     document.getElementById('regrasViewMode').classList.add('hidden');
     document.getElementById('regrasEditMode').classList.remove('hidden');
@@ -5224,7 +5508,12 @@ window.editarRegras = () => {
 
 window.salvarRegras = async () => {
     regrasTexto = document.getElementById('regrasTexto').value;
-    await setDoc(doc(db, "configuracoes", "regras"), { texto: regrasTexto });
+    if (idiomaAtual === 'en') regrasTextoEN = regrasTexto;
+    else if (idiomaAtual === 'zh') regrasTextoZH = regrasTexto;
+    else regrasTextoPT = regrasTexto;
+    await setDoc(doc(db, "configuracoes", "regras"), {
+        texto: regrasTextoPT, texto_pt: regrasTextoPT, texto_en: regrasTextoEN || REGRAS_PADRAO_EN, texto_zh: regrasTextoZH || REGRAS_PADRAO_ZH
+    }, { merge:true });
     renderizarRegras();
     document.getElementById('regrasViewMode').classList.remove('hidden');
     document.getElementById('regrasEditMode').classList.add('hidden');
@@ -5383,6 +5672,7 @@ window.mudarIdioma = (lang) => {
     }
     renderizarListaPersonagens();
     if (document.getElementById('marketGrid')) renderizarMercado();
+    if (document.getElementById('regrasViewMode')) renderizarRegras();
     if (currentCharId) {
         const charAtual = userCharacters.find(c => c.id === currentCharId);
         if (charAtual) {
@@ -5390,6 +5680,8 @@ window.mudarIdioma = (lang) => {
             renderizarPericias(charAtual);
             renderizarCombate(charAtual);
             renderizarPsiRolagem_(charAtual);
+            renderizarHistoricoCombate_(charAtual);
+            renderizarHistoricoGeral_(charAtual);
             popularEquipamentosCombate_(charAtual);
             atualizarListaPericias();
         }
