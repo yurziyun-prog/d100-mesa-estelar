@@ -577,6 +577,13 @@
                                         <span style="color:#aaa;">Dano:</span>
                                         <strong id="combatWeaponDamage" style="color:#ff8b7d;font-size:1.2em;">—</strong>
                                     </div>
+                                    <div style="padding:10px 12px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.28);border-radius:9px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                                        <div>
+                                            <span style="color:#aaa;display:block;font-size:.88em;">Munição / Carga</span>
+                                            <strong id="combatAmmoStatus" style="color:#7ee2a8;font-size:1.05em;">—</strong>
+                                        </div>
+                                        <button id="combatReloadBtn" onclick="recarregarArmaCombate()" style="display:none;border:none;border-radius:8px;padding:8px 11px;background:#2980b9;color:#fff;font-weight:700;cursor:pointer;">🔋 Recarregar</button>
+                                    </div>
                                     <div style="padding:12px 15px;background:rgba(255,193,7,0.10);border:1px solid rgba(255,193,7,0.35);border-radius:9px;text-align:center;">
                                         <span style="color:#aaa;display:block;">Pontos de Ação</span>
                                         <strong id="combatActionPoints" style="color:#ffd166;font-size:1.45em;">—</strong>
@@ -604,7 +611,7 @@
                                     </div>
                                 </div>
 
-                                <small style="display:block;color:#aaa;margin-top:10px;">Armas e escudos vêm exclusivamente de <strong>Equipado</strong>. Esquiva dispensa equipamento e Combate Desarmado usa Punhos.</small>
+                                <small style="display:block;color:#aaa;margin-top:10px;">Armas e escudos vêm exclusivamente de <strong>Equipado</strong>. Esquiva dispensa equipamento e Combate Desarmado usa Punhos. Munição física gasta 1 uso por D100; baterias/células gastam energia conforme o dano rolado. Recarregar consome uma munição compatível carregada pelo personagem.</small>
                             </div>
                         </div>
                     </div>
@@ -1104,6 +1111,28 @@ function tocarSomDano_(item,nomeEquip) {
     return somDado_();
 }
 
+function somCaixaRegistradora_() {
+    const ctx = obterAudioCtx_(); if (!ctx) return;
+    const t = ctx.currentTime;
+    // Pequeno "clac"
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    osc.type = 'square'; osc.frequency.value = 150;
+    gain.gain.setValueAtTime(.04, t);
+    gain.gain.exponentialRampToValueAtTime(.001, t+.06);
+    osc.connect(gain).connect(ctx.destination); osc.start(t); osc.stop(t+.065);
+    // Campainha
+    [880,1320].forEach((f,i)=>{
+        const o=ctx.createOscillator(), g=ctx.createGain();
+        o.type='sine'; o.frequency.value=f;
+        g.gain.setValueAtTime(.001,t+.08+i*.025);
+        g.gain.linearRampToValueAtTime(.045,t+.10+i*.025);
+        g.gain.exponentialRampToValueAtTime(.001,t+.42+i*.025);
+        o.connect(g).connect(ctx.destination);
+        o.start(t+.08+i*.025); o.stop(t+.44+i*.025);
+    });
+}
+
+
 
 function getDescricao(item) {
     if (!item) return '';
@@ -1301,7 +1330,25 @@ function renderizarListaPersonagens() {
     } else { document.getElementById('characterSection').classList.add('hidden'); }
 }
 
-window.selecionarPersonagem = async (charId) => { currentCharId = charId; await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true }); renderizarListaPersonagens(); };
+window.selecionarPersonagem = async (charId) => {
+    currentCharId = charId;
+
+    // Limpa imediatamente controles que poderiam exibir dados do personagem anterior.
+    const skillSelect = document.getElementById('skillSelect');
+    const combatSkill = document.getElementById('combatSkillSelect');
+    const combatWeapon = document.getElementById('combatWeaponSelect');
+    if (skillSelect) skillSelect.innerHTML = '<option value="">Atualizando...</option>';
+    if (combatSkill) combatSkill.innerHTML = '<option value="">Atualizando...</option>';
+    if (combatWeapon) combatWeapon.innerHTML = '<option value="">Atualizando...</option>';
+
+    // Renderiza primeiro localmente; salvar a preferência do usuário não deve atrasar a troca visual.
+    renderizarListaPersonagens();
+    try {
+        await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
+    } catch (erro) {
+        console.warn('Não foi possível salvar personagem ativo:', erro);
+    }
+};
 
 window.deletarPersonagem = async (charId) => { const t = traducoes[idiomaAtual]; if (!confirm(t.confirmDelete)) return; await deleteDoc(doc(db, "personagens", charId)); if (charId === currentCharId) { currentCharId = null; await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: null }, { merge: true }); } await carregarPersonagens(); alert(t.deleted); };
 
@@ -1822,7 +1869,7 @@ function renderizarInventario(char) {
                     ondragover="permitirSoltarInventario(event)"
                     ondrop="soltarInventario(event, '${comp}', ${i})"
                     onclick="editarItem('${comp}', ${i})">${img}
-                    <div class="item-tooltip"><h5>${nome}</h5><p>${desc}</p><p>Peso: ${Number(item.peso || 0)}kg | PA: ${Number(item.pa || 0)} | PV: ${Number(item.pv || 0)}</p></div></div>`;
+                    <div class="item-tooltip"><h5>${nome}</h5><p>${desc}</p><p>Peso: ${Number(item.peso || 0)}kg | PA: ${Number(item.pa || 0)} | PV: ${Number(item.pv || 0)}${itemUsaMunicao_(item) ? ` | Carga: ${cargaAtualArma_(item)}/${cargaMaxArma_(item)}` : (categoriaNormalizada_(item)==='municao' ? ` | Quantidade: ${Number(item.quantidade ?? item.uso ?? 1)}` : '')}</p></div></div>`;
             }
             return `<div class="inventory-slot"
                 ondragover="permitirSoltarInventario(event)"
@@ -1981,6 +2028,161 @@ function itemEhCorpoACorpo_(item) {
     return normalizarTextoCombate_(item?.alcance).includes('corpo a corpo');
 }
 
+function normalizarMunicao_(valor) {
+    return String(valor || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function itemUsaMunicao_(item) {
+    if (!item || itemEhCorpoACorpo_(item)) return false;
+    const m = normalizarMunicao_(item.municao);
+    return !!m && !['∞','infinito','infinita','nenhuma','none','-'].includes(m);
+}
+
+function itemUsaEnergia_(item) {
+    const m = normalizarMunicao_(item?.municao);
+    return m.includes('bateria') || m.includes('celula') || m.includes('battery') || m.includes('energy cell') || m.includes('energia');
+}
+
+function cargaMaxArma_(item) {
+    if (!itemUsaMunicao_(item)) return Infinity;
+    const explicita = Number(item?.cargaMax ?? item?.capacidadeMunicao ?? item?.uso);
+    if (Number.isFinite(explicita) && explicita > 0) return Math.floor(explicita);
+    return itemUsaEnergia_(item) ? 100 : 20;
+}
+
+function cargaAtualArma_(item) {
+    if (!itemUsaMunicao_(item)) return Infinity;
+    const atual = Number(item?.cargaAtual);
+    // Armas antigas sem o novo campo passam a ser consideradas descarregadas.
+    return Number.isFinite(atual) ? Math.max(0, Math.floor(atual)) : 0;
+}
+
+function definirCargaArma_(item, valor) {
+    if (!item || !itemUsaMunicao_(item)) return;
+    const max = cargaMaxArma_(item);
+    item.cargaMax = max;
+    item.cargaAtual = Math.max(0, Math.min(max, Math.floor(Number(valor) || 0)));
+}
+
+function nomesMunicaoCompativeis_(arma, municaoItem) {
+    if (!arma || !municaoItem) return false;
+    const esperado = normalizarMunicao_(arma.municao);
+    const nome = normalizarMunicao_([municaoItem.nome,municaoItem.nome_en,municaoItem.nome_zh,municaoItem.destinoLocal,municaoItem.categoria].filter(Boolean).join(' '));
+    if (!esperado) return false;
+    if (esperado.includes('bateria')) return nome.includes('bateria') || nome.includes('battery');
+    if (esperado.includes('celula')) return nome.includes('celula') || nome.includes('energy cell');
+    if (esperado.includes('flecha')) return nome.includes('flecha') || nome.includes('arrow');
+    if (esperado.includes('virola')) return nome.includes('virola') || nome.includes('bolt');
+    if (esperado.includes('cartucho')) return nome.includes('cartucho') || nome.includes('cartridge');
+    if (esperado.includes('bala')) return nome.includes('bala') || nome.includes('bullet');
+    return nome.includes(esperado) || esperado.includes(nome);
+}
+
+function cargaFornecidaMunicao_(arma, municaoItem) {
+    const q = Number(municaoItem?.quantidade ?? municaoItem?.uso);
+    if (Number.isFinite(q) && q > 0) return Math.floor(q);
+    return itemUsaEnergia_(arma) ? 100 : 20;
+}
+
+function localizarInstanciaInventario_(char, instanciaId) {
+    const inv = normalizarInventario_(char);
+    for (const comp of Object.keys(inv)) {
+        if (!Array.isArray(inv[comp])) continue;
+        for (let i=0;i<inv[comp].length;i++) {
+            const item = inv[comp][i];
+            if (!item) continue;
+            const id = item.instanciaId || item.instanceId || item.idInstancia || item.id;
+            if (String(id) === String(instanciaId)) return {inv,comp,index:i,item};
+        }
+    }
+    return null;
+}
+
+function encontrarMunicaoPessoal_(char, arma) {
+    const inv = normalizarInventario_(char);
+    for (const comp of ['bolso','mochila','equipado']) {
+        const arr = inv[comp] || [];
+        for (let i=0;i<arr.length;i++) {
+            const item = arr[i];
+            if (!item || item === arma) continue;
+            const cat = categoriaNormalizada_(item);
+            if ((cat === 'municao' || cat === 'munição') && nomesMunicaoCompativeis_(arma,item)) {
+                return {comp,index:i,item,inv};
+            }
+        }
+    }
+    return null;
+}
+
+function atualizarStatusMunicaoCombate_() {
+    const alvo = document.getElementById('combatAmmoStatus');
+    const botao = document.getElementById('combatReloadBtn');
+    if (!alvo || !botao) return;
+    const valor = document.getElementById('combatWeaponSelect')?.value || '';
+    const item = encontrarEquipamentoCombate_(valor);
+
+    if (!item || !itemUsaMunicao_(item)) {
+        alvo.textContent = item ? '∞' : '—';
+        botao.style.display = 'none';
+        return;
+    }
+    const atual = cargaAtualArma_(item), max = cargaMaxArma_(item);
+    alvo.textContent = `${item.municao || 'Munição'}: ${atual} / ${max}`;
+    alvo.style.color = atual <= 0 ? '#ff6b6b' : '#7ee2a8';
+    botao.style.display = '';
+}
+
+async function salvarInventarioAtual_(char) {
+    if (!char || !currentCharId) return;
+    await setDoc(doc(db,'personagens',currentCharId),{inventario:char.inventario},{merge:true});
+    renderizarInventario(char);
+    atualizarStatusMunicaoCombate_();
+}
+
+window.recarregarArmaCombate = async () => {
+    const char = userCharacters.find(c=>c.id===currentCharId);
+    const valor = document.getElementById('combatWeaponSelect')?.value || '';
+    const arma = encontrarEquipamentoCombate_(valor);
+    if (!char || !arma || !itemUsaMunicao_(arma)) return;
+
+    const mun = encontrarMunicaoPessoal_(char, arma);
+    if (!mun) {
+        alert(`Nenhuma munição compatível (${arma.municao}) no Bolso, Mochila ou Equipado.`);
+        return;
+    }
+
+    const fornecida = cargaFornecidaMunicao_(arma, mun.item);
+    definirCargaArma_(arma, Math.min(cargaMaxArma_(arma), fornecida));
+    mun.inv[mun.comp][mun.index] = null;
+    char.inventario = mun.inv;
+
+    await salvarInventarioAtual_(char);
+    somSalvar_();
+    await registrarHistoricoCombate_(
+        'Recarregar',
+        `${getNome(arma)} recarregada com ${getNome(mun.item)} → ${cargaAtualArma_(arma)}/${cargaMaxArma_(arma)}`,
+        {subtipo:'recarregar',equipamento:getNome(arma),municao:getNome(mun.item),carga:cargaAtualArma_(arma)}
+    );
+};
+
+function consumirMunicaoFisica_(item, qtd=1) {
+    if (!item || !itemUsaMunicao_(item) || itemUsaEnergia_(item)) return {ok:true,gasto:0,restante:Infinity};
+    const atual = cargaAtualArma_(item);
+    if (atual < qtd) return {ok:false,gasto:0,restante:atual};
+    definirCargaArma_(item, atual-qtd);
+    return {ok:true,gasto:qtd,restante:cargaAtualArma_(item)};
+}
+
+function consumirEnergiaPorDano_(item, danoRolado) {
+    if (!item || !itemUsaEnergia_(item)) return {ok:true,gasto:0,restante:Infinity,danoEfetivo:danoRolado};
+    const antes = cargaAtualArma_(item);
+    if (antes <= 0) return {ok:false,gasto:0,restante:0,danoEfetivo:0};
+    const gasto = Math.min(antes, Math.max(0,Math.floor(Number(danoRolado)||0)));
+    definirCargaArma_(item, antes-gasto);
+    return {ok:true,gasto,restante:cargaAtualArma_(item),danoEfetivo:gasto,energiaAntes:antes};
+}
+
 function calcularFormulaPersonagem_(formula, char) {
     const attrsBase = char?.atributos || {};
     const bonus = char?.bonus || {};
@@ -2072,6 +2274,7 @@ function popularEquipamentosCombate_(char) {
     select.innerHTML = opcoes.map(o => `<option value="${escaparHtmlInventario_(o.value)}">${escaparHtmlInventario_(o.label)}</option>`).join('');
     if ([...select.options].some(o => o.value === anterior)) select.value = anterior;
     atualizarPainelCombate();
+    atualizarStatusMunicaoCombate_();
 }
 
 function encontrarEquipamentoCombate_(valor) {
@@ -2137,6 +2340,7 @@ window.mostrarDanoEquipamentoCombate = () => {
     const alvo = document.getElementById('combatWeaponDamage');
     if (!alvo) return;
     alvo.textContent = obterExpressaoDanoCombate_() || '—';
+    atualizarStatusMunicaoCombate_();
 };
 
 function classificarD100_(valor, rolagem) {
@@ -2216,6 +2420,13 @@ window.rolarCombateD100 = async () => {
         return;
     }
 
+    const armaUsada = encontrarEquipamentoCombate_(equip);
+    if (armaUsada && itemUsaMunicao_(armaUsada) && cargaAtualArma_(armaUsada) <= 0) {
+        resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(getNome(armaUsada))} está sem ${escaparHtmlInventario_(armaUsada.municao || 'munição')}. Recarregue antes de atacar.`;
+        atualizarStatusMunicaoCombate_();
+        return;
+    }
+
     const valorBase = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
     const dificuldadeEscolhidaId = document.getElementById('combatDifficultySelect')?.value || 'padrao';
     const ajuste = aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeEscolhidaId);
@@ -2242,6 +2453,47 @@ window.rolarCombateD100 = async () => {
         `${nomePericia}: ${roll} / ${valor} → ${r.grau} · Margem ${margem} · Dificuldade ${ajuste.escolhida.nome}${fadigaTxt} → ${ajuste.efetiva.nome} (${valorBase}→${valor})`,
         { subtipo: 'periciaCombate', periciaId: pericia.id, rolagem: roll, valorBase, valorEfetivo: valor, grau: r.grau, margem, fadiga: ajuste.regra.nome, dificuldadeEscolhida: ajuste.escolhida.nome, dificuldadeEfetiva: ajuste.efetiva.nome, degrausFadiga: ajuste.degrausFadiga }
     );
+
+    if (armaUsada && itemUsaMunicao_(armaUsada)) {
+        if (itemUsaEnergia_(armaUsada)) {
+            const exprEnergia = obterExpressaoDanoCombate_();
+            const rolagemEnergia = rolarExpressaoDanoCombate_(exprEnergia);
+            const energia = consumirEnergiaPorDano_(armaUsada, rolagemEnergia.total);
+            char.combate = char.combate || {};
+            char.combate.danoPendente = {
+                equipamentoId: equip,
+                equipamento: getNome(armaUsada),
+                expressao: exprEnergia,
+                totalRolado: rolagemEnergia.total,
+                totalEfetivo: energia.danoEfetivo,
+                detalhes: rolagemEnergia.detalhes,
+                efeitos: rolagemEnergia.efeitos,
+                energiaAntes: energia.energiaAntes,
+                energiaDepois: energia.restante,
+                timestamp: new Date().toISOString()
+            };
+            await setDoc(doc(db,'personagens',currentCharId),{
+                inventario:char.inventario,
+                'combate.danoPendente':char.combate.danoPendente
+            },{merge:true});
+            await registrarHistoricoCombate_(
+                'Energia',
+                `${getNome(armaUsada)} consumiu ${energia.gasto} de energia · restante ${energia.restante}/${cargaMaxArma_(armaUsada)}`,
+                {subtipo:'energia',equipamento:getNome(armaUsada),gasto:energia.gasto,restante:energia.restante}
+            );
+        } else {
+            const consumo = consumirMunicaoFisica_(armaUsada,1);
+            await setDoc(doc(db,'personagens',currentCharId),{inventario:char.inventario},{merge:true});
+            await registrarHistoricoCombate_(
+                'Munição',
+                `${getNome(armaUsada)} gastou 1 ${armaUsada.municao || 'munição'} · restante ${consumo.restante}/${cargaMaxArma_(armaUsada)}`,
+                {subtipo:'municao',equipamento:getNome(armaUsada),gasto:1,restante:consumo.restante}
+            );
+        }
+        renderizarInventario(char);
+        atualizarStatusMunicaoCombate_();
+    }
+
     resetarDificuldadeAposRolagem_('combatDifficultySelect');
 
     let atual = Math.max(0, Number(char.combate.pontosAcaoAtuais ?? paInfo.max) - 1);
@@ -2294,18 +2546,58 @@ window.rolarDanoCombate = async () => {
         resumo.innerHTML = 'ℹ️ A ação/equipamento selecionado não possui dano.';
         return;
     }
-    const r = rolarExpressaoDanoCombate_(expr);
+
+    const char = userCharacters.find(c=>c.id===currentCharId);
     const equipValor = document.getElementById('combatWeaponSelect')?.value || '';
     const item = encontrarEquipamentoCombate_(equipValor);
     const nomeEquip = equipValor === 'desarmado' ? 'Punhos' : (item ? getNome(item) : 'Dano');
+
+    let r;
+    let notaEnergia = '';
+    const pendente = char?.combate?.danoPendente;
+    if (item && itemUsaEnergia_(item) && pendente && String(pendente.equipamentoId) === String(equipValor)) {
+        r = {
+            total: Number(pendente.totalEfetivo || 0),
+            bruto: Number(pendente.totalRolado || 0),
+            detalhes: Array.isArray(pendente.detalhes) ? pendente.detalhes : [],
+            efeitos: Array.isArray(pendente.efeitos) ? pendente.efeitos : []
+        };
+        if (Number(pendente.totalEfetivo) < Number(pendente.totalRolado)) {
+            notaEnergia = ` · dano rolado ${pendente.totalRolado}, limitado a ${pendente.totalEfetivo} pela energia disponível`;
+        }
+        char.combate.danoPendente = null;
+        await setDoc(doc(db,'personagens',currentCharId),{'combate.danoPendente':null},{merge:true});
+    } else {
+        if (item && itemUsaEnergia_(item)) {
+            if (cargaAtualArma_(item) <= 0) {
+                resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(nomeEquip)} está sem energia.`;
+                return;
+            }
+            const rolado = rolarExpressaoDanoCombate_(expr);
+            const energia = consumirEnergiaPorDano_(item, rolado.total);
+            r = {...rolado,total:energia.danoEfetivo};
+            if (energia.danoEfetivo < rolado.total) notaEnergia = ` · dano rolado ${rolado.total}, limitado a ${energia.danoEfetivo} pela energia disponível`;
+            await setDoc(doc(db,'personagens',currentCharId),{inventario:char.inventario},{merge:true});
+            await registrarHistoricoCombate_(
+                'Energia',
+                `${nomeEquip} consumiu ${energia.gasto} de energia · restante ${energia.restante}/${cargaMaxArma_(item)}`,
+                {subtipo:'energia',equipamento:nomeEquip,gasto:energia.gasto,restante:energia.restante}
+            );
+            renderizarInventario(char);
+            atualizarStatusMunicaoCombate_();
+        } else {
+            r = rolarExpressaoDanoCombate_(expr);
+        }
+    }
+
     tocarSomDano_(item, nomeEquip);
-    resumo.innerHTML = `<strong>Dano ${escaparHtmlInventario_(expr)}</strong> → <strong>${r.total}</strong>${r.detalhes.length ? `<br><small>${escaparHtmlInventario_(r.detalhes.join(' · '))}</small>` : ''}${r.efeitos.length ? `<br><small>Efeito: ${escaparHtmlInventario_(r.efeitos.join(', '))}</small>` : ''}`;
+    resumo.innerHTML = `<strong>Dano ${escaparHtmlInventario_(expr)}</strong> → <strong>${r.total}</strong>${notaEnergia ? `<br><small>${escaparHtmlInventario_(notaEnergia.replace(/^ · /,''))}</small>` : ''}${r.detalhes.length ? `<br><small>${escaparHtmlInventario_(r.detalhes.join(' · '))}</small>` : ''}${r.efeitos.length ? `<br><small>Efeito: ${escaparHtmlInventario_(r.efeitos.join(', '))}</small>` : ''}`;
     const detalhesTexto = r.detalhes.length ? ` · ${r.detalhes.join(' · ')}` : '';
     const efeitosTexto = r.efeitos.length ? ` · Efeito: ${r.efeitos.join(', ')}` : '';
     await registrarHistoricoCombate_(
         'Dano',
-        `${nomeEquip}: ${expr} → ${r.total}${detalhesTexto}${efeitosTexto}`,
-        { subtipo: 'dano', equipamento: nomeEquip, expressao: expr, total: r.total, detalhes: r.detalhes, efeitos: r.efeitos }
+        `${nomeEquip}: ${expr} → ${r.total}${notaEnergia}${detalhesTexto}${efeitosTexto}`,
+        { subtipo: 'dano', equipamento: nomeEquip, expressao: expr, total: r.total, bruto:r.bruto, detalhes: r.detalhes, efeitos: r.efeitos }
     );
 };
 
@@ -3076,11 +3368,13 @@ window.comprarItemMercado = async (itemId) => {
         pvAtual: Number(itemBanco.pv || 0),
         origemAquisicao: 'compra',
         precoPago: preco,
-        adquiridoEm: new Date().toISOString()
+        adquiridoEm: new Date().toISOString(),
+        ...(itemUsaMunicao_(itemBanco) ? { cargaMax: cargaMaxArma_(itemBanco), cargaAtual: 0 } : {})
     };
     char.inventario = inv;
     char.recursos = recursos - preco;
     await setDoc(doc(db, 'personagens', currentCharId), { inventario: inv, recursos: char.recursos }, { merge: true });
+    somCaixaRegistradora_();
     renderizarInventario(char);
     const recursosInput = document.getElementById('editRecursos');
     if (recursosInput) recursosInput.value = char.recursos;
@@ -3376,7 +3670,10 @@ window.atualizarTreinoEspecializacao = async (espId, valor, categoria) => {
     await setDoc(doc(db, 'personagens', currentCharId), { especializacoes }, { merge: true });
 };
 
-window.salvarPericias = async () => { alert('Perícias salvas automaticamente!'); };
+window.salvarPericias = async () => {
+    somSalvar_();
+    alert('Perícias salvas automaticamente!');
+};
 window.mudarEtapaPericias = () => {
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
