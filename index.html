@@ -46,6 +46,22 @@
         .login-box input { width: 100%; padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 10px; color: #fff; }
         .btn-login, .btn-register { width: 100%; padding: 15px; background: linear-gradient(135deg, #00d4ff, #0099cc); color: #fff; border: none; border-radius: 10px; font-size: 1.1em; cursor: pointer; margin-bottom: 10px; font-weight: bold; }
         .btn-secondary { background: linear-gradient(135deg, #6c757d, #495057); }
+
+        /* MERCADO */
+        .market-toolbar { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin-bottom:20px; padding:15px; background:rgba(0,212,255,0.06); border:1px solid rgba(0,212,255,0.18); border-radius:12px; }
+        .market-toolbar input, .market-toolbar select { width:auto; min-width:180px; margin:0; }
+        .market-balance { margin-left:auto; padding:10px 15px; border-radius:10px; background:rgba(40,167,69,0.15); border:1px solid rgba(40,167,69,0.35); font-weight:bold; }
+        .market-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:16px; }
+        .market-card { display:grid; grid-template-columns:96px 1fr; gap:14px; padding:15px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:12px; }
+        .market-card:hover { border-color:rgba(0,212,255,0.5); background:rgba(0,212,255,0.06); }
+        .market-card img { width:96px; height:96px; object-fit:contain; background:rgba(0,0,0,0.25); border-radius:10px; }
+        .market-card-placeholder { width:96px; height:96px; display:flex; align-items:center; justify-content:center; font-size:2.7em; background:rgba(0,0,0,0.25); border-radius:10px; }
+        .market-card h4 { margin:0 0 6px; color:#fff; }
+        .market-meta { color:#aaa; font-size:.9em; line-height:1.5; }
+        .market-desc { color:#ccc; margin:8px 0; font-size:.92em; }
+        .market-buy { margin-top:10px; padding:9px 14px; border:0; border-radius:8px; background:#28a745; color:white; font-weight:bold; cursor:pointer; }
+        .market-buy:hover { filter:brightness(1.08); }
+
         .hidden { display: none !important; }
         
         .user-header { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.08); padding: 15px 25px; border-radius: 10px; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
@@ -273,10 +289,32 @@
             <!-- ABAS GLOBAIS -->
             <div class="tabs">
                 <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha">📋 Ficha</button>
+                <button class="tab-btn" id="mercadoTabBtn" onclick="mostrarAba('mercado', this)" data-i18n="tabMercado">🛒 Mercado</button>
                 <button class="tab-btn" id="configTabBtn" onclick="mostrarAba('config', this)" data-i18n="tabConfig" style="display:none;">⚙️ Config</button>
                 <button class="tab-btn hidden" id="bancoTabBtn" onclick="mostrarAba('banco', this)" data-i18n="tabBanco">📚 Banco de Dados</button>
                 <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
                 <button class="tab-btn hidden" id="escudoTabBtn" onclick="mostrarAba('escudo', this)">🛡️ Escudo do Mestre</button>
+            </div>
+
+            <!-- ABA MERCADO -->
+            <div id="mercado" class="tab-content">
+                <div class="form-section">
+                    <h2 data-i18n="marketTitle">🛒 Mercado</h2>
+                    <p data-i18n="marketIntro">Compre itens do banco de dados para o personagem atualmente selecionado.</p>
+                    <div class="market-toolbar">
+                        <input type="text" id="marketSearch" placeholder="Buscar item..." oninput="renderizarMercado()">
+                        <select id="marketCategory" onchange="renderizarMercado()"><option value="">Todas as categorias</option></select>
+                        <select id="marketDestination">
+                            <option value="mochila">Mochila</option>
+                            <option value="bolso">Bolso</option>
+                            <option value="veiculo">Veículo/Nave</option>
+                            <option value="casa">Casa/Base</option>
+                        </select>
+                        <div class="market-balance"><span data-i18n="resourcesLabel">Recursos</span>: <span id="marketBalance">0</span></div>
+                    </div>
+                    <div id="marketNotice" style="color:#aaa;margin-bottom:14px;"></div>
+                    <div id="marketGrid" class="market-grid"></div>
+                </div>
             </div>
 
             <!-- ABA FICHA -->
@@ -324,6 +362,7 @@
                                 <div class="stat-box"><div class="stat-label">Mod. Dano</div><div class="stat-value" id="statModDano">-1d2</div></div>
                                 <div class="stat-box"><div class="stat-label">Altura</div><div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div></div>
                                 <div class="stat-box"><div class="stat-label">Peso</div><div class="stat-value"><input type="number" id="editPeso" onchange="salvarAlturaPeso()"></div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="resourcesLabel">Recursos</div><div class="stat-value"><input type="number" id="editRecursos" min="0" step="1" onchange="salvarRecursos()"></div></div>
                             </div>
                         </div>
 
@@ -828,14 +867,21 @@ function gerarEstrelas() {
 gerarEstrelas();
 
 const traducoes = {
-    pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: ' Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Origem:', pointsEtapa3: 'Carreira:', pointsEtapa4: 'Hobbie:', saveConfig: ' Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: ' Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
-    en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Origin:', pointsEtapa3: 'Career:', pointsEtapa4: 'Hobby:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: ' Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
-    zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: ' 角色卡', tabConfig: '️ 设置', tabBanco: ' 数据库', tabRegras: ' 规则', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '起源：', pointsEtapa3: '职业：', pointsEtapa4: '爱好：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
+    pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', tabMercado: '🛒 Mercado', marketTitle: '🛒 Mercado', marketIntro: 'Compre itens do banco de dados para o personagem atualmente selecionado.', resourcesLabel: 'Recursos', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: ' Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Origem:', pointsEtapa3: 'Carreira:', pointsEtapa4: 'Hobbie:', saveConfig: ' Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: ' Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
+    en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', tabMercado: '🛒 Market', marketTitle: '🛒 Market', marketIntro: 'Buy database items for the currently selected character.', resourcesLabel: 'Resources', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Origin:', pointsEtapa3: 'Career:', pointsEtapa4: 'Hobby:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: ' Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
+    zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: ' 角色卡', tabConfig: '️ 设置', tabBanco: ' 数据库', tabRegras: ' 规则', tabMercado: '🛒 市场', marketTitle: '🛒 市场', marketIntro: '为当前选择的角色购买数据库中的物品。', resourcesLabel: '资源', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '起源：', pointsEtapa3: '职业：', pointsEtapa4: '爱好：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
 };
 
 function getNome(item) {
     const key = `nome_${idiomaAtual}`;
     return item[key] || item.nome;
+}
+
+function getDescricao(item) {
+    if (!item) return '';
+    if (idiomaAtual === 'en') return item.descricao_en || item.descricao || '';
+    if (idiomaAtual === 'zh') return item.descricao_zh || item.descricao || '';
+    return item.descricao || '';
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -930,6 +976,7 @@ async function carregarBancosDeDados() {
 
     popularSelects();
     renderizarBancoDados();
+    if (document.getElementById('marketGrid')) renderizarMercado();
 }
 
 async function carregarConfiguracoes() {
@@ -1018,7 +1065,7 @@ window.novoPersonagem = async () => {
     const maxChars = userData.role === 'mestre' ? 999 : 5;
     if (userCharacters.length >= maxChars) { alert(`Limite: ${maxChars}`); return; }
     const charId = `char_${Date.now()}`;
-    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
+    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
     await carregarPersonagens(); currentCharId = charId;
     await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -1102,6 +1149,20 @@ window.salvarAlturaPeso = async () => {
     await setDoc(doc(db, "personagens", currentCharId), { altura, peso }, { merge: true });
 };
 
+window.salvarRecursos = async () => {
+    if (!currentCharId) return;
+    if (!userData || userData.role !== 'mestre') {
+        const char = userCharacters.find(c => c.id === currentCharId);
+        if (char) document.getElementById('editRecursos').value = Number(char.recursos || 0);
+        return;
+    }
+    const recursos = Math.max(0, Math.floor(Number(document.getElementById('editRecursos').value) || 0));
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (char) char.recursos = recursos;
+    await setDoc(doc(db, 'personagens', currentCharId), { recursos }, { merge: true });
+    renderizarMercado();
+};
+
 function atualizarVisualizacao(data) {
     document.getElementById('charName').textContent = data.nome || '-';
     document.getElementById('charRace').textContent = data.raca || '-';
@@ -1126,6 +1187,8 @@ function atualizarVisualizacao(data) {
     const calc = calcularAlturaPeso((attrs.TAM || 10) + (bonus.TAM || 0), data.tipoCorporal || 'Médio');
     document.getElementById('editAltura').value = data.altura || calc.altura;
     document.getElementById('editPeso').value = data.peso || calc.peso;
+    const recursosInput = document.getElementById('editRecursos');
+    if (recursosInput) { recursosInput.value = Number(data.recursos || 0); recursosInput.disabled = !(userData && userData.role === 'mestre'); }
     
     renderizarInventario(data);
     renderizarCombate(data);
@@ -1248,8 +1311,8 @@ function renderizarInventario(char) {
         container.innerHTML = Array(maxSlots).fill(0).map((_, i) => {
             const item = items[i];
             if (item && item.nome) {
-                const nome = escaparHtmlInventario_(item.nome);
-                const desc = escaparHtmlInventario_(item.descricao || '');
+                const nome = escaparHtmlInventario_(getNome(item));
+                const desc = escaparHtmlInventario_(getDescricao(item));
                 const img = item.imagem ? `<img src="${escaparHtmlInventario_(item.imagem)}" alt="${nome}">` : '📦';
                 return `<div class="inventory-slot filled" draggable="true"
                     ondragstart="iniciarArrastoInventario(event, '${comp}', ${i})"
@@ -1658,6 +1721,85 @@ const itensPadrao = [
     { id: 'tradutor_comunicador', nome: 'Tradutor-Comunicador', nome_en: 'Translator-Communicator', nome_zh: '翻译通讯器', categoria: 'Comunicação', peso: 1, pa: 0, pv: 2, preco: 7800 }
 ];
 
+
+// ============================================
+// MERCADO
+// ============================================
+function obterPersonagemAtual_() {
+    return userCharacters.find(c => c.id === currentCharId) || null;
+}
+
+function atualizarCategoriasMercado_() {
+    const select = document.getElementById('marketCategory');
+    if (!select) return;
+    const atual = select.value;
+    const categorias = [...new Set(itensDB.map(i => String(i.categoria || 'Diversos').trim()).filter(Boolean))].sort((a,b) => a.localeCompare(b));
+    select.innerHTML = '<option value="">Todas as categorias</option>' + categorias.map(c => `<option value="${escaparBanco_(c)}">${escaparBanco_(c)}</option>`).join('');
+    if ([...select.options].some(o => o.value === atual)) select.value = atual;
+}
+
+window.renderizarMercado = () => {
+    const grid = document.getElementById('marketGrid');
+    const notice = document.getElementById('marketNotice');
+    const balance = document.getElementById('marketBalance');
+    if (!grid || !notice || !balance) return;
+
+    atualizarCategoriasMercado_();
+    const char = obterPersonagemAtual_();
+    balance.textContent = char ? Number(char.recursos || 0).toLocaleString('pt-BR') : '—';
+    notice.textContent = char ? `${char.nome || 'Personagem'} • Recursos disponíveis: ${Number(char.recursos || 0).toLocaleString('pt-BR')}` : 'Selecione um personagem na aba Ficha antes de comprar.';
+
+    const busca = String(document.getElementById('marketSearch')?.value || '').trim().toLowerCase();
+    const categoria = String(document.getElementById('marketCategory')?.value || '').trim();
+    const filtrados = itensDB.filter(item => {
+        const nomes = `${item.nome || ''} ${item.nome_en || ''} ${item.nome_zh || ''}`.toLowerCase();
+        return (!busca || nomes.includes(busca)) && (!categoria || String(item.categoria || '') === categoria);
+    }).sort((a,b) => getNome(a).localeCompare(getNome(b)));
+
+    grid.innerHTML = filtrados.map(item => {
+        const nome = escaparBanco_(getNome(item));
+        const desc = escaparBanco_(getDescricao(item));
+        const preco = Math.max(0, Number(item.preco || 0));
+        const imagem = item.imagem ? `<img src="${escaparBanco_(item.imagem)}" alt="${nome}">` : '<div class="market-card-placeholder">📦</div>';
+        const detalhes = [item.categoria || '', item.peso != null ? `${item.peso} kg` : '', item.pa != null ? `PA ${item.pa}` : '', item.pv != null ? `PV ${item.pv}` : '', item.dano ? `Dano ${item.dano}` : '', item.nivelAcesso ? `Acesso ${item.nivelAcesso}` : ''].filter(Boolean).join(' • ');
+        return `<div class="market-card">${imagem}<div><h4>${nome}</h4><div class="market-meta">${escaparBanco_(detalhes)}</div>${desc ? `<div class="market-desc">${desc}</div>` : ''}<div><strong>${preco.toLocaleString('pt-BR')}</strong></div><button class="market-buy" onclick="comprarItemMercado('${escaparBanco_(item.id)}')">Comprar</button></div></div>`;
+    }).join('') || '<p style="color:#aaa;">Nenhum item encontrado.</p>';
+};
+
+window.comprarItemMercado = async (itemId) => {
+    const char = obterPersonagemAtual_();
+    if (!char) { alert('Selecione um personagem antes de comprar.'); return; }
+    const itemBanco = itensDB.find(i => i.id === itemId);
+    if (!itemBanco) { alert('Item não encontrado no banco.'); return; }
+    const preco = Math.max(0, Number(itemBanco.preco || 0));
+    const recursos = Math.max(0, Number(char.recursos || 0));
+    if (recursos < preco) { alert(`Recursos insuficientes. Preço: ${preco} | Disponível: ${recursos}`); return; }
+
+    const destino = String(document.getElementById('marketDestination')?.value || 'mochila');
+    const inv = normalizarInventario_(char);
+    if (!Array.isArray(inv[destino])) { alert('Destino de inventário inválido.'); return; }
+    const slot = inv[destino].findIndex(x => !x);
+    if (slot < 0) { alert('Não há espaço livre nesse compartimento.'); return; }
+
+    inv[destino][slot] = {
+        ...itemBanco,
+        idBanco: itemBanco.id,
+        instanciaId: `item_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+        pvAtual: Number(itemBanco.pv || 0),
+        origemAquisicao: 'compra',
+        precoPago: preco,
+        adquiridoEm: new Date().toISOString()
+    };
+    char.inventario = inv;
+    char.recursos = recursos - preco;
+    await setDoc(doc(db, 'personagens', currentCharId), { inventario: inv, recursos: char.recursos }, { merge: true });
+    renderizarInventario(char);
+    const recursosInput = document.getElementById('editRecursos');
+    if (recursosInput) recursosInput.value = char.recursos;
+    renderizarMercado();
+    alert(`${getNome(itemBanco)} comprado por ${preco}.`);
+};
+
 // ============================================
 // FUNÇÕES DE NAVEGAÇÃO
 // ============================================
@@ -1669,8 +1811,11 @@ window.mostrarAba = (abaId, btn) => {
     }
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(abaId).classList.add('active');
-    btn.classList.add('active');
+    const alvo = document.getElementById(abaId);
+    if (!alvo) return;
+    alvo.classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (abaId === 'mercado') renderizarMercado();
 };
 
 window.mostrarCharAba = (abaId, btn) => {
@@ -2132,7 +2277,7 @@ window.atualizarPreviewItemBanco = () => {
         preview.innerHTML = '📦';
         return;
     }
-    preview.innerHTML = `<img src="${escaparBanco_(url)}" alt="Preview" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='⚠️'">`;
+    preview.innerHTML = `<img src="${escaparBanco_(url)}" alt="Preview" style="width:100%;height:100%;object-fit:contain;background:rgba(0,0,0,.2);" onerror="this.parentElement.innerHTML='⚠️'">`;
 };
 
 window.handleDbItemImageUpload = async (event) => {
@@ -2689,6 +2834,7 @@ window.mudarIdioma = (lang) => {
         }
     }
     renderizarListaPersonagens();
+    if (document.getElementById('marketGrid')) renderizarMercado();
 };
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -2730,6 +2876,9 @@ window.calcularTotal = calcularTotal;
 window.calcularDerivados = calcularDerivados;
 window.calcularAlturaPesoAutomatico = calcularAlturaPesoAutomatico;
 window.salvarAlturaPeso = salvarAlturaPeso;
+window.salvarRecursos = salvarRecursos;
+window.renderizarMercado = renderizarMercado;
+window.comprarItemMercado = comprarItemMercado;
 window.mostrarAba = mostrarAba;
 window.mostrarCharAba = mostrarCharAba;
 window.mostrarBancoAba = mostrarBancoAba;
