@@ -529,20 +529,37 @@
                             </div>
 
                             <div class="combat-section" style="margin-top:20px;">
-                                <h4>⚔️ Equipamento de Combate</h4>
-                                <div style="display:grid;grid-template-columns:minmax(220px,1fr) minmax(180px,0.7fr);gap:15px;align-items:end;">
+                                <h4>🎯 Painel de Combate</h4>
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;align-items:end;">
                                     <div class="form-group" style="margin-bottom:0;">
-                                        <label>Arma / Escudo equipado:</label>
-                                        <select id="combatWeaponSelect" onchange="mostrarDanoEquipamentoCombate()">
-                                            <option value="desarmado">Punhos</option>
-                                        </select>
+                                        <label>Perícia de combate:</label>
+                                        <select id="combatSkillSelect" onchange="atualizarPainelCombate()"></select>
+                                    </div>
+                                    <div class="form-group" style="margin-bottom:0;">
+                                        <label>Equipamento:</label>
+                                        <select id="combatWeaponSelect" onchange="mostrarDanoEquipamentoCombate()"></select>
+                                    </div>
+                                    <div style="padding:12px 15px;background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.30);border-radius:9px;">
+                                        <span style="color:#aaa;">Valor:</span>
+                                        <strong id="combatSkillValue" style="color:#00d4ff;font-size:1.25em;">—</strong>
                                     </div>
                                     <div style="padding:12px 15px;background:rgba(231,76,60,0.10);border:1px solid rgba(231,76,60,0.35);border-radius:9px;">
                                         <span style="color:#aaa;">Dano:</span>
-                                        <strong id="combatWeaponDamage" style="color:#ff8b7d;font-size:1.2em;">1d3</strong>
+                                        <strong id="combatWeaponDamage" style="color:#ff8b7d;font-size:1.2em;">—</strong>
                                     </div>
                                 </div>
-                                <small style="display:block;color:#aaa;margin-top:10px;">Somente armas e escudos atualmente em <strong>Equipado</strong> aparecem aqui.</small>
+
+                                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px;">
+                                    <button class="dice-btn" onclick="rolarCombateD100()">🎲 D100 de Combate</button>
+                                    <button class="dice-btn" onclick="rolarDanoCombate()" style="background:linear-gradient(135deg,#e74c3c,#c0392b);">💥 Dano</button>
+                                    <button class="dice-btn" onclick="rolarLocalizacaoCombate()" style="background:linear-gradient(135deg,#3498db,#2471a3);">🎯 Localização D20</button>
+                                    <button class="dice-btn" onclick="rolarIniciativaCombate()" style="background:linear-gradient(135deg,#f39c12,#d68910);">⚡ Iniciativa</button>
+                                </div>
+
+                                <div id="combatRollSummary" style="margin-top:15px;padding:14px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#ddd;min-height:52px;">
+                                    Selecione uma perícia para começar.
+                                </div>
+                                <small style="display:block;color:#aaa;margin-top:10px;">Armas e escudos vêm exclusivamente de <strong>Equipado</strong>. Esquiva dispensa equipamento e Combate Desarmado usa Punhos.</small>
                             </div>
                         </div>
                     </div>
@@ -566,34 +583,14 @@
                             <div class="skill-test-section">
                                 <h4>📊 Teste de Perícia</h4>
                                 <div class="form-group">
-                                    <label>Tipo de Teste:</label>
-                                    <select id="skillTestType" onchange="atualizarListaPericias()">
-                                        <option value="normal">Teste Normal</option>
-                                        <option value="combate">Combate</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
                                     <label>Perícia:</label>
                                     <select id="skillSelect" onchange="mostrarValorPericia()"></select>
                                 </div>
-                                <div style="margin:15px 0; color:#00d4ff; font-size:1.2em;">
-                                    Valor da Perícia: <strong id="skillValue">-</strong>
+                                <div style="margin:15px 0;color:#00d4ff;font-size:1.2em;">
+                                    Valor da Perícia: <strong id="skillValue">—</strong>
                                 </div>
                                 <button class="dice-btn" onclick="rolarPericia()">🎲 Rolar Perícia</button>
-                            </div>
-                            
-                            <div class="attack-section">
-                                <h4>⚔️ Ataque com Arma</h4>
-                                <div class="form-group">
-                                    <label>Arma/Ataque:</label>
-                                    <select id="weaponSelect" onchange="mostrarDanoArma()">
-                                        <option value="desarmado">Desarmado (Punhos/Chutes)</option>
-                                    </select>
-                                </div>
-                                <div style="margin:15px 0; color:#e74c3c; font-size:1.2em;">
-                                    Dano: <strong id="weaponDamage">1d3</strong>
-                                </div>
-                                <button class="dice-btn" onclick="rolarDanoArma()" style="background:linear-gradient(135deg, #e74c3c, #c0392b);">💥 Rolar Dano</button>
+                                <small style="display:block;color:#aaa;margin-top:10px;">Todas as perícias básicas são permitidas. Profissionais e especializações aparecem quando o personagem possui investimento.</small>
                             </div>
                             
                             <div class="dice-roller" style="margin-top:30px;">
@@ -1494,48 +1491,298 @@ function calcularPAEquipado_(char, localizacoes) {
     return resultado;
 }
 
-function popularEquipamentosCombate_(char) {
-    const equipados = obterItensEquipados_(char).filter(itemEhArmaOuEscudo_);
-    const selects = [document.getElementById('combatWeaponSelect'), document.getElementById('weaponSelect')].filter(Boolean);
-    selects.forEach(select => {
-        const anterior = select.value;
-        const opcoes = ['<option value="desarmado">Punhos</option>'].concat(
-            equipados.map((item, i) => {
-                const id = item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`;
-                item.__combatId = String(id);
-                return `<option value="${escaparHtmlInventario_(String(id))}">${escaparHtmlInventario_(getNome(item))}</option>`;
-            })
-        );
-        select.innerHTML = opcoes.join('');
-        if ([...select.options].some(o => o.value === anterior)) select.value = anterior;
+function normalizarTextoCombate_(texto) {
+    return String(texto || '').trim().toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function itemEhEscudo_(item) {
+    const cat = categoriaNormalizada_(item);
+    return cat === 'escudo' || cat === 'escudos';
+}
+
+function itemEhCorpoACorpo_(item) {
+    return normalizarTextoCombate_(item?.alcance).includes('corpo a corpo');
+}
+
+function calcularFormulaPersonagem_(formula, char) {
+    const attrsBase = char?.atributos || {};
+    const bonus = char?.bonus || {};
+    try {
+        let expr = String(formula || '0');
+        ['FOR','CON','TAM','DES','INT','POD','CAR'].forEach(a => {
+            const valor = (parseInt(attrsBase[a]) || 10) + (parseInt(bonus[a]) || 0);
+            expr = expr.replace(new RegExp(a, 'g'), valor);
+        });
+        if (!/^[0-9+\-*/().\s]+$/.test(expr)) return 0;
+        return Math.round(Function(`"use strict"; return (${expr})`)());
+    } catch (e) {
+        return 0;
+    }
+}
+
+function obterValorRegistroPericia_(char, id, ehEspecializacao = false) {
+    const banco = ehEspecializacao ? especializacoesDB : periciasDB;
+    const registro = banco.find(x => x.id === id);
+    if (!registro) return 0;
+    const dados = (ehEspecializacao ? char.especializacoes : char.pericias)?.[id] || {};
+    return calcularFormulaPersonagem_(registro.formula, char) + totalTreinoPericia_(dados);
+}
+
+function obterPericiasCombate_(char) {
+    const basicas = periciasDB.filter(p => ['combate_desarmado','esquiva'].includes(p.id));
+    const especializacoes = especializacoesDB.filter(e => {
+        const treino = totalTreinoPericia_((char.especializacoes || {})[e.id] || {});
+        const tipo = normalizarTextoCombate_(e.tipo);
+        const uso = normalizarTextoCombate_(e.uso || e.usoCombate);
+        return treino > 0 && tipo === 'combate' && uso !== 'teste';
     });
-    mostrarDanoEquipamentoCombate();
-    mostrarDanoArma();
+    return [
+        ...basicas.map(x => ({...x, __especializacao:false})),
+        ...especializacoes.map(x => ({...x, __especializacao:true}))
+    ];
+}
+
+function equipamentoCompativelComPericia_(item, pericia) {
+    if (!item || !pericia) return false;
+    const uso = normalizarTextoCombate_(pericia.uso || pericia.usoCombate);
+    if (itemEhEscudo_(item)) return uso.includes('defesa');
+    if (itemEhCorpoACorpo_(item)) return uso.includes('corpo a corpo') || uso.includes('defesa');
+    return uso.includes('distancia');
+}
+
+function popularPericiasCombate_(char) {
+    const select = document.getElementById('combatSkillSelect');
+    if (!select) return;
+    const anterior = select.value;
+    const lista = obterPericiasCombate_(char);
+    select.innerHTML = lista.map(p => `<option value="${p.__especializacao ? 'esp:' : 'per:'}${escaparHtmlInventario_(p.id)}">${escaparHtmlInventario_(getNome(p))}</option>`).join('');
+    if ([...select.options].some(o => o.value === anterior)) select.value = anterior;
+}
+
+function obterPericiaCombateSelecionada_() {
+    const select = document.getElementById('combatSkillSelect');
+    if (!select?.value) return null;
+    const [tipo, id] = select.value.split(':');
+    const banco = tipo === 'esp' ? especializacoesDB : periciasDB;
+    const registro = banco.find(x => x.id === id);
+    return registro ? {...registro, __especializacao: tipo === 'esp'} : null;
+}
+
+function popularEquipamentosCombate_(char) {
+    popularPericiasCombate_(char);
+    const select = document.getElementById('combatWeaponSelect');
+    if (!select) return;
+    const anterior = select.value;
+    const pericia = obterPericiaCombateSelecionada_();
+    const equipados = obterItensEquipados_(char).filter(itemEhArmaOuEscudo_);
+    let opcoes = [];
+
+    if (!pericia) {
+        opcoes = [{value:'', label:'—'}];
+    } else if (pericia.id === 'esquiva') {
+        opcoes = [{value:'nenhum', label:'Nenhum equipamento'}];
+    } else if (pericia.id === 'combate_desarmado') {
+        opcoes = [{value:'desarmado', label:'Punhos'}];
+    } else {
+        const compativeis = equipados.filter(i => equipamentoCompativelComPericia_(i, pericia));
+        opcoes = compativeis.map((item, i) => {
+            const id = item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`;
+            return {value:String(id), label:getNome(item)};
+        });
+        if (!opcoes.length) opcoes = [{value:'', label:'Nenhum equipamento compatível'}];
+    }
+
+    select.innerHTML = opcoes.map(o => `<option value="${escaparHtmlInventario_(o.value)}">${escaparHtmlInventario_(o.label)}</option>`).join('');
+    if ([...select.options].some(o => o.value === anterior)) select.value = anterior;
+    atualizarPainelCombate();
 }
 
 function encontrarEquipamentoCombate_(valor) {
     const char = userCharacters.find(c => c.id === currentCharId);
-    if (!char || valor === 'desarmado') return null;
+    if (!char || !valor || ['desarmado','nenhum'].includes(valor)) return null;
     return obterItensEquipados_(char).find((item, i) => {
         const id = item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`;
         return String(id) === String(valor);
     }) || null;
 }
 
-window.mostrarDanoEquipamentoCombate = () => {
-    const select = document.getElementById('combatWeaponSelect');
-    const alvo = document.getElementById('combatWeaponDamage');
-    if (!select || !alvo) return;
-    const item = encontrarEquipamentoCombate_(select.value);
-    alvo.textContent = item ? (item.dano || '—') : '1d3';
+function obterExpressaoDanoCombate_() {
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return '';
+    const pericia = obterPericiaCombateSelecionada_();
+    const valorEquip = document.getElementById('combatWeaponSelect')?.value || '';
+    if (!pericia || pericia.id === 'esquiva') return '';
+    const mod = calcularModDano(
+        (char.atributos?.FOR || 10) + (char.bonus?.FOR || 0),
+        (char.atributos?.TAM || 10) + (char.bonus?.TAM || 0)
+    );
+    const modLimpo = (!mod || mod === '+0' || mod === '0') ? '' : mod;
+    if (pericia.id === 'combate_desarmado' || valorEquip === 'desarmado') return `1d3${modLimpo}`;
+    const item = encontrarEquipamentoCombate_(valorEquip);
+    if (!item || !item.dano) return '';
+    return `${item.dano}${itemEhCorpoACorpo_(item) ? modLimpo : ''}`;
+}
+
+window.atualizarPainelCombate = () => {
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    const pericia = obterPericiaCombateSelecionada_();
+    const selectEquip = document.getElementById('combatWeaponSelect');
+    if (!pericia) {
+        document.getElementById('combatSkillValue').textContent = '—';
+        document.getElementById('combatWeaponDamage').textContent = '—';
+        return;
+    }
+    const valor = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
+    document.getElementById('combatSkillValue').textContent = valor;
+
+    // A troca de perícia redefine as opções de equipamento.
+    if (selectEquip) {
+        const atual = selectEquip.value;
+        const equipados = obterItensEquipados_(char).filter(itemEhArmaOuEscudo_);
+        let opcoes;
+        if (pericia.id === 'esquiva') opcoes = [{value:'nenhum',label:'Nenhum equipamento'}];
+        else if (pericia.id === 'combate_desarmado') opcoes = [{value:'desarmado',label:'Punhos'}];
+        else {
+            opcoes = equipados.filter(i => equipamentoCompativelComPericia_(i, pericia)).map((item,i) => ({
+                value:String(item.instanciaId || item.instanceId || item.idInstancia || item.id || `equipado_${i}`),
+                label:getNome(item)
+            }));
+            if (!opcoes.length) opcoes = [{value:'',label:'Nenhum equipamento compatível'}];
+        }
+        selectEquip.innerHTML = opcoes.map(o => `<option value="${escaparHtmlInventario_(o.value)}">${escaparHtmlInventario_(o.label)}</option>`).join('');
+        if ([...selectEquip.options].some(o => o.value === atual)) selectEquip.value = atual;
+    }
+    window.mostrarDanoEquipamentoCombate();
 };
 
-window.mostrarDanoArma = () => {
-    const select = document.getElementById('weaponSelect');
-    const alvo = document.getElementById('weaponDamage');
-    if (!select || !alvo) return;
-    const item = encontrarEquipamentoCombate_(select.value);
-    alvo.textContent = item ? (item.dano || '—') : '1d3';
+window.mostrarDanoEquipamentoCombate = () => {
+    const alvo = document.getElementById('combatWeaponDamage');
+    if (!alvo) return;
+    alvo.textContent = obterExpressaoDanoCombate_() || '—';
+};
+
+function classificarD100_(valor, rolagem) {
+    const v = Math.max(1, parseInt(valor) || 1);
+    const critico = Math.max(1, Math.floor(v * 0.1));
+    if (rolagem === 100) return {grau:'Fiasco', sucesso:false};
+    if (rolagem <= critico) return {grau:'Crítico', sucesso:true};
+    if (rolagem <= v) return {grau:'Sucesso', sucesso:true};
+    return {grau:'Falha', sucesso:false};
+}
+
+window.rolarCombateD100 = () => {
+    const char = userCharacters.find(c => c.id === currentCharId);
+    const pericia = obterPericiaCombateSelecionada_();
+    const resumo = document.getElementById('combatRollSummary');
+    if (!char || !pericia || !resumo) return;
+    const equip = document.getElementById('combatWeaponSelect')?.value || '';
+    if (!['esquiva','combate_desarmado'].includes(pericia.id) && !equip) {
+        resumo.innerHTML = '⚠️ Não há equipamento compatível equipado para esta perícia.';
+        return;
+    }
+    const valor = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
+    const roll = Math.floor(Math.random()*100)+1;
+    const r = classificarD100_(valor, roll);
+    const margem = Math.abs(valor-roll);
+    resumo.innerHTML = `<strong>${escaparHtmlInventario_(getNome(pericia))}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}`;
+};
+
+function rolarExpressaoDanoCombate_(expressao) {
+    const tokens = String(expressao || '').match(/[+-]?[^+-]+/g) || [];
+    let total = 0;
+    const detalhes = [];
+    const efeitos = [];
+    tokens.forEach(token => {
+        token = token.trim();
+        let sinal = 1;
+        if (token.startsWith('-')) { sinal = -1; token = token.slice(1).trim(); }
+        else if (token.startsWith('+')) token = token.slice(1).trim();
+        const dado = token.match(/^(\d*)d(\d+)$/i);
+        if (dado) {
+            const qtd = parseInt(dado[1]) || 1, faces = parseInt(dado[2]);
+            const rolls = Array.from({length:qtd},()=>Math.floor(Math.random()*faces)+1);
+            const soma = rolls.reduce((a,b)=>a+b,0) * sinal;
+            total += soma;
+            detalhes.push(`${sinal < 0 ? '-' : ''}${qtd}d${faces} [${rolls.join(', ')}]`);
+            return;
+        }
+        if (/^\d+$/.test(token)) {
+            total += sinal * parseInt(token);
+            detalhes.push(`${sinal < 0 ? '-' : '+'}${token}`);
+            return;
+        }
+        if (token) efeitos.push(token);
+    });
+    return {total:Math.max(0,total), bruto:total, detalhes, efeitos};
+}
+
+window.rolarDanoCombate = () => {
+    const resumo = document.getElementById('combatRollSummary');
+    const expr = obterExpressaoDanoCombate_();
+    if (!resumo) return;
+    if (!expr) {
+        resumo.innerHTML = 'ℹ️ A ação/equipamento selecionado não possui dano.';
+        return;
+    }
+    const r = rolarExpressaoDanoCombate_(expr);
+    resumo.innerHTML = `<strong>Dano ${escaparHtmlInventario_(expr)}</strong> → <strong>${r.total}</strong>${r.detalhes.length ? `<br><small>${escaparHtmlInventario_(r.detalhes.join(' · '))}</small>` : ''}${r.efeitos.length ? `<br><small>Efeito: ${escaparHtmlInventario_(r.efeitos.join(', '))}</small>` : ''}`;
+};
+
+window.rolarLocalizacaoCombate = () => {
+    const roll = Math.floor(Math.random()*20)+1;
+    let local;
+    if (roll <= 3) local = 'Perna Direita';
+    else if (roll <= 6) local = 'Perna Esquerda';
+    else if (roll <= 9) local = 'Abdômen';
+    else if (roll <= 12) local = 'Peito';
+    else if (roll <= 15) local = 'Braço Direito';
+    else if (roll <= 18) local = 'Braço Esquerdo';
+    else local = 'Cabeça';
+    const resumo = document.getElementById('combatRollSummary');
+    if (resumo) resumo.innerHTML = `🎯 D20 <strong>${roll}</strong> → <strong>${local}</strong>`;
+};
+
+window.rolarIniciativaCombate = () => {
+    const char = userCharacters.find(c => c.id === currentCharId);
+    if (!char) return;
+    const iniciativa = (char.atributos?.INT || 10) + (char.bonus?.INT || 0) + (char.atributos?.DES || 10) + (char.bonus?.DES || 0);
+    const dado = Math.floor(Math.random()*10)+1;
+    const total = iniciativa + dado;
+    const resumo = document.getElementById('combatRollSummary');
+    if (resumo) resumo.innerHTML = `⚡ Iniciativa: 1d10 [<strong>${dado}</strong>] + ${iniciativa} = <strong>${total}</strong>`;
+};
+
+function obterPericiasTesteGeral_(char) {
+    const basicas = periciasDB.filter(p => p.tipo === 'Básica');
+    const prof = periciasDB.filter(p => p.tipo !== 'Básica' && totalTreinoPericia_((char.pericias || {})[p.id] || {}) > 0);
+    const esp = especializacoesDB.filter(e => totalTreinoPericia_((char.especializacoes || {})[e.id] || {}) > 0);
+    return [
+        ...basicas.map(x => ({...x,__especializacao:false})),
+        ...prof.map(x => ({...x,__especializacao:false})),
+        ...esp.map(x => ({...x,__especializacao:true}))
+    ];
+}
+
+window.atualizarListaPericias = () => {
+    const char = userCharacters.find(c => c.id === currentCharId);
+    const select = document.getElementById('skillSelect');
+    if (!char || !select) return;
+    const anterior = select.value;
+    const lista = obterPericiasTesteGeral_(char);
+    select.innerHTML = lista.map(p => `<option value="${p.__especializacao ? 'esp:' : 'per:'}${escaparHtmlInventario_(p.id)}">${escaparHtmlInventario_(getNome(p))}</option>`).join('');
+    if ([...select.options].some(o => o.value === anterior)) select.value = anterior;
+    mostrarValorPericia();
+};
+
+window.mostrarValorPericia = () => {
+    const char = userCharacters.find(c => c.id === currentCharId);
+    const select = document.getElementById('skillSelect');
+    const alvo = document.getElementById('skillValue');
+    if (!char || !select || !alvo || !select.value) { if (alvo) alvo.textContent = '—'; return; }
+    const [tipo,id] = select.value.split(':');
+    alvo.textContent = obterValorRegistroPericia_(char,id,tipo === 'esp');
 };
 
 function renderizarCombate(char) {
@@ -1660,23 +1907,21 @@ window.rolarFormula = () => {
 };
 
 window.rolarPericia = () => {
-    const skillValue = parseInt(document.getElementById('skillValue').textContent) || 0;
+    const char = userCharacters.find(c => c.id === currentCharId);
+    const select = document.getElementById('skillSelect');
+    if (!char || !select?.value) return;
+    const [tipo,id] = select.value.split(':');
+    const banco = tipo === 'esp' ? especializacoesDB : periciasDB;
+    const registro = banco.find(x => x.id === id);
+    if (!registro) return;
+    const skillValue = obterValorRegistroPericia_(char,id,tipo === 'esp');
     const roll = Math.floor(Math.random() * 100) + 1;
-    const isCritSuccess = roll <= Math.floor(skillValue * 0.1) || (skillValue >= 50 && roll <= 5);
-    const isCritFail = roll >= 96 || (skillValue < 96 && roll > 100 - Math.floor(skillValue * 0.1));
-    const isSuccess = roll <= skillValue;
+    const r = classificarD100_(skillValue, roll);
     const margin = Math.abs(roll - skillValue);
-    
-    let result = '';
-    if (isCritSuccess) result = `✅ CRÍTICO! Margem: ${margin}`;
-    else if (isCritFail) result = `❌ FALHA CRÍTICA!`;
-    else if (isSuccess) result = `✅ Sucesso! Margem: ${margin}`;
-    else result = `❌ Falha! Margem: ${margin}`;
-    
     document.getElementById('rollResultText').innerHTML = `
-        <strong>Teste de Perícia</strong><br>
+        <strong>${escaparHtmlInventario_(getNome(registro))}</strong><br>
         Valor: ${skillValue} | D100: ${roll}<br>
-        ${result}
+        <strong>${r.grau}</strong> | Margem: ${margin}
     `;
     document.getElementById('rollResultBox').classList.remove('hidden');
 };
@@ -1992,12 +2237,14 @@ window.mostrarCharAba = (abaId, btn) => {
     document.getElementById(`char-${abaId}`).classList.add('active');
     btn.classList.add('active');
     
-    if (abaId === 'pericias' && currentCharId) {
+    if (currentCharId) {
         const char = userCharacters.find(c => c.id === currentCharId);
-        if (char) {
+        if (char && abaId === 'pericias') {
             document.getElementById('periciasEtapa').value = 'origem';
             renderizarPericias(char);
         }
+        if (char && abaId === 'combate') renderizarCombate(char);
+        if (char && abaId === 'rolagem') atualizarListaPericias();
     }
 };
 
@@ -3090,7 +3337,13 @@ window.fecharModal = fecharModal;
 window.salvarCombate = salvarCombate;
 window.salvarPATotal = salvarPATotal;
 window.mostrarDanoEquipamentoCombate = mostrarDanoEquipamentoCombate;
-window.mostrarDanoArma = mostrarDanoArma;
+window.atualizarPainelCombate = atualizarPainelCombate;
+window.rolarCombateD100 = rolarCombateD100;
+window.rolarDanoCombate = rolarDanoCombate;
+window.rolarLocalizacaoCombate = rolarLocalizacaoCombate;
+window.rolarIniciativaCombate = rolarIniciativaCombate;
+window.atualizarListaPericias = atualizarListaPericias;
+window.mostrarValorPericia = mostrarValorPericia;
 window.salvarFadiga = salvarFadiga;
 window.rolarDado = rolarDado;
 window.rolarFormula = rolarFormula;
