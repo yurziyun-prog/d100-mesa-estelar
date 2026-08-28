@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 5.11: painel compartilhado, tempo real, autoavanço e dificuldade -->
+    <!-- Mesa Estelar v28 etapa 5.12: painel de combate do jogador e seleção de armas corrigida -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -181,6 +181,14 @@
         .btn-cancel { background: #dc3545; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
         
         /* COMBATE */
+
+        /* A aba antiga agora serve apenas como Outras Características.
+           Os controles ativos de combate foram migrados para a aba superior Combate. */
+        #char-combate .combat-test-panel,
+        #char-combate #combatRollSummary,
+        #char-combate #combatReactionPanel,
+        #char-combate #combatSpecialEffectPanel { display:none !important; }
+
         .combat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
         .combat-section { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; border: 2px solid rgba(255,255,255,0.1); }
         .combat-section h4 { color: #00d4ff; margin-bottom: 15px; font-size: 1.2em; }
@@ -316,8 +324,64 @@
                         </div>
                         <div id="sharedCombatRound" style="font-size:1.15em;font-weight:800;color:#ffd166;">Fora de combate</div>
                     </div>
+
                     <div id="sharedCombatNotice" style="margin-top:14px;"></div>
-                    <div id="sharedCombatParticipants" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:16px;"></div>
+
+                    <div id="playerCombatControlCard" style="display:none;margin-top:16px;padding:16px;border-radius:14px;border:1px solid rgba(0,212,255,.32);background:rgba(0,212,255,.055);">
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <img id="playerCombatAvatar" src="" style="width:58px;height:58px;border-radius:50%;object-fit:cover;border:2px solid rgba(0,212,255,.45);">
+                            <div style="min-width:160px;">
+                                <strong id="playerCombatName" style="font-size:1.18em;">—</strong>
+                                <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;color:#bbb;">
+                                    <span>INI <strong id="playerCombatIni">—</strong></span>
+                                    <span>PV <strong id="playerCombatPV">—</strong></span>
+                                    <span>PA <strong id="playerCombatPA">—</strong></span>
+                                    <span>AÇ <strong id="playerCombatAC">—</strong></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="playerCombatLocations" style="margin-top:12px;"></div>
+
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px;margin-top:14px;align-items:end;">
+                            <div class="form-group" style="margin:0;">
+                                <label>P. Cmbt.</label>
+                                <select id="sharedCombatSkillSelect" onchange="mudarPericiaCombateJogadorCompartilhado_(this.value)"></select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label>Dif.</label>
+                                <select id="sharedCombatDifficultySelect" onchange="mudarDificuldadeCombateJogadorCompartilhado_(this.value)">
+                                    <option value="muito_facil">Muito Fácil</option>
+                                    <option value="facil">Fácil</option>
+                                    <option value="padrao" selected>Padrão</option>
+                                    <option value="dificil">Difícil</option>
+                                    <option value="formidavel">Formidável</option>
+                                    <option value="herculeo">Hercúleo</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label>Equipamento</label>
+                                <select id="sharedCombatWeaponSelect" onchange="mudarEquipamentoCombateJogadorCompartilhado_(this.value)"></select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label>Alvo</label>
+                                <select id="sharedCombatTargetSelect" onchange="mudarAlvoCombateJogadorCompartilhado_(this.value)"></select>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;">
+                            <button class="btn-small btn-select" onclick="rolarTesteCombateJogadorCompartilhado_()">🎲 Teste D100</button>
+                            <button class="btn-small btn-delete" onclick="rolarDanoCombateJogadorCompartilhado_()">💥 Rolar dano</button>
+                            <button class="btn-small" onclick="rolarIniciativaJogadorCompartilhado_()">⚡ Iniciativa</button>
+                            <button id="sharedCombatStandBtn" class="btn-small" style="display:none;" onclick="levantarCombateJogador_()">🧍 Levantar (1 AÇ)</button>
+                        </div>
+                        <div id="sharedCombatOwnResult" style="margin-top:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.045);color:#ccc;">Selecione uma ação.</div>
+                    </div>
+
+                    <div style="margin-top:18px;">
+                        <h3 style="margin-bottom:8px;color:#00d4ff;">Ordem de iniciativa</h3>
+                        <div id="sharedCombatParticipants" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;"></div>
+                    </div>
                 </div>
             </div>
 
@@ -356,14 +420,14 @@
                         <button class="char-tab-btn active" onclick="mostrarCharAba('personagem', this)" data-i18n="charTabCharacter">📄 Personagem</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('pericias', this)" data-i18n="charTabSkills">📚 Perícias</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)" data-i18n="charTabInventory">🎒 Inventário</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('combate', this)" data-i18n="charTabCombat">🧩 Outras Características</button>
+                        <button class="char-tab-btn" id="charOtherTraitsTabBtn" onclick="mostrarCharAba('combate', this)">🧩 Outras Características</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)" data-i18n="charTabNotes">📔 Anotações</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)" data-i18n="charTabRolls">🎲 Rolagem</button>
                     </div>
 
                     <!-- PERSONAGEM -->
                     <div id="char-personagem" class="char-tab-content active">
-                        <div class="character-card">
+                        <div class="character-card combat-test-panel">
                             <div class="character-header">
                                 <div class="avatar" id="charAvatar"><span>👤</span></div>
                                 <div class="char-info">
@@ -4853,7 +4917,10 @@ window.mostrarAba = (abaId, btn) => {
     alvo.classList.add('active');
     if (btn) btn.classList.add('active');
     if (abaId === 'mercado') renderizarMercado();
-    if (abaId === 'combateMesa') renderizarPainelCombateCompartilhado_();
+    if (abaId === 'combateMesa') {
+        renderizarPainelCombateCompartilhado_();
+        if(userData?.role!=='mestre')renderizarControlesJogadorCompartilhado_();
+    }
 };
 
 window.mostrarCharAba = (abaId, btn) => {
@@ -6940,6 +7007,257 @@ function alvoAtualCombateJogador_(char){
     return salvo!==char.id&&ids.has(salvo)?salvo:'';
 }
 
+
+function personagemControladoJogadorNoCombate_(){
+    const sess=sessaoCombateVisivelAtual_();
+    if(!sess?.ativo)return null;
+    const ids=new Set((sess.participantes||[]).map(x=>x.id));
+    const atual=(userCharacters||[]).find(c=>c.id===currentCharId && ids.has(c.id) && String(c.dono||'')===String(currentUserUid));
+    if(atual)return atual;
+    return (userCharacters||[]).find(c=>ids.has(c.id) && String(c.dono||'')===String(currentUserUid))||null;
+}
+
+function tokenPericiaCombate_(p){
+    return `${p.__especializacao?'esp':'per'}:${p.id}`;
+}
+function resolverPericiaTokenCombate_(token){
+    const [tipo,id]=String(token||'').split(':');
+    const banco=tipo==='esp'?especializacoesDB:periciasDB;
+    const p=(banco||[]).find(x=>x.id===id);
+    if(p && tipo==='esp')p.__especializacao=true;
+    return p||null;
+}
+function garantirPreferenciasCombateJogador_(char){
+    char.combate=char.combate||{};
+    char.combate.painelCompartilhado=char.combate.painelCompartilhado||{};
+    const prefs=char.combate.painelCompartilhado;
+    const skills=obterPericiasCombate_(char)||[];
+    if(!skills.some(p=>tokenPericiaCombate_(p)===prefs.pericia)){
+        const primeira=skills[0];
+        prefs.pericia=primeira?tokenPericiaCombate_(primeira):'';
+    }
+    if(!prefs.dificuldade)prefs.dificuldade='padrao';
+    return prefs;
+}
+function armaValorInstancia_(item,idx){
+    return String(item.instanciaId||item.instanceId||item.idInstancia||item.id||`equipado_${idx}`);
+}
+function opcoesArmasJogadorCompartilhado_(char,pericia,selecionado){
+    if(!pericia)return '<option value="">—</option>';
+    if(pericia.id==='combate_desarmado')return `<option value="desarmado" selected>Punhos</option>`;
+    if(pericia.id==='esquiva')return `<option value="nenhum" selected>— sem arma —</option>`;
+
+    const equipados=obterItensEquipados_(char)||[];
+    const armas=equipados
+        .map((i,idx)=>({item:i,idx}))
+        .filter(x=>itemEhArmaOuEscudo_(x.item));
+
+    if(!armas.length)return '<option value="">— nenhuma arma equipada —</option>';
+
+    // Importante: mostra TODAS as armas equipadas. Compatibilidade vira penalidade,
+    // não desaparecimento da opção.
+    return armas.map(({item,idx})=>{
+        const v=armaValorInstancia_(item,idx);
+        const graus=penalidadeCompatibilidadeArma_(pericia,item);
+        const rot=graus>0?` ⚠ +${graus} grau${graus>1?'s':''}`:'';
+        return `<option value="${escaparHtmlInventario_(v)}" ${String(v)===String(selecionado)?'selected':''}>${escaparHtmlInventario_(getNome(item))}${rot}</option>`;
+    }).join('');
+}
+function armaCompartilhadaAtual_(char,prefs){
+    if(!char||!prefs)return null;
+    return encontrarEquipamentoCombateChar_(char,prefs.equipamento)||null;
+}
+function resumoLocaisJogadorCompartilhado_(char){
+    if(!char||modoCombateAtual_()==='simplificado')return '';
+    return resumoLocaisCompactoCombateMestre_(char);
+}
+
+window.mudarPericiaCombateJogadorCompartilhado_=async(valor)=>{
+    const c=personagemControladoJogadorNoCombate_();if(!c)return;
+    const prefs=garantirPreferenciasCombateJogador_(c);
+    prefs.pericia=String(valor||'');
+    prefs.equipamento='';
+    await setDoc(doc(db,'personagens',c.id),{'combate.painelCompartilhado':prefs},{merge:true});
+    renderizarControlesJogadorCompartilhado_();
+};
+window.mudarDificuldadeCombateJogadorCompartilhado_=async(valor)=>{
+    const c=personagemControladoJogadorNoCombate_();if(!c)return;
+    const prefs=garantirPreferenciasCombateJogador_(c);
+    prefs.dificuldade=String(valor||'padrao');
+    await setDoc(doc(db,'personagens',c.id),{'combate.painelCompartilhado':prefs},{merge:true});
+};
+window.mudarEquipamentoCombateJogadorCompartilhado_=async(valor)=>{
+    const c=personagemControladoJogadorNoCombate_();if(!c)return;
+    const prefs=garantirPreferenciasCombateJogador_(c);
+    prefs.equipamento=String(valor||'');
+    await setDoc(doc(db,'personagens',c.id),{'combate.painelCompartilhado':prefs},{merge:true});
+};
+window.mudarAlvoCombateJogadorCompartilhado_=async(valor)=>{
+    const c=personagemControladoJogadorNoCombate_();if(!c)return;
+    c.combate=c.combate||{};
+    c.combate.alvoPreferido=String(valor||'');
+    await setDoc(doc(db,'personagens',c.id),{'combate.alvoPreferido':c.combate.alvoPreferido},{merge:true});
+};
+
+function renderizarControlesJogadorCompartilhado_(){
+    const card=document.getElementById('playerCombatControlCard');
+    if(!card)return;
+    const c=personagemControladoJogadorNoCombate_();
+    const sess=sessaoCombateVisivelAtual_();
+    if(!c||!sess?.ativo){
+        card.style.display='none';return;
+    }
+    card.style.display='block';
+
+    const prefs=garantirPreferenciasCombateJogador_(c);
+    const pSess=(sess.participantes||[]).find(x=>x.id===c.id);
+    const skills=obterPericiasCombate_(c)||[];
+    const pericia=resolverPericiaTokenCombate_(prefs.pericia)||skills[0]||null;
+
+    const skillSel=document.getElementById('sharedCombatSkillSelect');
+    skillSel.innerHTML=skills.map(p=>`<option value="${tokenPericiaCombate_(p)}" ${tokenPericiaCombate_(p)===prefs.pericia?'selected':''}>${escaparHtmlInventario_(getNome(p))}</option>`).join('');
+
+    const diff=document.getElementById('sharedCombatDifficultySelect');
+    if(diff)diff.value=prefs.dificuldade||'padrao';
+
+    const weaponSel=document.getElementById('sharedCombatWeaponSelect');
+    if(pericia){
+        const opts=opcoesArmasJogadorCompartilhado_(c,pericia,prefs.equipamento);
+        weaponSel.innerHTML=opts;
+        const valores=[...weaponSel.options].map(o=>o.value);
+        if(!valores.includes(String(prefs.equipamento||''))){
+            prefs.equipamento=weaponSel.value||'';
+        }
+    }else weaponSel.innerHTML='<option value="">—</option>';
+
+    const targetSel=document.getElementById('sharedCombatTargetSelect');
+    const outros=(sess.participantes||[]).filter(x=>x.id!==c.id);
+    let alvo=alvoAtualCombateJogador_(c);
+    if(!alvo&&outros.length)alvo=outros[0].id;
+    targetSel.innerHTML=outros.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${x.id===alvo?'selected':''}>${escaparHtmlInventario_(x.nome||'Sem nome')}</option>`).join('')||'<option value="">—</option>';
+
+    const ac=garantirPontosAcaoCombate_(c);
+    const pv=pvResumoCombateMestre_(c);
+    document.getElementById('playerCombatName').textContent=c.nome||'Sem nome';
+    const av=document.getElementById('playerCombatAvatar');av.src=c.imagem||'';av.style.display=c.imagem?'block':'none';
+    document.getElementById('playerCombatIni').textContent=pSess?.iniciativa??'—';
+    document.getElementById('playerCombatPV').textContent=typeof pv==='object'?(pv.texto||'—'):pv;
+    document.getElementById('playerCombatPA').textContent=paResumoCombateMestre_(c);
+    document.getElementById('playerCombatAC').textContent=`${ac.atual}/${ac.max}`;
+    document.getElementById('playerCombatLocations').innerHTML=resumoLocaisJogadorCompartilhado_(c);
+    const stand=document.getElementById('sharedCombatStandBtn');
+    if(stand){stand.style.display=estaCaidoCombate_(c)?'inline-flex':'none';stand.disabled=ac.atual<=0;}
+}
+
+window.rolarIniciativaJogadorCompartilhado_=async()=>{
+    const c=personagemControladoJogadorNoCombate_();if(!c)return;
+    somDado_();
+    const iniBase=calcularIniciativa(c);
+    const d10=Math.floor(Math.random()*10)+1;
+    const total=d10+iniBase;
+    c.combate=c.combate||{};
+    c.combate.ultimaIniciativa={dado:d10,base:iniBase,total,timestamp:new Date().toISOString()};
+    await setDoc(doc(db,'personagens',c.id),{'combate.ultimaIniciativa':c.combate.ultimaIniciativa},{merge:true});
+    await registrarHistoricoCombate_('Iniciativa',`1d10 [${d10}] + ${iniBase} = ${total}`,{subtipo:'iniciativa',dado:d10,base:iniBase,total});
+    document.getElementById('sharedCombatOwnResult').textContent=`Iniciativa: 1d10 [${d10}] + ${iniBase} = ${total}`;
+};
+
+window.rolarTesteCombateJogadorCompartilhado_=async()=>{
+    const c=personagemControladoJogadorNoCombate_();if(!c)return;
+    const prefs=garantirPreferenciasCombateJogador_(c);
+    const pericia=resolverPericiaTokenCombate_(prefs.pericia);if(!pericia)return;
+    const out=document.getElementById('sharedCombatOwnResult');
+
+    if(ataqueBloqueadoPorEfeito_(c)){out.textContent='Resolva o Efeito Especial pendente antes de outro teste.';return;}
+    if(estaCaidoCombate_(c)&&periciaEhOfensiva_(pericia)){out.textContent='Você está caído. Gaste 1 AÇ para se levantar.';return;}
+
+    const ac=garantirPontosAcaoCombate_(c);
+    if(ac.atual<=0){out.textContent='Sem AÇ restantes nesta rodada.';return;}
+
+    let item=null;
+    if(prefs.equipamento && !['desarmado','nenhum'].includes(prefs.equipamento))item=encontrarEquipamentoCombateChar_(c,prefs.equipamento);
+    if(!['esquiva','combate_desarmado'].includes(pericia.id)&&!item){out.textContent='Selecione um equipamento.';return;}
+
+    if(item&&itemUsaMunicao_(item)){
+        const minimo=itemUsaEnergia_(item)?custoEnergiaDisparo_(item):1;
+        if(cargaAtualArma_(item)<minimo){out.textContent=`${getNome(item)} sem munição/energia suficiente.`;return;}
+    }
+
+    const base=obterValorRegistroPericia_(c,pericia.id,pericia.__especializacao);
+    const graus=item?penalidadeCompatibilidadeArma_(pericia,item):0;
+    const ajuste=aplicarDificuldadeEFadiga_(c,base,prefs.dificuldade||'padrao',graus);
+    if(ajuste.bloqueado){out.textContent='Ação bloqueada por fadiga.';return;}
+
+    somDado_();
+    const roll=Math.floor(Math.random()*100)+1;
+    const r=classificarD100_(ajuste.valor,roll);
+    const margem=Math.abs(ajuste.valor-roll);
+    const alvoId=document.getElementById('sharedCombatTargetSelect')?.value||alvoAtualCombateJogador_(c);
+
+    out.textContent=`${getNome(pericia)}: ${roll}/${ajuste.valor} → ${r.grau} · Margem ${margem} · ${ajuste.escolhida.nome}`;
+
+    await registrarHistoricoCombate_('D100',out.textContent,{
+        subtipo:'periciaCombate',periciaId:pericia.id,rolagem:roll,valorBase:base,valorEfetivo:ajuste.valor,
+        grau:r.grau,margem,dificuldadeEscolhida:prefs.dificuldade||'padrao',penalidadeCompatibilidade:graus,alvoId:alvoId||''
+    });
+
+    c.combate=c.combate||{};
+    c.combate.pontosAcaoAtuais=Math.max(0,ac.atual-1);
+    c.combate.ultimoTesteDano={equipamentoId:prefs.equipamento,periciaId:pericia.id,grau:r.grau,sucesso:!!r.sucesso,consumido:false,timestamp:new Date().toISOString()};
+
+    if(periciaEhOfensiva_(pericia)&&r.sucesso&&alvoId){
+        c.combate.ataqueSolicitado={
+            id:`atk_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+            atacanteId:c.id,alvoId,grau:r.grau,rolagem:roll,valor:ajuste.valor,periciaId:pericia.id,
+            equipamentoId:prefs.equipamento,penetracao:obterPenetracaoArma_(item),status:'novo',timestamp:new Date().toISOString()
+        };
+    }
+
+    if(item&&itemUsaMunicao_(item)){
+        if(itemUsaEnergia_(item))consumirEnergiaDisparo_(item);else consumirMunicaoFisica_(item,1);
+    }
+
+    await setDoc(doc(db,'personagens',c.id),{
+        'combate.pontosAcaoAtuais':c.combate.pontosAcaoAtuais,
+        'combate.ultimoTesteDano':c.combate.ultimoTesteDano,
+        'combate.ataqueSolicitado':c.combate.ataqueSolicitado||null,
+        inventario:c.inventario
+    },{merge:true});
+
+    renderizarControlesJogadorCompartilhado_();
+};
+
+window.rolarDanoCombateJogadorCompartilhado_=async()=>{
+    const c=personagemControladoJogadorNoCombate_();if(!c)return;
+    const prefs=garantirPreferenciasCombateJogador_(c);
+    const pericia=resolverPericiaTokenCombate_(prefs.pericia);
+    const out=document.getElementById('sharedCombatOwnResult');
+    if(!pericia)return;
+
+    let expr='',nome='Punhos',item=null;
+    if(pericia.id==='combate_desarmado'||prefs.equipamento==='desarmado'){
+        expr='1d3';
+        const mod=String(calcularModDano((c.atributos?.FOR||10)+(c.bonus?.FOR||0),(c.atributos?.TAM||10)+(c.bonus?.TAM||0))||'').trim();
+        if(mod&&mod!=='0'&&mod!=='+0')expr+=mod.startsWith('+')||mod.startsWith('-')?mod:`+${mod}`;
+    }else{
+        item=encontrarEquipamentoCombateChar_(c,prefs.equipamento);
+        if(!item){out.textContent='Selecione uma arma.';return;}
+        expr=String(item.dano||'').trim();nome=getNome(item);
+        if(!expr){out.textContent='A arma não possui dano cadastrado.';return;}
+    }
+
+    const ultimo=c?.combate?.ultimoTesteDano;
+    if(!ultimo||!ultimo.sucesso||ultimo.consumido){out.textContent='Faça primeiro um ataque bem-sucedido.';return;}
+
+    const critico=ultimo.grau==='Crítico';
+    const r=critico?maximizarExpressaoDanoCombate_(expr):rolarExpressaoDanoCombate_(expr);
+    if(critico)somCriticoArma_(item,nome);else tocarSomDano_(item,nome);
+    ultimo.consumido=true;
+    await setDoc(doc(db,'personagens',c.id),{'combate.ultimoTesteDano':ultimo},{merge:true});
+    await registrarHistoricoCombate_('Dano',`${nome}: ${expr} → ${r.total}`,{subtipo:'danoCombate',equipamento:nome,total:r.total,expressao:expr,critico});
+    out.textContent=`${nome}: ${expr} → ${r.total}${critico?' · CRÍTICO':''}`;
+};
+
 function sessaoCombateVisivelAtual_(){
     if(userData?.role==='mestre'){
         return {
@@ -6963,33 +7281,24 @@ function renderizarPainelCombateCompartilhado_(){
     const round=document.getElementById('sharedCombatRound');
     const notice=document.getElementById('sharedCombatNotice');
     if(!grid||!round)return;
+
     const sess=sessaoCombateVisivelAtual_();
     if(!sess?.ativo || !(sess.participantes||[]).length){
         round.textContent='Fora de combate';
         grid.innerHTML='<div style="grid-column:1/-1;padding:22px;border:1px dashed rgba(255,255,255,.18);border-radius:12px;color:#888;">Nenhum combate ativo.</div>';
         if(notice)notice.innerHTML='';
+        const card=document.getElementById('playerCombatControlCard');if(card)card.style.display='none';
         return;
     }
+
     round.textContent=`Rodada ${sess.rodada||1} · Ciclo ${sess.ciclo||1}`;
     const atualId=sess.participanteAtualId||'';
     const isMaster=userData?.role==='mestre';
-    grid.innerHTML=(sess.participantes||[]).map(p=>{
-        const minha=(userCharacters||[]).some(c=>c.id===p.id&&String(c.dono||'')===String(currentUserUid));
-        const c=(userCharacters||[]).find(x=>x.id===p.id);
-        const podeDetalhar=isMaster||minha;
-        let detalhes='';
-        if(podeDetalhar&&c){
-            const ac=isMaster?acoesResumoCombateMestre_(c,obterParticipanteCombateMestre_(c.id)):garantirPontosAcaoCombate_(c);
-            const pv=pvResumoCombateMestre_(c);
-            detalhes=`<div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:.9em;">
-                <span>PV <strong>${pv}</strong></span>
-                ${isMaster?`<span>PA <strong>${paResumoCombateMestre_(c)}</strong></span>`:''}
-                <span>AÇ <strong>${Number(ac.atual||0)}/${Number(ac.max||0)}</strong></span>
-            </div>`;
-        }else{
-            detalhes='<div style="margin-top:8px;color:#888;font-size:.87em;">PV e PA privados</div>';
-        }
-        return `<div style="padding:13px;border-radius:12px;border:1px solid ${p.id===atualId?'rgba(255,193,7,.65)':'rgba(255,255,255,.12)'};background:${p.id===atualId?'rgba(255,193,7,.08)':'rgba(255,255,255,.035)'};">
+
+    // Ordem pública: apenas foto, nome e iniciativa dos demais.
+    const ordenados=[...(sess.participantes||[])].sort((a,b)=>(Number(b.iniciativa)||-999)-(Number(a.iniciativa)||-999));
+    grid.innerHTML=ordenados.map(p=>`
+        <div style="padding:13px;border-radius:12px;border:1px solid ${p.id===atualId?'rgba(255,193,7,.65)':'rgba(255,255,255,.12)'};background:${p.id===atualId?'rgba(255,193,7,.08)':'rgba(255,255,255,.035)'};">
             <div style="display:flex;gap:10px;align-items:center;">
                 ${p.imagem?`<img src="${escaparHtmlInventario_(p.imagem)}" onerror="this.style.display='none'" style="width:46px;height:46px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,.18);">`:''}
                 <div style="min-width:0;flex:1;">
@@ -6997,15 +7306,15 @@ function renderizarPainelCombateCompartilhado_(){
                     <small style="color:#aaa;">INI ${p.iniciativa??'—'}${p.id===atualId?' · ▶ agora':''}</small>
                 </div>
             </div>
-            ${detalhes}
-        </div>`;
-    }).join('');
+        </div>`).join('');
+
     if(notice){
-        if(isMaster)notice.innerHTML='<div style="padding:9px 12px;border-radius:9px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#aaa;">Nesta etapa, o painel comum mostra o estado da luta. Os controles completos do mestre ainda ficam no Escudo enquanto migramos as ações.</div>';
-        else{
-            const pendente=(userCharacters||[]).find(c=>String(c.dono||'')===String(currentUserUid)&&c?.combate?.confrontoPendente?.status==='aguardando_defesa');
-            notice.innerHTML=pendente?'<div style="padding:9px 12px;border-radius:9px;background:rgba(231,76,60,.11);border:1px solid rgba(231,76,60,.35);color:#ffb3b3;">⚔️ Você tem uma reação pendente.</div>':'';
-        }
+        const pendente=(userCharacters||[]).find(c=>String(c.dono||'')===String(currentUserUid)&&c?.combate?.confrontoPendente?.status==='aguardando_defesa');
+        notice.innerHTML=pendente?'<div style="padding:9px 12px;border-radius:9px;background:rgba(231,76,60,.11);border:1px solid rgba(231,76,60,.35);color:#ffb3b3;">⚔️ Você tem uma reação pendente.</div>':'';
+    }
+    if(!isMaster)renderizarControlesJogadorCompartilhado_();
+    else{
+        const card=document.getElementById('playerCombatControlCard');if(card)card.style.display='none';
     }
 }
 function renderizarAlvosCombateJogador_(char){
@@ -7275,6 +7584,7 @@ function iniciarSincronizadorCombate_(){
                 }else esconderOverlayReacaoCombateJogador_();
             }
             renderizarPainelCombateCompartilhado_();
+            if(userData?.role!=='mestre')renderizarControlesJogadorCompartilhado_();
         }catch(err){console.warn('Tempo real do combate:',err);}
     },err=>console.warn('Escuta de combate:',err));
 }
@@ -7541,19 +7851,20 @@ function obterPericiaCombateMestrePorValor_(valor){
 }
 
 function equipamentosCombateChar_(char,pericia,selecionado=''){
-    let opts=[];
     if(!pericia)return '<option value="">—</option>';
-    if(pericia.id==='esquiva') opts=[{value:'nenhum',label:'Sem equipamento'}];
-    else if(pericia.id==='combate_desarmado') opts=[{value:'desarmado',label:'Punhos'}];
-    else{
-        const equipados=obterItensEquipados_(char).filter(itemEhArmaOuEscudo_).filter(i=>equipamentoCompativelComPericia_(i,pericia));
-        opts=equipados.map((item,i)=>{
-            const id=item.instanciaId||item.instanceId||item.idInstancia||item.id||`equipado_${i}`;
-            return {value:String(id),label:getNome(item)+rotuloCompatArma_(penalidadeCompatibilidadeArma_(pericia,item))};
-        });
-        if(!opts.length)opts=[{value:'',label:'Nenhum equipamento compatível'}];
-    }
-    return opts.map(o=>`<option value="${escaparHtmlInventario_(o.value)}" ${String(o.value)===String(selecionado)?'selected':''}>${escaparHtmlInventario_(o.label)}</option>`).join('');
+    if(pericia.id==='combate_desarmado')return `<option value="desarmado" selected>Punhos</option>`;
+    if(pericia.id==='esquiva')return `<option value="nenhum" selected>— sem arma —</option>`;
+
+    const itens=obterItensEquipados_(char)||[];
+    const armas=itens.map((item,idx)=>({item,idx})).filter(x=>itemEhArmaOuEscudo_(x.item));
+    if(!armas.length)return '<option value="">— nenhuma arma equipada —</option>';
+
+    return armas.map(({item,idx})=>{
+        const valor=String(item.instanciaId||item.instanceId||item.idInstancia||item.id||`equipado_${idx}`);
+        const graus=penalidadeCompatibilidadeArma_(pericia,item);
+        const rotulo=graus>0?` ⚠ +${graus} grau${graus>1?'s':''}`:'';
+        return `<option value="${valor}" ${String(valor)===String(selecionado)?'selected':''}>${escaparHtmlInventario_(getNome(item))}${rotulo}</option>`;
+    }).join('');
 }
 
 function encontrarEquipamentoCombateChar_(char,valor){
@@ -7783,9 +8094,8 @@ function renderizarCombateMestre_(){
                 if(pericia?.id==='combate_desarmado') equip='desarmado';
                 else if(pericia?.id==='esquiva') equip='nenhum';
                 else{
-                    const primeira=obterItensEquipados_(c)
-                        .filter(itemEhArmaOuEscudo_)
-                        .find(item=>equipamentoCompativelComPericia_(item,pericia));
+                    const lista=obterItensEquipados_(c).filter(itemEhArmaOuEscudo_);
+                    const primeira=lista.find(item=>equipamentoCompativelComPericia_(item,pericia))||lista[0];
                     if(primeira){
                         const ix=obterItensEquipados_(c).indexOf(primeira);
                         equip=String(primeira.instanciaId||primeira.instanceId||primeira.idInstancia||primeira.id||`equipado_${ix}`);
