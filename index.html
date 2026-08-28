@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v29: painel único de batalha compartilhado -->
+    <!-- Mesa Estelar v29.2: histórico com privacidade por personagem -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -347,8 +347,8 @@
 
                     <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.10);">
                         <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
-                            <h3 style="margin:0;color:#00d4ff;">📜 Histórico público da batalha</h3>
-                            <small style="color:#888;">Somente eventos que todos podem conhecer.</small>
+                            <h3 style="margin:0;color:#00d4ff;">📜 Histórico da batalha</h3>
+                            <small style="color:#888;">Jogadores veem detalhes apenas das próprias rolagens; o mestre vê tudo.</small>
                         </div>
                         <div id="battlePublicLog" style="display:flex;flex-direction:column;gap:7px;margin-top:10px;max-height:280px;overflow:auto;"></div>
                     </div>
@@ -566,7 +566,44 @@
 
                     <!-- COMBATE -->
                     <div id="char-combate" class="char-tab-content">
-                        
+                        <div class="form-section">
+                            <h3>🧩 Outras Características</h3>
+                            <div class="combat-grid">
+                                <div class="combat-section">
+                                    <div class="combat-title-row">
+                                        <h4 data-i18n="hpTitle">Pontos de Vida</h4>
+                                        <span class="combat-title-col" data-i18n="maxHp">PV Máx</span>
+                                        <span class="combat-title-col" data-i18n="currentHp">PV Atual</span>
+                                    </div>
+                                    <div id="hitLocations"></div>
+                                </div>
+                                <div class="combat-section">
+                                    <div class="combat-title-row">
+                                        <h4 data-i18n="armorTitle">Armadura (PA)</h4>
+                                        <span></span>
+                                        <span></span>
+                                    </div>
+                                    <div id="armorLocations"></div>
+                                </div>
+                                <div class="combat-section">
+                                    <h4 data-i18n="fatigueTitle">Fadiga</h4>
+                                    <select id="fadigaLevel" onchange="salvarFadiga()">
+                                        <option value="Fresh" data-i18n="fatFresh">Descansado (Fresh)</option>
+                                        <option value="Winded" data-i18n="fatWinded">Ofegante (Winded)</option>
+                                        <option value="Tired" data-i18n="fatTired">Cansado (Tired)</option>
+                                        <option value="Wearied" data-i18n="fatWearied">Fatigado (Wearied)</option>
+                                        <option value="Exhausted" data-i18n="fatExhausted">Exausto (Exhausted)</option>
+                                        <option value="Debilitated" data-i18n="fatDebilitated">Debilitado (Debilitated)</option>
+                                        <option value="Incapacitated" data-i18n="fatIncapacitated">Incapacitado (Incapacitated)</option>
+                                        <option value="Semi-Conscious" data-i18n="fatSemiConscious">Semiconsciente (Semi-Conscious)</option>
+                                        <option value="Comatose" data-i18n="fatComatose">Comatoso (Comatose)</option>
+                                        <option value="Dead" data-i18n="fatDead">Morto (Dead)</option>
+                                    </select>
+                                    <div id="fadigaDescricao" style="margin-top:14px;padding:12px 14px;background:rgba(0,0,0,0.20);border:1px solid rgba(255,255,255,0.10);border-radius:9px;color:#ddd;line-height:1.55;"></div>
+                                </div>
+                            </div>
+
+                                                    </div>
                     </div>
 
                     <!-- ANOTAÇÕES -->
@@ -4727,7 +4764,7 @@ window.mostrarCharAba = (abaId, btn) => {
             document.getElementById('periciasEtapa').value = 'origem';
             renderizarPericias(char);
         }
-        // A aba Outras Características não possui mais painel ativo de combate.
+        if (char && abaId === 'combate') renderizarCombate(char);
         if (char && abaId === 'rolagem') {
             atualizarListaPericias();
             renderizarPsiRolagem_(char);
@@ -4764,6 +4801,7 @@ const BATALHA_ACOES_REF = () => collection(db,'combatesAtivos','mesa','acoes');
 let batalhaEstado_ = null;
 let batalhaUnsub_ = null;
 let batalhaAcoesUnsub_ = null;
+let batalhaPersonagensUnsub_ = null;
 let batalhaProcessandoAcoes_ = false;
 let batalhaPrefsMestre_ = {};
 let batalhaSelecaoMestre_ = new Set();
@@ -4802,15 +4840,71 @@ function batalhaSanitizarParticipante_(c){
     };
 }
 
-function batalhaLogPush_(estado,texto,tipo='info'){
+
+function batalhaIniciativasProntas_(){
+    const ps=batalhaEstado_?.participantes||[];
+    return ps.length>0 && ps.every(p=>Number.isFinite(Number(p.iniciativa)));
+}
+
+function batalhaOrdenarPorIniciativaInterno_(){
+    if(!batalhaEstado_)return;
+    batalhaEstado_.participantes=(batalhaEstado_.participantes||[]).sort((a,b)=>{
+        const ai=Number.isFinite(Number(a.iniciativa))?Number(a.iniciativa):-999999;
+        const bi=Number.isFinite(Number(b.iniciativa))?Number(b.iniciativa):-999999;
+        return bi-ai;
+    });
+    batalhaEstado_.turnoIndex=0;
+    batalhaEstado_.ciclo=1;
+}
+
+function batalhaMargem_(valor,roll){
+    return Number(valor||0)-Number(roll||0);
+}
+function batalhaMargemTexto_(valor,roll){
+    const m=batalhaMargem_(valor,roll);
+    return `Margem ${m>=0?'+':''}${m}`;
+}
+
+function batalhaLocalizacaoD20_(){
+    const roll=Math.floor(Math.random()*20)+1;
+    let local;
+    if(roll<=3)local='Perna Direita';
+    else if(roll<=6)local='Perna Esquerda';
+    else if(roll<=9)local='Abdômen';
+    else if(roll<=12)local='Peito';
+    else if(roll<=15)local='Braço Direito';
+    else if(roll<=18)local='Braço Esquerdo';
+    else local='Cabeça';
+    return {roll,local};
+}
+
+function batalhaLogPush_(estado,textoPublico,tipo='info',dados={}){
     estado.logPublico=Array.isArray(estado.logPublico)?estado.logPublico:[];
     estado.logPublico.unshift({
         id:`log_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-        texto:String(texto||''),
+        texto:String(textoPublico||''),
+        textoPublico:String(textoPublico||''),
+        textoDetalhado:String(dados.textoDetalhado||textoPublico||''),
+        actorId:String(dados.actorId||''),
+        targetId:String(dados.targetId||''),
         tipo,
         timestamp:new Date().toISOString()
     });
     estado.logPublico=estado.logPublico.slice(0,80);
+}
+
+function batalhaPodeVerDetalheLog_(entry){
+    if(batalhaEhMestre_())return true;
+    if(!entry?.actorId)return false;
+    const c=batalhaCharLocal_(entry.actorId);
+    return !!c && String(c.dono||'')===String(currentUserUid||'');
+}
+
+function batalhaTextoLogVisivel_(entry){
+    if(batalhaPodeVerDetalheLog_(entry)){
+        return entry.textoDetalhado||entry.textoPublico||entry.texto||'';
+    }
+    return entry.textoPublico||entry.texto||'';
 }
 
 async function batalhaSalvarEstado_(estado=batalhaEstado_){
@@ -4970,9 +5064,9 @@ function batalhaControlCard_(p,char){
         ${defendendo?batalhaDefesaHtml_(p,char,pend):''}
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;">
-            <button class="btn-small btn-select" ${Number(p.acoesAtuais||0)<=0?'disabled':''} onclick="batalhaRolarD100_('${p.id}')">🎲 Teste D100</button>
+            <button class="btn-small btn-select" ${Number(p.acoesAtuais||0)<=0||!batalhaIniciativasProntas_()?'disabled':''} onclick="batalhaRolarD100_('${p.id}')">🎲 Teste D100</button>
             <button class="btn-small btn-delete" ${!danoLiberado?'disabled':''} onclick="batalhaRolarDano_('${p.id}')">💥 Rolar dano</button>
-            <button class="btn-small" onclick="batalhaRolarIniciativa_('${p.id}')">⚡ Iniciativa</button>
+            <button class="btn-small" ${Number.isFinite(Number(p.iniciativa))?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${Number.isFinite(Number(p.iniciativa))?'Iniciativa rolada':'Iniciativa'}</button>
             ${atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">⏭ Próximo</button>`:''}
             ${batalhaEhMestre_()?`<button class="btn-small btn-delete" onclick="batalhaRemoverParticipante_('${p.id}')">✕ Remover</button>`:''}
         </div>
@@ -4982,20 +5076,38 @@ function batalhaControlCard_(p,char){
 
 function batalhaDefesaHtml_(p,char,pend){
     const ac=Number(p.acoesAtuais||0);
-    const skills=batalhaListaPericias_(char);
+    const skills=[...(batalhaListaPericias_(char)||[])].sort((a,b)=>{
+        if(a.id==='esquiva'&&b.id!=='esquiva')return -1;
+        if(b.id==='esquiva'&&a.id!=='esquiva')return 1;
+        return getNome(a).localeCompare(getNome(b));
+    });
     const opts=skills.map(x=>`<option value="${batalhaTokenPericia_(x)}">${escaparHtmlInventario_(getNome(x))}</option>`).join('');
+    const padrao=skills[0];
+    const valorPadrao=padrao?obterValorRegistroPericia_(char,padrao.id,padrao.__especializacao):0;
     return `<div style="margin-top:11px;padding:12px;border-radius:10px;background:rgba(231,76,60,.11);border:1px solid rgba(231,76,60,.40);">
         <strong style="color:#ff9c90;">⚔️ ${escaparHtmlInventario_(pend.atacanteNome||'Atacante')} está atacando ${escaparHtmlInventario_(p.nome)}</strong>
         <div style="margin-top:6px;color:#ddd;">Ataque: <strong>${escaparHtmlInventario_(pend.ataque?.grau||'')}</strong> · AÇ disponíveis: <strong>${ac}/${p.acoesMax}</strong></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:9px;">
-            <select id="battleDefenseSkill_${p.id}" style="min-width:220px;">${opts}</select>
-            <button class="btn-small btn-select" ${ac<=0?'disabled':''} onclick="batalhaResponderDefesa_('${p.id}',true)">🛡 Defender</button>
+            <select id="battleDefenseSkill_${p.id}" style="min-width:220px;" onchange="batalhaAtualizarValorDefesa_('${p.id}',this.value)">${opts}</select>
+            <span style="padding:8px 10px;border-radius:8px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);">Valor: <strong id="battleDefenseValue_${p.id}" style="color:#00d4ff;">${valorPadrao}</strong></span>
+            <button class="btn-small btn-select" ${ac<=0?'disabled':''} onclick="batalhaResponderDefesa_('${p.id}',true)">🎲 Defender</button>
             <button class="btn-small btn-delete" onclick="batalhaResponderDefesa_('${p.id}',false)">✋ Não defender</button>
         </div>
+        <small style="display:block;color:#aaa;margin-top:7px;">Esquiva é a opção padrão. Você pode escolher outra perícia de combate apropriada para aparar.</small>
     </div>`;
 }
 
 let batalhaUltimoResultado_={};
+
+window.batalhaAtualizarValorDefesa_=(id,token)=>{
+    const c=batalhaCharLocal_(id);
+    const p=batalhaResolverPericia_(token);
+    const el=document.getElementById(`battleDefenseValue_${id}`);
+    if(!c||!p||!el)return;
+    el.textContent=obterValorRegistroPericia_(c,p.id,p.__especializacao);
+};
+
+
 
 window.batalhaMudarPref_=async(id,campo,valor)=>{
     const p=batalhaParticipante_(id),char=batalhaCharLocal_(id);
@@ -5062,12 +5174,7 @@ window.batalhaRemoverParticipante_=async(id)=>{
 
 window.batalhaOrdenarIniciativa_=async()=>{
     if(!batalhaEhMestre_()||!batalhaEstado_)return;
-    batalhaEstado_.participantes.sort((a,b)=>{
-        const ai=Number.isFinite(Number(a.iniciativa))?Number(a.iniciativa):-999;
-        const bi=Number.isFinite(Number(b.iniciativa))?Number(b.iniciativa):-999;
-        return bi-ai;
-    });
-    batalhaEstado_.turnoIndex=0;batalhaEstado_.ciclo=1;
+    batalhaOrdenarPorIniciativaInterno_();
     await batalhaSalvarEstado_();
 };
 
@@ -5164,24 +5271,65 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
 
     const roll=requestPayload?.roll ?? (Math.floor(Math.random()*100)+1);
     const r=classificarD100_(ajuste.valor,roll);
+    const margem=batalhaMargem_(ajuste.valor,roll);
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
-    batalhaUltimoResultado_[id]=`${getNome(per)}: ${roll}/${ajuste.valor} → ${r.grau}`;
+    batalhaUltimoResultado_[id]=`${getNome(per)}: ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}`;
 
     if(periciaEhOfensiva_(per)&&r.sucesso&&alvoId){
         const alvo=batalhaParticipante_(alvoId);
-        batalhaEstado_.pendencia={
-            id:`def_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-            status:'aguardando_defesa',
-            atacanteId:id,atacanteNome:p.nome,
-            defensorId:alvoId,defensorNome:alvo?.nome||'Alvo',
-            ataque:{grau:r.grau,rolagem:roll,valor:ajuste.valor,pericia:getNome(per),equipamento:item?getNome(item):'Punhos'}
+        const ataqueInfo={
+            grau:r.grau,rolagem:roll,valor:ajuste.valor,margem,
+            pericia:getNome(per),equipamento:item?getNome(item):'Punhos',
+            penetracao:item?obterPenetracaoArma_(item):0
         };
-        batalhaLogPush_(batalhaEstado_,`${p.nome} atacou ${alvo?.nome||'o alvo'} e aguarda reação.`,'ataque');
+        if(Number(alvo?.acoesAtuais||0)<=0){
+            batalhaEstado_.pendencia=null;
+            batalhaEstado_.danoPendente={
+                atacanteId:id,defensorId:alvoId,ataque:ataqueInfo,criadoEm:new Date().toISOString()
+            };
+            batalhaUltimoResultado_[id]+=' · alvo sem AÇ: dano liberado';
+            batalhaLogPush_(
+                batalhaEstado_,
+                `${p.nome} atacou ${alvo?.nome||'o alvo'} → ${r.grau}; alvo sem AÇ para reagir.`,
+                'acerto',
+                {
+                    actorId:p.id,
+                    targetId:alvoId,
+                    textoDetalhado:`${p.nome}: ${getNome(per)} ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}; alvo sem AÇ para reagir.`
+                }
+            );
+        }else{
+            batalhaEstado_.pendencia={
+                id:`def_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+                status:'aguardando_defesa',
+                atacanteId:id,atacanteNome:p.nome,
+                defensorId:alvoId,defensorNome:alvo?.nome||'Alvo',
+                ataque:ataqueInfo
+            };
+            batalhaLogPush_(
+                batalhaEstado_,
+                `${p.nome} atacou ${alvo?.nome||'o alvo'} → ${r.grau}.`,
+                'ataque',
+                {
+                    actorId:p.id,
+                    targetId:alvoId,
+                    textoDetalhado:`${p.nome}: ${getNome(per)} ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)} · alvo ${alvo?.nome||'—'}.`
+                }
+            );
+        }
     }else{
-        batalhaLogPush_(batalhaEstado_,`${p.nome}: ${getNome(per)} → ${r.grau}.`,'teste');
+        batalhaLogPush_(
+            batalhaEstado_,
+            `${p.nome}: ${getNome(per)} → ${r.grau}.`,
+            'teste',
+            {
+                actorId:p.id,
+                textoDetalhado:`${p.nome}: ${getNome(per)} ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}.`
+            }
+        );
     }
 
-    if(Number(p.acoesAtuais)<=0 && !batalhaEstado_.pendencia){
+    if(Number(p.acoesAtuais)<=0 && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente){
         await batalhaAvancarTurnoInterno_();
     }
     await batalhaSalvarEstado_();
@@ -5189,8 +5337,12 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
 
 window.batalhaRolarD100_=async(id)=>{
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);if(!p||!c||!batalhaPodeControlar_(p))return;
+    if(!batalhaIniciativasProntas_()){
+        notificar_('Todos os participantes precisam rolar iniciativa antes do primeiro turno.','aviso');
+        return;
+    }
     const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
-    if(atual?.id!==id){notificar_('Não é a oportunidade deste personagem.','aviso');return;}
+    if(atual?.id!==id){notificar_(`Agora é a oportunidade de ${atual?.nome||'outro personagem'}.`,'aviso');return;}
     const prefs=batalhaGarantirPrefsValidas_(c,batalhaPrefsChar_(c));
     if(batalhaEhMestre_()){
         somDado_();
@@ -5205,16 +5357,25 @@ window.batalhaRolarD100_=async(id)=>{
 
 window.batalhaRolarIniciativa_=async(id)=>{
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);if(!p||!c||!batalhaPodeControlar_(p))return;
+    if(Number.isFinite(Number(p.iniciativa))){
+        notificar_('A iniciativa deste personagem já foi rolada nesta batalha.','aviso');
+        return;
+    }
     const d10=Math.floor(Math.random()*10)+1,base=batalhaIniBase_(c),total=d10+base;
     somDado_();
+
     if(batalhaEhMestre_()){
         p.iniciativa=total;
         batalhaUltimoResultado_[id]=`Iniciativa: 1d10 [${d10}] + ${base} = ${total}`;
-        batalhaLogPush_(batalhaEstado_,`${p.nome} rolou iniciativa ${total}.`,'iniciativa');
+        batalhaLogPush_(batalhaEstado_,`${p.nome} rolou iniciativa ${total}.`,'iniciativa',{actorId:p.id});
+        batalhaOrdenarPorIniciativaInterno_();
         await batalhaSalvarEstado_();
     }else{
+        // Atualização visual imediata enquanto o mestre processa a ação.
+        p.iniciativa=total;
+        batalhaOrdenarPorIniciativaInterno_();
         await batalhaEnviarAcao_(id,'iniciativa',{d10,base,total});
-        batalhaUltimoResultado_[id]=`Iniciativa enviada: ${total}`;
+        batalhaUltimoResultado_[id]=`Iniciativa enviada: 1d10 [${d10}] + ${base} = ${total}`;
         renderizarBatalhaCompartilhada_();
     }
 };
@@ -5232,8 +5393,10 @@ window.batalhaResponderDefesa_=async(id,defender)=>{
         const ajuste=aplicarDificuldadeEFadiga_(c,base,'padrao',0);
         const roll=Math.floor(Math.random()*100)+1;
         const r=classificarD100_(ajuste.valor,roll);
+        const margem=batalhaMargem_(ajuste.valor,roll);
         somDado_();
-        resposta={defendeu:true,grau:r.grau,rolagem:roll,valor:ajuste.valor,pericia:getNome(per)};
+        resposta={defendeu:true,grau:r.grau,rolagem:roll,valor:ajuste.valor,margem,pericia:getNome(per)};
+        batalhaUltimoResultado_[id]=`${getNome(per)}: ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}`;
     }
 
     if(batalhaEhMestre_()){
@@ -5256,6 +5419,23 @@ async function batalhaProcessarDefesa_(acao){
     if(resp.defendeu){
         if(Number(defensor.acoesAtuais||0)<=0)return;
         defensor.acoesAtuais=Math.max(0,Number(defensor.acoesAtuais||0)-1);
+        batalhaUltimoResultado_[defensor.id]=`${resp.pericia||'Defesa'}: ${resp.rolagem}/${resp.valor} → ${resp.grau} · ${batalhaMargemTexto_(resp.valor,resp.rolagem)}`;
+    }else{
+        batalhaUltimoResultado_[defensor.id]='Optou por não defender.';
+    }
+
+    if(resp.defendeu){
+        batalhaLogPush_(
+            batalhaEstado_,
+            `${defensor?.nome||'Defensor'}: ${resp.pericia||'Defesa'} → ${resp.grau}.`,
+            'defesa',
+            {
+                actorId:defensor?.id||pend.defensorId,
+                textoDetalhado:`${defensor?.nome||'Defensor'}: ${resp.pericia||'Defesa'} ${resp.rolagem}/${resp.valor} → ${resp.grau} · ${batalhaMargemTexto_(resp.valor,resp.rolagem)}.`
+            }
+        );
+    }else{
+        batalhaLogPush_(batalhaEstado_,`${defensor?.nome||'Defensor'} optou por não defender.`,'defesa',{actorId:defensor?.id||pend.defensorId});
     }
 
     const ag=batalhaResultadoGradeValor_(pend.ataque?.grau);
@@ -5270,11 +5450,11 @@ async function batalhaProcessarDefesa_(acao){
             criadoEm:new Date().toISOString()
         };
         batalhaUltimoResultado_[pend.atacanteId]='Ataque acertou. Dano liberado.';
-        batalhaLogPush_(batalhaEstado_,`${atacante?.nome||'Atacante'} acertou ${defensor?.nome||'o alvo'}.`,'acerto');
+        batalhaLogPush_(batalhaEstado_,`${atacante?.nome||'Atacante'} acertou ${defensor?.nome||'o alvo'}.`,'acerto',{actorId:atacante?.id||pend.atacanteId,targetId:defensor?.id||pend.defensorId});
     }else{
         batalhaEstado_.danoPendente=null;
         batalhaUltimoResultado_[pend.atacanteId]='Ataque defendido.';
-        batalhaLogPush_(batalhaEstado_,`${defensor?.nome||'Defensor'} evitou o ataque.`,'defesa');
+        batalhaLogPush_(batalhaEstado_,`${defensor?.nome||'Defensor'} evitou o ataque.`,'defesa',{actorId:defensor?.id||pend.defensorId,targetId:atacante?.id||pend.atacanteId});
     }
     batalhaEstado_.pendencia=null;
 
@@ -5282,6 +5462,73 @@ async function batalhaProcessarDefesa_(acao){
         await batalhaAvancarTurnoInterno_();
     }
     await batalhaSalvarEstado_();
+}
+
+
+async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
+    const dp=batalhaEstado_?.danoPendente;
+    if(!dp||String(dp.atacanteId)!==String(atacanteId))return null;
+    const defensor=batalhaParticipante_(dp.defensorId);
+    const alvo=batalhaCharLocal_(dp.defensorId);
+    if(!defensor||!alvo)return null;
+
+    const {roll,local}=batalhaLocalizacaoD20_();
+    const penetracao=Math.max(0,Number(dp.ataque?.penetracao||0));
+    alvo.combate=alvo.combate||{};
+    let pa=0,paEfetivo=0,danoFinal=0,pvAntes=0,pvDepois=0;
+
+    if(modoCombateAtual_()==='simplificado'){
+        const max=calcularPVGlobalMax_(alvo);
+        if(!Number.isFinite(Number(alvo.combate.pvGlobalAtual)))alvo.combate.pvGlobalAtual=max;
+        pvAntes=Math.max(0,Number(alvo.combate.pvGlobalAtual||0));
+        pa=Math.max(0,Number(alvo.combate.armorGlobalManual||0)+Number(calcularPAGlobalEquipado_(alvo)||0));
+        paEfetivo=Math.max(0,pa-penetracao);
+        danoFinal=Math.max(0,Number(total||0)-paEfetivo);
+        pvDepois=Math.max(0,pvAntes-danoFinal);
+        alvo.combate.pvGlobalAtual=pvDepois;
+    }else{
+        const attrs=alvo.atributos||{},bonus=alvo.bonus||{};
+        const con=(attrs.CON||10)+(bonus.CON||0),tam=(attrs.TAM||10)+(bonus.TAM||0);
+        const maxLoc=calcularHitLocations_(con,tam);
+        alvo.combate.hitLocations=alvo.combate.hitLocations||{};
+        alvo.combate.armor=alvo.combate.armor||{};
+        pvAntes=Object.prototype.hasOwnProperty.call(alvo.combate.hitLocations,local)
+            ?Number(alvo.combate.hitLocations[local]||0)
+            :Number(maxLoc[local]||0);
+        const paEq=calcularPAEquipado_(alvo,Object.keys(maxLoc));
+        pa=Math.max(0,Number(alvo.combate.armor[local]||0)+Number(paEq[local]||0));
+        paEfetivo=Math.max(0,pa-penetracao);
+        danoFinal=Math.max(0,Number(total||0)-paEfetivo);
+        pvDepois=pvAntes-danoFinal;
+        alvo.combate.hitLocations[local]=pvDepois;
+    }
+
+    await setDoc(doc(db,'personagens',alvo.id),{combate:alvo.combate},{merge:true});
+
+    const resultado={
+        d20:roll,local,bruto:Number(total||0),penetracao,pa,paEfetivo,danoFinal,pvAntes,pvDepois,
+        defensorId:alvo.id,defensorNome:defensor.nome,nomeArma
+    };
+
+    batalhaUltimoResultado_[atacanteId]=`${nomeArma}: ${total} bruto · D20 ${roll} → ${local} · PA ${pa}${penetracao?` − Pen ${penetracao} = ${paEfetivo}`:''} · dano ${danoFinal}`;
+    batalhaUltimoResultado_[alvo.id]=`Atingido em ${local}: ${pvAntes} → ${pvDepois} PV`;
+
+    batalhaLogPush_(
+        batalhaEstado_,
+        `${batalhaParticipante_(atacanteId)?.nome||'Atacante'} atingiu ${defensor.nome} em ${local} (D20 ${roll}) · dano recebido ${danoFinal}.`,
+        'dano',
+        {
+            actorId:atacanteId,
+            targetId:defensor.id,
+            textoDetalhado:`${batalhaParticipante_(atacanteId)?.nome||'Atacante'} atingiu ${defensor.nome} em ${local} (D20 ${roll}) · dano bruto ${Number(total||0)} · PA ${pa}${penetracao?` − Pen ${penetracao} = ${paEfetivo}`:''} · dano final ${danoFinal} · PV ${pvAntes} → ${pvDepois}.`
+        }
+    );
+    batalhaEstado_.danoPendente=null;
+
+    const atacante=batalhaParticipante_(atacanteId);
+    if(atacante&&Number(atacante.acoesAtuais||0)<=0)await batalhaAvancarTurnoInterno_();
+    await batalhaSalvarEstado_();
+    return resultado;
 }
 
 window.batalhaRolarDano_=async(id)=>{
@@ -5307,10 +5554,7 @@ window.batalhaRolarDano_=async(id)=>{
     tocarSomDano_(item,nome);
 
     if(batalhaEhMestre_()){
-        batalhaUltimoResultado_[id]=`${nome}: ${expr} → ${r.total}`;
-        batalhaLogPush_(batalhaEstado_,`${p.nome} rolou ${r.total} de dano com ${nome}.`,'dano');
-        batalhaEstado_.danoPendente=null;
-        await batalhaSalvarEstado_();
+        await batalhaAplicarDanoNoAlvo_(id,r.total,nome);
     }else{
         await batalhaEnviarAcao_(id,'dano',{total:r.total,expr,nome});
         batalhaUltimoResultado_[id]=`${nome}: ${expr} → ${r.total} (enviado)`;
@@ -5327,10 +5571,13 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
 
     try{
         if(acao.tipo==='iniciativa'){
-            p.iniciativa=Number(acao.payload?.total);
-            batalhaUltimoResultado_[p.id]=`Iniciativa: ${p.iniciativa}`;
-            batalhaLogPush_(batalhaEstado_,`${p.nome} rolou iniciativa ${p.iniciativa}.`,'iniciativa');
-            await batalhaSalvarEstado_();
+            if(!Number.isFinite(Number(p.iniciativa))){
+                p.iniciativa=Number(acao.payload?.total);
+                batalhaUltimoResultado_[p.id]=`Iniciativa: 1d10 [${Number(acao.payload?.d10||0)}] + ${Number(acao.payload?.base||0)} = ${p.iniciativa}`;
+                batalhaLogPush_(batalhaEstado_,`${p.nome} rolou iniciativa ${p.iniciativa}.`,'iniciativa',{actorId:p.id});
+                batalhaOrdenarPorIniciativaInterno_();
+                await batalhaSalvarEstado_();
+            }
         }else if(acao.tipo==='teste'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
             if(atual?.id===p.id)await batalhaExecutarAtaqueMestre_(p.id,{prefs:acao.payload?.prefs});
@@ -5345,10 +5592,7 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
         }else if(acao.tipo==='dano'){
             if(batalhaEstado_.danoPendente?.atacanteId===p.id){
                 const total=Number(acao.payload?.total||0);
-                batalhaUltimoResultado_[p.id]=`${acao.payload?.nome||'Dano'}: ${total}`;
-                batalhaLogPush_(batalhaEstado_,`${p.nome} rolou ${total} de dano.`,'dano');
-                batalhaEstado_.danoPendente=null;
-                await batalhaSalvarEstado_();
+                await batalhaAplicarDanoNoAlvo_(p.id,total,acao.payload?.nome||'Dano');
             }
         }
     }finally{
@@ -5391,13 +5635,14 @@ function renderizarBatalhaCompartilhada_(){
 
     if(log){
         const itens=batalhaEstado_.logPublico||[];
-        log.innerHTML=itens.length?itens.map(x=>`<div style="padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.035);color:#ccc;"><small style="color:#777;">${new Date(x.timestamp).toLocaleTimeString()}</small> · ${escaparHtmlInventario_(x.texto)}</div>`).join(''):'<div style="color:#888;">Sem eventos.</div>';
+        log.innerHTML=itens.length?itens.map(x=>`<div style="padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.035);color:#ccc;"><small style="color:#777;">${new Date(x.timestamp).toLocaleTimeString()}</small> · ${escaparHtmlInventario_(batalhaTextoLogVisivel_(x))}</div>`).join(''):'<div style="color:#888;">Sem eventos.</div>';
     }
 }
 
 function iniciarBatalhaCompartilhada_(){
     if(batalhaUnsub_){try{batalhaUnsub_();}catch(e){} batalhaUnsub_=null;}
     if(batalhaAcoesUnsub_){try{batalhaAcoesUnsub_();}catch(e){} batalhaAcoesUnsub_=null;}
+    if(batalhaPersonagensUnsub_){try{batalhaPersonagensUnsub_();}catch(e){} batalhaPersonagensUnsub_=null;}
     if(!currentUserUid)return;
 
     batalhaUnsub_=onSnapshot(BATALHA_DOC_REF(),snap=>{
@@ -5407,6 +5652,21 @@ function iniciarBatalhaCompartilhada_(){
         console.warn('Batalha compartilhada:',err);
         notificar_('Não foi possível acessar o painel compartilhado. Verifique as regras do Firestore.','erro',5000);
     });
+
+    if(!batalhaEhMestre_()){
+        const qProprios=query(collection(db,'personagens'),where('dono','==',currentUserUid));
+        batalhaPersonagensUnsub_=onSnapshot(qProprios,snap=>{
+            snap.docChanges().forEach(ch=>{
+                if(ch.type==='removed')return;
+                const novo={id:ch.doc.id,...ch.doc.data()};
+                const ix=(userCharacters||[]).findIndex(x=>x.id===novo.id);
+                if(ix>=0)userCharacters[ix]={...userCharacters[ix],...novo};
+            });
+            renderizarBatalhaCompartilhada_();
+            const charAtual=(userCharacters||[]).find(c=>c.id===currentCharId);
+            if(charAtual&&document.getElementById('char-combate')?.classList.contains('active'))renderizarCombate(charAtual);
+        },err=>console.warn('Fichas próprias em tempo real:',err));
+    }
 
     if(batalhaEhMestre_()){
         batalhaAcoesUnsub_=onSnapshot(BATALHA_ACOES_REF(),async snap=>{
