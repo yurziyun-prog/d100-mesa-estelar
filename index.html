@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v26.1: recursos iniciais sincronizados para jogadores -->
+    <!-- Mesa Estelar v26.2: limite de características aplicado a personagens jogadores -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -1975,31 +1975,34 @@ window.novoPersonagem = async () => {
     if (recursosInput) recursosInput.value = recursosIniciaisNovo;
 };
 
+function personagemAtualEhNPC_() {
+    const char = userCharacters.find(c => c.id === currentCharId);
+    return !!(char && char.tipo === 'npc');
+}
+
 window.validarAtributos = () => {
-    const isMaster = userData && userData.role === 'mestre';
+    const ehNPC = personagemAtualEhNPC_();
     const attrs = ['FOR', 'CON', 'DES', 'POD', 'CAR'];
     const attrsMinMax6 = ['TAM', 'INT'];
-    
+
     attrs.forEach(attr => {
         const input = document.getElementById(`edit${attr}`);
-        let val = parseInt(input.value) || 10;
-        const min = isMaster ? 1 : 3;
-        const max = isMaster ? 99 : 18;
-        if (val < min) val = min;
-        if (val > max) val = max;
-        input.value = val;
+        let val = parseInt(input.value);
+        if (!Number.isFinite(val)) val = 10;
+        const min = ehNPC ? 1 : Number(configuracoes.minAttr ?? 3);
+        const max = ehNPC ? 99 : Number(configuracoes.maxAttr ?? 18);
+        input.value = Math.min(max, Math.max(min, val));
     });
-    
+
     attrsMinMax6.forEach(attr => {
         const input = document.getElementById(`edit${attr}`);
-        let val = parseInt(input.value) || 10;
-        const min = isMaster ? 1 : 6;
-        const max = isMaster ? 99 : 18;
-        if (val < min) val = min;
-        if (val > max) val = max;
-        input.value = val;
+        let val = parseInt(input.value);
+        if (!Number.isFinite(val)) val = 10;
+        const min = ehNPC ? 1 : Number(configuracoes.minAttrINT ?? 6);
+        const max = ehNPC ? 99 : Number(configuracoes.maxAttr ?? 18);
+        input.value = Math.min(max, Math.max(min, val));
     });
-    
+
     calcularTotal();
 };
 
@@ -2008,7 +2011,17 @@ window.calcularTotal = () => {
     ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => {
         total += parseInt(document.getElementById(`edit${attr}`).value) || 0;
     });
-    document.getElementById('totalPoints').textContent = total;
+    const totalEl = document.getElementById('totalPoints');
+    if (totalEl) {
+        totalEl.textContent = total;
+        const limite = Math.max(0, Number(configuracoes.etapa1 ?? 80));
+        const excedeu = !personagemAtualEhNPC_() && total > limite;
+        totalEl.style.color = excedeu ? '#ff6b6b' : '';
+        totalEl.title = personagemAtualEhNPC_()
+            ? 'NPC: sem limite de pontos de características'
+            : `Limite de características: ${limite}`;
+    }
+    return total;
 };
 
 window.calcularDerivados = () => {
@@ -2290,6 +2303,29 @@ window.salvarPersonagem = async () => {
         atributos[attr] = parseInt(document.getElementById(`edit${attr}`).value) || 10;
     });
     
+    // PCs devem respeitar o total da Etapa 1; NPCs são exceção.
+    try { await carregarConfiguracoes(); }
+    catch (erro) { console.warn('Não foi possível atualizar configurações antes de salvar.', erro); }
+
+    validarAtributos();
+    ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => {
+        atributos[attr] = parseInt(document.getElementById(`edit${attr}`).value) || 10;
+    });
+
+    const totalCaracteristicas = Object.values(atributos).reduce((soma, valor) => soma + Number(valor || 0), 0);
+    const limiteCaracteristicas = Math.max(0, Number(configuracoes.etapa1 ?? 80));
+
+    if (!personagemAtualEhNPC_() && totalCaracteristicas > limiteCaracteristicas) {
+        const excesso = totalCaracteristicas - limiteCaracteristicas;
+        const mensagens = {
+            pt: `Não é possível salvar: as características somam ${totalCaracteristicas}, mas o limite atual é ${limiteCaracteristicas}. Reduza ${excesso} ponto(s).`,
+            en: `Cannot save: characteristics total ${totalCaracteristicas}, but the current limit is ${limiteCaracteristicas}. Reduce them by ${excesso} point(s).`,
+            zh: `无法保存：属性总值为 ${totalCaracteristicas}，当前上限为 ${limiteCaracteristicas}。请减少 ${excesso} 点。`
+        };
+        alert(mensagens[idiomaAtual] || mensagens.pt);
+        return;
+    }
+
     const personagemData = {
         nome,
         raca: document.getElementById('editRace').value.trim(),
