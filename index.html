@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 5.1: participantes visuais, rolagens e histórico de combate -->
+    <!-- Mesa Estelar v28 etapa 5.2: correção dos cartões e rolagens de combate -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -6838,6 +6838,29 @@ function sincronizarIniciativasCombateMestre_(autoOrdenar=true){
     return mudou;
 }
 
+
+function calcularHitLocations_(conTotal,tamTotal){
+    const soma=Number(conTotal||0)+Number(tamTotal||0);
+    const coluna=soma<=5?0:soma<=10?1:soma<=15?2:soma<=20?3:soma<=25?4:soma<=30?5:soma<=35?6:7;
+    const incremento=soma>40?Math.ceil((soma-40)/5):0;
+    const tabela={
+        perna:[1,2,3,4,5,6,7,8],
+        abdomen:[2,3,4,5,6,7,8,9],
+        peito:[3,4,5,6,7,8,9,10],
+        braco:[1,1,2,3,4,5,6,7],
+        cabeca:[1,2,3,4,5,6,7,8]
+    };
+    return {
+        'Cabeça':tabela.cabeca[coluna]+incremento,
+        'Peito':tabela.peito[coluna]+incremento,
+        'Abdômen':tabela.abdomen[coluna]+incremento,
+        'Braço Direito':tabela.braco[coluna]+incremento,
+        'Braço Esquerdo':tabela.braco[coluna]+incremento,
+        'Perna Direita':tabela.perna[coluna]+incremento,
+        'Perna Esquerda':tabela.perna[coluna]+incremento
+    };
+}
+
 function pvResumoCombateMestre_(char){
     if(modoCombateAtual_()==='simplificado'){
         const max=calcularPVGlobalMax_(char);
@@ -7086,7 +7109,8 @@ function renderizarCombateMestre_(){
         }catch(err){
             console.error('Erro ao renderizar participante do combate',c?.nome,c?.id,err);
             cards.push(`<div style="padding:12px;border-radius:10px;background:rgba(255,80,80,.08);border:1px solid rgba(255,80,80,.25);">
-                <strong>${escaparHtmlInventario_(c.nome||'Personagem')}</strong>: erro ao montar painel de combate. Veja o console.
+                <strong>${escaparHtmlInventario_(c.nome||'Personagem')}</strong>: erro ao montar painel de combate.
+                <div style="color:#ffb3b3;font-size:.82em;margin-top:5px;">${escaparHtmlInventario_(err?.message||String(err||'Erro desconhecido'))}</div>
             </div>`);
         }
     });
@@ -7303,7 +7327,9 @@ window.rolarDanoCombateMestre_=async(id)=>{
 
     if(pericia?.id==='combate_desarmado' || p.equipSelecionado==='desarmado'){
         expr='1d3';
-        const mod=String(calcularModificadorDano_?.(c) || '').trim();
+        const forca=(c.atributos?.FOR||10)+(c.bonus?.FOR||0);
+        const tam=(c.atributos?.TAM||10)+(c.bonus?.TAM||0);
+        const mod=String(calcularModDano(forca,tam) || '').trim();
         if(mod && mod!=='0' && mod!=='+0') expr += mod.startsWith('-')||mod.startsWith('+') ? mod : `+${mod}`;
         nomeEquip='Punhos';
     }else{
