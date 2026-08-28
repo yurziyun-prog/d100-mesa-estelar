@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 4.1: correção de upload de cenário -->
+    <!-- Mesa Estelar v28 etapa 5: combate do mestre -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -988,9 +988,50 @@
 
                     <!-- COMBATE -->
                     <div id="gm-sub-combate" class="gm-sub-content hidden">
-                        <div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(231,76,60,.35);">
-                            <h4 style="color:#ff8b7d;margin-top:0;">⚔️ Combate</h4>
-                            <p style="color:#bbb;margin-bottom:0;">Estrutura reservada para a próxima etapa: participantes, iniciativa automática e manual, turno atual, PV/PA compactos e testes exclusivamente de combate.</p>
+                        <div style="display:grid;grid-template-columns:minmax(250px,330px) 1fr;gap:14px;align-items:start;">
+                            <div style="padding:14px;border-radius:12px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.09);position:sticky;top:10px;">
+                                <h4 style="color:#ff8b7d;margin:0 0 12px;">⚔️ Participantes</h4>
+                                <div id="gmCombatCandidateList" style="display:flex;flex-direction:column;gap:7px;max-height:390px;overflow:auto;padding-right:3px;"></div>
+
+                                <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px;">
+                                    <button class="btn-small btn-select" onclick="adicionarSelecionadosCombateMestre()">➕ Adicionar</button>
+                                    <button class="btn-small" onclick="adicionarCenarioAtivoAoCombate()">🪐 Do cenário ativo</button>
+                                </div>
+
+                                <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.09);">
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                        <button class="btn-small btn-select" onclick="rolarIniciativasFaltantesMestre()">⚡ Rolar faltantes</button>
+                                        <button class="btn-small" onclick="atualizarCombateMestre()">🔄 Atualizar</button>
+                                        <button class="btn-small btn-select" onclick="proximoTurnoCombateMestre()">⏭️ Próximo turno</button>
+                                        <button class="btn-small btn-delete" onclick="encerrarCombateMestre()">⏹️ Encerrar</button>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.09);">
+                                    <h4 style="color:#ffd166;margin:0 0 9px;">💥 Aplicar dano</h4>
+                                    <div class="form-group"><label>Alvo:</label><select id="gmCombatDamageTarget"></select></div>
+                                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                        <div class="form-group"><label>Dano bruto:</label><input id="gmCombatDamageAmount" type="number" min="0" value="1"></div>
+                                        <div class="form-group"><label>Localização:</label><select id="gmCombatDamageLocation"></select></div>
+                                    </div>
+                                    <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                                        <button class="btn-small" onclick="rolarLocalizacaoDanoMestre()">🎯 D20</button>
+                                        <button class="btn-small btn-delete" onclick="aplicarDanoCombateMestre()">Aplicar dano</button>
+                                    </div>
+                                    <small style="display:block;color:#888;margin-top:8px;">No modo tático, a localização padrão vem do D20. O mestre ainda pode escolher manualmente em caso de efeito especial ou necessidade narrativa.</small>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div id="gmCombatHeader" style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;padding:12px 14px;border-radius:10px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.22);">
+                                    <div><strong style="color:#ffd166;">Rodada <span id="gmCombatRound">1</span></strong><br><small id="gmCombatStatus" style="color:#aaa;">Nenhum combate ativo.</small></div>
+                                    <div style="display:flex;gap:7px;flex-wrap:wrap;">
+                                        <button class="btn-small" onclick="ordenarCombatePorIniciativaMestre()">↕️ Ordenar por iniciativa</button>
+                                        <button class="btn-small" onclick="limparIniciativasCombateMestre()">🧹 Limpar iniciativas</button>
+                                    </div>
+                                </div>
+                                <div id="gmCombatParticipantRows" style="display:flex;flex-direction:column;gap:9px;"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -1376,6 +1417,14 @@ let escudoTexto = '';
 let estadoCampanhaMestre = {
     nome:'', planeta:'', cidade:'', clima:'', cenario:'', dataJogo:'', resumo:''
 };
+let estadoCombateMestre = {
+    ativo:false,
+    rodada:1,
+    turnoIndex:0,
+    participantes:[]
+};
+let gmCombatDragId_ = '';
+
 let currentEditSlot = { compartment: null, index: null };
 let uploadedItemImage = null;
 
@@ -2051,11 +2100,17 @@ async function carregarEscudo() {
             ...estadoCampanhaMestre,
             ...(dadosEscudo.campanha || {})
         };
+        estadoCombateMestre = {
+            ...estadoCombateMestre,
+            ...(dadosEscudo.combate || {}),
+            participantes:Array.isArray(dadosEscudo.combate?.participantes) ? dadosEscudo.combate.participantes : []
+        };
     } else {
         escudoTexto = '# Escudo do Mestre\n\nAnotações privadas...';
         await setDoc(doc(db, "configuracoes", "escudoMestre"), {
             texto: escudoTexto,
-            campanha: estadoCampanhaMestre
+            campanha: estadoCampanhaMestre,
+            combate: estadoCombateMestre
         });
     }
     renderizarEscudo();
@@ -2111,6 +2166,7 @@ async function carregarPersonagens() {
         renderizarCampanhaMestre_();
         renderizarHistoricoMestre_();
         renderizarCenarioMestre_();
+        renderizarCombateMestre_();
     }
 }
 
@@ -3784,11 +3840,19 @@ window.rolarIniciativaCombate = async () => {
         if (resumo) resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(regra.nome)}: nenhuma atividade possível.`;
         return;
     }
-    const iniciativaBase = (char.atributos?.INT || 10) + (char.bonus?.INT || 0) + (char.atributos?.DES || 10) + (char.bonus?.DES || 0);
+    const intTotal = (char.atributos?.INT || 10) + (char.bonus?.INT || 0);
+    const desTotal = (char.atributos?.DES || 10) + (char.bonus?.DES || 0);
+    const iniciativaBase = Math.ceil((intTotal + desTotal) / 2);
     const penalidade = regra.iniciativa || 0;
     const iniciativaEfetiva = Math.max(0, iniciativaBase + penalidade);
     const dado = Math.floor(Math.random()*10)+1;
     const total = iniciativaEfetiva + dado;
+    char.combate = char.combate || {};
+    char.combate.ultimaIniciativa = {
+        total,dado,iniciativaBase,penalidadeFadiga:penalidade,iniciativaEfetiva,
+        timestamp:new Date().toISOString()
+    };
+    await setDoc(doc(db,'personagens',currentCharId),{combate:char.combate},{merge:true});
     const fadigaTxt = penalidade ? ` (${penalidade} por fadiga)` : '';
     if (resumo) resumo.innerHTML = `⚡ Iniciativa: 1d10 [<strong>${dado}</strong>] + ${iniciativaEfetiva}${fadigaTxt} = <strong>${total}</strong>`;
     await registrarHistoricoCombate_(
@@ -6404,6 +6468,7 @@ window.mostrarSubAbaMestre = (nome,btn) => {
     if (nome==='campanha') renderizarCampanhaMestre_();
     if (nome==='historico') renderizarHistoricoMestre_();
     if (nome==='cenario') renderizarCenarioMestre_();
+    if (nome==='combate') renderizarCombateMestre_();
 };
 
 function cartaoNumeroMestre_(valor,rotulo,icone='') {
@@ -6701,12 +6766,493 @@ window.rolarEncontroCenarioMestre = () => {
 };
 
 
+
+async function salvarEstadoCombateMestre_(){
+    if(!(userData&&userData.role==='mestre'))return;
+    await setDoc(doc(db,'configuracoes','escudoMestre'),{combate:estadoCombateMestre},{merge:true});
+}
+
+function tipoPersonagemCombateMestre_(c){
+    const tipo=String(c?.tipo||'pc').toLowerCase();
+    if(['npc','npc_rapido','monstro'].includes(tipo)) return tipo==='monstro'?'Monstro':'NPC';
+    return c?.dono===currentUserUid?'PM':'PC';
+}
+
+function obterParticipanteCombateMestre_(id){
+    return (estadoCombateMestre.participantes||[]).find(p=>p.id===id)||null;
+}
+
+function obterUltimaIniciativaChar_(c){
+    const u=c?.combate?.ultimaIniciativa;
+    if(u && Number.isFinite(Number(u.total))) return u;
+    const hist=Array.isArray(c?.historicoRolagens)?c.historicoRolagens:[];
+    const r=hist.find(x=>x?.subtipo==='iniciativa' && Number.isFinite(Number(x.total)));
+    return r ? {total:Number(r.total),timestamp:r.timestamp||'',dado:r.dado,iniciativaBase:r.iniciativaBase,iniciativaEfetiva:r.iniciativaEfetiva} : null;
+}
+
+function garantirParticipantesValidosCombateMestre_(){
+    const ids=new Set((userCharacters||[]).map(c=>c.id));
+    estadoCombateMestre.participantes=(estadoCombateMestre.participantes||[]).filter(p=>ids.has(p.id));
+    if(estadoCombateMestre.turnoIndex>=estadoCombateMestre.participantes.length) estadoCombateMestre.turnoIndex=0;
+}
+
+function sincronizarIniciativasCombateMestre_(autoOrdenar=true){
+    garantirParticipantesValidosCombateMestre_();
+    let mudou=false;
+    (estadoCombateMestre.participantes||[]).forEach(p=>{
+        const c=(userCharacters||[]).find(x=>x.id===p.id);
+        const u=obterUltimaIniciativaChar_(c);
+        if(!u)return;
+        const ts=String(u.timestamp||'');
+        if(ts && ts!==String(p.iniciativaTimestamp||'')){
+            p.iniciativa=Number(u.total);
+            p.iniciativaTimestamp=ts;
+            mudou=true;
+        }else if(!Number.isFinite(Number(p.iniciativa)) && Number.isFinite(Number(u.total))){
+            p.iniciativa=Number(u.total);
+            p.iniciativaTimestamp=ts;
+            mudou=true;
+        }
+    });
+    if(mudou && autoOrdenar){
+        const atualId=estadoCombateMestre.participantes[estadoCombateMestre.turnoIndex]?.id||'';
+        estadoCombateMestre.participantes.sort((a,b)=>{
+            const ia=Number.isFinite(Number(a.iniciativa))?Number(a.iniciativa):-9999;
+            const ib=Number.isFinite(Number(b.iniciativa))?Number(b.iniciativa):-9999;
+            return ib-ia;
+        });
+        const ix=estadoCombateMestre.participantes.findIndex(p=>p.id===atualId);
+        estadoCombateMestre.turnoIndex=ix>=0?ix:0;
+    }
+    return mudou;
+}
+
+function pvResumoCombateMestre_(char){
+    if(modoCombateAtual_()==='simplificado'){
+        const max=calcularPVGlobalMax_(char);
+        const atual=Number.isFinite(Number(char?.combate?.pvGlobalAtual))?Number(char.combate.pvGlobalAtual):max;
+        return {atual,max,texto:`${Math.max(0,atual)}/${max}`};
+    }
+    const a=char?.atributos||{},b=char?.bonus||{};
+    const maxLoc=calcularHitLocations_(Number(a.CON||10)+Number(b.CON||0),Number(a.TAM||10)+Number(b.TAM||0));
+    const cur=char?.combate?.hitLocations||{};
+    let atual=0,max=0;
+    Object.entries(maxLoc).forEach(([loc,v])=>{
+        max+=Number(v||0);
+        atual+=Number.isFinite(Number(cur[loc]))?Number(cur[loc]):Number(v||0);
+    });
+    return {atual,max,texto:`${Math.max(0,atual)}/${max}`};
+}
+
+function paResumoCombateMestre_(char){
+    if(modoCombateAtual_()==='simplificado'){
+        const equip=calcularPAGlobalEquipado_(char);
+        const manual=Math.max(0,Number(char?.combate?.armorGlobalManual||0));
+        return manual+equip;
+    }
+    const locais=['Cabeça','Peito','Abdômen','Braço Direito','Braço Esquerdo','Perna Direita','Perna Esquerda'];
+    const equip=calcularPAEquipado_(char,locais);
+    const manual=char?.combate?.armor||{};
+    const vals=locais.map(l=>Math.max(0,Number(equip?.[l]||0)+Number(manual?.[l]||0)));
+    return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;
+}
+
+function opcoesPericiasCombateMestre_(char,selecionado=''){
+    return obterPericiasCombate_(char).map(p=>{
+        const v=`${p.__especializacao?'esp':'per'}:${p.id}`;
+        return `<option value="${escaparHtmlInventario_(v)}" ${v===selecionado?'selected':''}>${escaparHtmlInventario_(getNome(p))}</option>`;
+    }).join('');
+}
+
+function obterPericiaCombateMestrePorValor_(valor){
+    const [tipo,id]=String(valor||'').split(':');
+    const banco=tipo==='esp'?especializacoesDB:periciasDB;
+    const p=banco.find(x=>x.id===id);
+    return p?{...p,__especializacao:tipo==='esp'}:null;
+}
+
+function equipamentosCombateChar_(char,pericia,selecionado=''){
+    let opts=[];
+    if(!pericia)return '<option value="">—</option>';
+    if(pericia.id==='esquiva') opts=[{value:'nenhum',label:'Sem equipamento'}];
+    else if(pericia.id==='combate_desarmado') opts=[{value:'desarmado',label:'Punhos'}];
+    else{
+        const equipados=obterItensEquipados_(char).filter(itemEhArmaOuEscudo_).filter(i=>equipamentoCompativelComPericia_(i,pericia));
+        opts=equipados.map((item,i)=>{
+            const id=item.instanciaId||item.instanceId||item.idInstancia||item.id||`equipado_${i}`;
+            return {value:String(id),label:getNome(item)+rotuloCompatArma_(penalidadeCompatibilidadeArma_(pericia,item))};
+        });
+        if(!opts.length)opts=[{value:'',label:'Nenhum equipamento compatível'}];
+    }
+    return opts.map(o=>`<option value="${escaparHtmlInventario_(o.value)}" ${String(o.value)===String(selecionado)?'selected':''}>${escaparHtmlInventario_(o.label)}</option>`).join('');
+}
+
+function encontrarEquipamentoCombateChar_(char,valor){
+    if(!char||!valor||['desarmado','nenhum'].includes(valor))return null;
+    return obterItensEquipados_(char).find((item,i)=>{
+        const id=item.instanciaId||item.instanceId||item.idInstancia||item.id||`equipado_${i}`;
+        return String(id)===String(valor);
+    })||null;
+}
+
+function detalhesPVPACombateMestre_(char){
+    if(modoCombateAtual_()==='simplificado'){
+        const max=calcularPVGlobalMax_(char);
+        const atual=Number.isFinite(Number(char?.combate?.pvGlobalAtual))?Number(char.combate.pvGlobalAtual):max;
+        const equip=calcularPAGlobalEquipado_(char);
+        const manual=Math.max(0,Number(char?.combate?.armorGlobalManual||0));
+        return `<div style="display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:8px;">
+            <label>PV Geral <input type="number" min="0" max="${max}" value="${atual}" onchange="editarPVCombateMestre_('${char.id}','global',this.value)"></label>
+            <label>PA manual <input type="number" min="0" value="${manual}" onchange="editarPACombateMestre_('${char.id}','global',this.value)"></label>
+            <small style="color:#888;grid-column:1/-1;">PA de equipamento: ${equip}</small>
+        </div>`;
+    }
+    const locais=['Cabeça','Peito','Abdômen','Braço Direito','Braço Esquerdo','Perna Direita','Perna Esquerda'];
+    const a=char.atributos||{},b=char.bonus||{};
+    const maxLoc=calcularHitLocations_(Number(a.CON||10)+Number(b.CON||0),Number(a.TAM||10)+Number(b.TAM||0));
+    const cur=char?.combate?.hitLocations||{};
+    const eq=calcularPAEquipado_(char,locais);
+    const man=char?.combate?.armor||{};
+    return `<div style="display:grid;grid-template-columns:1.4fr .8fr .8fr .8fr;gap:6px;align-items:center;font-size:.84em;">
+        <strong>Local</strong><strong>PV</strong><strong>PA manual</strong><strong>PA total</strong>
+        ${locais.map(loc=>{
+            const atual=Number.isFinite(Number(cur[loc]))?Number(cur[loc]):Number(maxLoc[loc]||1);
+            const manual=Math.max(0,Number(man[loc]||0));
+            const total=manual+Math.max(0,Number(eq?.[loc]||0));
+            return `<span>${traduzirLocalCorpo_(loc)}</span>
+            <input type="number" min="0" max="${maxLoc[loc]||1}" value="${atual}" onchange="editarPVCombateMestre_('${char.id}','${loc}',this.value)">
+            <input type="number" min="0" value="${manual}" onchange="editarPACombateMestre_('${char.id}','${loc}',this.value)">
+            <strong>${total}</strong>`;
+        }).join('')}
+    </div>`;
+}
+
+function renderizarCandidatosCombateMestre_(){
+    const alvo=document.getElementById('gmCombatCandidateList');
+    if(!alvo)return;
+    const ativos=new Set((estadoCombateMestre.participantes||[]).map(p=>p.id));
+    const lista=[...(userCharacters||[])].filter(c=>!ativos.has(c.id));
+    alvo.innerHTML=lista.length?lista.map(c=>{
+        const img=c.imagem?`<img src="${escaparHtmlInventario_(c.imagem)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`:'👤';
+        return `<label style="display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center;padding:7px 8px;border-radius:8px;background:rgba(255,255,255,.035);">
+            <input type="checkbox" class="gm-combat-candidate" value="${escaparHtmlInventario_(c.id)}">
+            <span>${img}</span><span><strong>${escaparHtmlInventario_(c.nome||'Sem Nome')}</strong><br><small style="color:#888;">${tipoPersonagemCombateMestre_(c)}</small></span>
+        </label>`;
+    }).join(''):'<div style="color:#888;">Todos os personagens já estão no combate.</div>';
+}
+
+function renderizarControlesDanoCombateMestre_(){
+    const alvoSel=document.getElementById('gmCombatDamageTarget');
+    const locSel=document.getElementById('gmCombatDamageLocation');
+    if(alvoSel){
+        alvoSel.innerHTML=(estadoCombateMestre.participantes||[]).map(p=>{
+            const c=(userCharacters||[]).find(x=>x.id===p.id);
+            return c?`<option value="${escaparHtmlInventario_(c.id)}">${escaparHtmlInventario_(c.nome||'')}</option>`:'';
+        }).join('');
+    }
+    if(locSel){
+        const locais=['Cabeça','Peito','Abdômen','Braço Direito','Braço Esquerdo','Perna Direita','Perna Esquerda'];
+        locSel.innerHTML=locais.map(l=>`<option value="${l}">${traduzirLocalCorpo_(l)}</option>`).join('');
+        locSel.disabled=modoCombateAtual_()==='simplificado';
+    }
+}
+
+function renderizarCombateMestre_(){
+    if(!(userData&&userData.role==='mestre'))return;
+    garantirParticipantesValidosCombateMestre_();
+    sincronizarIniciativasCombateMestre_(true);
+    renderizarCandidatosCombateMestre_();
+    renderizarControlesDanoCombateMestre_();
+
+    const round=document.getElementById('gmCombatRound');
+    const status=document.getElementById('gmCombatStatus');
+    const rows=document.getElementById('gmCombatParticipantRows');
+    if(round)round.textContent=estadoCombateMestre.rodada||1;
+    if(status){
+        const n=(estadoCombateMestre.participantes||[]).length;
+        status.textContent=n?`${n} participante(s) · arraste as linhas para ajustar a ordem manualmente.`:'Nenhum participante.';
+    }
+    if(!rows)return;
+
+    const turno=Number(estadoCombateMestre.turnoIndex||0);
+    rows.innerHTML=(estadoCombateMestre.participantes||[]).map((p,i)=>{
+        const c=(userCharacters||[]).find(x=>x.id===p.id);
+        if(!c)return '';
+        const pv=pvResumoCombateMestre_(c);
+        const pa=paResumoCombateMestre_(c);
+        const ativo=i===turno;
+        const ini=Number.isFinite(Number(p.iniciativa))?Number(p.iniciativa):'—';
+        const skills=obterPericiasCombate_(c);
+        const skillValue=p.skillSelecionada && skills.some(x=>`${x.__especializacao?'esp':'per'}:${x.id}`===p.skillSelecionada)
+            ? p.skillSelecionada
+            : (skills[0]?`${skills[0].__especializacao?'esp':'per'}:${skills[0].id}`:'');
+        p.skillSelecionada=skillValue;
+        const pericia=obterPericiaCombateMestrePorValor_(skillValue);
+        const equip=String(p.equipSelecionado||'');
+        const equipamentos=equipamentosCombateChar_(c,pericia,equip);
+        const detalheAberto=!!p.detalhesAbertos;
+        const ultima=p.ultimoResultado?`<div style="margin-top:7px;color:#ddd;font-size:.84em;">${escaparHtmlInventario_(p.ultimoResultado)}</div>`:'';
+
+        return `<div draggable="true" ondragstart="iniciarArrastoCombateMestre_('${c.id}')" ondragover="event.preventDefault()" ondrop="soltarArrastoCombateMestre_('${c.id}')"
+            style="padding:11px 12px;border-radius:11px;background:${ativo?'rgba(255,193,7,.13)':'rgba(255,255,255,.04)'};border:1px solid ${ativo?'rgba(255,193,7,.50)':'rgba(255,255,255,.08)'};">
+            <div style="display:grid;grid-template-columns:32px minmax(150px,1.2fr) 76px 90px 78px 1.1fr 1.1fr auto;gap:8px;align-items:center;">
+                <strong style="color:${ativo?'#ffd166':'#777'};">${ativo?'▶':(i+1)}</strong>
+                <div><strong>${escaparHtmlInventario_(c.nome||'Sem Nome')}</strong><br><small style="color:#888;">${tipoPersonagemCombateMestre_(c)} · ${traduzirNomeFadiga_(c?.combate?.fadiga||'Fresh')}</small></div>
+                <div><small style="color:#888;">INI</small><br><strong>${ini}</strong></div>
+                <div><small style="color:#888;">PV</small><br><strong>${pv.texto}</strong></div>
+                <div><small style="color:#888;">PA</small><br><strong>${pa}</strong></div>
+                <select onchange="mudarPericiaCombateMestre_('${c.id}',this.value)">${opcoesPericiasCombateMestre_(c,skillValue)}</select>
+                <select onchange="mudarEquipCombateMestre_('${c.id}',this.value)">${equipamentos}</select>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;">
+                    <button class="btn-small btn-select" onclick="rolarTesteCombateMestre_('${c.id}')">🎲 D100</button>
+                    <button class="btn-small" onclick="rolarIniciativaMestre_('${c.id}')">⚡</button>
+                    <button class="btn-small" onclick="alternarDetalhesCombateMestre_('${c.id}')">${detalheAberto?'▲':'▼'} PV/PA</button>
+                    <button class="btn-small btn-delete" onclick="removerParticipanteCombateMestre_('${c.id}')">✕</button>
+                </div>
+            </div>
+            ${ultima}
+            ${detalheAberto?`<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08);">${detalhesPVPACombateMestre_(c)}</div>`:''}
+        </div>`;
+    }).join('')||'<div style="padding:20px;border-radius:10px;background:rgba(255,255,255,.025);color:#888;">Adicione personagens ao combate pela coluna da esquerda.</div>';
+}
+
+window.adicionarSelecionadosCombateMestre=async()=>{
+    const ids=[...document.querySelectorAll('.gm-combat-candidate:checked')].map(x=>x.value);
+    ids.forEach(id=>{
+        if(!obterParticipanteCombateMestre_(id)){
+            const c=(userCharacters||[]).find(x=>x.id===id);
+            const u=obterUltimaIniciativaChar_(c);
+            estadoCombateMestre.participantes.push({
+                id,
+                iniciativa:u?.total??null,
+                iniciativaTimestamp:u?.timestamp||'',
+                skillSelecionada:'',
+                equipSelecionado:'',
+                detalhesAbertos:false,
+                ultimoResultado:''
+            });
+        }
+    });
+    if(ids.length)estadoCombateMestre.ativo=true;
+    sincronizarIniciativasCombateMestre_(true);
+    await salvarEstadoCombateMestre_();
+    renderizarCombateMestre_();
+};
+
+window.adicionarCenarioAtivoAoCombate=async()=>{
+    const cenario=(cenariosDB||[]).find(c=>c.id===estadoCampanhaMestre?.cenarioId);
+    const ids=(cenario?.personagensCena||[]).map(x=>x.id).filter(Boolean);
+    if(!ids.length){alert('O cenário ativo não possui personagens vinculados.');return;}
+    ids.forEach(id=>{
+        if(!obterParticipanteCombateMestre_(id) && (userCharacters||[]).some(c=>c.id===id)){
+            const c=userCharacters.find(x=>x.id===id),u=obterUltimaIniciativaChar_(c);
+            estadoCombateMestre.participantes.push({id,iniciativa:u?.total??null,iniciativaTimestamp:u?.timestamp||'',skillSelecionada:'',equipSelecionado:'',detalhesAbertos:false,ultimoResultado:''});
+        }
+    });
+    estadoCombateMestre.ativo=true;
+    sincronizarIniciativasCombateMestre_(true);
+    await salvarEstadoCombateMestre_();
+    renderizarCombateMestre_();
+};
+
+window.removerParticipanteCombateMestre_=async(id)=>{
+    const idx=estadoCombateMestre.participantes.findIndex(p=>p.id===id);
+    if(idx<0)return;
+    estadoCombateMestre.participantes.splice(idx,1);
+    if(estadoCombateMestre.turnoIndex>=estadoCombateMestre.participantes.length)estadoCombateMestre.turnoIndex=0;
+    await salvarEstadoCombateMestre_();
+    renderizarCombateMestre_();
+};
+
+window.iniciarArrastoCombateMestre_=(id)=>{gmCombatDragId_=id;};
+window.soltarArrastoCombateMestre_=async(destId)=>{
+    if(!gmCombatDragId_||gmCombatDragId_===destId)return;
+    const arr=estadoCombateMestre.participantes;
+    const atualId=arr[estadoCombateMestre.turnoIndex]?.id||'';
+    const de=arr.findIndex(p=>p.id===gmCombatDragId_),para=arr.findIndex(p=>p.id===destId);
+    if(de<0||para<0)return;
+    const [mov]=arr.splice(de,1);arr.splice(para,0,mov);
+    const ix=arr.findIndex(p=>p.id===atualId);estadoCombateMestre.turnoIndex=ix>=0?ix:0;
+    gmCombatDragId_='';
+    await salvarEstadoCombateMestre_();
+    renderizarCombateMestre_();
+};
+
+window.ordenarCombatePorIniciativaMestre=async()=>{
+    const atualId=estadoCombateMestre.participantes[estadoCombateMestre.turnoIndex]?.id||'';
+    estadoCombateMestre.participantes.sort((a,b)=>(Number.isFinite(Number(b.iniciativa))?Number(b.iniciativa):-9999)-(Number.isFinite(Number(a.iniciativa))?Number(a.iniciativa):-9999));
+    const ix=estadoCombateMestre.participantes.findIndex(p=>p.id===atualId);estadoCombateMestre.turnoIndex=ix>=0?ix:0;
+    await salvarEstadoCombateMestre_();renderizarCombateMestre_();
+};
+
+window.limparIniciativasCombateMestre=async()=>{
+    estadoCombateMestre.participantes.forEach(p=>{p.iniciativa=null;p.iniciativaTimestamp='';});
+    await salvarEstadoCombateMestre_();renderizarCombateMestre_();
+};
+
+window.proximoTurnoCombateMestre=async()=>{
+    const n=estadoCombateMestre.participantes.length;if(!n)return;
+    estadoCombateMestre.turnoIndex=(Number(estadoCombateMestre.turnoIndex||0)+1)%n;
+    if(estadoCombateMestre.turnoIndex===0)estadoCombateMestre.rodada=Math.max(1,Number(estadoCombateMestre.rodada||1)+1);
+    estadoCombateMestre.ativo=true;
+    await salvarEstadoCombateMestre_();renderizarCombateMestre_();
+};
+
+window.encerrarCombateMestre=async()=>{
+    if(!confirm('Encerrar o combate atual? A lista de participantes será limpa.'))return;
+    estadoCombateMestre={ativo:false,rodada:1,turnoIndex:0,participantes:[]};
+    await salvarEstadoCombateMestre_();renderizarCombateMestre_();
+};
+
+window.atualizarCombateMestre=async()=>{
+    await carregarPersonagens();
+    const mudou=sincronizarIniciativasCombateMestre_(true);
+    if(mudou)await salvarEstadoCombateMestre_();
+    renderizarCombateMestre_();
+};
+
+window.mudarPericiaCombateMestre_=async(id,valor)=>{
+    const p=obterParticipanteCombateMestre_(id);if(!p)return;
+    p.skillSelecionada=valor;p.equipSelecionado='';
+    await salvarEstadoCombateMestre_();renderizarCombateMestre_();
+};
+window.mudarEquipCombateMestre_=async(id,valor)=>{
+    const p=obterParticipanteCombateMestre_(id);if(!p)return;
+    p.equipSelecionado=valor;await salvarEstadoCombateMestre_();
+};
+window.alternarDetalhesCombateMestre_=(id)=>{
+    const p=obterParticipanteCombateMestre_(id);if(!p)return;
+    p.detalhesAbertos=!p.detalhesAbertos;renderizarCombateMestre_();
+};
+
+async function registrarHistoricoCombateCharMestre_(char,tipo,texto,dados={}){
+    const registro={id:`gmroll_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,tipo,texto,timestamp:new Date().toISOString(),...dados};
+    const atual=Array.isArray(char.historicoRolagens)?char.historicoRolagens:[];
+    char.historicoRolagens=[registro,...atual].slice(0,50);
+    await setDoc(doc(db,'personagens',char.id),{historicoRolagens:char.historicoRolagens},{merge:true});
+    await registrarEventoMestreNoPersonagem_(char,tipo,texto,dados);
+}
+
+window.rolarIniciativaMestre_=async(id)=>{
+    const c=(userCharacters||[]).find(x=>x.id===id);if(!c)return;
+    const regra=obterRegraFadiga_(c);
+    if(regra.iniciativa===null){alert(`${c.nome}: nenhuma atividade possível por fadiga.`);return;}
+    const intT=Number(c.atributos?.INT||10)+Number(c.bonus?.INT||0);
+    const desT=Number(c.atributos?.DES||10)+Number(c.bonus?.DES||0);
+    const base=Math.ceil((intT+desT)/2);
+    const penalidade=Number(regra.iniciativa||0);
+    const efetiva=Math.max(0,base+penalidade);
+    const dado=Math.floor(Math.random()*10)+1,total=efetiva+dado;
+    c.combate=c.combate||{};
+    c.combate.ultimaIniciativa={total,dado,iniciativaBase:base,penalidadeFadiga:penalidade,iniciativaEfetiva:efetiva,timestamp:new Date().toISOString()};
+    await setDoc(doc(db,'personagens',id),{combate:c.combate},{merge:true});
+    await registrarHistoricoCombateCharMestre_(c,'Iniciativa',`1d10 [${dado}] + ${efetiva} = ${total}`,{subtipo:'iniciativa',dado,iniciativaBase:base,penalidadeFadiga:penalidade,iniciativaEfetiva:efetiva,total});
+    const p=obterParticipanteCombateMestre_(id);if(p){p.iniciativa=total;p.iniciativaTimestamp=c.combate.ultimaIniciativa.timestamp;}
+    await ordenarCombatePorIniciativaMestre();
+};
+
+window.rolarIniciativasFaltantesMestre=async()=>{
+    for(const p of estadoCombateMestre.participantes){
+        if(!Number.isFinite(Number(p.iniciativa))) await rolarIniciativaMestre_(p.id);
+    }
+    renderizarCombateMestre_();
+};
+
+window.rolarTesteCombateMestre_=async(id)=>{
+    const c=(userCharacters||[]).find(x=>x.id===id),p=obterParticipanteCombateMestre_(id);if(!c||!p)return;
+    const pericia=obterPericiaCombateMestrePorValor_(p.skillSelecionada);
+    if(!pericia)return;
+    const item=encontrarEquipamentoCombateChar_(c,p.equipSelecionado);
+    if(!['esquiva','combate_desarmado'].includes(pericia.id) && !p.equipSelecionado){alert('Selecione equipamento compatível.');return;}
+    if(item && itemUsaMunicao_(item)){
+        const minimo=itemUsaEnergia_(item)?custoEnergiaDisparo_(item):1;
+        if(cargaAtualArma_(item)<minimo){alert(`${getNome(item)} sem munição/energia suficiente.`);return;}
+    }
+    const base=obterValorRegistroPericia_(c,pericia.id,pericia.__especializacao);
+    const graus=item?penalidadeCompatibilidadeArma_(pericia,item):0;
+    const ajuste=aplicarDificuldadeEFadiga_(c,base,'padrao',graus);
+    if(ajuste.bloqueado){p.ultimoResultado='Bloqueado por fadiga.';renderizarCombateMestre_();return;}
+    const roll=Math.floor(Math.random()*100)+1,r=classificarD100_(ajuste.valor,roll),margem=Math.abs(ajuste.valor-roll);
+    p.ultimoResultado=`${getNome(pericia)}: ${roll}/${ajuste.valor} → ${r.grau} · Margem ${margem}`;
+    await registrarHistoricoCombateCharMestre_(c,'D100',p.ultimoResultado,{subtipo:'periciaCombate',periciaId:pericia.id,rolagem:roll,valorBase:base,valorEfetivo:ajuste.valor,grau:r.grau,margem,penalidadeCompatibilidade:graus});
+
+    if(item && itemUsaMunicao_(item)){
+        if(itemUsaEnergia_(item)) consumirEnergiaDisparo_(item); else consumirMunicaoFisica_(item,1);
+        await setDoc(doc(db,'personagens',id),{inventario:c.inventario},{merge:true});
+    }
+    c.combate=c.combate||{};
+    const pa=garantirPontosAcaoCombate_(c),atual=Math.max(0,Number(c.combate.pontosAcaoAtuais??pa.max)-1);
+    c.combate.pontosAcaoAtuais=atual<=0?pa.max:atual;
+    await setDoc(doc(db,'personagens',id),{combate:c.combate},{merge:true});
+    await salvarEstadoCombateMestre_();
+    renderizarCombateMestre_();
+};
+
+window.editarPVCombateMestre_=async(id,local,valor)=>{
+    const c=userCharacters.find(x=>x.id===id);if(!c)return;c.combate=c.combate||{};
+    if(local==='global'){
+        const max=calcularPVGlobalMax_(c);c.combate.pvGlobalAtual=Math.max(0,Math.min(max,Number(valor)||0));
+    }else{
+        const a=c.atributos||{},b=c.bonus||{},max=calcularHitLocations_(Number(a.CON||10)+Number(b.CON||0),Number(a.TAM||10)+Number(b.TAM||0));
+        c.combate.hitLocations=c.combate.hitLocations||{};
+        c.combate.hitLocations[local]=Math.max(0,Math.min(Number(max[local]||1),Number(valor)||0));
+    }
+    await setDoc(doc(db,'personagens',id),{combate:c.combate},{merge:true});
+    await registrarEventoMestreNoPersonagem_(c,'Ficha',`PV alterado manualmente${local==='global'?'':` em ${local}`}.`,{subtipo:'pvManual',local,valor:Number(valor)||0});
+    renderizarCombateMestre_();
+};
+
+window.editarPACombateMestre_=async(id,local,valor)=>{
+    const c=userCharacters.find(x=>x.id===id);if(!c)return;c.combate=c.combate||{};
+    if(local==='global')c.combate.armorGlobalManual=Math.max(0,Number(valor)||0);
+    else{c.combate.armor=c.combate.armor||{};c.combate.armor[local]=Math.max(0,Number(valor)||0);}
+    await setDoc(doc(db,'personagens',id),{combate:c.combate},{merge:true});
+    await registrarEventoMestreNoPersonagem_(c,'Ficha',`PA manual alterado${local==='global'?'':` em ${local}`}.`,{subtipo:'paManual',local,valor:Number(valor)||0});
+    renderizarCombateMestre_();
+};
+
+window.rolarLocalizacaoDanoMestre=()=>{
+    const roll=Math.floor(Math.random()*20)+1;let local;
+    if(roll<=3)local='Perna Direita';else if(roll<=6)local='Perna Esquerda';else if(roll<=9)local='Abdômen';else if(roll<=12)local='Peito';else if(roll<=15)local='Braço Direito';else if(roll<=18)local='Braço Esquerdo';else local='Cabeça';
+    const sel=document.getElementById('gmCombatDamageLocation');if(sel&&!sel.disabled)sel.value=local;
+    alert(`D20 ${roll} → ${local}`);
+};
+
+window.aplicarDanoCombateMestre=async()=>{
+    const id=document.getElementById('gmCombatDamageTarget')?.value;
+    const bruto=Math.max(0,Number(document.getElementById('gmCombatDamageAmount')?.value)||0);
+    const c=userCharacters.find(x=>x.id===id);if(!c||bruto<=0)return;
+    const local=document.getElementById('gmCombatDamageLocation')?.value||'Peito';
+    if(!confirm(`Aplicar ${bruto} de dano bruto em ${c.nome}${modoCombateAtual_()==='tatico'?` (${local})`:''}?`))return;
+    c.combate=c.combate||{};
+    let pa=0,final=0;
+    if(modoCombateAtual_()==='simplificado'){
+        pa=Math.max(0,Number(c.combate.armorGlobalManual||0)+calcularPAGlobalEquipado_(c));
+        final=Math.max(0,bruto-pa);
+        const max=calcularPVGlobalMax_(c),atual=Number.isFinite(Number(c.combate.pvGlobalAtual))?Number(c.combate.pvGlobalAtual):max;
+        c.combate.pvGlobalAtual=Math.max(0,atual-final);
+    }else{
+        const eq=calcularPAEquipado_(c,[local]);
+        pa=Math.max(0,Number(c.combate?.armor?.[local]||0)+Number(eq?.[local]||0));
+        final=Math.max(0,bruto-pa);
+        const a=c.atributos||{},b=c.bonus||{},max=calcularHitLocations_(Number(a.CON||10)+Number(b.CON||0),Number(a.TAM||10)+Number(b.TAM||0));
+        c.combate.hitLocations=c.combate.hitLocations||{};
+        const atual=Number.isFinite(Number(c.combate.hitLocations[local]))?Number(c.combate.hitLocations[local]):Number(max[local]||1);
+        c.combate.hitLocations[local]=Math.max(0,atual-final);
+    }
+    await setDoc(doc(db,'personagens',id),{combate:c.combate},{merge:true});
+    await registrarHistoricoCombateCharMestre_(c,'Dano',`${bruto} bruto - PA ${pa} = ${final}${modoCombateAtual_()==='tatico'?` em ${local}`:''}`,{subtipo:'danoAplicadoMestre',bruto,pa,total:final,local});
+    renderizarCombateMestre_();
+};
+
+
 function renderizarEscudo() {
     const notas=document.getElementById('escudoViewMode');
     if(notas) notas.innerHTML = formatarMarkdown(escudoTexto);
     if(userData && userData.role==='mestre') {
         renderizarCampanhaMestre_();
         renderizarHistoricoMestre_();
+        renderizarCombateMestre_();
     }
 }
 
