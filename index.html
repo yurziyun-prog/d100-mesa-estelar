@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 5.7: notificações leves, recarga por arrasto, participantes arrastáveis e Pen. visível -->
+    <!-- Mesa Estelar v28 etapa 5.8: seletores de combate estáveis e alinhados -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -7069,7 +7069,8 @@ async function sincronizarCombateMultiplayer_(){
                 await criarConfrontoPendenteMestre_(atacante,p,req.alvoId,{grau:req.grau,rolagem:req.rolagem,valor:req.valor,periciaId:req.periciaId},item);
                 req.status='processado';await setDoc(doc(db,'personagens',atacante.id),{'combate.ataqueSolicitado':req},{merge:true});
             }
-            await resolverConfrontosRespondidosMestre_();await aplicarEscolhasEfeitosMestre_();renderizarCombateMestre_();
+            await resolverConfrontosRespondidosMestre_();await aplicarEscolhasEfeitosMestre_();
+            if(!estaEditandoSeletoresCombateMestre_())renderizarCombateMestre_();
         }else if(currentCharId){
             const snap=await getDoc(doc(db,'personagens',currentCharId));if(!snap.exists())return;
             const novo={id:snap.id,...snap.data()},ix=userCharacters.findIndex(x=>x.id===currentCharId);if(ix>=0)userCharacters[ix]=novo;
@@ -7501,6 +7502,23 @@ function renderizarHistoricoCombateMestre_(){
     }).join('')||'<div style="color:#888;padding:12px;">Ainda não há rolagens de combate destes participantes.</div>';
 }
 
+
+let edicaoCombateMestreAte_=0;
+
+window.iniciarEdicaoCombateMestre_=()=>{
+    edicaoCombateMestreAte_=Date.now()+15000;
+};
+window.finalizarEdicaoCombateMestre_=()=>{
+    // pequena margem para o onchange terminar de salvar antes de permitir
+    // que a sincronização automática reconstrua o cartão.
+    edicaoCombateMestreAte_=Date.now()+700;
+};
+function estaEditandoSeletoresCombateMestre_(){
+    const ativo=document.activeElement;
+    const focoEmSelect=!!(ativo && ativo.matches?.('.gm-combat-live-select'));
+    return focoEmSelect || Date.now()<edicaoCombateMestreAte_;
+}
+
 function renderizarCombateMestre_(){
     if(!(userData&&userData.role==='mestre'))return;
     garantirParticipantesValidosCombateMestre_();
@@ -7548,6 +7566,8 @@ function renderizarCombateMestre_(){
             p.skillSelecionada=skillValue;
             const pericia=obterPericiaCombateMestrePorValor_(skillValue);
             let equip=String(p.equipSelecionado||'');
+            const equipValido = equip==='desarmado' || equip==='nenhum' || !!encontrarEquipamentoCombateChar_(c,equip);
+            if(!equipValido) equip='';
             if(!equip){
                 if(pericia?.id==='combate_desarmado') equip='desarmado';
                 else if(pericia?.id==='esquiva') equip='nenhum';
@@ -7590,9 +7610,18 @@ function renderizarCombateMestre_(){
                     <div><small style="color:#888;">PV</small><br><strong style="font-size:1.1em;">${pv.texto}</strong></div>
                     <div><small style="color:#888;">PA</small><br><strong style="font-size:1.1em;">${pa}</strong></div>
                     <div><small style="color:#888;">AÇ</small><br><strong style="font-size:1.1em;color:${acoes.atual<=0?'#ff8f8f':'#8ff0a8'};">${acoes.texto}</strong></div>
-                    <div><small style="color:#888;">Perícia de combate</small><select style="margin-top:4px;width:100%;" onchange="mudarPericiaCombateMestre_('${c.id}',this.value)">${opcoesPericiasCombateMestre_(c,skillValue)}</select></div>
-                    <div><small style="color:#888;">Equipamento</small><select style="margin-top:4px;width:100%;" onchange="mudarEquipCombateMestre_('${c.id}',this.value)">${equipamentos}</select></div>
-                    <div><small style="color:#888;">Alvo</small><select style="margin-top:4px;width:100%;" onchange="mudarAlvoCombateMestre_('${c.id}',this.value)">${alvoOpts||'<option value="">—</option>'}</select></div>
+                    <div style="align-self:stretch;display:flex;flex-direction:column;justify-content:center;">
+                        <small style="color:#888;display:block;min-height:18px;">P. Cmbt.</small>
+                        <select class="gm-combat-live-select" style="margin-top:4px;width:100%;" onpointerdown="iniciarEdicaoCombateMestre_()" onfocus="iniciarEdicaoCombateMestre_()" onblur="finalizarEdicaoCombateMestre_()" onchange="mudarPericiaCombateMestre_('${c.id}',this.value)">${opcoesPericiasCombateMestre_(c,skillValue)}</select>
+                    </div>
+                    <div style="align-self:stretch;display:flex;flex-direction:column;justify-content:center;">
+                        <small style="color:#888;display:block;min-height:18px;">Equipamento</small>
+                        <select class="gm-combat-live-select" style="margin-top:4px;width:100%;" onpointerdown="iniciarEdicaoCombateMestre_()" onfocus="iniciarEdicaoCombateMestre_()" onblur="finalizarEdicaoCombateMestre_()" onchange="mudarEquipCombateMestre_('${c.id}',this.value)">${equipamentos}</select>
+                    </div>
+                    <div style="align-self:stretch;display:flex;flex-direction:column;justify-content:center;">
+                        <small style="color:#888;display:block;min-height:18px;">Alvo</small>
+                        <select class="gm-combat-live-select" style="margin-top:4px;width:100%;" onpointerdown="iniciarEdicaoCombateMestre_()" onfocus="iniciarEdicaoCombateMestre_()" onblur="finalizarEdicaoCombateMestre_()" onchange="mudarAlvoCombateMestre_('${c.id}',this.value)">${alvoOpts||'<option value="">—</option>'}</select>
+                    </div>
                 </div>
                 ${resumoLocaisCompactoCombateMestre_(c)}
                 ${confDef?.status==='aguardando_defesa'?`<div style="margin-top:9px;padding:9px;border-radius:8px;background:rgba(231,76,60,.10);border:1px solid rgba(231,76,60,.35);">⚔️ Reação pendente contra <strong>${escaparHtmlInventario_(confDef.atacanteNome||'ataque')}</strong> <button class="btn-small btn-select" onclick="responderDefesaMestre_('${c.id}',true)">🛡️ Defender</button> <button class="btn-small btn-delete" onclick="responderDefesaMestre_('${c.id}',false)">✋ Não defender</button></div>`:''}
@@ -7708,7 +7737,13 @@ window.atualizarCombateMestre=async()=>{
 };
 
 
-window.mudarAlvoCombateMestre_=async(id,alvoId)=>{const p=obterParticipanteCombateMestre_(id);if(!p)return;p.alvoId=String(alvoId||'');await salvarEstadoCombateMestre_();};
+window.mudarAlvoCombateMestre_=async(id,alvoId)=>{
+    iniciarEdicaoCombateMestre_();
+    const p=obterParticipanteCombateMestre_(id);if(!p)return;
+    p.alvoId=String(alvoId||'');
+    await salvarEstadoCombateMestre_();
+    finalizarEdicaoCombateMestre_();
+};
 window.responderDefesaMestre_=async(id,defender)=>{
     const c=(userCharacters||[]).find(x=>x.id===id);if(!c)return;const conf=c?.combate?.confrontoPendente;if(!conf||conf.status!=='aguardando_defesa')return;
     let resposta={defendeu:false,grau:'Falha',timestamp:new Date().toISOString()};
@@ -7732,13 +7767,20 @@ window.escolherEfeitoEspecialMestre_=async(id,tipo)=>{
     await aplicarEscolhasEfeitosMestre_();renderizarCombateMestre_();
 };
 window.mudarPericiaCombateMestre_=async(id,valor)=>{
+    iniciarEdicaoCombateMestre_();
     const p=obterParticipanteCombateMestre_(id);if(!p)return;
-    p.skillSelecionada=valor;p.equipSelecionado='';
-    await salvarEstadoCombateMestre_();renderizarCombateMestre_();
+    p.skillSelecionada=String(valor||'');
+    p.equipSelecionado='';
+    await salvarEstadoCombateMestre_();
+    finalizarEdicaoCombateMestre_();
+    renderizarCombateMestre_();
 };
 window.mudarEquipCombateMestre_=async(id,valor)=>{
+    iniciarEdicaoCombateMestre_();
     const p=obterParticipanteCombateMestre_(id);if(!p)return;
-    p.equipSelecionado=valor;await salvarEstadoCombateMestre_();
+    p.equipSelecionado=String(valor||'');
+    await salvarEstadoCombateMestre_();
+    finalizarEdicaoCombateMestre_();
 };
 window.alternarDetalhesCombateMestre_=(id)=>{
     const p=obterParticipanteCombateMestre_(id);if(!p)return;
