@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 5.2: correção dos cartões e rolagens de combate -->
+    <!-- Mesa Estelar v28 etapa 5.3: equipamento automático e PV por localização -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -6891,6 +6891,39 @@ function paResumoCombateMestre_(char){
     return vals.length?Math.round(vals.reduce((a,b)=>a+b,0)/vals.length):0;
 }
 
+
+function resumoLocaisCompactoCombateMestre_(char){
+    if(modoCombateAtual_()==='simplificado') return '';
+
+    const locais=[
+        ['Cabeça','Cabeça'],['Peito','Peito'],['Abdômen','Abdômen'],
+        ['Braço Direito','Braço D.'],['Braço Esquerdo','Braço E.'],
+        ['Perna Direita','Perna D.'],['Perna Esquerda','Perna E.']
+    ];
+
+    const a=char.atributos||{}, b=char.bonus||{};
+    const maxLoc=calcularHitLocations_(
+        Number(a.CON||10)+Number(b.CON||0),
+        Number(a.TAM||10)+Number(b.TAM||0)
+    );
+    const atuais=char?.combate?.hitLocations||{};
+    const equipamento=calcularPAEquipado_(char,locais.map(x=>x[0]));
+    const manual=char?.combate?.armor||{};
+
+    return `<div style="display:grid;grid-template-columns:repeat(7,minmax(82px,1fr));gap:5px;margin-top:9px;">
+        ${locais.map(([loc,rotulo])=>{
+            const atual=Number.isFinite(Number(atuais[loc])) ? Number(atuais[loc]) : Number(maxLoc[loc]||1);
+            const pa=Math.max(0,Number(manual[loc]||0)+Number(equipamento?.[loc]||0));
+            const ferido=atual < Number(maxLoc[loc]||1);
+            return `<div style="padding:5px 6px;border-radius:7px;background:${ferido?'rgba(231,76,60,.10)':'rgba(255,255,255,.035)'};border:1px solid ${ferido?'rgba(231,76,60,.30)':'rgba(255,255,255,.07)'};text-align:center;">
+                <div style="font-size:.70em;color:#aaa;white-space:nowrap;">${rotulo}</div>
+                <strong style="font-size:.92em;color:${ferido?'#ff9c90':'#fff'};">PV ${atual}</strong>
+                <div style="font-size:.68em;color:#8fb9d8;">PA ${pa}</div>
+            </div>`;
+        }).join('')}
+    </div>`;
+}
+
 function opcoesPericiasCombateMestre_(char,selecionado=''){
     return obterPericiasCombate_(char).map(p=>{
         const v=`${p.__especializacao?'esp':'per'}:${p.id}`;
@@ -7070,7 +7103,21 @@ function renderizarCombateMestre_(){
                 : (skills[0]?`${skills[0].__especializacao?'esp':'per'}:${skills[0].id}`:'');
             p.skillSelecionada=skillValue;
             const pericia=obterPericiaCombateMestrePorValor_(skillValue);
-            const equip=String(p.equipSelecionado||'');
+            let equip=String(p.equipSelecionado||'');
+            if(!equip){
+                if(pericia?.id==='combate_desarmado') equip='desarmado';
+                else if(pericia?.id==='esquiva') equip='nenhum';
+                else{
+                    const primeira=obterItensEquipados_(c)
+                        .filter(itemEhArmaOuEscudo_)
+                        .find(item=>equipamentoCompativelComPericia_(item,pericia));
+                    if(primeira){
+                        const ix=obterItensEquipados_(c).indexOf(primeira);
+                        equip=String(primeira.instanciaId||primeira.instanceId||primeira.idInstancia||primeira.id||`equipado_${ix}`);
+                    }
+                }
+                p.equipSelecionado=equip;
+            }
             const equipamentos=equipamentosCombateChar_(c,pericia,equip);
             const detalheAberto=!!p.detalhesAbertos;
             const ultima=p.ultimoResultado?`<div style="margin-top:8px;padding:7px 9px;border-radius:7px;background:rgba(0,0,0,.15);color:#ddd;font-size:.86em;">${escaparHtmlInventario_(p.ultimoResultado)}</div>`:'';
@@ -7095,6 +7142,7 @@ function renderizarCombateMestre_(){
                     <div><small style="color:#888;">Perícia de combate</small><select style="margin-top:4px;width:100%;" onchange="mudarPericiaCombateMestre_('${c.id}',this.value)">${opcoesPericiasCombateMestre_(c,skillValue)}</select></div>
                     <div><small style="color:#888;">Equipamento</small><select style="margin-top:4px;width:100%;" onchange="mudarEquipCombateMestre_('${c.id}',this.value)">${equipamentos}</select></div>
                 </div>
+                ${resumoLocaisCompactoCombateMestre_(c)}
 
                 <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;">
                     <button class="btn-small btn-select" onclick="rolarTesteCombateMestre_('${c.id}')">🎲 Teste D100</button>
@@ -7264,8 +7312,28 @@ window.rolarTesteCombateMestre_=async(id)=>{
     const c=(userCharacters||[]).find(x=>x.id===id),p=obterParticipanteCombateMestre_(id);if(!c||!p)return;
     const pericia=obterPericiaCombateMestrePorValor_(p.skillSelecionada);
     if(!pericia)return;
+
+    // O select pode estar mostrando automaticamente a primeira arma compatível
+    // mesmo antes de o onchange gravar p.equipSelecionado.
+    if(!p.equipSelecionado){
+        if(pericia.id==='combate_desarmado') p.equipSelecionado='desarmado';
+        else if(pericia.id==='esquiva') p.equipSelecionado='nenhum';
+        else{
+            const primeira=obterItensEquipados_(c)
+                .filter(itemEhArmaOuEscudo_)
+                .find(i=>equipamentoCompativelComPericia_(i,pericia));
+            if(primeira){
+                const ix=obterItensEquipados_(c).indexOf(primeira);
+                p.equipSelecionado=String(primeira.instanciaId||primeira.instanceId||primeira.idInstancia||primeira.id||`equipado_${ix}`);
+            }
+        }
+    }
+
     const item=encontrarEquipamentoCombateChar_(c,p.equipSelecionado);
-    if(!['esquiva','combate_desarmado'].includes(pericia.id) && !p.equipSelecionado){alert('Selecione equipamento compatível.');return;}
+    if(!['esquiva','combate_desarmado'].includes(pericia.id) && !item){
+        alert('Selecione equipamento compatível.');
+        return;
+    }
     if(item && itemUsaMunicao_(item)){
         const minimo=itemUsaEnergia_(item)?custoEnergiaDisparo_(item):1;
         if(cargaAtualArma_(item)<minimo){alert(`${getNome(item)} sem munição/energia suficiente.`);return;}
@@ -7323,6 +7391,20 @@ window.rolarDanoCombateMestre_=async(id)=>{
     if(!c||!p)return;
 
     const pericia=obterPericiaCombateMestrePorValor_(p.skillSelecionada);
+
+    if(!p.equipSelecionado){
+        if(pericia?.id==='combate_desarmado') p.equipSelecionado='desarmado';
+        else{
+            const primeira=obterItensEquipados_(c)
+                .filter(itemEhArmaOuEscudo_)
+                .find(i=>equipamentoCompativelComPericia_(i,pericia));
+            if(primeira){
+                const ix=obterItensEquipados_(c).indexOf(primeira);
+                p.equipSelecionado=String(primeira.instanciaId||primeira.instanceId||primeira.idInstancia||primeira.id||`equipado_${ix}`);
+            }
+        }
+    }
+
     let expr='',nomeEquip='';
 
     if(pericia?.id==='combate_desarmado' || p.equipSelecionado==='desarmado'){
