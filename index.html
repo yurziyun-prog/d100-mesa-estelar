@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 5.8: seletores de combate estáveis e alinhados -->
+    <!-- Mesa Estelar v28 etapa 5.9: reações de PJ globais e defesa de PM/NPC no escudo -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -1991,6 +1991,8 @@ onAuthStateChanged(auth, async (user) => {
         await carregarPersonagens();
         iniciarSincronizadorCombate_();
         await sincronizarCombateMultiplayer_();
+        const pendenteInicial=(userCharacters||[]).find(c=>String(c.dono||'')===String(currentUserUid)&&c?.combate?.confrontoPendente?.status==='aguardando_defesa');
+        if(pendenteInicial&&userData?.role!=='mestre')renderizarReacaoCombateJogador_(pendenteInicial);
     } else {
         currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
         document.getElementById('loginScreen').classList.remove('hidden');
@@ -6940,27 +6942,70 @@ function opcoesDefesaReacao_(char){
     const skills=[...(obterPericiasCombate_(char)||[])].sort((a,b)=>a.id==='esquiva'?-1:b.id==='esquiva'?1:getNome(a).localeCompare(getNome(b)));
     return skills.map(p=>`<option value="${p.__especializacao?'esp':'per'}:${p.id}">${escaparHtmlInventario_(getNome(p))}</option>`).join('');
 }
-function renderizarReacaoCombateJogador_(char){
-    const box=document.getElementById('combatReactionPanel');if(!box)return;
-    const conf=char?.combate?.confrontoPendente;
-    if(!conf||conf.status!=='aguardando_defesa'||conf.defensorId!==char.id){box.style.display='none';box.innerHTML='';return;}
-    const ac=garantirPontosAcaoCombate_(char);
-    box.style.display='block';
-    box.innerHTML=`<strong style="color:#ff9c90;">⚔️ ${escaparHtmlInventario_(conf.atacanteNome||'Atacante')} está atacando você</strong>
-    <div style="margin-top:7px;">Ataque: <strong>${escaparHtmlInventario_(conf.ataque?.grau||'')}</strong> · AÇ ${ac.atual}/${ac.max}</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;">
-      <select id="playerDefenseSkillSelect" style="min-width:220px;">${opcoesDefesaReacao_(char)}</select>
-      <button class="btn-small btn-select" ${ac.atual<=0?'disabled':''} onclick="responderDefesaJogador_(true)">🛡️ Defender</button>
-      <button class="btn-small btn-delete" onclick="responderDefesaJogador_(false)">✋ Não defender</button>
-    </div>`;
+
+function obterOverlayReacaoCombateJogador_(){
+    let overlay=document.getElementById('combatReactionOverlayGlobal');
+    if(!overlay){
+        overlay=document.createElement('div');
+        overlay.id='combatReactionOverlayGlobal';
+        overlay.style.cssText='display:none;position:fixed;inset:0;z-index:99998;background:rgba(3,5,14,.68);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;';
+        overlay.innerHTML=`<div id="combatReactionOverlayCard" style="width:min(620px,96vw);background:linear-gradient(145deg,rgba(32,24,52,.99),rgba(19,31,57,.99));border:1px solid rgba(255,102,102,.55);border-radius:16px;padding:20px 22px;box-shadow:0 18px 60px rgba(0,0,0,.55);"></div>`;
+        document.body.appendChild(overlay);
+    }
+    return overlay;
 }
-window.responderDefesaJogador_=async(defender)=>{
+function esconderOverlayReacaoCombateJogador_(){
+    const overlay=document.getElementById('combatReactionOverlayGlobal');
+    if(overlay)overlay.style.display='none';
+}
+function montarConteudoReacaoJogador_(char,conf){
+    const ac=garantirPontosAcaoCombate_(char);
+    return `
+        <div style="font-size:1.15em;font-weight:800;color:#ff9c90;">⚔️ ${escaparHtmlInventario_(conf.atacanteNome||'Atacante')} está atacando ${escaparHtmlInventario_(char.nome||'você')}</div>
+        <div style="margin-top:9px;color:#ddd;">Resultado do ataque: <strong>${escaparHtmlInventario_(conf.ataque?.grau||'')}</strong> · AÇ disponíveis: <strong>${ac.atual}/${ac.max}</strong></div>
+        <div style="margin-top:7px;color:#aaa;font-size:.92em;">Escolha uma reação. Enquanto este ataque estiver pendente, o combate não avança.</div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:15px;">
+            <select id="playerDefenseSkillSelectGlobal" style="min-width:240px;flex:1;">${opcoesDefesaReacao_(char)}</select>
+            <button class="btn-small btn-select" ${ac.atual<=0?'disabled':''} onclick="responderDefesaJogador_(true,true)">🛡️ Defender</button>
+            <button class="btn-small btn-delete" onclick="responderDefesaJogador_(false,true)">✋ Não defender</button>
+        </div>
+        ${ac.atual<=0?'<div style="margin-top:10px;color:#ffb3b3;">Sem AÇ restantes: defesa ativa indisponível.</div>':''}
+    `;
+}
+function renderizarReacaoCombateJogador_(char){
+    const box=document.getElementById('combatReactionPanel');
+    const conf=char?.combate?.confrontoPendente;
+
+    if(!conf||conf.status!=='aguardando_defesa'||conf.defensorId!==char.id){
+        if(box){box.style.display='none';box.innerHTML='';}
+        esconderOverlayReacaoCombateJogador_();
+        return;
+    }
+
+    const conteudo=montarConteudoReacaoJogador_(char,conf);
+
+    if(box){
+        box.style.display='block';
+        box.innerHTML=conteudo
+            .replace('playerDefenseSkillSelectGlobal','playerDefenseSkillSelect')
+            .replace('responderDefesaJogador_(true,true)','responderDefesaJogador_(true,false)')
+            .replace('responderDefesaJogador_(false,true)','responderDefesaJogador_(false,false)');
+    }
+
+    const overlay=obterOverlayReacaoCombateJogador_();
+    const card=document.getElementById('combatReactionOverlayCard');
+    if(card)card.innerHTML=conteudo;
+    overlay.style.display='flex';
+}
+window.responderDefesaJogador_=async(defender,globalOverlay=false)=>{
     const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(!c)return;
     const conf=c?.combate?.confrontoPendente;if(!conf||conf.status!=='aguardando_defesa')return;
     let resposta={defendeu:false,grau:'Falha',rolagem:null,valor:null,timestamp:new Date().toISOString()};
     if(defender){
         const ac=garantirPontosAcaoCombate_(c);if(ac.atual<=0)return;
-        const tok=document.getElementById('playerDefenseSkillSelect')?.value||'';const [tipo,id]=tok.split(':');
+        const selectId=globalOverlay?'playerDefenseSkillSelectGlobal':'playerDefenseSkillSelect';
+        const tok=document.getElementById(selectId)?.value||document.getElementById('playerDefenseSkillSelectGlobal')?.value||document.getElementById('playerDefenseSkillSelect')?.value||'';
+        const [tipo,id]=tok.split(':');
         const per=(tipo==='esp'?especializacoesDB:periciasDB).find(x=>x.id===id);if(!per)return;
         const base=obterValorRegistroPericia_(c,id,tipo==='esp'),aj=aplicarDificuldadeEFadiga_(c,base,'padrao',0);if(aj.bloqueado)return;
         somDado_();const roll=Math.floor(Math.random()*100)+1,r=classificarD100_(aj.valor,roll);
@@ -6971,6 +7016,7 @@ window.responderDefesaJogador_=async(defender)=>{
     c.combate.confrontoPendente={...conf,status:'respondido',resposta};
     await setDoc(doc(db,'personagens',c.id),{'combate.confrontoPendente':c.combate.confrontoPendente,'combate.pontosAcaoAtuais':c.combate.pontosAcaoAtuais},{merge:true});
     renderizarReacaoCombateJogador_(c);atualizarVisualPontosAcao_(c);
+    if(globalOverlay)esconderOverlayReacaoCombateJogador_();
 };
 
 function efeitosDisponiveisCombate_(pend){
@@ -7071,10 +7117,33 @@ async function sincronizarCombateMultiplayer_(){
             }
             await resolverConfrontosRespondidosMestre_();await aplicarEscolhasEfeitosMestre_();
             if(!estaEditandoSeletoresCombateMestre_())renderizarCombateMestre_();
-        }else if(currentCharId){
-            const snap=await getDoc(doc(db,'personagens',currentCharId));if(!snap.exists())return;
-            const novo={id:snap.id,...snap.data()},ix=userCharacters.findIndex(x=>x.id===currentCharId);if(ix>=0)userCharacters[ix]=novo;
-            renderizarAlvosCombateJogador_(novo);renderizarReacaoCombateJogador_(novo);renderizarEfeitoEspecialJogador_(novo);renderizarEstadoCaidoJogador_(novo);atualizarVisualPontosAcao_(novo);
+        }else{
+            // Jogadores podem ter mais de um PJ. Procura qualquer ficha própria
+            // com reação pendente, mesmo que ela não seja a ficha atualmente aberta.
+            const proprios=(userCharacters||[]).filter(c=>String(c.dono||'')===String(currentUserUid));
+            let personagemReagindo=null;
+
+            for(const c of proprios){
+                const snap=await getDoc(doc(db,'personagens',c.id));
+                if(!snap.exists())continue;
+                const novo={id:snap.id,...snap.data()};
+                const ix=userCharacters.findIndex(x=>x.id===novo.id);if(ix>=0)userCharacters[ix]=novo;
+                if(novo?.combate?.confrontoPendente?.status==='aguardando_defesa'){
+                    personagemReagindo=novo;
+                }
+            }
+
+            const atual=(userCharacters||[]).find(c=>c.id===currentCharId);
+            const foco=personagemReagindo||atual;
+            if(foco){
+                renderizarAlvosCombateJogador_(foco);
+                renderizarReacaoCombateJogador_(foco);
+                renderizarEfeitoEspecialJogador_(foco);
+                renderizarEstadoCaidoJogador_(foco);
+                atualizarVisualPontosAcao_(foco);
+            }else{
+                esconderOverlayReacaoCombateJogador_();
+            }
         }
     }catch(err){console.warn('Sincronização de combate:',err);}
 }
@@ -7624,7 +7693,25 @@ function renderizarCombateMestre_(){
                     </div>
                 </div>
                 ${resumoLocaisCompactoCombateMestre_(c)}
-                ${confDef?.status==='aguardando_defesa'?`<div style="margin-top:9px;padding:9px;border-radius:8px;background:rgba(231,76,60,.10);border:1px solid rgba(231,76,60,.35);">⚔️ Reação pendente contra <strong>${escaparHtmlInventario_(confDef.atacanteNome||'ataque')}</strong> <button class="btn-small btn-select" onclick="responderDefesaMestre_('${c.id}',true)">🛡️ Defender</button> <button class="btn-small btn-delete" onclick="responderDefesaMestre_('${c.id}',false)">✋ Não defender</button></div>`:''}
+                ${confDef?.status==='aguardando_defesa'?(()=>{
+                    const tipoAlvo=tipoPersonagemCombateMestre_(c);
+                    const ehPJ=tipoAlvo==='PC';
+                    const acDef=acoesResumoCombateMestre_(c);
+                    if(ehPJ){
+                        return `<div style="margin-top:9px;padding:10px;border-radius:8px;background:rgba(255,193,7,.09);border:1px solid rgba(255,193,7,.34);">
+                            ⏳ <strong>${escaparHtmlInventario_(c.nome||'PJ')}</strong> está decidindo se reage ao ataque de <strong>${escaparHtmlInventario_(confDef.atacanteNome||'atacante')}</strong>.
+                            <span style="color:#aaa;"> AÇ ${acDef.texto}</span>
+                        </div>`;
+                    }
+                    return `<div style="margin-top:9px;padding:10px;border-radius:8px;background:rgba(231,76,60,.10);border:1px solid rgba(231,76,60,.35);">
+                        ⚔️ <strong>${escaparHtmlInventario_(c.nome||tipoAlvo)}</strong> precisa reagir ao ataque de <strong>${escaparHtmlInventario_(confDef.atacanteNome||'atacante')}</strong>.
+                        <span style="color:#aaa;"> AÇ ${acDef.texto}</span>
+                        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;">
+                            <button class="btn-small btn-select" ${acDef.atual<=0?'disabled':''} onclick="responderDefesaMestre_('${c.id}',true)">🛡️ Defender</button>
+                            <button class="btn-small btn-delete" onclick="responderDefesaMestre_('${c.id}',false)">✋ Não defender</button>
+                        </div>
+                    </div>`;
+                })():''}
                 ${efeitoPend&&Number(efeitoPend.restantes||0)>0?`<div style="margin-top:9px;padding:9px;border-radius:8px;background:rgba(255,193,7,.10);border:1px solid rgba(255,193,7,.35);">⭐ <strong>${efeitoPend.restantes}</strong> Efeito(s) Especial(is) pendente(s)<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;">${efeitosDisponiveisCombate_(efeitoPend).map(e=>`<button class="btn-small" onclick="escolherEfeitoEspecialMestre_('${c.id}','${e.id}')">${e.nome}</button>`).join('')}</div></div>`:''}
 
                 <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;">
@@ -7749,7 +7836,14 @@ window.responderDefesaMestre_=async(id,defender)=>{
     let resposta={defendeu:false,grau:'Falha',timestamp:new Date().toISOString()};
     if(defender){
         const ac=garantirPontosAcaoCombate_(c);if(ac.atual<=0){alert('Sem AÇ para defender.');return;}
-        const skills=obterPericiasCombate_(c)||[],per=skills.find(x=>x.id==='esquiva')||skills[0];if(!per)return;
+        const skills=obterPericiasCombate_(c)||[];
+        const pAlvo=obterParticipanteCombateMestre_(c.id);
+        const token=String(pAlvo?.skillSelecionada||'');
+        const perSelecionada=obterPericiaCombateMestrePorValor_(token);
+        const per=(perSelecionada&&skills.some(x=>x.id===perSelecionada.id)?perSelecionada:null)
+            ||skills.find(x=>x.id==='esquiva')
+            ||skills[0];
+        if(!per)return;
         const base=obterValorRegistroPericia_(c,per.id,per.__especializacao),aj=aplicarDificuldadeEFadiga_(c,base,'padrao',0);
         somDado_();const roll=Math.floor(Math.random()*100)+1,r=classificarD100_(aj.valor,roll);
         resposta={defendeu:true,periciaId:per.id,grau:r.grau,rolagem:roll,valor:aj.valor,timestamp:new Date().toISOString()};
