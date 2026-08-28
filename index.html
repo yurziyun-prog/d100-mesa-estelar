@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v27.1: correção de login e centro de operações do mestre -->
+    <!-- Mesa Estelar v28 etapa 1: console do mestre, campanha e histórico central -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -877,62 +877,98 @@
             <div id="escudo" class="tab-content">
                 <div class="form-section">
                     <h3>🛡️ Escudo do Mestre</h3>
-                    <p style="color:#ffd700; margin-bottom:20px;">Anotações privadas do mestre</p>
-                    <div id="escudoViewMode" class="regras-view"></div>
-                    <div id="escudoEditMode" class="hidden">
-                        <textarea id="escudoTexto" rows="20" style="width:100%; background:rgba(0,0,0,0.3); color:#ffd700; padding:15px; border-radius:10px; border:1px solid rgba(255,215,0,0.3);"></textarea>
-                    </div>
-                    <div style="margin-top:15px; display:flex; gap:10px;">
-                        <button class="btn-save" onclick="editarEscudo()" id="btnEditarEscudo" style="background:linear-gradient(135deg, #ffd700, #ffaa00); color:#000;">✏️ Editar Escudo</button>
-                        <button class="btn-save hidden" onclick="salvarEscudo()" id="btnSalvarEscudo" style="background:linear-gradient(135deg, #28a745, #218838);">💾 Salvar Escudo</button>
-                        <button class="btn-save hidden" onclick="cancelarEdicaoEscudo()" id="btnCancelarEscudo" style="background:linear-gradient(135deg, #6c757d, #495057);" data-i18n="cancelBtn">❌ Cancelar</button>
-                    </div>
-                </div>
+                    <p style="color:#aaa;margin-bottom:16px;">Área privada do mestre. Esta interface não é exibida para jogadores.</p>
 
-                <div id="masterOpsPanel" class="form-section" style="margin-top:20px;">
-                    <h3 data-i18n="gmOpsTitle">🛰️ Centro de Operações do Mestre</h3>
-                    <p data-i18n="gmOpsHelp" style="color:#aaa;margin-bottom:18px;">Painel privado. Nada aqui aparece para jogadores. Abrir uma ficha apenas muda sua própria visualização; somente ações explícitas de alteração gravam na ficha.</p>
-
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
-                        <button class="btn-save" onclick="atualizarPainelMestre()" style="width:auto;background:linear-gradient(135deg,#00d4ff,#0077aa);" data-i18n="gmRefresh">🔄 Atualizar painel</button>
-                        <button class="btn-save" onclick="criarNPCRapido()" style="width:auto;background:linear-gradient(135deg,#9b59b6,#6f42c1);" data-i18n="gmQuickNpc">➕ NPC rápido</button>
+                    <div class="gm-subtabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:12px;">
+                        <button class="btn-small btn-select gm-subtab-btn active" onclick="mostrarSubAbaMestre('campanha',this)">🌌 Campanha</button>
+                        <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('historico',this)">📡 Histórico</button>
+                        <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('cenario',this)">🪐 Cenário</button>
+                        <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('combate',this)">⚔️ Combate</button>
+                        <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('anotacoes',this)">📝 Anotações</button>
+                        <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('rolagem',this)">🎲 Rolagem do Mestre</button>
                     </div>
 
-                    <div style="margin-bottom:24px;">
-                        <h4 style="color:#00d4ff;margin-bottom:12px;" data-i18n="gmCharactersTitle">👥 Personagens e NPCs</h4>
-                        <div id="gmCharacterDashboard" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;"></div>
-                    </div>
+                    <!-- CAMPANHA -->
+                    <div id="gm-sub-campanha" class="gm-sub-content">
+                        <div id="gmCampaignStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px;"></div>
 
-                    <div style="margin-bottom:24px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-                            <h4 style="color:#00d4ff;margin:0;" data-i18n="gmActivityTitle">📡 Atividade recente</h4>
-                            <small style="color:#888;" data-i18n="gmActivityHelp">Agrega os históricos salvos nas fichas.</small>
-                        </div>
-                        <div id="gmActivityFeed" style="margin-top:10px;display:flex;flex-direction:column;gap:7px;max-height:420px;overflow:auto;padding-right:4px;"></div>
-                    </div>
-
-                    <div style="margin-bottom:24px;">
-                        <h4 style="color:#00d4ff;margin-bottom:12px;" data-i18n="gmCombatTrackerTitle">⚔️ Rastreador de Combate</h4>
-                        <div id="gmCombatSetup" style="padding:14px;background:rgba(0,0,0,.16);border-radius:10px;border:1px solid rgba(255,255,255,.08);">
-                            <div id="gmCombatParticipants" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;"></div>
-                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                <button class="btn-small btn-select" onclick="iniciarCombateMestre()" data-i18n="gmStartCombat">▶️ Iniciar combate</button>
-                                <button class="btn-small btn-select" onclick="proximoTurnoMestre()" data-i18n="gmNextTurn">⏭️ Próximo turno</button>
-                                <button class="btn-small btn-delete" onclick="encerrarCombateMestre()" data-i18n="gmEndCombat">⏹️ Encerrar</button>
+                        <div style="padding:16px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.09);border-radius:12px;">
+                            <h4 style="color:#00d4ff;margin:0 0 14px;">🌍 Estado atual da campanha</h4>
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+                                <div class="form-group"><label>Nome da campanha:</label><input id="gmCampanhaNome" type="text"></div>
+                                <div class="form-group"><label>Planeta atual:</label><input id="gmCampanhaPlaneta" type="text"></div>
+                                <div class="form-group"><label>Cidade / região:</label><input id="gmCampanhaCidade" type="text"></div>
+                                <div class="form-group"><label>Clima atual:</label><input id="gmCampanhaClima" type="text"></div>
+                                <div class="form-group"><label>Cenário ativo:</label><input id="gmCampanhaCenario" type="text"></div>
+                                <div class="form-group"><label>Data / período no jogo:</label><input id="gmCampanhaData" type="text"></div>
                             </div>
+                            <div class="form-group"><label>Resumo atual:</label><textarea id="gmCampanhaResumo" rows="4" placeholder="Situação geral, missão em andamento, acontecimentos importantes..."></textarea></div>
+                            <button class="btn-save" onclick="salvarEstadoCampanha()" style="width:auto;">💾 Salvar estado da campanha</button>
                         </div>
-                        <div id="gmCombatTracker" style="margin-top:10px;"></div>
                     </div>
 
-                    <div>
-                        <h4 style="color:#ff8f8f;margin-bottom:12px;" data-i18n="gmDamageTitle">💥 Aplicar dano a uma ficha</h4>
-                        <div style="display:grid;grid-template-columns:2fr 1fr 1.5fr auto;gap:10px;align-items:end;">
-                            <div class="form-group" style="margin:0;"><label data-i18n="gmTarget">Alvo:</label><select id="gmDamageTarget"></select></div>
-                            <div class="form-group" style="margin:0;"><label data-i18n="gmDamage">Dano:</label><input id="gmDamageAmount" type="number" min="0" value="1"></div>
-                            <div class="form-group" style="margin:0;"><label data-i18n="gmLocation">Localização:</label><select id="gmDamageLocation"></select></div>
-                            <button class="btn-small btn-delete" onclick="aplicarDanoMestre()" style="height:46px;" data-i18n="gmApplyDamage">Aplicar</button>
+                    <!-- HISTÓRICO -->
+                    <div id="gm-sub-historico" class="gm-sub-content hidden">
+                        <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:14px;">
+                            <div class="form-group" style="margin:0;min-width:220px;">
+                                <label>Personagem:</label>
+                                <select id="gmLogFiltroPersonagem" onchange="renderizarHistoricoMestre_()"><option value="">Todos</option></select>
+                            </div>
+                            <div class="form-group" style="margin:0;min-width:190px;">
+                                <label>Tipo:</label>
+                                <select id="gmLogFiltroTipo" onchange="renderizarHistoricoMestre_()">
+                                    <option value="">Todos</option>
+                                    <option value="rolagem">Rolagens / testes</option>
+                                    <option value="inventario">Inventário</option>
+                                    <option value="mercado">Mercado</option>
+                                    <option value="personagem">Ficha</option>
+                                </select>
+                            </div>
+                            <button class="btn-small btn-select" onclick="atualizarHistoricoMestre()">🔄 Atualizar</button>
                         </div>
-                        <small style="display:block;color:#888;margin-top:8px;" data-i18n="gmDamageHelp">Esta é a única ferramenta deste painel que altera diretamente PV/PA do alvo e sempre pede confirmação.</small>
+                        <div style="display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;">
+                            <strong style="color:#00d4ff;">Registro privado da campanha</strong>
+                            <small style="color:#888;">até 800 eventos exibidos</small>
+                        </div>
+                        <div id="gmHistoricoCentral" style="display:flex;flex-direction:column;gap:7px;max-height:650px;overflow:auto;padding-right:4px;"></div>
+                    </div>
+
+                    <!-- CENÁRIO -->
+                    <div id="gm-sub-cenario" class="gm-sub-content hidden">
+                        <div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(0,212,255,.35);">
+                            <h4 style="color:#00d4ff;margin-top:0;">🪐 Cenários</h4>
+                            <p style="color:#bbb;margin-bottom:0;">Estrutura reservada para a próxima etapa: banco de cenários, descrição, NPCs possíveis, eventos, encontros e clima.</p>
+                        </div>
+                    </div>
+
+                    <!-- COMBATE -->
+                    <div id="gm-sub-combate" class="gm-sub-content hidden">
+                        <div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(231,76,60,.35);">
+                            <h4 style="color:#ff8b7d;margin-top:0;">⚔️ Combate</h4>
+                            <p style="color:#bbb;margin-bottom:0;">Estrutura reservada para a próxima etapa: participantes, iniciativa automática e manual, turno atual, PV/PA compactos e testes exclusivamente de combate.</p>
+                        </div>
+                    </div>
+
+                    <!-- ANOTAÇÕES: ESCUDO ATUAL -->
+                    <div id="gm-sub-anotacoes" class="gm-sub-content hidden">
+                        <h4 style="color:#ffd166;">📝 Anotações privadas do mestre</h4>
+                        <div id="escudoViewMode" class="regras-view"></div>
+                        <div id="escudoEditMode" class="hidden">
+                            <textarea id="escudoTexto" rows="20" style="width:100%; background:rgba(0,0,0,0.3); color:#ffd700; padding:15px; border-radius:10px; border:1px solid rgba(255,215,0,0.3);"></textarea>
+                        </div>
+                        <div style="margin-top:15px; display:flex; gap:10px;">
+                            <button class="btn-save" onclick="editarEscudo()" id="btnEditarEscudo" style="background:linear-gradient(135deg, #ffd700, #ffaa00); color:#000;">✏️ Editar Anotações</button>
+                            <button class="btn-save hidden" onclick="salvarEscudo()" id="btnSalvarEscudo" style="background:linear-gradient(135deg, #28a745, #218838);">💾 Salvar</button>
+                            <button class="btn-save hidden" onclick="cancelarEdicaoEscudo()" id="btnCancelarEscudo" style="background:linear-gradient(135deg, #6c757d, #495057);">❌ Cancelar</button>
+                        </div>
+                    </div>
+
+                    <!-- ROLAGEM DO MESTRE -->
+                    <div id="gm-sub-rolagem" class="gm-sub-content hidden">
+                        <div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(155,89,182,.40);">
+                            <h4 style="color:#d8b4ff;margin-top:0;">🎲 Rolagem do Mestre</h4>
+                            <p style="color:#bbb;margin-bottom:0;">Estrutura reservada para a próxima etapa: escolha de PC/PM/NPC, perícias ocultas prioritárias, todas as demais perícias, dados livres e roladores vinculados ao cenário.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1190,7 +1226,9 @@ const REGRAS_PADRAO_ZH = `# D100系统规则 - 星际桌游RPG
 行动点、先攻、伤害修正、经验修正、恢复率、移动、幸运点与各部位生命值均根据角色属性和系统表计算。
 `;
 let escudoTexto = '';
-let escudoCombate = { participantes: [], turno: 0, rodada: 1, ativo: false };
+let estadoCampanhaMestre = {
+    nome:'', planeta:'', cidade:'', clima:'', cenario:'', dataJogo:'', resumo:''
+};
 let currentEditSlot = { compartment: null, index: null };
 let uploadedItemImage = null;
 
@@ -1631,41 +1669,6 @@ Object.assign(traducoes.zh, {
   masterOnlyField:'只有主持人可以修改此字段。'
 });
 
-
-Object.assign(traducoes.pt, {
-  gmOpsTitle:'🛰️ Centro de Operações do Mestre', gmOpsHelp:'Painel privado. Nada aqui aparece para jogadores. Abrir uma ficha apenas muda sua própria visualização; somente ações explícitas de alteração gravam na ficha.',
-  gmRefresh:'🔄 Atualizar painel', gmQuickNpc:'➕ NPC rápido', gmCharactersTitle:'👥 Personagens e NPCs',
-  gmActivityTitle:'📡 Atividade recente', gmActivityHelp:'Agrega os históricos salvos nas fichas.', gmCombatTrackerTitle:'⚔️ Rastreador de Combate',
-  gmStartCombat:'▶️ Iniciar combate', gmNextTurn:'⏭️ Próximo turno', gmEndCombat:'⏹️ Encerrar',
-  gmDamageTitle:'💥 Aplicar dano a uma ficha', gmTarget:'Alvo:', gmDamage:'Dano:', gmLocation:'Localização:',
-  gmApplyDamage:'Aplicar', gmDamageHelp:'Esta é a única ferramenta deste painel que altera diretamente PV/PA do alvo e sempre pede confirmação.',
-  gmPC:'PC', gmOpenSheet:'Abrir ficha', gmResources:'Recursos', gmDuplicateNpc:'Duplicar como NPC', gmNoActivity:'Nenhuma atividade registrada.',
-  gmNpcNamePrompt:'Nome do NPC:', gmQuickNpcDefault:'NPC Rápido', gmCopy:'Cópia', gmSelectParticipants:'Selecione ao menos um participante.',
-  gmNoCombat:'Nenhum combate ativo.', gmRound:'Rodada', gmConfirmDamage:'Aplicar dano', gmDamageApplied:'Dano aplicado'
-});
-Object.assign(traducoes.en, {
-  gmOpsTitle:'🛰️ GM Operations Center', gmOpsHelp:'Private panel. Nothing here is shown to players. Opening a sheet only changes your own view; only explicit editing actions write to the character.',
-  gmRefresh:'🔄 Refresh panel', gmQuickNpc:'➕ Quick NPC', gmCharactersTitle:'👥 Characters and NPCs',
-  gmActivityTitle:'📡 Recent activity', gmActivityHelp:'Aggregates histories saved in character sheets.', gmCombatTrackerTitle:'⚔️ Combat Tracker',
-  gmStartCombat:'▶️ Start combat', gmNextTurn:'⏭️ Next turn', gmEndCombat:'⏹️ End',
-  gmDamageTitle:'💥 Apply damage to a sheet', gmTarget:'Target:', gmDamage:'Damage:', gmLocation:'Location:',
-  gmApplyDamage:'Apply', gmDamageHelp:'This is the only tool in this panel that directly changes the target’s HP/AP and it always asks for confirmation.',
-  gmPC:'PC', gmOpenSheet:'Open sheet', gmResources:'Resources', gmDuplicateNpc:'Duplicate as NPC', gmNoActivity:'No activity recorded.',
-  gmNpcNamePrompt:'NPC name:', gmQuickNpcDefault:'Quick NPC', gmCopy:'Copy', gmSelectParticipants:'Select at least one participant.',
-  gmNoCombat:'No active combat.', gmRound:'Round', gmConfirmDamage:'Apply damage', gmDamageApplied:'Damage applied'
-});
-Object.assign(traducoes.zh, {
-  gmOpsTitle:'🛰️ 主持人操作中心', gmOpsHelp:'私人面板。玩家看不到这里的内容。打开角色卡只会改变主持人的视图；只有明确的修改操作才会写入角色数据。',
-  gmRefresh:'🔄 刷新面板', gmQuickNpc:'➕ 快速NPC', gmCharactersTitle:'👥 角色与NPC',
-  gmActivityTitle:'📡 最近活动', gmActivityHelp:'汇总各角色卡中保存的历史记录。', gmCombatTrackerTitle:'⚔️ 战斗追踪器',
-  gmStartCombat:'▶️ 开始战斗', gmNextTurn:'⏭️ 下一回合', gmEndCombat:'⏹️ 结束',
-  gmDamageTitle:'💥 对角色卡应用伤害', gmTarget:'目标：', gmDamage:'伤害：', gmLocation:'部位：',
-  gmApplyDamage:'应用', gmDamageHelp:'这是此面板中唯一会直接修改目标生命值／护甲值的工具，并且始终会要求确认。',
-  gmPC:'玩家角色', gmOpenSheet:'打开角色卡', gmResources:'资源', gmDuplicateNpc:'复制为NPC', gmNoActivity:'没有活动记录。',
-  gmNpcNamePrompt:'NPC名称：', gmQuickNpcDefault:'快速NPC', gmCopy:'副本', gmSelectParticipants:'请至少选择一名参与者。',
-  gmNoCombat:'当前没有战斗。', gmRound:'轮次', gmConfirmDamage:'应用伤害', gmDamageApplied:'已应用伤害'
-});
-
 function tr_(key) { return (traducoes[idiomaAtual] || traducoes.pt)[key] || (traducoes.pt[key] || key); }
 
 const BODY_LOC_KEYS_ = {
@@ -1885,13 +1888,18 @@ async function carregarEscudo() {
     if (userData && userData.role !== 'mestre') return;
     const escudoDoc = await getDoc(doc(db, "configuracoes", "escudoMestre"));
     if (escudoDoc.exists()) {
-        const ed = escudoDoc.data() || {};
-        escudoTexto = ed.texto || '';
-        escudoCombate = ed.combate || { participantes: [], turno: 0, rodada: 1, ativo: false };
+        const dadosEscudo = escudoDoc.data() || {};
+        escudoTexto = dadosEscudo.texto || '';
+        estadoCampanhaMestre = {
+            ...estadoCampanhaMestre,
+            ...(dadosEscudo.campanha || {})
+        };
     } else {
         escudoTexto = '# Escudo do Mestre\n\nAnotações privadas...';
-        escudoCombate = { participantes: [], turno: 0, rodada: 1, ativo: false };
-        await setDoc(doc(db, "configuracoes", "escudoMestre"), { texto: escudoTexto, combate: escudoCombate });
+        await setDoc(doc(db, "configuracoes", "escudoMestre"), {
+            texto: escudoTexto,
+            campanha: estadoCampanhaMestre
+        });
     }
     renderizarEscudo();
 }
@@ -1941,7 +1949,10 @@ async function carregarPersonagens() {
     if (currentCharId && !userCharacters.some(c => c.id === currentCharId)) currentCharId = null;
 
     renderizarListaPersonagens();
-    if (userData && userData.role === 'mestre' && document.getElementById('gmCharacterDashboard')) renderizarPainelMestre_();
+    if (userData && userData.role==='mestre' && document.getElementById('gmCampaignStats')) {
+        renderizarCampanhaMestre_();
+        renderizarHistoricoMestre_();
+    }
 }
 
 function renderizarListaPersonagens() {
@@ -2709,6 +2720,12 @@ window.soltarInventario = async (event, destinoComp, destinoIndex) => {
 
     try {
         await setDoc(doc(db, 'personagens', currentCharId), { inventario: inv }, { merge: true });
+        await registrarEventoMestreNoPersonagem_(
+            char,
+            'Inventário',
+            `${getNome(itemOrigem)}: ${origemComp} → ${destinoComp}`,
+            {subtipo:'movimentoInventario',itemId:itemOrigem.idBanco||itemOrigem.id||'',origem:origemComp,destino:destinoComp}
+        );
     } catch (erro) {
         console.error('Erro ao mover item:', erro);
         alert('Não foi possível salvar a movimentação do item. Recarregue a ficha para restaurar os dados do servidor.');
@@ -3321,6 +3338,40 @@ function renderizarHistoricoCombate_(char) {
     }).join('');
 }
 
+
+function classificarEventoMestre_(tipo, dados={}) {
+    const t = normalizarTextoCombate_(tipo || '');
+    if (dados.subtipo === 'compra') return 'mercado';
+    if (dados.subtipo === 'movimentoInventario' || /inventario|item|recarregar|municao|energia/.test(t)) return 'inventario';
+    if (/teste|rolagem|d100|dado|formula|psi|dano|iniciativa|localizacao|sorte/.test(t) || dados.subtipo) return 'rolagem';
+    return 'personagem';
+}
+
+async function registrarEventoMestreNoPersonagem_(char, tipo, texto, dados={}) {
+    if (!char?.id && !currentCharId) return;
+    const idChar = char?.id || currentCharId;
+    const alvo = char || userCharacters.find(c=>c.id===idChar);
+    if (!alvo) return;
+
+    const registro = {
+        id:`gm_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+        timestamp:new Date().toISOString(),
+        tipo:String(tipo||'Evento'),
+        categoriaMestre:classificarEventoMestre_(tipo,dados),
+        texto:String(texto||''),
+        atorUid:currentUserUid || '',
+        ...dados
+    };
+    const atual=Array.isArray(alvo.historicoMestre)?alvo.historicoMestre:[];
+    const novo=[registro,...atual].slice(0,300);
+    alvo.historicoMestre=novo;
+    try {
+        await setDoc(doc(db,'personagens',idChar),{historicoMestre:novo},{merge:true});
+    } catch(e) {
+        console.warn('Falha ao registrar evento privado do mestre:',e);
+    }
+}
+
 async function registrarHistoricoCombate_(tipo, texto, dados = {}) {
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
@@ -3338,6 +3389,7 @@ async function registrarHistoricoCombate_(tipo, texto, dados = {}) {
     renderizarHistoricoCombate_(char);
     try {
         await setDoc(doc(db, 'personagens', currentCharId), { historicoRolagens: novo }, { merge: true });
+        await registrarEventoMestreNoPersonagem_(char, tipo, texto, dados);
     } catch (erro) {
         console.error('Erro ao salvar histórico de rolagens:', erro);
     }
@@ -4010,6 +4062,7 @@ async function registrarHistoricoGeral_(tipo, texto, dados = {}) {
     renderizarHistoricoGeral_(char);
     try {
         await setDoc(doc(db, 'personagens', currentCharId), { historicoRolagensGerais: novo }, { merge: true });
+        await registrarEventoMestreNoPersonagem_(char, tipo, texto, dados);
     } catch (erro) {
         console.error('Erro ao salvar histórico geral:', erro);
     }
@@ -4438,6 +4491,12 @@ window.comprarItemMercado = async (itemId) => {
     char.inventario = inv;
     char.recursos = recursos - preco;
     await setDoc(doc(db, 'personagens', currentCharId), { inventario: inv, recursos: char.recursos }, { merge: true });
+    await registrarEventoMestreNoPersonagem_(
+        char,
+        'Mercado',
+        `${getNome(itemBanco)} comprado por ${preco}`,
+        {subtipo:'compra',itemId:itemBanco.id,preco,qualidade,destino,recursosRestantes:char.recursos}
+    );
     somCaixaRegistradora_();
     renderizarInventario(char);
     const recursosInput = document.getElementById('editRecursos');
@@ -5915,249 +5974,145 @@ function renderizarRegras() {
     else btnEditar.style.display = 'none';
 }
 
-function vidaResumoMestre_(char) {
-    if (modoCombateAtual_() === 'simplificado') {
-        const max = calcularPVGlobalMax_(char);
-        const atual = Number.isFinite(Number(char?.combate?.pvGlobalAtual)) ? Number(char.combate.pvGlobalAtual) : max;
-        return `${Math.max(0,atual)}/${max}`;
-    }
-    const attrs = char.atributos || {};
-    const bonus = char.bonus || {};
-    const con = Number(attrs.CON||10)+Number(bonus.CON||0);
-    const tam = Number(attrs.TAM||10)+Number(bonus.TAM||0);
-    const maximos = calcularHitLocations_(con,tam);
-    const atuais = char?.combate?.hitLocations || {};
-    let atual=0,max=0;
-    Object.entries(maximos).forEach(([loc,v])=>{
-        max += Number(v||0);
-        atual += Number.isFinite(Number(atuais[loc])) ? Number(atuais[loc]) : Number(v||0);
-    });
-    return `${Math.max(0,atual)}/${max}`;
+window.mostrarSubAbaMestre = (nome,btn) => {
+    if (!(userData && userData.role==='mestre')) return;
+    document.querySelectorAll('.gm-sub-content').forEach(el=>el.classList.add('hidden'));
+    document.querySelectorAll('.gm-subtab-btn').forEach(el=>el.classList.remove('active','btn-select'));
+    document.getElementById(`gm-sub-${nome}`)?.classList.remove('hidden');
+    if (btn) btn.classList.add('active','btn-select');
+    if (nome==='campanha') renderizarCampanhaMestre_();
+    if (nome==='historico') renderizarHistoricoMestre_();
+};
+
+function cartaoNumeroMestre_(valor,rotulo,icone='') {
+    return `<div style="padding:13px;border-radius:10px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);">
+        <div style="color:#888;font-size:.78em;">${icone} ${rotulo}</div>
+        <strong style="display:block;color:#00d4ff;font-size:1.55em;margin-top:4px;">${valor}</strong>
+    </div>`;
 }
 
-function pontosAcaoResumoMestre_(char) {
-    const max = obterPAMaxCombate_(char);
-    const atual = Number.isFinite(Number(char?.combate?.pontosAcaoAtuais)) ? Number(char.combate.pontosAcaoAtuais) : max;
-    return `${atual}/${max}`;
+function estatisticasMestre_() {
+    const chars=userCharacters||[];
+    const pcs=chars.filter(c=>c.dono!==currentUserUid && !['npc','npc_rapido','monstro'].includes(String(c.tipo||'pc').toLowerCase())).length;
+    const pms=chars.filter(c=>c.dono===currentUserUid && !['npc','npc_rapido','monstro'].includes(String(c.tipo||'pc').toLowerCase())).length;
+    const npcs=chars.filter(c=>['npc','npc_rapido'].includes(String(c.tipo||'').toLowerCase())).length;
+    const monstros=chars.filter(c=>String(c.tipo||'').toLowerCase()==='monstro').length;
+    return {pcs,pms,npcs,monstros};
 }
 
-function magiaResumoMestre_(char) {
-    if (!personagemTemPsi_(char)) return '—';
-    const max = obterPontosMagiaMax_(char);
-    const atual = obterPontosMagiaAtuais_(char);
-    return `${atual}/${max}`;
+function preencherEstadoCampanha_() {
+    const e=estadoCampanhaMestre||{};
+    const campos={
+        gmCampanhaNome:'nome',gmCampanhaPlaneta:'planeta',gmCampanhaCidade:'cidade',
+        gmCampanhaClima:'clima',gmCampanhaCenario:'cenario',gmCampanhaData:'dataJogo',gmCampanhaResumo:'resumo'
+    };
+    Object.entries(campos).forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=e[k]||'';});
 }
 
-function sorteResumoMestre_(char) {
-    const max = calcularPontosSorteMax_(char);
-    const atual = Number.isFinite(Number(char.pontosSorte)) ? Number(char.pontosSorte) : max;
-    return `${atual}/${max}`;
+function renderizarCampanhaMestre_() {
+    if (!(userData && userData.role==='mestre')) return;
+    const alvo=document.getElementById('gmCampaignStats');
+    if (!alvo) return;
+    const n=estatisticasMestre_();
+    alvo.innerHTML=[
+        cartaoNumeroMestre_(n.pcs,'Personagens de jogadores','👤'),
+        cartaoNumeroMestre_(n.pms,'PMs','🛡️'),
+        cartaoNumeroMestre_(n.npcs,'NPCs','🎭'),
+        cartaoNumeroMestre_(n.monstros,'Monstros','👾'),
+        cartaoNumeroMestre_((periciasDB||[]).length,'Perícias','📚'),
+        cartaoNumeroMestre_((especializacoesDB||[]).length,'Especializações','⚔️'),
+        cartaoNumeroMestre_((itensDB||[]).length,'Itens','📦'),
+        cartaoNumeroMestre_((carreirasDB||[]).length,'Carreiras','💼'),
+        cartaoNumeroMestre_((origensDB||[]).length,'Origens','🌍'),
+        cartaoNumeroMestre_((poderesPsiDB||[]).length,'Poderes Psi','🔮')
+    ].join('');
+    preencherEstadoCampanha_();
 }
 
-function renderizarPainelMestre_() {
-    if (!(userData && userData.role === 'mestre')) return;
-    const chars = (userCharacters || []).filter(c=>!c.arquivado);
-    const dash = document.getElementById('gmCharacterDashboard');
-    const feed = document.getElementById('gmActivityFeed');
-    const participants = document.getElementById('gmCombatParticipants');
-    const target = document.getElementById('gmDamageTarget');
-    const location = document.getElementById('gmDamageLocation');
-    if (!dash || !feed) return;
+window.salvarEstadoCampanha = async () => {
+    if (!(userData && userData.role==='mestre')) return;
+    estadoCampanhaMestre={
+        nome:document.getElementById('gmCampanhaNome')?.value?.trim()||'',
+        planeta:document.getElementById('gmCampanhaPlaneta')?.value?.trim()||'',
+        cidade:document.getElementById('gmCampanhaCidade')?.value?.trim()||'',
+        clima:document.getElementById('gmCampanhaClima')?.value?.trim()||'',
+        cenario:document.getElementById('gmCampanhaCenario')?.value?.trim()||'',
+        dataJogo:document.getElementById('gmCampanhaData')?.value?.trim()||'',
+        resumo:document.getElementById('gmCampanhaResumo')?.value?.trim()||''
+    };
+    await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
+    somSalvar_();
+    alert('Estado da campanha salvo.');
+};
 
-    dash.innerHTML = chars.map(c=>{
-        const tipo = String(c.tipo||'pc').toLowerCase()==='npc' ? 'NPC' : tr_('gmPC');
-        const fat = traduzirNomeFadiga_(c?.combate?.fadiga || 'Fresh');
-        return `<div style="padding:14px;border-radius:11px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);">
-            <div style="display:flex;justify-content:space-between;gap:10px;align-items:start;">
-                <div>
-                    <strong style="font-size:1.08em;color:#fff;">${escaparHtmlInventario_(c.nome||tr_('unnamedCharacter'))}</strong>
-                    <div style="color:#888;font-size:.78em;margin-top:3px;">${tipo}${c.classeSocial ? ` · ${escaparHtmlInventario_(c.classeSocial)}` : ''}</div>
-                </div>
-                <button class="btn-small btn-select" onclick="abrirFichaMestre_('${c.id}')">${tr_('gmOpenSheet')}</button>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px;font-size:.86em;">
-                <div><span style="color:#999;">PV</span><br><strong>${vidaResumoMestre_(c)}</strong></div>
-                <div><span style="color:#999;">${tr_('pa')}</span><br><strong>${pontosAcaoResumoMestre_(c)}</strong></div>
-                <div><span style="color:#999;">${tr_('fatigueWord')}</span><br><strong>${escaparHtmlInventario_(fat)}</strong></div>
-                <div><span style="color:#999;">${tr_('gmResources')}</span><br><strong>${Number(c.recursos||0)}</strong></div>
-                <div><span style="color:#999;">${tr_('luckType')}</span><br><strong>${sorteResumoMestre_(c)}</strong></div>
-                <div><span style="color:#999;">PP</span><br><strong>${magiaResumoMestre_(c)}</strong></div>
-            </div>
-            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:11px;">
-                <button class="btn-small" onclick="duplicarComoNPC_('${c.id}')">${tr_('gmDuplicateNpc')}</button>
-            </div>
-        </div>`;
-    }).join('') || `<div style="color:#888;">${tr_('noCharactersMaster')}</div>`;
+function todosEventosMestre_() {
+    const eventos=[];
+    (userCharacters||[]).forEach(char=>{
+        const privados=Array.isArray(char.historicoMestre)?char.historicoMestre:[];
+        privados.forEach(r=>eventos.push({...r,__char:char,__origem:'mestre'}));
 
-    const registros = [];
-    chars.forEach(c=>{
-        [...(c.historicoRolagens||[]), ...(c.historicoRolagensGerais||[])].forEach(r=>{
-            registros.push({...r,__char:c});
+        // Compatibilidade retroativa: históricos antigos já aparecem imediatamente.
+        const antigos=[...(char.historicoRolagens||[]),...(char.historicoRolagensGerais||[])];
+        antigos.forEach(r=>{
+            if (!privados.some(x=>x.id===r.id)) eventos.push({
+                ...r,__char:char,__origem:'legado',
+                categoriaMestre:classificarEventoMestre_(r.tipo,r)
+            });
         });
     });
-    registros.sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')));
-    feed.innerHTML = registros.slice(0,80).map(r=>{
-        const c=r.__char;
-        return `<div style="display:grid;grid-template-columns:80px minmax(120px,180px) 1fr;gap:9px;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.06);">
-            <span style="color:#777;">${formatarHoraHistoricoCombate_(r.timestamp)}</span>
+    eventos.sort((a,b)=>String(b.timestamp||'').localeCompare(String(a.timestamp||'')));
+    return eventos;
+}
+
+function popularFiltroHistoricoMestre_() {
+    const sel=document.getElementById('gmLogFiltroPersonagem');
+    if(!sel)return;
+    const atual=sel.value;
+    sel.innerHTML='<option value="">Todos</option>'+(userCharacters||[]).map(c=>`<option value="${c.id}">${escaparHtmlInventario_(c.nome||'Sem Nome')}</option>`).join('');
+    if([...sel.options].some(o=>o.value===atual))sel.value=atual;
+}
+
+window.renderizarHistoricoMestre_ = () => {
+    if (!(userData && userData.role==='mestre')) return;
+    popularFiltroHistoricoMestre_();
+    const alvo=document.getElementById('gmHistoricoCentral');
+    if(!alvo)return;
+    const charId=document.getElementById('gmLogFiltroPersonagem')?.value||'';
+    const tipo=document.getElementById('gmLogFiltroTipo')?.value||'';
+    let eventos=todosEventosMestre_();
+    if(charId)eventos=eventos.filter(e=>e.__char?.id===charId);
+    if(tipo)eventos=eventos.filter(e=>(e.categoriaMestre||'')===tipo);
+    eventos=eventos.slice(0,800);
+    alvo.innerHTML=eventos.map(e=>{
+        const c=e.__char||{};
+        const data=e.timestamp?new Date(e.timestamp):null;
+        const horario=data&&!isNaN(data)?data.toLocaleString('pt-BR'):'';
+        let texto=e.texto||'';
+        if(e.__origem==='legado'){
+            try { texto=formatarRegistroHistorico_(e,true)||texto; } catch(_){}
+        }
+        return `<div style="display:grid;grid-template-columns:145px minmax(120px,190px) 110px 1fr;gap:9px;align-items:start;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.065);">
+            <span style="color:#777;font-size:.82em;">${escaparHtmlInventario_(horario)}</span>
             <strong style="color:#d8c7ff;">${escaparHtmlInventario_(c.nome||'')}</strong>
-            <span style="color:#ddd;">${escaparHtmlInventario_(formatarRegistroHistorico_(r, true))}</span>
+            <span style="color:#8feaff;font-size:.86em;">${escaparHtmlInventario_(e.tipo||'Evento')}</span>
+            <span style="color:#ddd;">${escaparHtmlInventario_(texto)}</span>
         </div>`;
-    }).join('') || `<div style="color:#888;">${tr_('gmNoActivity')}</div>`;
+    }).join('')||'<div style="color:#888;padding:12px;">Nenhum evento registrado.</div>';
+};
 
-    if (participants) {
-        const selecionados = new Set((escudoCombate?.participantes||[]).map(x=>x.id));
-        participants.innerHTML = chars.map(c=>`<label style="display:flex;align-items:center;gap:6px;padding:6px 9px;border-radius:8px;background:rgba(255,255,255,.04);">
-            <input type="checkbox" class="gmCombatCheck" value="${c.id}" ${selecionados.has(c.id)?'checked':''}> ${escaparHtmlInventario_(c.nome||'')}
-        </label>`).join('');
-    }
-
-    if (target) target.innerHTML = chars.map(c=>`<option value="${c.id}">${escaparHtmlInventario_(c.nome||'')}</option>`).join('');
-    if (location) {
-        const locais=['Cabeça','Peito','Abdômen','Braço Direito','Braço Esquerdo','Perna Direita','Perna Esquerda'];
-        location.innerHTML = locais.map(l=>`<option value="${l}">${escaparHtmlInventario_(traduzirLocalCorpo_(l))}</option>`).join('');
-        location.disabled = modoCombateAtual_()==='simplificado';
-    }
-    renderizarRastreadorCombateMestre_();
-}
-
-window.atualizarPainelMestre = async () => {
-    if (!(userData && userData.role === 'mestre')) return;
+window.atualizarHistoricoMestre = async () => {
     await carregarPersonagens();
-    renderizarPainelMestre_();
-};
-
-window.abrirFichaMestre_ = (id) => {
-    selecionarPersonagem(id);
-    const abaPersonagens = document.querySelector(".tab-btn[onclick*=\"mostrarAba('personagens'\"]");
-    if (abaPersonagens) mostrarAba('personagens', abaPersonagens);
-    window.scrollTo({top:0,behavior:'smooth'});
-};
-
-window.criarNPCRapido = async () => {
-    if (!(userData && userData.role === 'mestre')) return;
-    const nome = prompt(tr_('gmNpcNamePrompt'), tr_('gmQuickNpcDefault'));
-    if (nome === null) return;
-    const id=`npc_${Date.now()}`;
-    const npc={
-        nome:(nome||tr_('gmQuickNpcDefault')).trim(), raca:'Humano', conceito:'', sexo:'Neutro', idade:30,
-        origem:origensDB[0]?.id||'urbano', carreira:carreirasDB[0]?.id||'militar', classeSocial:'', tipoCorporal:'Médio',
-        imagem:null, recursos:0, pontosSorte:null, pontosMagiaGastos:0,
-        atributos:{FOR:10,CON:10,TAM:10,DES:10,INT:10,POD:10,CAR:10},
-        bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
-        pericias:{}, especializacoes:{},
-        inventario:{equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)},
-        combate:{hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[]},
-        dono:currentUserUid,tipo:'npc',etapaCriacao:4,anotacoes:'',eventos:''
-    };
-    await setDoc(doc(db,'personagens',id),npc);
-    await carregarPersonagens();
-    abrirFichaMestre_(id);
-};
-
-window.duplicarComoNPC_ = async (id) => {
-    if (!(userData && userData.role === 'mestre')) return;
-    const base=userCharacters.find(c=>c.id===id);
-    if (!base) return;
-    const novoId=`npc_${Date.now()}`;
-    const copia=JSON.parse(JSON.stringify(base));
-    delete copia.id;
-    copia.nome=`${base.nome||'NPC'} — ${tr_('gmCopy')}`;
-    copia.dono=currentUserUid;
-    copia.tipo='npc';
-    copia.historicoRolagens=[];
-    copia.historicoRolagensGerais=[];
-    await setDoc(doc(db,'personagens',novoId),copia);
-    await carregarPersonagens();
-};
-
-async function salvarCombateEscudo_() {
-    await setDoc(doc(db,'configuracoes','escudoMestre'),{combate:escudoCombate},{merge:true});
-}
-
-window.iniciarCombateMestre = async () => {
-    const ids=[...document.querySelectorAll('.gmCombatCheck:checked')].map(x=>x.value);
-    if (!ids.length) { alert(tr_('gmSelectParticipants')); return; }
-    const participantes=ids.map(id=>{
-        const c=userCharacters.find(x=>x.id===id);
-        return {id, iniciativa:Math.ceil(((Number(c?.atributos?.DES||10)+Number(c?.bonus?.DES||0))+(Number(c?.atributos?.INT||10)+Number(c?.bonus?.INT||0)))/2)};
-    }).sort((a,b)=>b.iniciativa-a.iniciativa);
-    escudoCombate={participantes,turno:0,rodada:1,ativo:true};
-    await salvarCombateEscudo_();
-    renderizarPainelMestre_();
-};
-
-window.proximoTurnoMestre = async () => {
-    if (!escudoCombate?.ativo || !escudoCombate.participantes?.length) return;
-    escudoCombate.turno++;
-    if (escudoCombate.turno>=escudoCombate.participantes.length) {
-        escudoCombate.turno=0;
-        escudoCombate.rodada=(Number(escudoCombate.rodada)||1)+1;
-    }
-    await salvarCombateEscudo_();
-    renderizarRastreadorCombateMestre_();
-};
-
-window.encerrarCombateMestre = async () => {
-    escudoCombate={participantes:[],turno:0,rodada:1,ativo:false};
-    await salvarCombateEscudo_();
-    renderizarPainelMestre_();
-};
-
-function renderizarRastreadorCombateMestre_() {
-    const alvo=document.getElementById('gmCombatTracker');
-    if (!alvo) return;
-    if (!escudoCombate?.ativo || !escudoCombate.participantes?.length) {
-        alvo.innerHTML=`<div style="color:#888;padding:12px;">${tr_('gmNoCombat')}</div>`;
-        return;
-    }
-    alvo.innerHTML=`<div style="margin-bottom:8px;color:#ffd166;font-weight:700;">${tr_('gmRound')} ${escudoCombate.rodada}</div>`+
-    escudoCombate.participantes.map((p,i)=>{
-        const c=userCharacters.find(x=>x.id===p.id);
-        if (!c) return '';
-        const ativo=i===escudoCombate.turno;
-        return `<div style="display:grid;grid-template-columns:42px 1fr 90px 90px 120px;gap:8px;align-items:center;padding:9px 10px;margin-bottom:6px;border-radius:8px;background:${ativo?'rgba(255,193,7,.14)':'rgba(255,255,255,.035)'};border:1px solid ${ativo?'rgba(255,193,7,.45)':'rgba(255,255,255,.07)'};">
-            <strong>${i+1}</strong><span>${escaparHtmlInventario_(c.nome||'')}</span><span>INI ${p.iniciativa}</span><span>PV ${vidaResumoMestre_(c)}</span><span>${escaparHtmlInventario_(traduzirNomeFadiga_(c?.combate?.fadiga||'Fresh'))}</span>
-        </div>`;
-    }).join('');
-}
-
-window.aplicarDanoMestre = async () => {
-    if (!(userData && userData.role === 'mestre')) return;
-    const id=document.getElementById('gmDamageTarget')?.value;
-    const bruto=Math.max(0,parseInt(document.getElementById('gmDamageAmount')?.value)||0);
-    const char=userCharacters.find(c=>c.id===id);
-    if (!char || bruto<=0) return;
-    const local=document.getElementById('gmDamageLocation')?.value || 'Peito';
-    if (!confirm(`${tr_('gmConfirmDamage')} ${bruto} → ${char.nome}${modoCombateAtual_()==='tatico' ? ` (${traduzirLocalCorpo_(local)})` : ''}?`)) return;
-    if (!char.combate) char.combate={};
-
-    let danoFinal=bruto, pa=0;
-    if (modoCombateAtual_()==='simplificado') {
-        pa=Math.max(0,Number(char.combate.armorGlobalManual||0)+calcularPAGlobalEquipado_(char));
-        danoFinal=Math.max(0,bruto-pa);
-        const max=calcularPVGlobalMax_(char);
-        const atual=Number.isFinite(Number(char.combate.pvGlobalAtual))?Number(char.combate.pvGlobalAtual):max;
-        char.combate.pvGlobalAtual=Math.max(0,atual-danoFinal);
-    } else {
-        const paAuto=calcularPAEquipado_(char,[local]);
-        pa=Math.max(0,Number(char.combate?.armor?.[local]||0)+Number(paAuto?.[local]||0));
-        danoFinal=Math.max(0,bruto-pa);
-        const a=char.atributos||{},b=char.bonus||{};
-        const maximos=calcularHitLocations_(Number(a.CON||10)+Number(b.CON||0),Number(a.TAM||10)+Number(b.TAM||0));
-        if (!char.combate.hitLocations) char.combate.hitLocations={};
-        const atual=Number.isFinite(Number(char.combate.hitLocations[local]))?Number(char.combate.hitLocations[local]):Number(maximos[local]||1);
-        char.combate.hitLocations[local]=Math.max(0,atual-danoFinal);
-    }
-    await setDoc(doc(db,'personagens',id),{combate:char.combate},{merge:true});
-    await carregarPersonagens();
-    alert(`${tr_('gmDamageApplied')}: ${bruto} - PA ${pa} = ${danoFinal}`);
+    renderizarHistoricoMestre_();
 };
 
 
 function renderizarEscudo() {
-    document.getElementById('escudoViewMode').innerHTML = formatarMarkdown(escudoTexto);
-    if (userData && userData.role === 'mestre') renderizarPainelMestre_();
+    const notas=document.getElementById('escudoViewMode');
+    if(notas) notas.innerHTML = formatarMarkdown(escudoTexto);
+    if(userData && userData.role==='mestre') {
+        renderizarCampanhaMestre_();
+        renderizarHistoricoMestre_();
+    }
 }
 
 function formatarMarkdown(texto) {
@@ -6349,7 +6304,6 @@ window.mudarIdioma = (lang) => {
     renderizarListaPersonagens();
     if (document.getElementById('marketGrid')) renderizarMercado();
     if (document.getElementById('regrasViewMode')) renderizarRegras();
-    if (userData && userData.role === 'mestre' && document.getElementById('gmCharacterDashboard')) renderizarPainelMestre_();
     if (currentCharId) {
         const charAtual = userCharacters.find(c => c.id === currentCharId);
         if (charAtual) {
