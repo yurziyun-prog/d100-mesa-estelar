@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 5.3: equipamento automático e PV por localização -->
+    <!-- Mesa Estelar v28 etapa 5.4: AÇ, ciclos e economia de ações -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -367,7 +367,7 @@
                             </div>
 
                             <div class="derived-stats">
-                                <div class="stat-box"><div class="stat-label" data-i18n="pa">Pontos de Ação</div><div class="stat-value" id="statPA">1</div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="pa">Ações</div><div class="stat-value" id="statPA">1</div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="iniciativa">Iniciativa</div><div class="stat-value" id="statIniciativa">20</div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="modDano">Mod. Dano</div><div class="stat-value" id="statModDano">-1d2</div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="modExp">Mod. Experiência</div><div class="stat-value" id="statModExp">0</div></div>
@@ -591,7 +591,7 @@
                                         <button id="combatReloadBtn" onclick="recarregarArmaCombate()" style="display:none;border:none;border-radius:8px;padding:8px 11px;background:#2980b9;color:#fff;font-weight:700;cursor:pointer;" data-i18n="reloadBtn">🔋 Recarregar</button>
                                     </div>
                                     <div style="padding:12px 15px;background:rgba(255,193,7,0.10);border:1px solid rgba(255,193,7,0.35);border-radius:9px;text-align:center;">
-                                        <span style="color:#aaa;display:block;" data-i18n="pa">Pontos de Ação</span>
+                                        <span style="color:#aaa;display:block;" data-i18n="pa">Ações</span>
                                         <strong id="combatActionPoints" style="color:#ffd166;font-size:1.45em;">—</strong>
                                     </div>
                                 </div>
@@ -1002,7 +1002,8 @@
                                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                                         <button class="btn-small btn-select" onclick="rolarIniciativasFaltantesMestre()">⚡ Rolar faltantes</button>
                                         <button class="btn-small" onclick="atualizarCombateMestre()">🔄 Atualizar</button>
-                                        <button class="btn-small btn-select" onclick="proximoTurnoCombateMestre()">⏭️ Próximo turno</button>
+                                        <button class="btn-small btn-select" onclick="proximoTurnoCombateMestre()">⏭️ Próximo</button>
+                                        <button class="btn-small" onclick="novaRodadaCombateMestre(true)">🔄 Nova rodada</button>
                                         <button class="btn-small btn-delete" onclick="encerrarCombateMestre()">⏹️ Encerrar</button>
                                     </div>
                                 </div>
@@ -1024,7 +1025,7 @@
 
                             <div>
                                 <div id="gmCombatHeader" style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px;padding:12px 14px;border-radius:10px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.22);">
-                                    <div><strong style="color:#ffd166;">Rodada <span id="gmCombatRound">1</span></strong><br><small id="gmCombatStatus" style="color:#aaa;">Nenhum combate ativo.</small></div>
+                                    <div><strong style="color:#ffd166;">Rodada <span id="gmCombatRound">1</span> · Ciclo <span id="gmCombatCycle">1</span></strong><br><small id="gmCombatStatus" style="color:#aaa;">Nenhum combate ativo.</small></div>
                                     <div style="display:flex;gap:7px;flex-wrap:wrap;">
                                         <button class="btn-small" onclick="ordenarCombatePorIniciativaMestre()">↕️ Ordenar por iniciativa</button>
                                         <button class="btn-small" onclick="limparIniciativasCombateMestre()">🧹 Limpar iniciativas</button>
@@ -1431,6 +1432,7 @@ let estadoCampanhaMestre = {
 let estadoCombateMestre = {
     ativo:false,
     rodada:1,
+    ciclo:1,
     turnoIndex:0,
     participantes:[]
 };
@@ -1457,7 +1459,7 @@ function gerarEstrelas() {
 gerarEstrelas();
 
 const traducoes = {
-    pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', tabMercado: '🛒 Mercado', marketTitle: '🛒 Mercado', marketIntro: 'Compre itens do banco de dados para o personagem atualmente selecionado.', resourcesLabel: 'Recursos', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Pontos de Ação', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: ' Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Origem:', pointsEtapa3: 'Carreira:', pointsEtapa4: 'Hobbie:', saveConfig: ' Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: ' Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
+    pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', tabMercado: '🛒 Mercado', marketTitle: '🛒 Mercado', marketIntro: 'Compre itens do banco de dados para o personagem atualmente selecionado.', resourcesLabel: 'Recursos', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Ações', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: ' Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Origem:', pointsEtapa3: 'Carreira:', pointsEtapa4: 'Hobbie:', saveConfig: ' Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: ' Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
     en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', tabMercado: '🛒 Market', marketTitle: '🛒 Market', marketIntro: 'Buy database items for the currently selected character.', resourcesLabel: 'Resources', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Origin:', pointsEtapa3: 'Career:', pointsEtapa4: 'Hobby:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: ' Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
     zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: ' 角色卡', tabConfig: '️ 设置', tabBanco: ' 数据库', tabRegras: ' 规则', tabMercado: '🛒 市场', marketTitle: '🛒 市场', marketIntro: '为当前选择的角色购买数据库中的物品。', resourcesLabel: '资源', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '起源：', pointsEtapa3: '职业：', pointsEtapa4: '爱好：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
 
@@ -1689,7 +1691,7 @@ Object.assign(traducoes.pt, {
   fatWearied:'Fatigado (Wearied)', fatExhausted:'Exausto (Exhausted)', fatDebilitated:'Debilitado (Debilitated)',
   fatIncapacitated:'Incapacitado (Incapacitated)', fatSemiConscious:'Semiconsciente (Semi-Conscious)',
   fatComatose:'Comatoso (Comatose)', fatDead:'Morto (Dead)',
-  testsLabel:'Testes:', movementLabel:'Movimento:', initiativeLabel:'Iniciativa:', actionPointsLabel:'Pontos de Ação:',
+  testsLabel:'Testes:', movementLabel:'Movimento:', initiativeLabel:'Iniciativa:', actionPointsLabel:'AÇ:',
   recoveryLabel:'Recuperação:', noPenalty:'Sem penalidade', noPenalties:'Sem penalidades', noActivity:'Nenhuma atividade',
   noActivityPossible:'Nenhuma atividade possível', half:'Metade', immobile:'Imóvel', never:'Nunca',
   minutes15:'15 minutos', hours3:'3 horas', hours6:'6 horas', hours12:'12 horas', hours18:'18 horas',
@@ -1756,7 +1758,7 @@ Object.assign(traducoes.pt, {
   newTurnType:'Novo turno', luckType:'Sorte', success:'Sucesso', failure:'Falha', critical:'Crítico',
   fumble:'Fiasco', marginWord:'Margem', difficultyWord:'Dificuldade', fatigueWord:'Fadiga',
   weaponCompatibility:'Compatibilidade de arma', spentWord:'Gasto', remainingWord:'Restante',
-  restoredAP:'Pontos de Ação restaurados', insufficientActivity:'nenhuma atividade possível',
+  restoredAP:'Ações restaurados', insufficientActivity:'nenhuma atividade possível',
   blockedByFatigue:'bloqueado por fadiga', chosenDifficulty:'Dificuldade escolhida',
   rulesTitle:'📖 Regras do Sistema', editRulesBtn:'✏️ Editar Regras', saveRulesBtn:'💾 Salvar Regras',
   cancelBtn:'❌ Cancelar', physicalEffortTitle:'Tabela de Esforço Físico', effortCol:'Esforço',
@@ -2114,6 +2116,7 @@ async function carregarEscudo() {
         estadoCombateMestre = {
             ...estadoCombateMestre,
             ...(dadosEscudo.combate || {}),
+            ciclo:Number(dadosEscudo.combate?.ciclo || 1),
             participantes:Array.isArray(dadosEscudo.combate?.participantes) ? dadosEscudo.combate.participantes : []
         };
     } else {
@@ -3634,6 +3637,10 @@ window.rolarCombateD100 = async () => {
         resumo.innerHTML = `⚠️ ${escaparHtmlInventario_(fadiga.nome)}: nenhuma ação de combate é possível.`;
         return;
     }
+    if (paInfo.atual <= 0) {
+        resumo.innerHTML = `⚠️ Sem AÇ restantes nesta rodada.`;
+        return;
+    }
 
     const equip = document.getElementById('combatWeaponSelect')?.value || '';
     if (!['esquiva','combate_desarmado'].includes(pericia.id) && !equip) {
@@ -3722,12 +3729,7 @@ window.rolarCombateD100 = async () => {
     await setDoc(doc(db, 'personagens', currentCharId), { 'combate.pontosAcaoAtuais': atual }, { merge: true });
     atualizarVisualPontosAcao_(char);
 
-    if (atual <= 0) {
-        char.combate.pontosAcaoAtuais = paInfo.max;
-        await setDoc(doc(db, 'personagens', currentCharId), { 'combate.pontosAcaoAtuais': paInfo.max }, { merge: true });
-        await registrarHistoricoCombate_('Novo turno', `Pontos de Ação restaurados: ${paInfo.max}`, { subtipo:'novoTurno', pontosAcao:paInfo.max });
-        atualizarVisualPontosAcao_(char);
-    }
+
 };
 
 function rolarExpressaoDanoCombate_(expressao) {
@@ -3934,12 +3936,12 @@ const REGRAS_FADIGA = {
     'Debilitated': {
         nome: 'Debilitado (Debilitated)', grau: 'Hercúleo', multiplicador: 1/10,
         movimento: 'Metade', iniciativa: -6, pa: -2, recuperacao: '18 horas',
-        descricao: 'Testes em grau Hercúleo, movimento pela metade, Iniciativa -6 e -2 Pontos de Ação.'
+        descricao: 'Testes em grau Hercúleo, movimento pela metade, Iniciativa -6 e -2 Ações.'
     },
     'Incapacitated': {
         nome: 'Incapacitado (Incapacitated)', grau: 'Hercúleo', multiplicador: 1/10,
         movimento: 'Imóvel', iniciativa: -8, pa: -3, recuperacao: '24 horas',
-        descricao: 'Testes em grau Hercúleo, personagem imóvel, Iniciativa -8 e -3 Pontos de Ação.'
+        descricao: 'Testes em grau Hercúleo, personagem imóvel, Iniciativa -8 e -3 Ações.'
     },
     'Semi-Conscious': {
         nome: 'Semiconsciente (Semi-Conscious)', grau: 'Sem esperança', multiplicador: 0,
@@ -6427,7 +6429,7 @@ function renderizarRegras() {
           `<strong>各部位生命值：</strong>根据${attr.CON}+${attr.SIZ}及身体部位表计算。`,
           `<strong>身高/体重：</strong>由${attr.SIZ}和体型决定范围；自动值取区间中点且可编辑。`
         ] : [
-          `<strong>Pontos de Ação:</strong> ${attr.INT}+${attr.DEX}: ≤12=1; 13–24=2; 25–36=3; +1 a cada 12.`,
+          `<strong>Ações:</strong> ${attr.INT}+${attr.DEX}: ≤12=1; 13–24=2; 25–36=3; +1 a cada 12.`,
           `<strong>Iniciativa:</strong> média de ${attr.INT} e ${attr.DEX}; a rolagem de combate usa 1d10 + Iniciativa.`,
           `<strong>Pontos de Sorte:</strong> ${attr.POW} ≤6=1; 7–12=2; 13–18=3; +1 a cada 6 ${attr.POW}.`,
           `<strong>Pontos de Magia:</strong> iguais ao ${attr.POW} para personagens capazes de utilizar poderes.`,
@@ -6861,6 +6863,66 @@ function calcularHitLocations_(conTotal,tamTotal){
     };
 }
 
+
+function acoesResumoCombateMestre_(char){
+    const info=garantirPontosAcaoCombate_(char);
+    return {atual:Number(info.atual||0),max:Number(info.max||0),texto:`${Number(info.atual||0)}/${Number(info.max||0)}`};
+}
+
+function todosSemAcoesCombateMestre_(){
+    const participantes=estadoCombateMestre.participantes||[];
+    if(!participantes.length)return false;
+    return participantes.every(p=>{
+        const c=(userCharacters||[]).find(x=>x.id===p.id);
+        if(!c)return true;
+        return acoesResumoCombateMestre_(c).atual<=0;
+    });
+}
+
+async function registrarNovaRodadaNosParticipantesMestre_(rodada){
+    for(const p of estadoCombateMestre.participantes||[]){
+        const c=(userCharacters||[]).find(x=>x.id===p.id);
+        if(!c)continue;
+        await registrarHistoricoCombateCharMestre_(
+            c,
+            'Nova rodada',
+            `Rodada ${rodada} iniciada · AÇ restauradas`,
+            {subtipo:'novaRodada',rodada}
+        );
+    }
+}
+
+window.novaRodadaCombateMestre=async(forcada=false)=>{
+    if(!(estadoCombateMestre.participantes||[]).length)return;
+    if(forcada && !confirm('Iniciar uma nova rodada e restaurar as AÇ de todos os participantes?'))return;
+
+    estadoCombateMestre.rodada=Math.max(1,Number(estadoCombateMestre.rodada||1)+1);
+    estadoCombateMestre.ciclo=1;
+    estadoCombateMestre.turnoIndex=0;
+    estadoCombateMestre.ativo=true;
+
+    for(const p of estadoCombateMestre.participantes){
+        const c=(userCharacters||[]).find(x=>x.id===p.id);
+        if(!c)continue;
+        c.combate=c.combate||{};
+        const max=obterPAMaxCombate_(c);
+        c.combate.pontosAcaoAtuais=max;
+        await setDoc(doc(db,'personagens',c.id),{'combate.pontosAcaoAtuais':max},{merge:true});
+    }
+
+    await registrarNovaRodadaNosParticipantesMestre_(estadoCombateMestre.rodada);
+    await salvarEstadoCombateMestre_();
+    renderizarCombateMestre_();
+};
+
+async function verificarFimRodadaPorAcoesMestre_(){
+    if(todosSemAcoesCombateMestre_()){
+        await novaRodadaCombateMestre(false);
+        return true;
+    }
+    return false;
+}
+
 function pvResumoCombateMestre_(char){
     if(modoCombateAtual_()==='simplificado'){
         const max=calcularPVGlobalMax_(char);
@@ -7068,9 +7130,11 @@ function renderizarCombateMestre_(){
     renderizarControlesDanoCombateMestre_();
 
     const round=document.getElementById('gmCombatRound');
+    const cycle=document.getElementById('gmCombatCycle');
     const status=document.getElementById('gmCombatStatus');
     const rows=document.getElementById('gmCombatParticipantRows');
     if(round)round.textContent=estadoCombateMestre.rodada||1;
+    if(cycle)cycle.textContent=estadoCombateMestre.ciclo||1;
 
     const participantes=estadoCombateMestre.participantes||[];
     if(status){
@@ -7095,6 +7159,7 @@ function renderizarCombateMestre_(){
         try{
             const pv=pvResumoCombateMestre_(c);
             const pa=paResumoCombateMestre_(c);
+            const acoes=acoesResumoCombateMestre_(c);
             const ativo=i===turno;
             const ini=Number.isFinite(Number(p.iniciativa))?Number(p.iniciativa):'—';
             const skills=obterPericiasCombate_(c)||[];
@@ -7127,7 +7192,7 @@ function renderizarCombateMestre_(){
 
             cards.push(`<div draggable="true" ondragstart="iniciarArrastoCombateMestre_('${c.id}')" ondragover="event.preventDefault()" ondrop="soltarArrastoCombateMestre_('${c.id}')"
                 style="padding:13px 14px;border-radius:12px;background:${ativo?'rgba(255,193,7,.13)':'rgba(255,255,255,.045)'};border:1px solid ${ativo?'rgba(255,193,7,.52)':'rgba(255,255,255,.09)'};box-shadow:${ativo?'0 0 18px rgba(255,193,7,.09)':'none'};">
-                <div style="display:grid;grid-template-columns:72px minmax(150px,.95fr) 76px 92px 78px minmax(150px,1fr) minmax(150px,1fr);gap:10px;align-items:center;">
+                <div style="display:grid;grid-template-columns:72px minmax(150px,.95fr) 70px 88px 72px 72px minmax(150px,1fr) minmax(150px,1fr);gap:10px;align-items:center;">
                     <div style="position:relative;">
                         ${img}
                         <span style="position:absolute;right:0;bottom:-2px;min-width:26px;height:26px;border-radius:13px;background:${ativo?'#e6a600':'#445'};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;">${ativo?'▶':i+1}</span>
@@ -7139,6 +7204,7 @@ function renderizarCombateMestre_(){
                     <div><small style="color:#888;">INI</small><br><strong style="font-size:1.15em;color:#ffd166;">${ini}</strong></div>
                     <div><small style="color:#888;">PV</small><br><strong style="font-size:1.1em;">${pv.texto}</strong></div>
                     <div><small style="color:#888;">PA</small><br><strong style="font-size:1.1em;">${pa}</strong></div>
+                    <div><small style="color:#888;">AÇ</small><br><strong style="font-size:1.1em;color:${acoes.atual<=0?'#ff8f8f':'#8ff0a8'};">${acoes.texto}</strong></div>
                     <div><small style="color:#888;">Perícia de combate</small><select style="margin-top:4px;width:100%;" onchange="mudarPericiaCombateMestre_('${c.id}',this.value)">${opcoesPericiasCombateMestre_(c,skillValue)}</select></div>
                     <div><small style="color:#888;">Equipamento</small><select style="margin-top:4px;width:100%;" onchange="mudarEquipCombateMestre_('${c.id}',this.value)">${equipamentos}</select></div>
                 </div>
@@ -7183,6 +7249,11 @@ window.adicionarSelecionadosCombateMestre=async()=>{
             });
         }
     });
+    if(ids.length && !estadoCombateMestre.ativo){
+        estadoCombateMestre.rodada=1;
+        estadoCombateMestre.ciclo=1;
+        estadoCombateMestre.turnoIndex=0;
+    }
     if(ids.length)estadoCombateMestre.ativo=true;
     sincronizarIniciativasCombateMestre_(true);
     await salvarEstadoCombateMestre_();
@@ -7243,14 +7314,17 @@ window.limparIniciativasCombateMestre=async()=>{
 window.proximoTurnoCombateMestre=async()=>{
     const n=estadoCombateMestre.participantes.length;if(!n)return;
     estadoCombateMestre.turnoIndex=(Number(estadoCombateMestre.turnoIndex||0)+1)%n;
-    if(estadoCombateMestre.turnoIndex===0)estadoCombateMestre.rodada=Math.max(1,Number(estadoCombateMestre.rodada||1)+1);
+    if(estadoCombateMestre.turnoIndex===0){
+        estadoCombateMestre.ciclo=Math.max(1,Number(estadoCombateMestre.ciclo||1)+1);
+    }
     estadoCombateMestre.ativo=true;
-    await salvarEstadoCombateMestre_();renderizarCombateMestre_();
+    await salvarEstadoCombateMestre_();
+    renderizarCombateMestre_();
 };
 
 window.encerrarCombateMestre=async()=>{
     if(!confirm('Encerrar o combate atual? A lista de participantes será limpa.'))return;
-    estadoCombateMestre={ativo:false,rodada:1,turnoIndex:0,participantes:[]};
+    estadoCombateMestre={ativo:false,rodada:1,ciclo:1,turnoIndex:0,participantes:[]};
     await salvarEstadoCombateMestre_();renderizarCombateMestre_();
 };
 
@@ -7284,6 +7358,7 @@ async function registrarHistoricoCombateCharMestre_(char,tipo,texto,dados={}){
 }
 
 window.rolarIniciativaMestre_=async(id)=>{
+    somDado_();
     const c=(userCharacters||[]).find(x=>x.id===id);if(!c)return;
     const regra=obterRegraFadiga_(c);
     if(regra.iniciativa===null){alert(`${c.nome}: nenhuma atividade possível por fadiga.`);return;}
@@ -7309,9 +7384,17 @@ window.rolarIniciativasFaltantesMestre=async()=>{
 };
 
 window.rolarTesteCombateMestre_=async(id)=>{
+    somDado_();
     const c=(userCharacters||[]).find(x=>x.id===id),p=obterParticipanteCombateMestre_(id);if(!c||!p)return;
     const pericia=obterPericiaCombateMestrePorValor_(p.skillSelecionada);
     if(!pericia)return;
+
+    const acInfo=garantirPontosAcaoCombate_(c);
+    if(acInfo.atual<=0){
+        p.ultimoResultado='Sem AÇ restantes nesta rodada.';
+        renderizarCombateMestre_();
+        return;
+    }
 
     // O select pode estar mostrando automaticamente a primeira arma compatível
     // mesmo antes de o onchange gravar p.equipSelecionado.
@@ -7351,11 +7434,15 @@ window.rolarTesteCombateMestre_=async(id)=>{
         await setDoc(doc(db,'personagens',id),{inventario:c.inventario},{merge:true});
     }
     c.combate=c.combate||{};
-    const pa=garantirPontosAcaoCombate_(c),atual=Math.max(0,Number(c.combate.pontosAcaoAtuais??pa.max)-1);
-    c.combate.pontosAcaoAtuais=atual<=0?pa.max:atual;
-    await setDoc(doc(db,'personagens',id),{combate:c.combate},{merge:true});
+    const ac=garantirPontosAcaoCombate_(c);
+    const atual=Math.max(0,Number(c.combate.pontosAcaoAtuais??ac.max)-1);
+    c.combate.pontosAcaoAtuais=atual;
+    await setDoc(doc(db,'personagens',id),{'combate.pontosAcaoAtuais':atual},{merge:true});
     await salvarEstadoCombateMestre_();
-    renderizarCombateMestre_();
+
+    if(!(await verificarFimRodadaPorAcoesMestre_())){
+        renderizarCombateMestre_();
+    }
 };
 
 
@@ -7424,6 +7511,9 @@ window.rolarDanoCombateMestre_=async(id)=>{
 
     const r=avaliarExpressaoDanoMestre_(expr);
     if(!r){alert(`Não foi possível interpretar o dano: ${expr}`);return;}
+
+    const itemSom=encontrarEquipamentoCombateChar_(c,p.equipSelecionado);
+    tocarSomDano_(itemSom,nomeEquip);
 
     p.ultimoResultado=`${nomeEquip}: ${expr} → ${r.total} · ${r.detalhes.join(' · ')}`;
     await registrarHistoricoCombateCharMestre_(c,'Dano',p.ultimoResultado,{
