@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 3: aba Cenário automatizada -->
+    <!-- Mesa Estelar v28 etapa 4: personagens vinculados e visibilidade de cenário -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -1067,6 +1067,17 @@
                 <div class="form-group"><label>Testes sugeridos:</label><input id="dbScenarioTestes"></div>
                 <div class="form-group"><label>Estado inicial:</label><input id="dbScenarioEstado"></div>
                 <div class="form-group"><label>NPCs da cena:</label><input id="dbScenarioNPCs"></div>
+            </div>
+
+            <div style="margin:14px 0;padding:14px;border-radius:10px;background:rgba(155,89,182,.08);border:1px solid rgba(155,89,182,.25);">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+                    <div>
+                        <strong style="color:#d8b4ff;">👥 Personagens vinculados à cena</strong>
+                        <div style="color:#999;font-size:.82em;margin-top:3px;">Vincule PCs ou PMs já existentes. “Visível” define quem poderá aparecer futuramente para os jogadores.</div>
+                    </div>
+                    <button type="button" class="btn-small btn-select" onclick="vincularNomesCenarioAutomaticamente()">🔗 Vincular nomes automaticamente</button>
+                </div>
+                <div id="dbScenarioPersonagensVinculados" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;"></div>
             </div>
 
 
@@ -5352,6 +5363,112 @@ function renderizarBancoCenarios() {
         <tbody>${linhas}</tbody></table></div>`;
 }
 
+
+function personagensDisponiveisParaCenario_(){
+    return [...(userCharacters||[])].filter(c=>String(c.tipo||'pc').toLowerCase()!=='monstro');
+}
+
+function renderizarSeletorPersonagensCenario_(cenario=null){
+    const alvo=document.getElementById('dbScenarioPersonagensVinculados');
+    if(!alvo)return;
+    const vinculados=new Map((cenario?.personagensCena||[]).map(x=>[x.id,!!x.visivel]));
+    const disponiveis=personagensDisponiveisParaCenario_();
+
+    if(!disponiveis.length){
+        alvo.innerHTML='<div style="color:#888;">Nenhum PC/PM disponível para vincular.</div>';
+        return;
+    }
+
+    alvo.innerHTML=disponiveis.map(c=>{
+        const marcado=vinculados.has(c.id);
+        const visivel=vinculados.get(c.id)===true;
+        const img=c.imagem
+          ? `<img src="${escaparBanco_(c.imagem)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
+          : `<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);">👤</div>`;
+        const tipo=c.dono===currentUserUid ? 'PM' : 'PC';
+        return `<div style="padding:9px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:center;">
+            ${img}
+            <div>
+                <label style="display:flex;align-items:center;gap:6px;color:#fff;">
+                    <input type="checkbox" class="cenario-personagem-check" value="${escaparBanco_(c.id)}" ${marcado?'checked':''} onchange="atualizarVisibilidadePersonagemCenario_(this)">
+                    <strong>${escaparBanco_(c.nome||'Sem Nome')}</strong> <small style="color:#888;">${tipo}</small>
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;margin-top:5px;color:#9fd3ff;font-size:.82em;">
+                    <input type="checkbox" class="cenario-personagem-visivel" data-id="${escaparBanco_(c.id)}" ${visivel?'checked':''} ${marcado?'':'disabled'}>
+                    Visível para jogadores
+                </label>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+window.atualizarVisibilidadePersonagemCenario_=(check)=>{
+    const v=document.querySelector(`.cenario-personagem-visivel[data-id="${CSS.escape(check.value)}"]`);
+    if(!v)return;
+    v.disabled=!check.checked;
+    if(!check.checked)v.checked=false;
+};
+
+function lerPersonagensVinculadosCenario_(){
+    return [...document.querySelectorAll('.cenario-personagem-check:checked')].map(ch=>{
+        const vis=document.querySelector(`.cenario-personagem-visivel[data-id="${CSS.escape(ch.value)}"]`);
+        return {id:ch.value,visivel:!!vis?.checked};
+    });
+}
+
+window.vincularNomesCenarioAutomaticamente=()=>{
+    const texto=String(document.getElementById('dbScenarioNPCs')?.value||'');
+    const norm=normalizarTextoCombate_(texto);
+    let encontrados=0;
+    personagensDisponiveisParaCenario_().forEach(c=>{
+        const nomeNorm=normalizarTextoCombate_(c.nome||'');
+        if(!nomeNorm||!norm.includes(nomeNorm))return;
+        const ch=document.querySelector(`.cenario-personagem-check[value="${CSS.escape(c.id)}"]`);
+        if(ch && !ch.checked){
+            ch.checked=true;
+            atualizarVisibilidadePersonagemCenario_(ch);
+            encontrados++;
+        }
+    });
+    alert(encontrados ? `${encontrados} personagem(ns) vinculado(s) pelo nome.` : 'Nenhum nome cadastrado coincidiu com PCs/PMs existentes.');
+};
+
+function obterPersonagemCenarioPorId_(id){
+    return (userCharacters||[]).find(c=>c.id===id)||null;
+}
+
+function cardsPersonagensCenario_(cenario,permitirControle=false){
+    const vinculados=Array.isArray(cenario?.personagensCena)?cenario.personagensCena:[];
+    if(!vinculados.length)return '<div style="color:#888;">Nenhum personagem vinculado.</div>';
+
+    return `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;">`+
+      vinculados.map(v=>{
+        const p=obterPersonagemCenarioPorId_(v.id);
+        if(!p)return '';
+        const img=p.imagem
+          ? `<img src="${escaparHtmlInventario_(p.imagem)}" style="width:54px;height:54px;border-radius:50%;object-fit:cover;">`
+          : `<div style="width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);font-size:1.5em;">👤</div>`;
+        return `<div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid ${v.visivel?'rgba(40,167,69,.45)':'rgba(255,255,255,.08)'};">
+            <div style="display:flex;gap:9px;align-items:center;">${img}<div><strong>${escaparHtmlInventario_(p.nome||'Sem Nome')}</strong><br>
+            <small style="color:${v.visivel?'#8ff0a8':'#999'};">${v.visivel?'👁 Visível':'🙈 Oculto'}</small></div></div>
+            ${permitirControle?`<button class="btn-small" style="margin-top:8px;" onclick="alternarVisibilidadePersonagemCenario_('${escaparHtmlInventario_(v.id)}')">${v.visivel?'Ocultar':'Tornar visível'}</button>`:''}
+        </div>`;
+      }).join('')+'</div>';
+}
+
+window.alternarVisibilidadePersonagemCenario_=async(id)=>{
+    const c=obterCenarioSelecionadoMestre_();
+    if(!c)return;
+    const arr=Array.isArray(c.personagensCena)?c.personagensCena:[];
+    const v=arr.find(x=>x.id===id);
+    if(!v)return;
+    v.visivel=!v.visivel;
+    await setDoc(doc(db,'cenarios',c.id),{personagensCena:arr},{merge:true});
+    renderizarCenarioMestre_();
+    somSalvar_();
+};
+
+
 function preencherModalCenarioBanco_(c=null){
     const set=(id,v='')=>{const el=document.getElementById(id);if(el)el.value=v??'';};
     set('dbScenarioIdOriginal',c?.id||'');
@@ -5371,6 +5488,7 @@ function preencherModalCenarioBanco_(c=null){
     set('dbScenarioImagem',c?.imagem||'');
     const f=document.getElementById('dbScenarioImagemArquivo');if(f)f.value='';
     document.getElementById('dbScenarioModalTitulo').textContent=c?`Editar Cenário — ${c.nome}`:'Adicionar Cenário';
+    renderizarSeletorPersonagensCenario_(c);
     atualizarPreviewCenarioBanco();
 }
 window.atualizarPreviewCenarioBanco=()=>{
@@ -5382,12 +5500,16 @@ window.handleDbScenarioImageUpload=async(event)=>{
     if(!userData||userData.role!=='mestre'){alert('Apenas o mestre pode enviar imagens.');return;}
     const file=event.target.files?.[0];if(!file)return;
     try{
-        const storageRef=ref(storage,`banco-cenarios/${Date.now()}_${file.name}`);
+        const storageRef=ref(storage,`banco-itens/cenario_${Date.now()}_${file.name}`);
         const snapshot=await uploadBytes(storageRef,file);
         const url=await getDownloadURL(snapshot.ref);
         document.getElementById('dbScenarioImagem').value=url;
         atualizarPreviewCenarioBanco();
-    }catch(error){console.error(error);alert('Não foi possível enviar a imagem do cenário.');}
+    }catch(error){
+        console.error('Erro no upload de imagem do cenário:',error);
+        const codigo=error?.code ? `\n${error.code}` : '';
+        alert(`Não foi possível enviar a imagem do cenário.${codigo}`);
+    }
 };
 window.adicionarCenarioBanco=()=>{
     preencherModalCenarioBanco_(null);document.getElementById('dbScenarioModal').classList.add('active');
@@ -5413,7 +5535,8 @@ window.salvarCenarioBancoModal=async()=>{
         eventos:val('dbScenarioEventos'),encontros:val('dbScenarioEncontros'),
         observacoes:val('dbScenarioObs'),observacoes_en:val('dbScenarioObsEn'),observacoes_zh:val('dbScenarioObsZh'),
         destino1:val('dbScenarioDestino1'),condicao1:val('dbScenarioCondicao1'),destino2:val('dbScenarioDestino2'),condicao2:val('dbScenarioCondicao2'),
-        destino3:val('dbScenarioDestino3'),condicao3:val('dbScenarioCondicao3'),npcsCena:val('dbScenarioNPCs'),imagem:val('dbScenarioImagem')};
+        destino3:val('dbScenarioDestino3'),condicao3:val('dbScenarioCondicao3'),
+        npcsCena:val('dbScenarioNPCs'),personagensCena:lerPersonagensVinculadosCenario_(),imagem:val('dbScenarioImagem')};
     await setDoc(doc(db,'cenarios',id),c,{merge:true});
     const ix=cenariosDB.findIndex(x=>x.id===id);if(ix>=0)cenariosDB[ix]=c;else cenariosDB.push(c);
     fecharCenarioBancoModal();renderizarBancoCenarios();renderizarCampanhaMestre_();renderizarCenarioMestre_();somSalvar_();
@@ -5841,6 +5964,11 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             destino2:String(bruto.destino2||'').trim(), condicao2:String(bruto.condicao2||'').trim(),
             destino3:String(bruto.destino3||'').trim(), condicao3:String(bruto.condicao3||'').trim(),
             npcsCena:String(bruto.npcsCena||bruto.npcs_cena||'').trim(),
+            personagensCena: (() => {
+                const ids=String(bruto.personagensCenaIds||bruto.personagens_cena_ids||'').split('|').map(x=>x.trim()).filter(Boolean);
+                const vis=new Set(String(bruto.personagensVisiveisIds||bruto.personagens_visiveis_ids||'').split('|').map(x=>x.trim()).filter(Boolean));
+                return ids.map(id=>({id,visivel:vis.has(id)}));
+            })(),
             imagem:String(bruto.imagem||bruto.urlImagem||'').trim()
         };
     }
@@ -6070,7 +6198,7 @@ function dadosExportacaoBanco_(tipo) {
         },
         cenarios: {
             dados: cenariosDB,
-            cabecalhos: ['id','nome','nome_en','nome_zh','local','local_en','local_zh','tipo','tipo_en','tipo_zh','descricaoJogadores','descricaoJogadores_en','descricaoJogadores_zh','descricaoGM','descricaoGM_en','descricaoGM_zh','objetivo','objetivo_en','objetivo_zh','segredos','segredos_en','segredos_zh','testesSugeridos','estadoInicial','eventos','encontros','observacoes','observacoes_en','observacoes_zh','destino1','condicao1','destino2','condicao2','destino3','condicao3','npcsCena','imagem'],
+            cabecalhos: ['id','nome','nome_en','nome_zh','local','local_en','local_zh','tipo','tipo_en','tipo_zh','descricaoJogadores','descricaoJogadores_en','descricaoJogadores_zh','descricaoGM','descricaoGM_en','descricaoGM_zh','objetivo','objetivo_en','objetivo_zh','segredos','segredos_en','segredos_zh','testesSugeridos','estadoInicial','eventos','encontros','observacoes','observacoes_en','observacoes_zh','destino1','condicao1','destino2','condicao2','destino3','condicao3','npcsCena','personagensCenaIds','personagensVisiveisIds','imagem'],
             map:c=>({
                 id:c.id||'',nome:c.nome||'',nome_en:c.nome_en||'',nome_zh:c.nome_zh||'',
                 local:c.local||'',local_en:c.local_en||'',local_zh:c.local_zh||'',
@@ -6082,7 +6210,10 @@ function dadosExportacaoBanco_(tipo) {
                 testesSugeridos:c.testesSugeridos||'',estadoInicial:c.estadoInicial||'',eventos:c.eventos||'',encontros:c.encontros||'',
                 observacoes:c.observacoes||'',observacoes_en:c.observacoes_en||'',observacoes_zh:c.observacoes_zh||'',
                 destino1:c.destino1||'',condicao1:c.condicao1||'',destino2:c.destino2||'',condicao2:c.condicao2||'',destino3:c.destino3||'',condicao3:c.condicao3||'',
-                npcsCena:c.npcsCena||'',imagem:c.imagem||''
+                npcsCena:c.npcsCena||'',
+                personagensCenaIds:Array.isArray(c.personagensCena)?c.personagensCena.map(x=>x.id).filter(Boolean).join('|'):'',
+                personagensVisiveisIds:Array.isArray(c.personagensCena)?c.personagensCena.filter(x=>x.visivel).map(x=>x.id).filter(Boolean).join('|'):'',
+                imagem:c.imagem||''
             })
         },
         itens: {
@@ -6494,12 +6625,22 @@ function renderizarCenarioMestre_() {
         ${bloco('🎯 Objetivo',c.objetivo)}
         ${bloco('🔒 Segredos',c.segredos,'#ff8f8f')}
         ${bloco('🎲 Testes sugeridos',c.testesSugeridos)}
-        ${bloco('👥 NPCs da cena',c.npcsCena,'#d8b4ff')}
+        ${bloco('👥 NPCs / nomes de referência',c.npcsCena,'#d8b4ff')}
+        <div style="padding:14px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.075);">
+            <strong style="color:#d8b4ff;display:block;margin-bottom:8px;">🧑‍🚀 Personagens vinculados</strong>
+            ${cardsPersonagensCenario_(c,true)}
+        </div>
         ${bloco('📝 Observações',c.observacoes)}
         <div style="padding:14px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.075);">
             <strong style="color:#00d4ff;display:block;margin-bottom:7px;">🧭 Conexões</strong>
             ${conexoesCenarioHtml_(c)}
         </div>
+      </div>
+
+      <div style="margin-top:12px;padding:14px;border-radius:10px;background:rgba(40,167,69,.07);border:1px solid rgba(40,167,69,.28);">
+        <strong style="color:#8ff0a8;display:block;margin-bottom:8px;">👁 Prévia pública futura</strong>
+        <div style="color:#bbb;margin-bottom:10px;">Somente estes dados seriam publicados para os jogadores: imagem, descrição para jogadores e personagens marcados como visíveis.</div>
+        ${cardsPersonagensCenario_({...c,personagensCena:(c.personagensCena||[]).filter(x=>x.visivel)},false)}
       </div>`;
 }
 
@@ -6537,6 +6678,21 @@ window.rolarEncontroCenarioMestre = () => {
     const c=obterCenarioSelecionadoMestre_();
     const alvo=document.getElementById('gmScenarioRollResult');
     if(!c||!alvo)return;
+
+    const vinculados=(Array.isArray(c.personagensCena)?c.personagensCena:[])
+        .map(v=>({v,p:obterPersonagemCenarioPorId_(v.id)}))
+        .filter(x=>x.p);
+
+    if(vinculados.length){
+        const sorte=vinculados[Math.floor(Math.random()*vinculados.length)];
+        const p=sorte.p;
+        const img=p.imagem
+          ? `<img src="${escaparHtmlInventario_(p.imagem)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`
+          : `<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);">👤</div>`;
+        alvo.innerHTML=`<div style="display:flex;gap:10px;align-items:center;">${img}<div><strong>${escaparHtmlInventario_(p.nome||'Sem Nome')}</strong><br><small style="color:${sorte.v.visivel?'#8ff0a8':'#aaa'};">${sorte.v.visivel?'Visível aos jogadores':'Oculto aos jogadores'}</small></div></div>`;
+        return;
+    }
+
     let lista=listaTextoCenario_(c.encontros);
     if(!lista.length) lista=listaTextoCenario_(c.npcsCena);
     if(!lista.length){alvo.textContent='Este cenário ainda não possui encontros ou NPCs cadastrados.';return;}
