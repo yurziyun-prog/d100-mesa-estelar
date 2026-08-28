@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v27: centro de operações do mestre -->
+    <!-- Mesa Estelar v27.1: correção de login e centro de operações do mestre -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -6029,7 +6029,7 @@ window.atualizarPainelMestre = async () => {
 
 window.abrirFichaMestre_ = (id) => {
     selecionarPersonagem(id);
-    const abaPersonagens = document.querySelector('.tab-btn[onclick*="mostrarAba(\\'personagens\\'"]');
+    const abaPersonagens = document.querySelector(".tab-btn[onclick*=\"mostrarAba('personagens'\"]");
     if (abaPersonagens) mostrarAba('personagens', abaPersonagens);
     window.scrollTo({top:0,behavior:'smooth'});
 };
