@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 5.5: alvos, reações, efeitos especiais e penetração -->
+    <!-- Mesa Estelar v28 etapa 5.6: seleção robusta, Derrubar e banco com penetração -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -604,6 +604,7 @@
 
                                 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:18px;">
                                     <button class="dice-btn" onclick="rolarCombateD100()" data-i18n="combatRollBtn">🎲 D100 de Combate</button>
+                                    <button id="combatStandBtn" class="dice-btn" style="display:none;" onclick="levantarCombateJogador_()">🧍 Levantar (1 AÇ)</button>
                                     <button class="dice-btn" onclick="rolarDanoCombate()" style="background:linear-gradient(135deg,#e74c3c,#c0392b);" data-i18n="damageBtn">💥 Dano</button>
                                     <button class="dice-btn" onclick="rolarLocalizacaoCombate()" style="background:linear-gradient(135deg,#3498db,#2471a3);" data-i18n="hitLocationBtn">🎯 Localização D20</button>
                                     <button class="dice-btn" onclick="rolarIniciativaCombate()" style="background:linear-gradient(135deg,#f39c12,#d68910);" data-i18n="initiativeBtn">⚡ Iniciativa</button>
@@ -1207,6 +1208,7 @@
                 <div class="form-group"><label>PV (integridade):</label><input type="number" id="dbItemPV" step="1" min="0"></div>
                 <div class="form-group"><label>Alcance:</label><input type="text" id="dbItemAlcance" placeholder="Corpo a corpo, 60 m..."></div>
                 <div class="form-group"><label>Dano:</label><input type="text" id="dbItemDano" placeholder="2d6, 1d8+Atordoar..."></div>
+                <div class="form-group"><label>Penetração:</label><input type="number" id="dbItemPenetracao" step="1" min="0" placeholder="0"></div>
             </div>
 
             <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:10px;">
@@ -3469,7 +3471,7 @@ window.mostrarDanoEquipamentoCombate = () => {
     }
     atualizarStatusMunicaoCombate_();
     const charSync=(userCharacters||[]).find(c=>c.id===currentCharId);
-    if(charSync){renderizarAlvosCombateJogador_(charSync);renderizarReacaoCombateJogador_(charSync);renderizarEfeitoEspecialJogador_(charSync);}
+    if(charSync){renderizarAlvosCombateJogador_(charSync);renderizarReacaoCombateJogador_(charSync);renderizarEfeitoEspecialJogador_(charSync);renderizarEstadoCaidoJogador_(charSync);}
 };
 
 function classificarD100_(valor, rolagem) {
@@ -3646,6 +3648,7 @@ window.rolarCombateD100 = async () => {
     const resumo = document.getElementById('combatRollSummary');
     if (!char || !pericia || !resumo) return;
     if(ataqueBloqueadoPorEfeito_(char)){resumo.innerHTML='⭐ Resolva o Efeito Especial pendente antes de fazer outro teste.';return;}
+    if(estaCaidoCombate_(char)&&periciaEhOfensiva_(pericia)){resumo.innerHTML='⚠️ Você está caído. Gaste 1 AÇ para se levantar antes de atacar.';renderizarEstadoCaidoJogador_(char);return;}
     const alvoId=document.getElementById('combatTargetSelect')?.value||alvoAtualCombateJogador_(char);
     if(periciaEhOfensiva_(pericia)&&char?.combate?.sessaoMesa?.ativo&&!alvoId){resumo.innerHTML='⚠️ Selecione um alvo antes de atacar.';return;}
 
@@ -5671,6 +5674,7 @@ function renderizarBancoItens() {
                 i.preco !== undefined ? `Preço: ${Number(i.preco || 0)}` : '',
                 i.alcance ? `Alcance: ${i.alcance}` : '',
                 i.dano ? `Dano: ${i.dano}` : '',
+                String(i.categoria||'').toLowerCase()==='armas' ? `Pen.: ${Number(i.penetracao || 0)}` : '',
                 i.municao ? `Munição: ${i.municao}` : '',
                 i.uso !== undefined && i.uso !== '' ? `Uso: ${i.uso}` : '',
                 (i.nivelAcesso || i.acesso) ? `Acesso: ${i.nivelAcesso || i.acesso}` : '',
@@ -5731,6 +5735,7 @@ function preencherModalItemBanco_(item = null) {
     set('dbItemPV', item?.pv ?? 1);
     set('dbItemAlcance', item?.alcance || '');
     set('dbItemDano', item?.dano || '');
+    set('dbItemPenetracao', item?.penetracao ?? 0);
     set('dbItemMunicao', item?.municao || '');
     set('dbItemUso', item?.uso ?? item?.quantidade ?? '');
     set('dbItemQualidade', normalizarQualidade_(item?.qualidade || 'Básica'));
@@ -5840,6 +5845,7 @@ window.salvarItemBancoModal = async () => {
         pv: Math.max(0, Math.trunc(num('dbItemPV', 1))),
         alcance: val('dbItemAlcance'),
         dano: val('dbItemDano'),
+        penetracao: Math.max(0, Math.trunc(num('dbItemPenetracao', 0))),
         municao: val('dbItemMunicao'),
         uso: val('dbItemUso'),
         qualidade: normalizarQualidade_(val('dbItemQualidade') || 'Básica'),
@@ -6084,6 +6090,7 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             preco: parseNumero_(bruto.preco ?? bruto.valor ?? bruto.valorBase, 0),
             alcance: String(bruto.alcance || '').trim(),
             dano: String(bruto.dano || '').trim(),
+            penetracao: Math.max(0, Math.trunc(parseNumero_(bruto.penetracao ?? bruto.penetration, 0))),
             municao: String(bruto.municao || bruto.recurso || '').trim(),
             uso: String(usoBruto).trim(),
             quantidade: parseNumero_(bruto.quantidade, 0),
@@ -6318,7 +6325,7 @@ function dadosExportacaoBanco_(tipo) {
         },
         itens: {
             dados: itensDB,
-            cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','imagem','descricao','descricao_en','descricao_zh'],
+            cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','penetracao','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','imagem','descricao','descricao_en','descricao_zh'],
             map: i => ({
                 id:i.id||'', nome:i.nome||'', nome_en:i.nome_en||'', nome_zh:i.nome_zh||'',
                 categoria:i.categoria||'Diversos',
@@ -6328,6 +6335,7 @@ function dadosExportacaoBanco_(tipo) {
                 pv:i.pv ?? i.PV ?? 1,
                 alcance:i.alcance||'',
                 dano:i.dano||'',
+                penetracao:i.penetracao ?? 0,
                 municao:i.municao||i.recurso||'',
                 uso:i.uso ?? i.quantidade ?? '',
                 destinoLocal:i.destinoLocal||i.destino||i.local||'',
@@ -6399,7 +6407,7 @@ window.baixarTemplate = (tipo) => {
         especializacoes: 'id;nome;nome_en;nome_zh;tipo;uso;formula;descricao;descricao_en;descricao_zh\ncombate_pistola_laser;Combate com Pistola Laser;Laser Pistol Combat;激光手枪战斗;Combate;Distância;DES+POD;;;',
         poderesPsi: 'id;nome;nome_en;nome_zh;esfera;arco;custo;observacao;observacao_en;observacao_zh\nevitar_dano;Evitar Dano;Avoid Damage;避免伤害;Sentidos;1;1;1 PP por ponto de dano absorvido;;',
         cenarios: 'id;nome;nome_en;nome_zh;local;local_en;local_zh;tipo;tipo_en;tipo_zh;descricaoJogadores;descricaoJogadores_en;descricaoJogadores_zh;descricaoGM;descricaoGM_en;descricaoGM_zh;objetivo;objetivo_en;objetivo_zh;segredos;segredos_en;segredos_zh;testesSugeridos;estadoInicial;eventos;encontros;observacoes;observacoes_en;observacoes_zh;destino1;condicao1;destino2;condicao2;destino3;condicao3;npcsCena;imagem\nC001;Exemplo;;;Local;;;Social;;;Descrição pública;;;Descrição GM;;;Objetivo;;;Segredo;;;Percepção|Influência;Ativo;Evento 1|Evento 2;Encontro 1|Encontro 2;;;;C002;Seguir adiante;;;;;NPC Exemplo;https://...',
-        itens: 'id;nome;nome_en;nome_zh;categoria;peso;preco;pa;pv;alcance;dano;municao;uso;destinoLocal;locaisProtegidos;nivelAcesso;material;unidade;imagem;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;9000;0;5;60 m;2d6;Bateria;100;Armas laser;;Restrito;Liga metálica;Peça;;;;'
+        itens: 'id;nome;nome_en;nome_zh;categoria;peso;preco;pa;pv;alcance;dano;penetracao;municao;uso;destinoLocal;locaisProtegidos;nivelAcesso;material;unidade;imagem;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;9000;4;5;60 m;2d6;3;Bateria;100;Armas laser;;Restrito;Liga metálica;Peça;;;;'
     };
 
     const conteudo = '\uFEFF' + (templates[tipo] || '');
@@ -7013,7 +7021,7 @@ async function sincronizarCombateMultiplayer_(){
         }else if(currentCharId){
             const snap=await getDoc(doc(db,'personagens',currentCharId));if(!snap.exists())return;
             const novo={id:snap.id,...snap.data()},ix=userCharacters.findIndex(x=>x.id===currentCharId);if(ix>=0)userCharacters[ix]=novo;
-            renderizarAlvosCombateJogador_(novo);renderizarReacaoCombateJogador_(novo);renderizarEfeitoEspecialJogador_(novo);atualizarVisualPontosAcao_(novo);
+            renderizarAlvosCombateJogador_(novo);renderizarReacaoCombateJogador_(novo);renderizarEfeitoEspecialJogador_(novo);renderizarEstadoCaidoJogador_(novo);atualizarVisualPontosAcao_(novo);
         }
     }catch(err){console.warn('Sincronização de combate:',err);}
 }
@@ -7104,6 +7112,36 @@ function calcularHitLocations_(conTotal,tamTotal){
 }
 
 
+
+function estaCaidoCombate_(char){return !!char?.combate?.caido;}
+async function levantarPersonagemCombate_(char,origem='mestre'){
+    if(!char)return false;
+    char.combate=char.combate||{};
+    if(!char.combate.caido)return true;
+    const ac=garantirPontosAcaoCombate_(char);
+    if(ac.atual<=0)return false;
+    char.combate.pontosAcaoAtuais=Math.max(0,ac.atual-1);
+    char.combate.caido=false;
+    await setDoc(doc(db,'personagens',char.id),{'combate.caido':false,'combate.pontosAcaoAtuais':char.combate.pontosAcaoAtuais},{merge:true});
+    if(origem==='mestre')await registrarHistoricoCombateCharMestre_(char,'Ação',`Levantou-se · AÇ ${char.combate.pontosAcaoAtuais}/${ac.max}`,{subtipo:'levantar',pontosAcao:char.combate.pontosAcaoAtuais});
+    else await registrarHistoricoCombate_('Ação',`Levantou-se · AÇ ${char.combate.pontosAcaoAtuais}/${ac.max}`,{subtipo:'levantar',pontosAcao:char.combate.pontosAcaoAtuais});
+    return true;
+}
+window.levantarCombateMestre_=async(id)=>{
+    const c=(userCharacters||[]).find(x=>x.id===id);if(!c)return;
+    if(!(await levantarPersonagemCombate_(c,'mestre'))){alert('Sem AÇ para se levantar.');return;}
+    renderizarCombateMestre_();
+};
+window.levantarCombateJogador_=async()=>{
+    const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(!c)return;
+    if(!(await levantarPersonagemCombate_(c,'jogador'))){const r=document.getElementById('combatRollSummary');if(r)r.innerHTML='⚠️ Sem AÇ para se levantar.';return;}
+    atualizarVisualPontosAcao_(c);renderizarEstadoCaidoJogador_(c);
+};
+function renderizarEstadoCaidoJogador_(char){
+    const btn=document.getElementById('combatStandBtn');if(!btn)return;
+    btn.style.display=estaCaidoCombate_(char)?'inline-flex':'none';
+    btn.disabled=garantirPontosAcaoCombate_(char).atual<=0;
+}
 function acoesResumoCombateMestre_(char){
     const info=garantirPontosAcaoCombate_(char);
     return {atual:Number(info.atual||0),max:Number(info.max||0),texto:`${Number(info.atual||0)}/${Number(info.max||0)}`};
@@ -7296,6 +7334,12 @@ function detalhesPVPACombateMestre_(char){
     </div>`;
 }
 
+const selecionadosCombateMestre_=new Set();
+function alternarSelecaoCombateMestre_(id,marcado){
+    if(marcado)selecionadosCombateMestre_.add(String(id));
+    else selecionadosCombateMestre_.delete(String(id));
+}
+
 function renderizarCandidatosCombateMestre_(){
     const alvo=document.getElementById('gmCombatCandidateList');
     if(!alvo)return;
@@ -7304,7 +7348,7 @@ function renderizarCandidatosCombateMestre_(){
     alvo.innerHTML=lista.length?lista.map(c=>{
         const img=c.imagem?`<img src="${escaparHtmlInventario_(c.imagem)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`:'👤';
         return `<label style="display:grid;grid-template-columns:auto auto 1fr;gap:8px;align-items:center;padding:7px 8px;border-radius:8px;background:rgba(255,255,255,.035);">
-            <input type="checkbox" class="gm-combat-candidate" value="${escaparHtmlInventario_(c.id)}">
+            <input type="checkbox" class="gm-combat-candidate" value="${escaparHtmlInventario_(c.id)}" ${selecionadosCombateMestre_.has(String(c.id))?'checked':''} onchange="alternarSelecaoCombateMestre_(\'${escaparHtmlInventario_(c.id)}\',this.checked)">
             <span>${img}</span><span><strong>${escaparHtmlInventario_(c.nome||'Sem Nome')}</strong><br><small style="color:#888;">${tipoPersonagemCombateMestre_(c)}</small></span>
         </label>`;
     }).join(''):'<div style="color:#888;">Todos os personagens já estão no combate.</div>';
@@ -7445,7 +7489,7 @@ function renderizarCombateMestre_(){
                     </div>
                     <div>
                         <strong style="font-size:1.08em;color:#fff;">${escaparHtmlInventario_(c.nome||'Sem Nome')}</strong><br>
-                        <small style="color:#888;">${tipoPersonagemCombateMestre_(c)} · ${escaparHtmlInventario_(traduzirNomeFadiga_(c?.combate?.fadiga||'Fresh'))}</small>
+                        <small style="color:#888;">${tipoPersonagemCombateMestre_(c)} · ${escaparHtmlInventario_(traduzirNomeFadiga_(c?.combate?.fadiga||'Fresh'))}${estaCaidoCombate_(c)?' · <span style="color:#ffb36b;">CAÍDO</span>':''}</small>
                     </div>
                     <div><small style="color:#888;">INI</small><br><strong style="font-size:1.15em;color:#ffd166;">${ini}</strong></div>
                     <div><small style="color:#888;">PV</small><br><strong style="font-size:1.1em;">${pv.texto}</strong></div>
@@ -7460,6 +7504,7 @@ function renderizarCombateMestre_(){
                 ${efeitoPend&&Number(efeitoPend.restantes||0)>0?`<div style="margin-top:9px;padding:9px;border-radius:8px;background:rgba(255,193,7,.10);border:1px solid rgba(255,193,7,.35);">⭐ <strong>${efeitoPend.restantes}</strong> Efeito(s) Especial(is) pendente(s)<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;">${efeitosDisponiveisCombate_(efeitoPend).map(e=>`<button class="btn-small" onclick="escolherEfeitoEspecialMestre_('${c.id}','${e.id}')">${e.nome}</button>`).join('')}</div></div>`:''}
 
                 <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;">
+                    ${estaCaidoCombate_(c)?`<button class="btn-small" onclick="levantarCombateMestre_('${c.id}')">🧍 Levantar (1 AÇ)</button>`:''}
                     <button class="btn-small btn-select" onclick="rolarTesteCombateMestre_('${c.id}')">🎲 Teste D100</button>
                     <button class="btn-small btn-delete" onclick="rolarDanoCombateMestre_('${c.id}')">💥 Rolar dano</button>
                     <button class="btn-small" onclick="rolarIniciativaMestre_('${c.id}')">⚡ Iniciativa</button>
@@ -7482,31 +7527,30 @@ function renderizarCombateMestre_(){
     renderizarHistoricoCombateMestre_();
 }
 window.adicionarSelecionadosCombateMestre=async()=>{
-    const ids=[...document.querySelectorAll('.gm-combat-candidate:checked')].map(x=>x.value);
+    const idsSet=new Set(selecionadosCombateMestre_);
+    document.querySelectorAll('.gm-combat-candidate:checked').forEach(x=>idsSet.add(String(x.value||'')));
+    const ids=[...idsSet].filter(Boolean);
+    if(!ids.length){alert('Selecione pelo menos um personagem.');return;}
+    let adicionados=0;
     ids.forEach(id=>{
-        if(!obterParticipanteCombateMestre_(id)){
-            const c=(userCharacters||[]).find(x=>x.id===id);
-            const u=obterUltimaIniciativaChar_(c);
-            estadoCombateMestre.participantes.push({
-                id,
-                iniciativa:u?.total??null,
-                iniciativaTimestamp:u?.timestamp||'',
-                skillSelecionada:'',
-                equipSelecionado:'',
-                detalhesAbertos:false,
-                ultimoResultado:'',
-                alvoId:''
-            });
-        }
+        if(obterParticipanteCombateMestre_(id))return;
+        const c=(userCharacters||[]).find(x=>String(x.id)===String(id));if(!c)return;
+        const u=obterUltimaIniciativaChar_(c);
+        estadoCombateMestre.participantes.push({
+            id:c.id,iniciativa:u?.total??null,iniciativaTimestamp:u?.timestamp||'',
+            skillSelecionada:'',equipSelecionado:'',detalhesAbertos:false,ultimoResultado:'',alvoId:''
+        });
+        adicionados++;
     });
-    if(ids.length && !estadoCombateMestre.ativo){
-        estadoCombateMestre.rodada=1;
-        estadoCombateMestre.ciclo=1;
-        estadoCombateMestre.turnoIndex=0;
+    if(adicionados){
+        if(!estadoCombateMestre.ativo){
+            estadoCombateMestre.rodada=1;estadoCombateMestre.ciclo=1;estadoCombateMestre.turnoIndex=0;
+        }
+        estadoCombateMestre.ativo=true;
+        sincronizarIniciativasCombateMestre_(true);
+        ids.forEach(id=>selecionadosCombateMestre_.delete(String(id)));
+        await salvarEstadoCombateMestre_();
     }
-    if(ids.length)estadoCombateMestre.ativo=true;
-    sincronizarIniciativasCombateMestre_(true);
-    await salvarEstadoCombateMestre_();
     renderizarCombateMestre_();
 };
 
@@ -7666,6 +7710,7 @@ window.rolarTesteCombateMestre_=async(id)=>{
     const pericia=obterPericiaCombateMestrePorValor_(p.skillSelecionada);
     if(!pericia)return;
     if(ataqueBloqueadoPorEfeito_(c)){p.ultimoResultado='Resolva o Efeito Especial pendente antes de outro teste.';renderizarCombateMestre_();return;}
+    if(estaCaidoCombate_(c)&&periciaEhOfensiva_(pericia)){p.ultimoResultado='Está caído: gaste 1 AÇ para se levantar antes de atacar.';renderizarCombateMestre_();return;}
     if(periciaEhOfensiva_(pericia)&&!p.alvoId){p.ultimoResultado='Selecione um alvo antes de atacar.';renderizarCombateMestre_();return;}
 
     const acInfo=garantirPontosAcaoCombate_(c);
