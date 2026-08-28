@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 4: personagens vinculados e visibilidade de cenário -->
+    <!-- Mesa Estelar v28 etapa 4.1: correção de upload de cenário -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -5500,7 +5500,7 @@ window.handleDbScenarioImageUpload=async(event)=>{
     if(!userData||userData.role!=='mestre'){alert('Apenas o mestre pode enviar imagens.');return;}
     const file=event.target.files?.[0];if(!file)return;
     try{
-        const storageRef=ref(storage,`banco-itens/cenario_${Date.now()}_${file.name}`);
+        const storageRef=ref(storage,`personagens/${currentUserUid}/cenario_${Date.now()}_${file.name}`);
         const snapshot=await uploadBytes(storageRef,file);
         const url=await getDownloadURL(snapshot.ref);
         document.getElementById('dbScenarioImagem').value=url;
