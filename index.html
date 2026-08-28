@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v28 etapa 2: banco de cenários -->
+    <!-- Mesa Estelar v28 etapa 3: aba Cenário automatizada -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -951,9 +951,38 @@
 
                     <!-- CENÁRIO -->
                     <div id="gm-sub-cenario" class="gm-sub-content hidden">
-                        <div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(0,212,255,.35);">
-                            <h4 style="color:#00d4ff;margin-top:0;">🪐 Cenários</h4>
-                            <p style="color:#bbb;margin-bottom:0;">Estrutura reservada para a próxima etapa: banco de cenários, descrição, NPCs possíveis, eventos, encontros e clima.</p>
+                        <div style="display:grid;grid-template-columns:minmax(260px,360px) 1fr;gap:16px;align-items:start;">
+                            <div style="padding:15px;border-radius:12px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.09);position:sticky;top:10px;">
+                                <h4 style="color:#00d4ff;margin:0 0 12px;">🪐 Selecionar cenário</h4>
+                                <div class="form-group">
+                                    <label>Cenário:</label>
+                                    <select id="gmScenarioSelect" onchange="selecionarCenarioMestre(this.value)"></select>
+                                </div>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button class="btn-small btn-select" onclick="ativarCenarioMestre()">📍 Definir como ativo</button>
+                                    <button class="btn-small" onclick="editarCenarioAtivoNoBanco()">✏️ Editar no banco</button>
+                                </div>
+
+                                <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.09);">
+                                    <strong style="color:#ffd166;">Cenário ativo da campanha</strong>
+                                    <div id="gmScenarioActiveSummary" style="color:#bbb;margin-top:6px;">Nenhum.</div>
+                                </div>
+
+                                <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.09);">
+                                    <h4 style="color:#d8b4ff;margin:0 0 10px;">🎲 Roladores do cenário</h4>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                        <button class="btn-small btn-select" onclick="rolarEventoCenarioMestre()">🎲 Evento</button>
+                                        <button class="btn-small btn-select" onclick="rolarEncontroCenarioMestre()">👥 Encontro</button>
+                                    </div>
+                                    <div id="gmScenarioRollResult" style="margin-top:10px;padding:10px;border-radius:8px;background:rgba(255,255,255,.04);color:#ddd;min-height:42px;">—</div>
+                                </div>
+                            </div>
+
+                            <div id="gmScenarioDetail">
+                                <div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(0,212,255,.35);color:#aaa;">
+                                    Selecione um cenário.
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1038,6 +1067,18 @@
                 <div class="form-group"><label>Testes sugeridos:</label><input id="dbScenarioTestes"></div>
                 <div class="form-group"><label>Estado inicial:</label><input id="dbScenarioEstado"></div>
                 <div class="form-group"><label>NPCs da cena:</label><input id="dbScenarioNPCs"></div>
+            </div>
+
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="form-group">
+                    <label>Eventos aleatórios (um por linha):</label>
+                    <textarea id="dbScenarioEventos" rows="5" placeholder="Uma patrulha atravessa a área&#10;Uma discussão começa nas proximidades"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Encontros possíveis (um por linha):</label>
+                    <textarea id="dbScenarioEncontros" rows="5" placeholder="2 guardas municipais&#10;Mercador itinerante&#10;Criatura local"></textarea>
+                </div>
             </div>
 
             <div class="form-group"><label>Observações (PT):</label><textarea id="dbScenarioObs" rows="3"></textarea></div>
@@ -2058,6 +2099,7 @@ async function carregarPersonagens() {
     if (userData && userData.role==='mestre' && document.getElementById('gmCampaignStats')) {
         renderizarCampanhaMestre_();
         renderizarHistoricoMestre_();
+        renderizarCenarioMestre_();
     }
 }
 
@@ -5321,6 +5363,7 @@ function preencherModalCenarioBanco_(c=null){
     set('dbScenarioObjetivo',c?.objetivo||'');set('dbScenarioObjetivoEn',c?.objetivo_en||'');set('dbScenarioObjetivoZh',c?.objetivo_zh||'');
     set('dbScenarioSegredos',c?.segredos||'');set('dbScenarioSegredosEn',c?.segredos_en||'');set('dbScenarioSegredosZh',c?.segredos_zh||'');
     set('dbScenarioTestes',c?.testesSugeridos||'');set('dbScenarioEstado',c?.estadoInicial||'');set('dbScenarioNPCs',c?.npcsCena||'');
+    set('dbScenarioEventos',c?.eventos||'');set('dbScenarioEncontros',c?.encontros||'');
     set('dbScenarioObs',c?.observacoes||'');set('dbScenarioObsEn',c?.observacoes_en||'');set('dbScenarioObsZh',c?.observacoes_zh||'');
     set('dbScenarioDestino1',c?.destino1||'');set('dbScenarioCondicao1',c?.condicao1||'');
     set('dbScenarioDestino2',c?.destino2||'');set('dbScenarioCondicao2',c?.condicao2||'');
@@ -5367,17 +5410,18 @@ window.salvarCenarioBancoModal=async()=>{
         objetivo:val('dbScenarioObjetivo'),objetivo_en:val('dbScenarioObjetivoEn'),objetivo_zh:val('dbScenarioObjetivoZh'),
         segredos:val('dbScenarioSegredos'),segredos_en:val('dbScenarioSegredosEn'),segredos_zh:val('dbScenarioSegredosZh'),
         testesSugeridos:val('dbScenarioTestes'),estadoInicial:val('dbScenarioEstado'),
+        eventos:val('dbScenarioEventos'),encontros:val('dbScenarioEncontros'),
         observacoes:val('dbScenarioObs'),observacoes_en:val('dbScenarioObsEn'),observacoes_zh:val('dbScenarioObsZh'),
         destino1:val('dbScenarioDestino1'),condicao1:val('dbScenarioCondicao1'),destino2:val('dbScenarioDestino2'),condicao2:val('dbScenarioCondicao2'),
         destino3:val('dbScenarioDestino3'),condicao3:val('dbScenarioCondicao3'),npcsCena:val('dbScenarioNPCs'),imagem:val('dbScenarioImagem')};
     await setDoc(doc(db,'cenarios',id),c,{merge:true});
     const ix=cenariosDB.findIndex(x=>x.id===id);if(ix>=0)cenariosDB[ix]=c;else cenariosDB.push(c);
-    fecharCenarioBancoModal();renderizarBancoCenarios();renderizarCampanhaMestre_();somSalvar_();
+    fecharCenarioBancoModal();renderizarBancoCenarios();renderizarCampanhaMestre_();renderizarCenarioMestre_();somSalvar_();
 };
 window.removerCenarioBanco=async(id)=>{
     if(!confirm('Remover este cenário?'))return;
     await deleteDoc(doc(db,'cenarios',id));cenariosDB=cenariosDB.filter(c=>c.id!==id);
-    renderizarBancoCenarios();renderizarCampanhaMestre_();
+    renderizarBancoCenarios();renderizarCampanhaMestre_();renderizarCenarioMestre_();
 };
 
 function renderizarBancoItens() {
@@ -5790,6 +5834,8 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             segredos:String(bruto.segredos||'').trim(), segredos_en:String(bruto.segredos_en||'').trim(), segredos_zh:String(bruto.segredos_zh||'').trim(),
             testesSugeridos:String(bruto.testesSugeridos||bruto.testes_sugeridos||'').trim(),
             estadoInicial:String(bruto.estadoInicial||bruto.estado_inicial||'').trim(),
+            eventos:String(bruto.eventos||bruto.eventosAleatorios||'').trim(),
+            encontros:String(bruto.encontros||bruto.encontrosPossiveis||'').trim(),
             observacoes:String(bruto.observacoes||'').trim(), observacoes_en:String(bruto.observacoes_en||'').trim(), observacoes_zh:String(bruto.observacoes_zh||'').trim(),
             destino1:String(bruto.destino1||'').trim(), condicao1:String(bruto.condicao1||'').trim(),
             destino2:String(bruto.destino2||'').trim(), condicao2:String(bruto.condicao2||'').trim(),
@@ -6024,7 +6070,7 @@ function dadosExportacaoBanco_(tipo) {
         },
         cenarios: {
             dados: cenariosDB,
-            cabecalhos: ['id','nome','nome_en','nome_zh','local','local_en','local_zh','tipo','tipo_en','tipo_zh','descricaoJogadores','descricaoJogadores_en','descricaoJogadores_zh','descricaoGM','descricaoGM_en','descricaoGM_zh','objetivo','objetivo_en','objetivo_zh','segredos','segredos_en','segredos_zh','testesSugeridos','estadoInicial','observacoes','observacoes_en','observacoes_zh','destino1','condicao1','destino2','condicao2','destino3','condicao3','npcsCena','imagem'],
+            cabecalhos: ['id','nome','nome_en','nome_zh','local','local_en','local_zh','tipo','tipo_en','tipo_zh','descricaoJogadores','descricaoJogadores_en','descricaoJogadores_zh','descricaoGM','descricaoGM_en','descricaoGM_zh','objetivo','objetivo_en','objetivo_zh','segredos','segredos_en','segredos_zh','testesSugeridos','estadoInicial','eventos','encontros','observacoes','observacoes_en','observacoes_zh','destino1','condicao1','destino2','condicao2','destino3','condicao3','npcsCena','imagem'],
             map:c=>({
                 id:c.id||'',nome:c.nome||'',nome_en:c.nome_en||'',nome_zh:c.nome_zh||'',
                 local:c.local||'',local_en:c.local_en||'',local_zh:c.local_zh||'',
@@ -6033,7 +6079,7 @@ function dadosExportacaoBanco_(tipo) {
                 descricaoGM:c.descricaoGM||'',descricaoGM_en:c.descricaoGM_en||'',descricaoGM_zh:c.descricaoGM_zh||'',
                 objetivo:c.objetivo||'',objetivo_en:c.objetivo_en||'',objetivo_zh:c.objetivo_zh||'',
                 segredos:c.segredos||'',segredos_en:c.segredos_en||'',segredos_zh:c.segredos_zh||'',
-                testesSugeridos:c.testesSugeridos||'',estadoInicial:c.estadoInicial||'',
+                testesSugeridos:c.testesSugeridos||'',estadoInicial:c.estadoInicial||'',eventos:c.eventos||'',encontros:c.encontros||'',
                 observacoes:c.observacoes||'',observacoes_en:c.observacoes_en||'',observacoes_zh:c.observacoes_zh||'',
                 destino1:c.destino1||'',condicao1:c.condicao1||'',destino2:c.destino2||'',condicao2:c.condicao2||'',destino3:c.destino3||'',condicao3:c.condicao3||'',
                 npcsCena:c.npcsCena||'',imagem:c.imagem||''
@@ -6121,7 +6167,7 @@ window.baixarTemplate = (tipo) => {
         carreiras: 'id;nome;nome_en;nome_zh;periciasBasicas;periciasProfissionais;especializacoes;descricao;descricao_en;descricao_zh\nmilitar;Militar;Military;军事;atletismo|esquiva|combate_desarmado;armeiro|tatica;soldado_infantaria|arma_laser_pesada;;;',
         especializacoes: 'id;nome;nome_en;nome_zh;tipo;uso;formula;descricao;descricao_en;descricao_zh\ncombate_pistola_laser;Combate com Pistola Laser;Laser Pistol Combat;激光手枪战斗;Combate;Distância;DES+POD;;;',
         poderesPsi: 'id;nome;nome_en;nome_zh;esfera;arco;custo;observacao;observacao_en;observacao_zh\nevitar_dano;Evitar Dano;Avoid Damage;避免伤害;Sentidos;1;1;1 PP por ponto de dano absorvido;;',
-        cenarios: 'id;nome;nome_en;nome_zh;local;local_en;local_zh;tipo;tipo_en;tipo_zh;descricaoJogadores;descricaoJogadores_en;descricaoJogadores_zh;descricaoGM;descricaoGM_en;descricaoGM_zh;objetivo;objetivo_en;objetivo_zh;segredos;segredos_en;segredos_zh;testesSugeridos;estadoInicial;observacoes;observacoes_en;observacoes_zh;destino1;condicao1;destino2;condicao2;destino3;condicao3;npcsCena;imagem\nC001;Exemplo;;;Local;;;Social;;;Descrição pública;;;Descrição GM;;;Objetivo;;;Segredo;;;Percepção|Influência;Ativo;;;;C002;Seguir adiante;;;;;NPC Exemplo;https://...',
+        cenarios: 'id;nome;nome_en;nome_zh;local;local_en;local_zh;tipo;tipo_en;tipo_zh;descricaoJogadores;descricaoJogadores_en;descricaoJogadores_zh;descricaoGM;descricaoGM_en;descricaoGM_zh;objetivo;objetivo_en;objetivo_zh;segredos;segredos_en;segredos_zh;testesSugeridos;estadoInicial;eventos;encontros;observacoes;observacoes_en;observacoes_zh;destino1;condicao1;destino2;condicao2;destino3;condicao3;npcsCena;imagem\nC001;Exemplo;;;Local;;;Social;;;Descrição pública;;;Descrição GM;;;Objetivo;;;Segredo;;;Percepção|Influência;Ativo;Evento 1|Evento 2;Encontro 1|Encontro 2;;;;C002;Seguir adiante;;;;;NPC Exemplo;https://...',
         itens: 'id;nome;nome_en;nome_zh;categoria;peso;preco;pa;pv;alcance;dano;municao;uso;destinoLocal;locaisProtegidos;nivelAcesso;material;unidade;imagem;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;9000;0;5;60 m;2d6;Bateria;100;Armas laser;;Restrito;Liga metálica;Peça;;;;'
     };
 
@@ -6226,6 +6272,7 @@ window.mostrarSubAbaMestre = (nome,btn) => {
     if (btn) btn.classList.add('active','btn-select');
     if (nome==='campanha') renderizarCampanhaMestre_();
     if (nome==='historico') renderizarHistoricoMestre_();
+    if (nome==='cenario') renderizarCenarioMestre_();
 };
 
 function cartaoNumeroMestre_(valor,rotulo,icone='') {
@@ -6348,6 +6395,153 @@ window.renderizarHistoricoMestre_ = () => {
 window.atualizarHistoricoMestre = async () => {
     await carregarPersonagens();
     renderizarHistoricoMestre_();
+};
+
+
+
+let cenarioSelecionadoMestreId_ = '';
+
+function listaTextoCenario_(texto) {
+    return String(texto || '')
+        .split(/\r?\n|\s*\|\s*/)
+        .map(x => x.trim())
+        .filter(Boolean);
+}
+
+function obterCenarioSelecionadoMestre_() {
+    const id = cenarioSelecionadoMestreId_ || document.getElementById('gmScenarioSelect')?.value || '';
+    return (cenariosDB || []).find(c => c.id === id) || null;
+}
+
+function popularSelectCenariosMestre_() {
+    const sel = document.getElementById('gmScenarioSelect');
+    if (!sel) return;
+    const atual = cenarioSelecionadoMestreId_ || sel.value || '';
+    const ordenados = [...(cenariosDB || [])].sort((a,b)=>String(a.id||'').localeCompare(String(b.id||'')));
+    sel.innerHTML = ordenados.length
+        ? ordenados.map(c=>`<option value="${escaparHtmlInventario_(c.id)}">${escaparHtmlInventario_(c.id)} · ${escaparHtmlInventario_(c.nome||'Sem nome')}</option>`).join('')
+        : '<option value="">Nenhum cenário cadastrado</option>';
+    if (ordenados.some(c=>c.id===atual)) sel.value = atual;
+    else if (estadoCampanhaMestre?.cenarioId && ordenados.some(c=>c.id===estadoCampanhaMestre.cenarioId)) sel.value = estadoCampanhaMestre.cenarioId;
+    cenarioSelecionadoMestreId_ = sel.value || '';
+}
+
+function conexoesCenarioHtml_(c) {
+    const conexoes = [
+        [c.destino1,c.condicao1],
+        [c.destino2,c.condicao2],
+        [c.destino3,c.condicao3]
+    ].filter(([d])=>String(d||'').trim());
+    if (!conexoes.length) return '<span style="color:#888;">Nenhuma conexão cadastrada.</span>';
+    return conexoes.map(([dest,cond],i)=>{
+        const alvo=(cenariosDB||[]).find(x=>x.id===dest);
+        const nome=alvo ? `${dest} · ${alvo.nome}` : dest;
+        return `<div style="padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);margin-bottom:7px;">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+                <strong>${escaparHtmlInventario_(nome)}</strong>
+                ${alvo ? `<button class="btn-small btn-select" onclick="selecionarCenarioMestre('${escaparHtmlInventario_(dest)}')">Abrir</button>` : ''}
+            </div>
+            ${cond ? `<small style="color:#aaa;">Condição: ${escaparHtmlInventario_(cond)}</small>` : ''}
+        </div>`;
+    }).join('');
+}
+
+window.selecionarCenarioMestre = (id) => {
+    cenarioSelecionadoMestreId_ = id || '';
+    const sel=document.getElementById('gmScenarioSelect');
+    if(sel && sel.value!==id && [...sel.options].some(o=>o.value===id)) sel.value=id;
+    renderizarCenarioMestre_();
+};
+
+function renderizarCenarioMestre_() {
+    if (!(userData && userData.role==='mestre')) return;
+    popularSelectCenariosMestre_();
+    const c = obterCenarioSelecionadoMestre_();
+    const detalhe = document.getElementById('gmScenarioDetail');
+    const ativo = document.getElementById('gmScenarioActiveSummary');
+    if (ativo) {
+        const ac = (cenariosDB||[]).find(x=>x.id===estadoCampanhaMestre?.cenarioId);
+        ativo.innerHTML = ac
+            ? `<strong style="color:#fff;">${escaparHtmlInventario_(ac.nome||ac.id)}</strong><br><small>${escaparHtmlInventario_(ac.local||'')}</small>`
+            : (estadoCampanhaMestre?.cenario ? escaparHtmlInventario_(estadoCampanhaMestre.cenario) : 'Nenhum.');
+    }
+    if (!detalhe) return;
+    if (!c) {
+        detalhe.innerHTML='<div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(0,212,255,.35);color:#aaa;">Nenhum cenário cadastrado.</div>';
+        return;
+    }
+
+    const img = c.imagem
+      ? `<img src="${escaparHtmlInventario_(c.imagem)}" alt="${escaparHtmlInventario_(c.nome||'')}" style="width:100%;height:310px;object-fit:cover;border-radius:12px;">`
+      : `<div style="height:230px;border-radius:12px;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:4em;">🪐</div>`;
+
+    const bloco=(titulo,conteudo,cor='#00d4ff')=>`<div style="padding:14px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.075);">
+        <strong style="color:${cor};display:block;margin-bottom:7px;">${titulo}</strong>
+        <div style="white-space:pre-wrap;line-height:1.45;color:#ddd;">${escaparHtmlInventario_(conteudo||'—')}</div>
+    </div>`;
+
+    detalhe.innerHTML = `
+      ${img}
+      <div style="margin:14px 0 12px;">
+        <h3 style="margin:0;color:#fff;">${escaparHtmlInventario_(c.nome||'')}</h3>
+        <div style="color:#aaa;margin-top:4px;">${escaparHtmlInventario_(c.id||'')} · ${escaparHtmlInventario_(c.local||'')} · ${escaparHtmlInventario_(c.tipo||'')}</div>
+        ${c.estadoInicial ? `<div style="margin-top:7px;"><span style="padding:3px 8px;border-radius:999px;background:rgba(0,212,255,.12);border:1px solid rgba(0,212,255,.28);color:#8feaff;">${escaparHtmlInventario_(c.estadoInicial)}</span></div>` : ''}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        ${bloco('👁️ Descrição para jogadores',c.descricaoJogadores)}
+        ${bloco('🛡️ Descrição do Mestre',c.descricaoGM,'#ffd166')}
+        ${bloco('🎯 Objetivo',c.objetivo)}
+        ${bloco('🔒 Segredos',c.segredos,'#ff8f8f')}
+        ${bloco('🎲 Testes sugeridos',c.testesSugeridos)}
+        ${bloco('👥 NPCs da cena',c.npcsCena,'#d8b4ff')}
+        ${bloco('📝 Observações',c.observacoes)}
+        <div style="padding:14px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.075);">
+            <strong style="color:#00d4ff;display:block;margin-bottom:7px;">🧭 Conexões</strong>
+            ${conexoesCenarioHtml_(c)}
+        </div>
+      </div>`;
+}
+
+window.ativarCenarioMestre = async () => {
+    const c = obterCenarioSelecionadoMestre_();
+    if (!c) return;
+    estadoCampanhaMestre = {
+        ...(estadoCampanhaMestre||{}),
+        cenarioId:c.id,
+        cenario:c.nome || c.id
+    };
+    await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
+    preencherEstadoCampanha_();
+    renderizarCenarioMestre_();
+    somSalvar_();
+};
+
+window.editarCenarioAtivoNoBanco = () => {
+    const c = obterCenarioSelecionadoMestre_();
+    if (!c) return;
+    editarCenarioBanco(c.id);
+};
+
+window.rolarEventoCenarioMestre = () => {
+    const c=obterCenarioSelecionadoMestre_();
+    const alvo=document.getElementById('gmScenarioRollResult');
+    if(!c||!alvo)return;
+    const lista=listaTextoCenario_(c.eventos);
+    if(!lista.length){alvo.textContent='Este cenário ainda não possui eventos cadastrados.';return;}
+    const i=Math.floor(Math.random()*lista.length);
+    alvo.innerHTML=`<strong>Evento ${i+1}/${lista.length}:</strong> ${escaparHtmlInventario_(lista[i])}`;
+};
+
+window.rolarEncontroCenarioMestre = () => {
+    const c=obterCenarioSelecionadoMestre_();
+    const alvo=document.getElementById('gmScenarioRollResult');
+    if(!c||!alvo)return;
+    let lista=listaTextoCenario_(c.encontros);
+    if(!lista.length) lista=listaTextoCenario_(c.npcsCena);
+    if(!lista.length){alvo.textContent='Este cenário ainda não possui encontros ou NPCs cadastrados.';return;}
+    const i=Math.floor(Math.random()*lista.length);
+    alvo.innerHTML=`<strong>Encontro ${i+1}/${lista.length}:</strong> ${escaparHtmlInventario_(lista[i])}`;
 };
 
 
