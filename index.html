@@ -3590,9 +3590,17 @@ function nomesMunicaoCompativeis_(arma, municaoItem) {
 }
 
 function cargaFornecidaMunicao_(arma, municaoItem) {
+    // Uma bateria/célula é uma unidade de recarga, não "1 ponto" de energia.
+    // Se houver carga energética explicitamente cadastrada, respeita-a; caso contrário,
+    // uma célula compatível completa a capacidade da arma.
+    if(itemUsaEnergia_(arma)){
+        const explicita=Number(municaoItem?.cargaFornecida ?? municaoItem?.energia ?? municaoItem?.carga);
+        if(Number.isFinite(explicita)&&explicita>0)return Math.floor(explicita);
+        return cargaMaxArma_(arma);
+    }
     const q = Number(municaoItem?.quantidade ?? municaoItem?.uso);
     if (Number.isFinite(q) && q > 0) return Math.floor(q);
-    return itemUsaEnergia_(arma) ? 100 : 20;
+    return 20;
 }
 
 function localizarInstanciaInventario_(char, instanciaId) {
@@ -3669,6 +3677,10 @@ window.recarregarArmaCombate = async () => {
     char.inventario = mun.inv;
 
     await salvarInventarioAtual_(char);
+    // Confirma visualmente a carga efetivamente gravada na instância.
+    renderizarInventario(char);
+    atualizarStatusMunicaoCombate_();
+    notificar_(`${getNome(arma)} recarregada → ${cargaAtualArma_(arma)}/${cargaMaxArma_(arma)}`,'info',3000);
     somSalvar_();
     await registrarHistoricoCombate_(
         'Recarregar',
@@ -6159,6 +6171,7 @@ let batalhaAcoesUnsub_ = null;
 let batalhaPersonagensUnsub_ = null;
 let batalhaProcessandoAcoes_ = false;
 let batalhaPrefsMestre_ = {};
+let batalhaPrefsJogador_ = {};
 let batalhaSelecaoMestre_ = new Set();
 
 function batalhaEhMestre_(){ return !!(userData && userData.role==='mestre'); }
@@ -6443,19 +6456,27 @@ function batalhaPodeControlar_(p){
 
 function batalhaPrefsChar_(char){
     if(!char)return {pericia:'',dificuldade:'padrao',equipamento:'',alvo:''};
+    const defaults={pericia:'',dificuldade:'padrao',equipamento:'',alvo:''};
     if(batalhaEhMestre_()){
-        batalhaPrefsMestre_[char.id]=batalhaPrefsMestre_[char.id]||{pericia:'',dificuldade:'padrao',equipamento:'',alvo:''};
+        batalhaPrefsMestre_[char.id]=batalhaPrefsMestre_[char.id]||{...defaults};
         return batalhaPrefsMestre_[char.id];
     }
-    char.combate=char.combate||{};
-    char.combate.batalhaPrefs=char.combate.batalhaPrefs||{pericia:'',dificuldade:'padrao',equipamento:'',alvo:''};
-    return char.combate.batalhaPrefs;
+    // A seleção visível do jogador fica local durante a oportunidade.
+    // Firestore continua recebendo uma cópia para o mestre saber a arma empunhada,
+    // mas snapshots atrasados não podem mais trocar Perícia/Alvo na interface.
+    if(!batalhaPrefsJogador_[char.id]){
+        batalhaPrefsJogador_[char.id]={...defaults,...(char?.combate?.batalhaPrefs||{})};
+    }
+    return batalhaPrefsJogador_[char.id];
 }
 
 async function batalhaSalvarPrefs_(char){
     if(!char)return;
-    if(batalhaEhMestre_())return; // mestre mantém preferências localmente para não expor dados privados
-    await setDoc(doc(db,'personagens',char.id),{'combate.batalhaPrefs':batalhaPrefsChar_(char)},{merge:true});
+    if(batalhaEhMestre_())return;
+    const prefs={...batalhaPrefsChar_(char)};
+    char.combate=char.combate||{};
+    char.combate.batalhaPrefs={...prefs};
+    await setDoc(doc(db,'personagens',char.id),{'combate.batalhaPrefs':prefs},{merge:true});
 }
 
 function batalhaTokenPericia_(p){ return `${p.__especializacao?'esp':'per'}:${p.id}`; }
@@ -7011,10 +7032,10 @@ function batalhaControlCard_(p,char){
             <div><small style="color:#888;">PV</small><br><strong>${batalhaPvTexto_(char)}</strong></div>
             <div><small style="color:#888;">PA</small><br><strong>${paResumoCombateMestre_(char)}</strong></div>
             <div><small style="color:#888;">AÇ</small><br><strong style="color:${Number(p.acoesAtuais||0)<=0?'#ff8f8f':'#8ff0a8'};">${Number(p.acoesAtuais||0)}/${Number(p.acoesMax||0)}</strong></div>
-            <div><small style="color:#888;">P. Cmbt.</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','pericia',this.value)">${skillOptions}</select></div>
-            <div><small style="color:#888;">Dif.</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','dificuldade',this.value)">${batalhaDificuldadeOptions_(prefs.dificuldade,char)}</select></div>
-            <div><small style="color:#888;">Equipamento</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','equipamento',this.value)">${equipOptions||'<option value="">—</option>'}</select></div>
-            <div><small style="color:#888;">Alvo</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','alvo',this.value)">${targetOptions||'<option value="">—</option>'}</select></div>
+            <div><small style="color:#888;">P. Cmbt.</small><select id="battleSkill_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','pericia',this.value)">${skillOptions}</select></div>
+            <div><small style="color:#888;">Dif.</small><select id="battleDiff_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','dificuldade',this.value)">${batalhaDificuldadeOptions_(prefs.dificuldade,char)}</select></div>
+            <div><small style="color:#888;">Equipamento</small><select id="battleEquip_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','equipamento',this.value)">${equipOptions||'<option value="">—</option>'}</select></div>
+            <div><small style="color:#888;">Alvo</small><select id="battleTarget_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','alvo',this.value)">${targetOptions||'<option value="">—</option>'}</select></div>
         </div>
 
         ${fullPrivacy?batalhaLocaisHtml_(char):''}
@@ -7090,12 +7111,26 @@ window.batalhaMudarPref_=async(id,campo,valor)=>{
     const p=batalhaParticipante_(id),char=batalhaCharLocal_(id);
     if(!p||!char||!batalhaPodeControlar_(p))return;
     const prefs=batalhaPrefsChar_(char);
+
+    // Captura o estado real dos quatro controles antes de redesenhar o card.
+    // Assim alterar Alvo nunca altera Perícia, e alterar Perícia nunca altera Alvo.
+    const skillEl=document.getElementById(`battleSkill_${id}`);
+    const diffEl=document.getElementById(`battleDiff_${id}`);
+    const equipEl=document.getElementById(`battleEquip_${id}`);
+    const targetEl=document.getElementById(`battleTarget_${id}`);
+    if(skillEl)prefs.pericia=String(skillEl.value||'');
+    if(diffEl)prefs.dificuldade=String(diffEl.value||'padrao');
+    if(equipEl)prefs.equipamento=String(equipEl.value||'');
+    if(targetEl)prefs.alvo=String(targetEl.value||'');
+
     if(campo==='dificuldade' && !batalhaEhMestre_() && !dificuldadePermitidaPelaFadiga_(char,String(valor||''))){
         notificar_(`A fadiga atual exige no mínimo ${obterRegraFadiga_(char).grau}.`,'aviso');
         renderizarBatalhaCompartilhada_();
         return;
     }
     prefs[campo]=String(valor||'');
+
+    // Somente a troca de Perícia pode reajustar Equipamento.
     if(campo==='pericia'){
         const per=batalhaResolverPericia_(prefs.pericia);
         if(per?.id==='combate_desarmado')prefs.equipamento='desarmado';
@@ -7207,6 +7242,7 @@ async function batalhaResetarSelecoesNovoTurno_(p){
     const defaults={pericia:'',dificuldade:'padrao',equipamento:'',alvo:''};
     const c=batalhaCharLocal_(p.id);
     if(batalhaEhMestre_())batalhaPrefsMestre_[p.id]={...defaults};
+    else batalhaPrefsJogador_[p.id]={...defaults};
     if(c&&!c.__npcTemporario&&!c.__criaturaTemporaria){
         c.combate=c.combate||{};
         c.combate.batalhaPrefs={...defaults};
@@ -12448,7 +12484,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.7.2: efeitos especiais sincronizados, seleções por turno e correção de bateria -->
+<!-- Mesa Estelar v46.7.3: recarga de células e seleções independentes no combate -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
