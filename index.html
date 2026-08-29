@@ -1,31 +1,4 @@
-<
-window.restaurarNPCBanco_=async id=>{
-    const n=npcBancoPorId_(id);if(!n)return;
-    if(!confirm(`Restaurar completamente ${n.nome}?`))return;
-    const estado={hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[],ferimentos:{},inconsciente:false,incapacitado:false,morto:false,ataquesBloqueadosTurnos:0,sangramentoAtivo:false};
-    n.estadoCombate=estado;
-    await setDoc(doc(db,'npcs',String(id)),{estadoCombate:estado},{merge:true});
-    for(const p of batalhaEstado_?.participantes||[])if(String(p.npcBancoId)===String(id))p.npcCombate=JSON.parse(JSON.stringify(estado));
-    if(batalhaEstado_?.ativo)await batalhaSalvarEstado_();
-    renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();
-    notificar_(`${n.nome} restaurado.`,'info');
-}
-function renderizarTabelaFadigaCompleta_(){
-    const el=document.getElementById('fatigueRulesFull');if(!el)return;
-    const rows=[['Fresh','Nenhuma'],['Winded','Difícil'],['Tired','Difícil'],['Wearied','Formidável'],['Exhausted','Formidável'],['Debilitated','Hercúleo'],['Incapacitated','Hercúleo'],['Semi-Conscious','Sem atividades'],['Comatose','Sem ações'],['Dead','Morto']];
-    el.innerHTML=`<h3>😮‍💨 Fadiga</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Efeito</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;
-}
-function renderizarTabelaFerimentosCompleta_(){
-    const el=document.getElementById('woundRulesFull');if(!el)return;
-    const rows=[
-      ['Leve','PV > 0','Sem penalidade automática; cura diária.'],
-      ['Sério','PV ≤ 0 e > -PV máximo','1d3 turnos sem atacar; teste oposto de Resistência; membro pode ficar inutilizado; cabeça/peito/abdômen podem causar inconsciência; cura semanal.'],
-      ['Grave','PV ≤ -PV máximo','Incapacitação; novo teste de Resistência; pode destruir membro ou matar; cura mensal só após tratamento.'],
-      ['Sangramento','Bleed','-1 nível de Fadiga por rodada até estancar. Armas laser/plasma/blaster/energia não causam Bleed nesta campanha.']];
-    el.innerHTML=`<h3>🩸 Ferimentos por localização</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Quando</th><th>Consequência</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-}
-;
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -636,6 +609,7 @@ function renderizarTabelaFerimentosCompleta_(){
                                         <span class="combat-title-col" data-i18n="currentHp">PV Atual</span>
                                     </div>
                                     <div id="hitLocations"></div>
+                                    <div id="combatWoundInfo"></div>
                                 </div>
                                 <div class="combat-section">
                                     <div class="combat-title-row">
@@ -10560,6 +10534,33 @@ window.rolarDanoArma = rolarDanoArma;
 window.handleItemImageUpload = handleItemImageUpload;
 window.importarPlanilha = importarPlanilha;
 window.baixarTemplate = baixarTemplate;
+
+window.restaurarNPCBanco_=async id=>{
+    const n=npcBancoPorId_(id);if(!n)return;
+    if(!confirm(`Restaurar completamente ${n.nome}?`))return;
+    const estado={hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[],ferimentos:{},inconsciente:false,incapacitado:false,morto:false,ataquesBloqueadosTurnos:0,sangramentoAtivo:false};
+    n.estadoCombate=estado;
+    await setDoc(doc(db,'npcs',String(id)),{estadoCombate:estado},{merge:true});
+    for(const p of batalhaEstado_?.participantes||[])if(String(p.npcBancoId)===String(id))p.npcCombate=JSON.parse(JSON.stringify(estado));
+    if(batalhaEstado_?.ativo)await batalhaSalvarEstado_();
+    renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();
+    notificar_(`${n.nome} restaurado.`,'info');
+};
+function renderizarTabelaFadigaCompleta_(){
+    const el=document.getElementById('fatigueRulesFull');if(!el)return;
+    const rows=[['Fresh','Nenhuma'],['Winded','Difícil'],['Tired','Difícil'],['Wearied','Formidável'],['Exhausted','Formidável'],['Debilitated','Hercúleo'],['Incapacitated','Hercúleo'],['Semi-Conscious','Sem atividades'],['Comatose','Sem ações'],['Dead','Morto']];
+    el.innerHTML=`<h3>😮‍💨 Fadiga</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Efeito</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;
+}
+function renderizarTabelaFerimentosCompleta_(){
+    const el=document.getElementById('woundRulesFull');if(!el)return;
+    const rows=[
+      ['Leve','PV > 0','Sem penalidade automática; cura diária.'],
+      ['Sério','PV ≤ 0 e > -PV máximo','1d3 turnos sem atacar; teste oposto de Resistência; membro pode ficar inutilizado; cabeça/peito/abdômen podem causar inconsciência; cura semanal.'],
+      ['Grave','PV ≤ -PV máximo','Incapacitação; novo teste de Resistência; pode destruir membro ou matar; cura mensal só após tratamento.'],
+      ['Sangramento','Bleed','-1 nível de Fadiga por rodada até estancar. Armas laser/plasma/blaster/energia não causam Bleed nesta campanha.']];
+    el.innerHTML=`<h3>🩸 Ferimentos por localização</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Quando</th><th>Consequência</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+;
 </script>
 </body>
 </html>
