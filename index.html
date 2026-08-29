@@ -862,6 +862,7 @@
                     <h3>📖 Regras do Sistema</h3>
                     <div id="regrasViewMode" class="regras-view"></div>
                     <div id="physicalEffortRules" style="margin-top:22px;"></div>
+                    <div id="combatCompatibilityRules" style="margin-top:22px;"></div>
                     <div id="regrasEditMode" class="hidden">
                         <textarea id="regrasTexto" rows="20" style="width:100%; background:rgba(0,0,0,0.3); color:#fff; padding:15px; border-radius:10px; border:1px solid rgba(255,255,255,0.2);"></textarea>
                     </div>
@@ -2004,6 +2005,16 @@ async function carregarBancosDeDados() {
     popularSelects();
     renderizarBancoDados();
     if (document.getElementById('marketGrid')) renderizarMercado();
+
+    // Itens comprados são referências vivas ao banco: ao importar/editar o banco,
+    // a ficha e a batalha passam a usar os novos dados sem recomprar.
+    const atual=obterPersonagemAtual_?.();
+    if(atual){
+        normalizarInventario_(atual);
+        if(document.getElementById('inventoryGrid')) renderizarInventario(atual);
+        if(document.getElementById('char-combate')?.classList.contains('active')) renderizarCombate(atual);
+    }
+    if(document.getElementById('batalha')?.classList.contains('active')) renderizarBatalhaCompartilhada_();
 }
 
 async function carregarConfiguracoes() {
@@ -2723,12 +2734,43 @@ function calcularAlturaPeso(tam, tipo) {
     return { altura: meio(faixa.h), peso: meio(faixa[chave]) };
 }
 
+function atualizarInstanciaPeloBanco_(item) {
+    if (!item || typeof item !== 'object') return item;
+    const idBanco = item.idBanco || item.id;
+    if (!idBanco || !Array.isArray(itensDB) || !itensDB.length) return item;
+    const banco = itensDB.find(x => String(x.id) === String(idBanco));
+    if (!banco) return item;
+
+    // O banco é a fonte de verdade para propriedades do item.
+    // Estes campos pertencem à instância comprada e nunca são apagados pela atualização do banco.
+    const estadoInstancia = {};
+    [
+        'idBanco','instanciaId','pvAtual','origemAquisicao','precoPago','adquiridoEm',
+        'qualidade','cargaAtual','cargaMax','quantidade','notasInstancia'
+    ].forEach(k => {
+        if (Object.prototype.hasOwnProperty.call(item,k)) estadoInstancia[k]=item[k];
+    });
+
+    const atualizado = {...item, ...banco, ...estadoInstancia, idBanco:String(banco.id)};
+    if (Object.prototype.hasOwnProperty.call(atualizado,'pvAtual') && Number.isFinite(Number(banco.pv))) {
+        atualizado.pvAtual = Math.min(Number(atualizado.pvAtual), Number(banco.pv));
+    }
+    if (Object.prototype.hasOwnProperty.call(atualizado,'cargaAtual')) {
+        const novaCapacidade = cargaMaxArma_(atualizado);
+        atualizado.cargaMax = novaCapacidade;
+        atualizado.cargaAtual = Math.min(Math.max(0,Number(atualizado.cargaAtual)||0),novaCapacidade);
+    }
+    return atualizado;
+}
+
 function normalizarInventario_(char) {
     if (!char.inventario || typeof char.inventario !== 'object') char.inventario = {};
     const tamanhos = { equipado: 12, bolso: 2, mochila: 20, veiculo: 50, casa: 100 };
 
     Object.entries(tamanhos).forEach(([comp, tamanho]) => {
-        const atual = Array.isArray(char.inventario[comp]) ? char.inventario[comp] : [];
+        let atual = Array.isArray(char.inventario[comp]) ? char.inventario[comp] : [];
+        // Atualização dinâmica: dano, Pen, PA, peso, descrição, imagem etc. vêm do banco atual.
+        atual = atual.map(item => item ? atualizarInstanciaPeloBanco_(item) : null);
         if (atual.length < tamanho) {
             char.inventario[comp] = atual.concat(Array(tamanho - atual.length).fill(null));
         } else {
@@ -3984,6 +4026,26 @@ function obterGrauDificuldade_(id) {
     return GRAUS_DIFICULDADE.find(g => g.id === id) || GRAUS_DIFICULDADE[2];
 }
 
+function indiceMinimoDificuldadeFadiga_(char) {
+    const nivel = char?.combate?.fadiga || 'Fresh';
+    const mapa = {
+        Fresh: 0,          // sem mínimo
+        Winded: 3,        // Difícil
+        Tired: 3,         // Difícil
+        Wearied: 4,       // Formidável
+        Exhausted: 4,     // Formidável
+        Debilitated: 5,   // Hercúleo
+        Incapacitated: 5  // Hercúleo
+    };
+    return mapa[nivel] ?? 99;
+}
+
+function dificuldadePermitidaPelaFadiga_(char,dificuldadeId) {
+    const min = indiceMinimoDificuldadeFadiga_(char);
+    const ix = GRAUS_DIFICULDADE.findIndex(g=>g.id===dificuldadeId);
+    return min < GRAUS_DIFICULDADE.length && ix >= min;
+}
+
 function aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeId, degrausExtras = 0) {
     const regra = obterRegraFadiga_(char);
     if (!regra.multiplicador) {
@@ -3991,11 +4053,20 @@ function aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeId, degrausExtra
     }
     const escolhida = obterGrauDificuldade_(dificuldadeId);
     const indiceEscolhido = GRAUS_DIFICULDADE.findIndex(g => g.id === escolhida.id);
-    const degrausFadiga = obterDegrausFadiga_(char);
-    const indiceEfetivo = Math.min(GRAUS_DIFICULDADE.length - 1, Math.max(0, indiceEscolhido + degrausFadiga + Math.max(0, parseInt(degrausExtras)||0)));
+    const indiceFadiga = indiceMinimoDificuldadeFadiga_(char);
+    const extras = Math.max(0, parseInt(degrausExtras)||0);
+
+    // Fadiga estabelece o piso de dificuldade; incompatibilidade da arma agrava depois.
+    const indiceBase = Math.max(indiceEscolhido, Math.min(indiceFadiga,GRAUS_DIFICULDADE.length-1));
+    const indiceEfetivo = Math.min(GRAUS_DIFICULDADE.length - 1, indiceBase + extras);
     const efetiva = GRAUS_DIFICULDADE[indiceEfetivo];
     const valor = Math.max(1, Math.floor((parseInt(valorBase) || 0) * efetiva.multiplicador));
-    return { valor, bloqueado: false, regra, escolhida, efetiva, degrausFadiga, degrausExtras: Math.max(0, parseInt(degrausExtras)||0) };
+    return {
+        valor, bloqueado:false, regra, escolhida, efetiva,
+        degrausFadiga:Math.max(0,indiceBase-indiceEscolhido),
+        degrausExtras:extras,
+        dificuldadeMinimaFadiga:GRAUS_DIFICULDADE[Math.min(indiceFadiga,GRAUS_DIFICULDADE.length-1)]?.id||'herculeo'
+    };
 }
 
 function resetarDificuldadeAposRolagem_(idSelect) {
@@ -4995,6 +5066,10 @@ function batalhaGarantirPrefsValidas_(char,prefs){
         prefs.pericia=batalhaTokenPericia_(skills[0]);
     }
     if(!prefs.dificuldade)prefs.dificuldade='padrao';
+    if(!batalhaEhMestre_() && !dificuldadePermitidaPelaFadiga_(char,prefs.dificuldade)){
+        const minIx=Math.min(indiceMinimoDificuldadeFadiga_(char),GRAUS_DIFICULDADE.length-1);
+        prefs.dificuldade=GRAUS_DIFICULDADE[minIx]?.id||'herculeo';
+    }
 
     const per=batalhaResolverPericia_(prefs.pericia);
     const ops=batalhaEquipamentos_(char,per,prefs.equipamento);
@@ -5022,12 +5097,19 @@ function batalhaLocaisHtml_(char){
     return resumoLocaisCompactoCombateMestre_(char);
 }
 
-function batalhaDificuldadeOptions_(v){
+function batalhaDificuldadeOptions_(v,char){
     const vals=[
         ['muito_facil','Muito Fácil'],['facil','Fácil'],['padrao','Padrão'],
         ['dificil','Difícil'],['formidavel','Formidável'],['herculeo','Hercúleo']
     ];
-    return vals.map(([id,n])=>`<option value="${id}" ${id===v?'selected':''}>${n}</option>`).join('');
+    const mestre=batalhaEhMestre_();
+    return vals.map(([id,n])=>{
+        const permitido=dificuldadePermitidaPelaFadiga_(char,id);
+        const bloqueio=!mestre&&!permitido?'disabled':'';
+        const cor=!permitido?'style="color:#ff6b6b;background:#2b1622;"':'';
+        const aviso=!permitido?' ⚠ fadiga':'';
+        return `<option value="${id}" ${id===v?'selected':''} ${bloqueio} ${cor}>${n}${aviso}</option>`;
+    }).join('');
 }
 
 function batalhaPublicCard_(p){
@@ -5069,7 +5151,7 @@ function batalhaControlCard_(p,char){
             <div><small style="color:#888;">PA</small><br><strong>${paResumoCombateMestre_(char)}</strong></div>
             <div><small style="color:#888;">AÇ</small><br><strong style="color:${Number(p.acoesAtuais||0)<=0?'#ff8f8f':'#8ff0a8'};">${Number(p.acoesAtuais||0)}/${Number(p.acoesMax||0)}</strong></div>
             <div><small style="color:#888;">P. Cmbt.</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','pericia',this.value)">${skillOptions}</select></div>
-            <div><small style="color:#888;">Dif.</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','dificuldade',this.value)">${batalhaDificuldadeOptions_(prefs.dificuldade)}</select></div>
+            <div><small style="color:#888;">Dif.</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','dificuldade',this.value)">${batalhaDificuldadeOptions_(prefs.dificuldade,char)}</select></div>
             <div><small style="color:#888;">Equipamento</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','equipamento',this.value)">${equipOptions||'<option value="">—</option>'}</select></div>
             <div><small style="color:#888;">Alvo</small><select style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','alvo',this.value)">${targetOptions||'<option value="">—</option>'}</select></div>
         </div>
@@ -5128,6 +5210,11 @@ window.batalhaMudarPref_=async(id,campo,valor)=>{
     const p=batalhaParticipante_(id),char=batalhaCharLocal_(id);
     if(!p||!char||!batalhaPodeControlar_(p))return;
     const prefs=batalhaPrefsChar_(char);
+    if(campo==='dificuldade' && !batalhaEhMestre_() && !dificuldadePermitidaPelaFadiga_(char,String(valor||''))){
+        notificar_(`A fadiga atual exige no mínimo ${obterRegraFadiga_(char).grau}.`,'aviso');
+        renderizarBatalhaCompartilhada_();
+        return;
+    }
     prefs[campo]=String(valor||'');
     if(campo==='pericia'){
         const per=batalhaResolverPericia_(prefs.pericia);
@@ -7312,6 +7399,42 @@ window.baixarTemplate = (tipo) => {
 // ============================================
 // REGRAS E ESCUDO
 // ============================================
+
+function renderizarTabelaCompatibilidadeCombate_(){
+    const alvo=document.getElementById('combatCompatibilityRules');
+    if(!alvo)return;
+    const linhas=[
+      ['Armas Brancas Curtas','Facas, adagas','Demais armas brancas corpo a corpo','Armas de outras famílias'],
+      ['Armas Brancas Longas','Espadas, sabres, machados','Demais armas brancas corpo a corpo','Armas de outras famílias'],
+      ['Armas de Haste','Lanças, alabardas e armas de haste','Demais armas brancas corpo a corpo','Armas de outras famílias'],
+      ['Pistolas e Revólveres','Pistolas e revólveres convencionais','Submetralhadoras','Demais armas'],
+      ['Fuzis e Carabinas','Fuzis e carabinas convencionais','Rifles de precisão / sniper','Demais armas'],
+      ['Escopetas','Escopetas','—','Demais armas'],
+      ['Submetralhadoras','Submetralhadoras','Pistolas e revólveres','Demais armas'],
+      ['Armas Pesadas','Armas pesadas convencionais','—','Demais armas'],
+      ['Atirador de Elite','Rifles de precisão / sniper','Fuzis e carabinas','Demais armas'],
+      ['Pistolas Laser','Pistolas laser','Blaster, phaser e outras armas de energia','Demais armas'],
+      ['Rifles Laser','Rifles e carabinas laser','Armas de energia e laser pesado','Demais armas'],
+      ['Arma Laser Pesada','Armas laser pesadas','Rifles laser e armas de energia','Demais armas'],
+      ['Armas de Energia','Blaster, phaser, disruptor e similares','Pistolas laser, rifles laser e laser pesado','Demais armas'],
+      ['Esgrima Plasma/Vibro','Espadas e lâminas plasma/vibro','—','Demais armas']
+    ];
+    alvo.innerHTML=`<div style="padding:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;">
+      <h3 style="color:#00d4ff;margin:0 0 8px;">⚔️ Compatibilidade entre Perícias e Armas</h3>
+      <p style="color:#aaa;margin:0 0 14px;">A arma da família treinada não altera a dificuldade. Armas relacionadas aumentam 1 grau; armas de famílias diferentes aumentam 2 graus.</p>
+      <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:850px;">
+        <thead><tr style="background:rgba(0,212,255,.13);">
+          <th style="padding:10px;text-align:left;">Perícia</th>
+          <th style="padding:10px;text-align:left;color:#8ff0a8;">0 graus</th>
+          <th style="padding:10px;text-align:left;color:#ffd166;">+1 grau</th>
+          <th style="padding:10px;text-align:left;color:#ff8f8f;">+2 graus</th>
+        </tr></thead>
+        <tbody>${linhas.map(r=>`<tr>${r.map((c,i)=>`<td style="padding:9px;border-top:1px solid rgba(255,255,255,.08);${i===0?'font-weight:700;':''}">${c}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table></div>
+      <small style="display:block;color:#aaa;margin-top:10px;">A penalidade da arma se combina com outras restrições. A fadiga estabelece a dificuldade mínima permitida para o personagem.</small>
+    </div>`;
+}
+
 function renderizarRegras() {
     regrasTexto = idiomaAtual === 'en' ? (regrasTextoEN || REGRAS_PADRAO_EN)
                : idiomaAtual === 'zh' ? (regrasTextoZH || REGRAS_PADRAO_ZH)
@@ -7385,6 +7508,7 @@ function renderizarRegras() {
                 </div>
             </div>`;
     }
+    renderizarTabelaCompatibilidadeCombate_();
     const btnEditar = document.getElementById('btnEditarRegras');
     if (userData && userData.role === 'mestre') btnEditar.style.display = 'block';
     else btnEditar.style.display = 'none';
