@@ -4860,17 +4860,82 @@ window.salvarPATotal = async (local, valorTotal, paEquipamento) => {
     renderizarCombate(char);
 };
 
+function reconciliarFerimentosComPVManual_(char){
+    if(!char)return;
+    char.combate=char.combate||{};
+    const combat=char.combate;
+    const attrs=char.atributos||{},bonus=char.bonus||{};
+    const maxLoc=calcularHitLocations_(
+        Number(attrs.CON||10)+Number(bonus.CON||0),
+        Number(attrs.TAM||10)+Number(bonus.TAM||0)
+    );
+    combat.hitLocations=combat.hitLocations||{};
+    combat.ferimentos=combat.ferimentos||{};
+
+    let existeGrave=false;
+    let existeSerioCentral=false;
+    let existeSerio=false;
+
+    for(const [loc,max] of Object.entries(maxLoc)){
+        const atual=Object.prototype.hasOwnProperty.call(combat.hitLocations,loc)
+            ? Number(combat.hitLocations[loc])
+            : Number(max||1);
+
+        if(atual>0){
+            delete combat.ferimentos[loc];
+            continue;
+        }
+
+        const f=combat.ferimentos[loc]||{};
+        f.serio=true;
+        f.grave=atual<=-Number(max||1);
+        if(!f.grave)delete f.resistenciaGrave;
+        combat.ferimentos[loc]=f;
+
+        existeSerio=true;
+        if(f.grave)existeGrave=true;
+        if(/Cabeça|Peito|Abdômen/.test(loc))existeSerioCentral=true;
+    }
+
+    if(!existeGrave){
+        combat.incapacitado=false;
+        combat.morto=false;
+        if(combat.fadiga==='Dead')combat.fadiga='Fresh';
+    }
+    if(!existeSerioCentral && !existeGrave)combat.inconsciente=false;
+    if(!existeSerio){
+        combat.ataquesBloqueadosTurnos=0;
+        combat.sangramentoAtivo=false;
+        delete combat.sangramentoOrigem;
+    }
+}
+
 window.salvarCombate = async (tipo, local, valor) => {
     if(userData?.role!=='mestre') return;
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
-    
+
     const combat = char.combate || { hitLocations: {}, armor: {}, fadiga: 'Fresh' };
+    char.combate=combat;
     if (!combat[tipo]) combat[tipo] = {};
     combat[tipo][local] = parseInt(valor) || 0;
-    
+
+    if(tipo==='hitLocations')reconciliarFerimentosComPVManual_(char);
+
     await setDoc(doc(db, "personagens", currentCharId), { combate: combat }, { merge: true });
+
+    const participante=batalhaParticipante_(currentCharId);
+    if(participante && batalhaEstado_?.ativo){
+        participante.acoesMax=batalhaAcoesMax_(char);
+        if(!batalhaEstaInconsciente_(char) && Number(participante.acoesAtuais||0)<=0){
+            participante.acoesAtuais=participante.acoesMax;
+        }
+        if(batalhaEhMestre_())await batalhaSalvarEstado_();
+    }
+
+    renderizarCombate(char);
+    renderizarBatalhaCompartilhada_();
     somSalvar_();
 };
 
@@ -7191,6 +7256,10 @@ window.batalhaAdicionarSelecionados_=async()=>{
             c=batalhaCharLocal_(id);
         }
         if(!c)continue;
+        if(!c.__npcTemporario&&!c.__criaturaTemporaria){
+            reconciliarFerimentosComPVManual_(c);
+            await setDoc(doc(db,'personagens',c.id),{combate:c.combate},{merge:true});
+        }
         const participante=batalhaSanitizarParticipante_(c);
         if(estado.participantes.some(p=>String(p.id)===String(participante.id)))continue;
         const posInicial=batalhaPosicaoAleatoriaLivre_(estado);
@@ -12484,7 +12553,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.7.3: recarga de células e seleções independentes no combate -->
+<!-- Mesa Estelar v46.7.4: estados de ferimento reconciliados com PV restaurados -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
