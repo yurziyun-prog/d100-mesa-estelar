@@ -1089,7 +1089,8 @@
                     <div id="gm-sub-rolagem" class="gm-sub-content hidden">
                         <div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(155,89,182,.40);">
                             <h4 style="color:#d8b4ff;margin-top:0;">🎲 Rolagem do Mestre</h4>
-                            <p style="color:#bbb;margin-bottom:0;">Estrutura reservada para a próxima etapa: escolha de PC/PM/NPC, perícias ocultas prioritárias, todas as demais perícias, dados livres e roladores vinculados ao cenário.</p>
+                            <p style="color:#bbb;">Ferramentas privadas do mestre. Nesta etapa, as rolagens de mundo de Calico foram reintroduzidas isoladamente.</p>
+                            <div id="calicoWorldRolls"></div>
                         </div>
                     </div>
                 </div>
@@ -6532,11 +6533,15 @@ function batalhaEspeciaisDisponiveis_(dp){
 }
 function batalhaEspeciaisHtml_(p,dp){
     if(!dp||String(dp.atacanteId)!==String(p.id)||Number(dp.especiaisRestantes||0)<=0)return '';
+    const disponiveis=batalhaEspeciaisDisponiveis_(dp);
+    // Se o ataque tecnicamente gerou um efeito, mas nenhum efeito é aplicável
+    // ao contexto/arma/alvo, não mostramos uma etapa vazia.
+    if(!disponiveis.length)return '';
     return `<div style="margin-top:11px;padding:11px;border-radius:10px;background:rgba(255,193,7,.09);border:1px solid rgba(255,193,7,.40);">
       <strong style="color:#ffd166;">⭐ ${Number(dp.especiaisRestantes)} Efeito(s) Especial(is)</strong>
       <div style="color:#bbb;margin-top:4px;">Escolha antes de rolar o dano.</div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px;">
-        ${batalhaEspeciaisDisponiveis_(dp).map(e=>`<button class="btn-small" onclick="batalhaEscolherEspecial_('${p.id}','${e.id}')">${e.nome}</button>`).join('')}
+        ${disponiveis.map(e=>`<button class="btn-small" onclick="batalhaEscolherEspecial_('${p.id}','${e.id}')">${e.nome}</button>`).join('')}
         <button class="btn-small" onclick="batalhaEscolherEspecial_('${p.id}','pular')">↪ Não usar</button>
       </div>
     </div>`;
@@ -6734,7 +6739,10 @@ function batalhaControlCard_(p,char){
     const pend=batalhaEstado_?.pendencia;
     const defendendo=pend?.status==='aguardando_defesa'&&pend?.defensorId===p.id;
     const danoLiberado=batalhaEstado_?.danoPendente?.atacanteId===p.id;
-    const especiaisPendentes=danoLiberado&&Number(batalhaEstado_?.danoPendente?.especiaisRestantes||0)>0;
+    const dpAtual=batalhaEstado_?.danoPendente;
+    const especiaisPendentes=danoLiberado
+        && Number(dpAtual?.especiaisRestantes||0)>0
+        && batalhaEspeciaisDisponiveis_(dpAtual).length>0;
     const tratandoPS=batalhaEstaTratandoPrimeirosSocorros_(char),tratamentoExecutando=tratandoPS&&batalhaTratamentoPrimeirosSocorros_(char)?.fase==='executando';
     const ataqueBloqueado=danoLiberado||(pend?.atacanteId===p.id)||batalhaAtaqueBloqueadoFerimento_(char)||tratandoPS;
 
@@ -7324,7 +7332,12 @@ async function batalhaProcessarDefesa_(acao){
             escolhasEspeciais:[],
             criadoEm:new Date().toISOString()
         };
-        batalhaUltimoResultado_[pend.atacanteId]=especiais?`Ataque acertou. ${especiais} efeito(s) especial(is) antes do dano.`:'Ataque acertou. Dano liberado.';
+        const dpCriado=batalhaEstado_.danoPendente;
+        const temEspecialAplicavel=especiais>0 && batalhaEspeciaisDisponiveis_(dpCriado).length>0;
+        if(especiais>0 && !temEspecialAplicavel)dpCriado.especiaisRestantes=0;
+        batalhaUltimoResultado_[pend.atacanteId]=temEspecialAplicavel
+            ?`Ataque acertou. ${especiais} efeito(s) especial(is) antes do dano.`
+            :'Ataque acertou. Dano liberado.';
         batalhaLogPush_(batalhaEstado_,`${atacante?.nome||'Atacante'} acertou ${defensor?.nome||'o alvo'}.`,'acerto',{actorId:atacante?.id||pend.atacanteId,targetId:defensor?.id||pend.defensorId});
     }else{
         batalhaEstado_.danoPendente=null;
@@ -11716,7 +11729,113 @@ function renderizarTabelaFerimentosCompleta_(){
     el.innerHTML=`<h3>🩸 Ferimentos por localização</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Quando</th><th>Consequência</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 ;
+
+// ============================================================
+// CALICO — rolagens de mundo v46.2
+// Sem MutationObserver: o painel só é redesenhado quando necessário.
+// ============================================================
+const CALICO_DIAS_SEMANA_=[
+    'Aurora','Vela','Forja','Peregrino','Coroa',
+    'Nexo','Véspera','Farol','Órbita','Repouso'
+];
+const CALICO_ESTACOES_=[
+    {nome:'Estação dos Ventos',dias:44},
+    {nome:'Estação das Brumas',dias:44},
+    {nome:'Estação das Flores',dias:44},
+    {nome:'Estação do Sol Alto',dias:44},
+    {nome:'Estação das Tempestades',dias:44},
+    {nome:'Estação das Folhas',dias:44},
+    {nome:'Estação dos Meteoros',dias:44},
+    {nome:'Estação das Estrelas',dias:42}
+];
+const CALICO_FASES_LUA_=[
+    'Lua Nova','Fio de Prata','Crescente','Meia-lua Ascendente','Gibosa Clara',
+    'Lua Cheia','Gibosa Tardia','Meia-lua Descendente','Minguante','Lua Escura'
+];
+const CALICO_CLIMAS_=[
+    {nome:'Céu limpo',t:[16,27],u:[22,45]},
+    {nome:'Parcialmente nublado',t:[13,24],u:[35,60]},
+    {nome:'Nublado',t:[10,20],u:[50,72]},
+    {nome:'Chuva fraca',t:[8,18],u:[70,90]},
+    {nome:'Chuva forte',t:[7,16],u:[82,98]},
+    {nome:'Neblina',t:[5,15],u:[88,100]},
+    {nome:'Ventos fortes',t:[8,20],u:[30,65]},
+    {nome:'Tempestade',t:[5,16],u:[78,98]},
+    {nome:'Calor seco',t:[27,38],u:[12,32]},
+    {nome:'Frio seco',t:[-4,8],u:[20,45]}
+];
+let calicoResultados_={hora:'—',lua:'—',dia:'—',estacao:'—',clima:'—'};
+
+function calicoAleatorio_(min,max){
+    return Math.floor(Math.random()*(max-min+1))+min;
+}
+function calicoRolarHora_(){
+    return `${String(calicoAleatorio_(0,23)).padStart(2,'0')}:${String(calicoAleatorio_(0,59)).padStart(2,'0')}`;
+}
+function calicoRolarLua_(){
+    return CALICO_FASES_LUA_[calicoAleatorio_(0,CALICO_FASES_LUA_.length-1)];
+}
+function calicoRolarDia_(){
+    return CALICO_DIAS_SEMANA_[calicoAleatorio_(0,CALICO_DIAS_SEMANA_.length-1)];
+}
+function calicoRolarEstacao_(){
+    const e=CALICO_ESTACOES_[calicoAleatorio_(0,CALICO_ESTACOES_.length-1)];
+    return `${e.nome} · ${e.dias} dias`;
+}
+function calicoRolarClima_(){
+    const c=CALICO_CLIMAS_[calicoAleatorio_(0,CALICO_CLIMAS_.length-1)];
+    const temp=calicoAleatorio_(c.t[0],c.t[1]);
+    const umid=calicoAleatorio_(c.u[0],c.u[1]);
+    return `${c.nome} · ${temp} °C · umidade ${umid}%`;
+}
+function renderizarRolagensCalico_(){
+    const el=document.getElementById('calicoWorldRolls');
+    if(!el)return;
+    const dados=[
+        ['hora','🕒 Hora'],
+        ['lua','🌙 Fase da lua'],
+        ['dia','📅 Dia da semana'],
+        ['estacao','🍂 Estação'],
+        ['clima','🌦️ Clima']
+    ];
+    el.innerHTML=`<div style="margin-top:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+            <div>
+                <strong style="color:#00d4ff;">🌍 Mundo de Calico</strong>
+                <div style="font-size:.82em;color:#888;margin-top:3px;">Dia de 24 h · semana de 10 dias · ano de 350 dias.</div>
+            </div>
+            <button type="button" class="btn-small btn-select" onclick="calicoRolarTudo_()">🎲 Rolar tudo</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;">
+            ${dados.map(([id,nome])=>`<div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
+                <div style="font-size:.78em;color:#999;">${nome}</div>
+                <div style="font-weight:700;min-height:40px;margin:5px 0 7px;">${calicoResultados_[id]}</div>
+                <button type="button" class="btn-small" onclick="calicoRolar_('${id}')">Rolar</button>
+            </div>`).join('')}
+        </div>
+        <div style="font-size:.78em;color:#777;margin-top:9px;">Os nomes de dias, estações e fases continuam provisórios enquanto a cosmologia de Calico é definida.</div>
+    </div>`;
+}
+window.calicoRolar_=function(tipo){
+    if(tipo==='hora')calicoResultados_.hora=calicoRolarHora_();
+    else if(tipo==='lua')calicoResultados_.lua=calicoRolarLua_();
+    else if(tipo==='dia')calicoResultados_.dia=calicoRolarDia_();
+    else if(tipo==='estacao')calicoResultados_.estacao=calicoRolarEstacao_();
+    else if(tipo==='clima')calicoResultados_.clima=calicoRolarClima_();
+    renderizarRolagensCalico_();
+};
+window.calicoRolarTudo_=function(){
+    calicoResultados_={
+        hora:calicoRolarHora_(),
+        lua:calicoRolarLua_(),
+        dia:calicoRolarDia_(),
+        estacao:calicoRolarEstacao_(),
+        clima:calicoRolarClima_()
+    };
+    renderizarRolagensCalico_();
+};
+document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.1.1: corrige renderização e adição no grid tático -->
+<!-- Mesa Estelar v46.2: Calico seguro + dano automático quando não há efeito aplicável -->
 </body>
 </html>
