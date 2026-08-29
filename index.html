@@ -263,20 +263,6 @@
                 grid-template-columns:64px minmax(140px,1fr) repeat(4,70px) repeat(2,minmax(120px,1fr)) !important;
             }
         }
-
-        /* v44 — grid tático compartilhado */
-        .battle-grid-wrap{overflow:auto;padding:10px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10)}
-        .battle-grid{--cell:54px;display:grid;grid-template-columns:repeat(20,var(--cell));grid-template-rows:repeat(12,var(--cell));width:max-content;background:#f8f8f8;border-left:1px solid #c8c8c8;border-top:1px solid #c8c8c8}
-        .battle-grid-cell{width:var(--cell);height:var(--cell);box-sizing:border-box;border-right:1px solid #c8c8c8;border-bottom:1px solid #c8c8c8;position:relative;display:flex;align-items:center;justify-content:center}
-        .battle-token{width:44px;height:44px;border-radius:9px;background:#27304f;border:2px solid #6578b9;color:white;display:flex;align-items:center;justify-content:center;cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.35);overflow:hidden;user-select:none}
-        .battle-token:active{cursor:grabbing}.battle-token img{width:100%;height:100%;object-fit:cover}.battle-token span{font-size:11px;font-weight:800;text-align:center;line-height:1.05;padding:2px}
-        .battle-token.current{outline:3px solid #ffd54a;outline-offset:1px}
-        .battle-grid-cell.drag-over{box-shadow:inset 0 0 0 3px #00cfff}
-        .battle-unplaced{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 10px}
-        .battle-unplaced .battle-token{width:auto;min-width:44px;padding:0 7px;gap:5px}
-        .calico-roll-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:10px}
-        .calico-roll-card{padding:12px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:rgba(255,255,255,.035)}
-
 </style>
 </head>
 <body>
@@ -1092,8 +1078,7 @@
                     <div id="gm-sub-rolagem" class="gm-sub-content hidden">
                         <div style="padding:22px;border-radius:12px;background:rgba(0,0,0,.15);border:1px dashed rgba(155,89,182,.40);">
                             <h4 style="color:#d8b4ff;margin-top:0;">🎲 Rolagem do Mestre</h4>
-                            <div id="calicoWorldRolls"></div>
-                            <p style="color:#bbb;margin:16px 0 0;">A área continua reservada também para os futuros testes ocultos de PC/PM/NPC, dados livres e roladores vinculados ao cenário.</p>
+                            <p style="color:#bbb;margin-bottom:0;">Estrutura reservada para a próxima etapa: escolha de PC/PM/NPC, perícias ocultas prioritárias, todas as demais perícias, dados livres e roladores vinculados ao cenário.</p>
                         </div>
                     </div>
                 </div>
@@ -6105,8 +6090,7 @@ function batalhaSanitizarParticipante_(c){
         iniciativa:null,
         acoesAtuais:batalhaAcoesMax_(c),
         acoesMax:batalhaAcoesMax_(c),
-        gridX:null,
-        gridY:null,
+        posicao:'centro',
         ...(c.__npcTemporario?{
             npcBancoId:String(c.npcBancoId||''),
             npcCombate:JSON.parse(JSON.stringify(c.combate||{})),
@@ -7560,67 +7544,42 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
 }
 
 
-
-const BATALHA_GRID_COLS_=20,BATALHA_GRID_ROWS_=12;
-function batalhaPodeMoverToken_(p){
-    if(!p||!currentUser)return false;
-    if(batalhaEhMestre_())return true;
-    return String(p.donoUid||'')===String(currentUser.uid);
-}
-function batalhaPosGridValida_(p){
-    const x=Number(p?.gridX),y=Number(p?.gridY);
-    return Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<BATALHA_GRID_COLS_&&y>=0&&y<BATALHA_GRID_ROWS_;
-}
-function batalhaCelulaOcupada_(x,y,excetoId=''){
-    return (batalhaEstado_?.participantes||[]).find(p=>p.id!==excetoId&&batalhaPosGridValida_(p)&&Number(p.gridX)===x&&Number(p.gridY)===y);
-}
-window.batalhaDragToken_=function(ev,id){
-    const p=batalhaParticipante_(id);if(!batalhaPodeMoverToken_(p)){ev.preventDefault();return;}
-    ev.dataTransfer.setData('text/plain',id);ev.dataTransfer.effectAllowed='move';
-};
-window.batalhaGridDragOver_=function(ev){ev.preventDefault();ev.currentTarget.classList.add('drag-over');};
-window.batalhaGridDragLeave_=function(ev){ev.currentTarget.classList.remove('drag-over');};
-window.batalhaGridDrop_=async function(ev,x,y){
-    ev.preventDefault();ev.currentTarget.classList.remove('drag-over');
-    const id=ev.dataTransfer.getData('text/plain'),p=batalhaParticipante_(id);
-    if(!p||!batalhaPodeMoverToken_(p))return;
-    const ocupado=batalhaCelulaOcupada_(x,y,id);
-    if(ocupado){notificar_(`A casa já está ocupada por ${ocupado.nome}.`,'aviso');return;}
-    p.gridX=x;p.gridY=y;
-    batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa.`,'posicao',{actorId:p.id});
-    renderizarBatalhaPosicoes_();
+const BATALHA_POSICOES_=[
+    {id:'vanguarda',nome:'⚔️ Vanguarda',desc:'Linha de frente'},
+    {id:'centro',nome:'🛡️ Centro',desc:'Posição intermediária'},
+    {id:'retaguarda',nome:'🎯 Retaguarda',desc:'Linha posterior'}
+];
+function batalhaPosicaoValida_(p){return BATALHA_POSICOES_.some(z=>z.id===p?.posicao)?p.posicao:'centro';}
+window.batalhaMoverPosicao_=async(id,posicao)=>{
+    if(!batalhaEhMestre_())return;
+    const p=batalhaParticipante_(id);if(!p||!BATALHA_POSICOES_.some(z=>z.id===posicao))return;
+    p.posicao=posicao;
+    batalhaLogPush_(batalhaEstado_,`${p.nome} mudou para ${BATALHA_POSICOES_.find(z=>z.id===posicao)?.nome.replace(/^[^ ]+ /,'')||posicao}.`,'posicao',{actorId:p.id});
     await batalhaSalvarEstado_();
 };
-window.batalhaGridRemover_=async function(ev){
-    ev.preventDefault();
-    const id=ev.dataTransfer.getData('text/plain'),p=batalhaParticipante_(id);
-    if(!p||!batalhaPodeMoverToken_(p))return;
-    p.gridX=null;p.gridY=null;renderizarBatalhaPosicoes_();await batalhaSalvarEstado_();
-};
-function batalhaTokenHtml_(p){
-    const pode=batalhaPodeMoverToken_(p),atual=batalhaParticipanteAtual_()?.id===p.id;
-    const iniciais=String(p.nome||'?').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
-    return `<div class="battle-token ${atual?'current':''}" draggable="${pode?'true':'false'}" ${pode?`ondragstart="batalhaDragToken_(event,'${p.id}')"`:''} title="${escaparHtmlInventario_(p.nome)}${pode?' · arraste para mover':''}">
-      ${p.imagem?`<img src="${escaparHtmlInventario_(p.imagem)}" alt="${escaparHtmlInventario_(p.nome)}">`:`<span>${escaparHtmlInventario_(iniciais||'👤')}</span>`}
-    </div>`;
-}
 function renderizarBatalhaPosicoes_(){
     const el=document.getElementById('battlePositionPanel');if(!el)return;
     if(!batalhaEstado_?.ativo||!(batalhaEstado_.participantes||[]).length){el.innerHTML='';return;}
-    const ps=batalhaEstado_.participantes||[],fora=ps.filter(p=>!batalhaPosGridValida_(p));
-    let cells='';
-    for(let y=0;y<BATALHA_GRID_ROWS_;y++)for(let x=0;x<BATALHA_GRID_COLS_;x++){
-        const p=ps.find(q=>batalhaPosGridValida_(q)&&Number(q.gridX)===x&&Number(q.gridY)===y);
-        cells+=`<div class="battle-grid-cell" ondragover="batalhaGridDragOver_(event)" ondragleave="batalhaGridDragLeave_(event)" ondrop="batalhaGridDrop_(event,${x},${y})">${p?batalhaTokenHtml_(p):''}</div>`;
-    }
     el.innerHTML=`<div style="padding:13px;border-radius:12px;background:rgba(0,0,0,.13);border:1px solid rgba(255,255,255,.10);">
-      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px">
-        <h3 style="margin:0;color:#b8c8ff;">🗺️ Mapa do combate</h3>
-        <small style="color:#888;">20 × 12 casas · jogadores movem seus personagens; mestre move todos.</small>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <h3 style="margin:0;color:#b8c8ff;">🗺️ Posição no combate</h3>
+        <small style="color:#888;">Representação por zonas. Ainda não altera alcance ou movimento.</small>
       </div>
-      ${fora.length?`<div><small style="color:#aaa;">Aguardando posicionamento:</small><div class="battle-unplaced" ondragover="event.preventDefault()" ondrop="batalhaGridRemover_(event)">${fora.map(batalhaTokenHtml_).join('')}</div></div>`:''}
-      <div class="battle-grid-wrap"><div class="battle-grid">${cells}</div></div>
-      <small style="display:block;color:#777;margin-top:7px;">Por enquanto o mapa é apenas posicional: distância, alcance e movimento ainda não são calculados automaticamente.</small>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+        ${BATALHA_POSICOES_.map(z=>{
+            const ps=(batalhaEstado_.participantes||[]).filter(p=>batalhaPosicaoValida_(p)===z.id);
+            return `<div style="min-height:130px;padding:10px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);">
+              <div style="font-weight:800;margin-bottom:2px;">${z.nome}</div><small style="color:#777;">${z.desc}</small>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-top:9px;">
+                ${ps.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:7px;border-radius:8px;background:rgba(0,0,0,.16);">
+                  ${p.imagem?`<img src="${escaparHtmlInventario_(p.imagem)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`:`<div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);">👤</div>`}
+                  <div style="min-width:0;flex:1;"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escaparHtmlInventario_(p.nome)}</strong><small style="color:#888;">${escaparHtmlInventario_(p.tipo||'')}</small></div>
+                  ${batalhaEhMestre_()?`<select style="width:118px;padding:5px;" onchange="batalhaMoverPosicao_('${p.id}',this.value)">${BATALHA_POSICOES_.map(o=>`<option value="${o.id}" ${o.id===z.id?'selected':''}>${o.id==='vanguarda'?'Frente':o.id==='centro'?'Centro':'Retaguarda'}</option>`).join('')}</select>`:''}
+                </div>`).join('')||'<small style="color:#666;">Vazio</small>'}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
     </div>`;
 }
 
@@ -7675,8 +7634,7 @@ function iniciarBatalhaCompartilhada_(){
         if(batalhaEstado_?.participantes){
             batalhaEstado_.participantes.forEach(p=>{
                 if(p.iniciativa===undefined)p.iniciativa=null;
-                if(!Number.isInteger(Number(p.gridX)))p.gridX=null;
-                if(!Number.isInteger(Number(p.gridY)))p.gridY=null;
+                if(!BATALHA_POSICOES_.some(z=>z.id===p.posicao))p.posicao='centro';
             });
         }
         renderizarBatalhaCompartilhada_();
@@ -11669,73 +11627,13 @@ function renderizarTabelaFerimentosCompleta_(){
     el.innerHTML=`<h3>🩸 Ferimentos por localização</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Quando</th><th>Consequência</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 ;
-
-// ===== v44 · Gerador de condições de Calico =====
-const CALICO_DIAS_=['Aurora','Vela','Forja','Peregrino','Coroa','Nexo','Véspera','Farol','Órbita','Repouso'];
-const CALICO_ESTACOES_=[
- {nome:'Estação dos Ventos',dias:44,temp:[8,22],chuva:28},
- {nome:'Estação das Brumas',dias:44,temp:[5,18],chuva:45},
- {nome:'Estação das Flores',dias:44,temp:[12,27],chuva:34},
- {nome:'Estação do Sol Alto',dias:44,temp:[20,36],chuva:16},
- {nome:'Estação das Tempestades',dias:44,temp:[18,32],chuva:58},
- {nome:'Estação das Folhas',dias:44,temp:[10,25],chuva:31},
- {nome:'Estação dos Meteoros',dias:44,temp:[3,19],chuva:20},
- {nome:'Estação das Estrelas',dias:42,temp:[-2,14],chuva:25}
-]; // 350 dias
-const CALICO_LUA_FASES_=['Lua Nova','Fio de Prata','Crescente','Meia-lua Ascendente','Gibosa Clara','Lua Cheia','Gibosa Tardia','Meia-lua Descendente','Minguante','Lua Escura'];
-let calicoUltimasRolagens_={};
-function calicoRnd_(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-function calicoDiaAno_(diaCampanha){return ((Math.max(1,Number(diaCampanha)||1)-1)%350)+1;}
-function calicoCalendario_(diaCampanha){
-    const d=calicoDiaAno_(diaCampanha);let resto=d,est=CALICO_ESTACOES_[0];
-    for(const e of CALICO_ESTACOES_){if(resto<=e.dias){est=e;break;}resto-=e.dias;}
-    const nomeDia=CALICO_DIAS_[(d-1)%10];
-    const fase=CALICO_LUA_FASES_[Math.floor(((d-1)%30)/3)%10];
-    return {diaAno:d,diaEstacao:resto,estacao:est,nomeDia,fase};
-}
-function calicoRolarClima_(){
-    const camp=window.campanhaAtual_||window.estadoCampanha_||{};
-    const c=calicoCalendario_(camp.diaCampanha||camp.dia||1),e=c.estacao;
-    const temp=calicoRnd_(e.temp[0],e.temp[1]),umid=calicoRnd_(35,92),r=calicoRnd_(1,100);
-    let tempo=r<=e.chuva?(r<=Math.max(7,e.chuva/4)?'⛈️ Tempestade':'🌧️ Chuva'):(umid>78?'☁️ Nublado':temp>28?'☀️ Ensolarado':'🌤️ Parcialmente aberto');
-    return {temperatura:temp,umidade:umid,tempo};
-}
-window.calicoRolar_=function(tipo){
-    const camp=window.campanhaAtual_||window.estadoCampanha_||{},dia=camp.diaCampanha||camp.dia||1,c=calicoCalendario_(dia);
-    if(tipo==='hora')calicoUltimasRolagens_.hora=`${String(calicoRnd_(0,23)).padStart(2,'0')}:${String(calicoRnd_(0,59)).padStart(2,'0')}`;
-    if(tipo==='lua')calicoUltimasRolagens_.lua=c.fase;
-    if(tipo==='semana')calicoUltimasRolagens_.semana=`${c.nomeDia} · dia ${((c.diaAno-1)%10)+1} da dezena`;
-    if(tipo==='estacao')calicoUltimasRolagens_.estacao=`Dia ${c.diaEstacao} da ${c.estacao.nome} · dia ${c.diaAno}/350`;
-    if(tipo==='clima'){const w=calicoRolarClima_();calicoUltimasRolagens_.clima=`${w.tempo} · ${w.temperatura} °C · ${w.umidade}% umidade`;}
-    renderizarRolagensCalico_();
-};
-window.calicoRolarTudo_=function(){['hora','lua','semana','estacao','clima'].forEach(calicoRolar_);};
-function renderizarRolagensCalico_(){
-    const el=document.getElementById('calicoWorldRolls');if(!el)return;
-    const camp=window.campanhaAtual_||window.estadoCampanha_||{},c=calicoCalendario_(camp.diaCampanha||camp.dia||1);
-    const cards=[
-      ['🕒 Horário','hora',calicoUltimasRolagens_.hora||'—'],
-      ['🌙 Lua','lua',calicoUltimasRolagens_.lua||c.fase],
-      ['📆 Dia da semana','semana',calicoUltimasRolagens_.semana||c.nomeDia],
-      ['🌡️ Clima','clima',calicoUltimasRolagens_.clima||'—'],
-      ['🍃 Estação','estacao',calicoUltimasRolagens_.estacao||`Dia ${c.diaEstacao} da ${c.estacao.nome}`]
-    ];
-    el.innerHTML=`<div style="margin:12px 0 18px;padding:13px;border:1px solid rgba(255,255,255,.10);border-radius:12px;background:rgba(0,0,0,.12)">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><strong style="color:#00d4ff">🪐 Condições de Calico</strong><div style="color:#888;font-size:13px">Dia ${c.diaAno}/350 · semana de 10 dias · ciclo lunar provisório de 30 dias.</div></div><button onclick="calicoRolarTudo_()">🎲 Rolar tudo</button></div>
-      <div class="calico-roll-grid">${cards.map(([nome,id,val])=>`<div class="calico-roll-card"><div style="font-weight:800">${nome}</div><div style="font-size:18px;margin:7px 0">${escaparHtmlInventario_(String(val))}</div><button onclick="calicoRolar_('${id}')">🎲 Rolar</button></div>`).join('')}</div>
-      <small style="display:block;color:#777;margin-top:10px">Os nomes do calendário são provisórios e podem ser trocados depois sem alterar a estrutura do sistema.</small>
-    </div>`;
-}
-
-
-document.addEventListener('DOMContentLoaded',()=>{
-    // Renderiza uma vez. O observer anterior reescrevia o próprio painel,
-    // disparava outra mutação e entrava em um ciclo infinito.
-    renderizarRolagensCalico_();
-});
-
-
-window.atualizarPainelCalico_=()=>renderizarRolagensCalico_();
 </script>
+
+<!--
+RECUPERAÇÃO v45.3
+Base: v43, última versão que apareceu funcionando em capturas do usuário.
+Não contém o grid tático nem as rolagens de Calico introduzidas depois.
+Objetivo: recuperar a inicialização do site antes de reintroduzir recursos em blocos menores.
+-->
 </body>
 </html>
