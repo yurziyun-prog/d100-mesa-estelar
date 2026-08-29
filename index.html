@@ -2064,6 +2064,10 @@ async function carregarBancosDeDados() {
     }
 
     if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'npcs'));npcsDB=[];q.forEach(d=>npcsDB.push({id:d.id,...d.data()}));}catch(e){console.warn(e);}}
+    if(userData?.role==='mestre'){
+        renderizarCampanhaMestre_();
+        if(document.getElementById('batalha')?.classList.contains('active'))renderizarBatalhaCompartilhada_();
+    }
     popularSelects();
     renderizarBancoDados();
     if (document.getElementById('marketGrid')) renderizarMercado();
@@ -3382,7 +3386,48 @@ function calcularFormulaPersonagem_(formula, char) {
     }
 }
 
+
+function baseNPCPericia_(char,nome){
+    const a=char?.atributos||{};
+    const FOR=Number(a.FOR||10),CON=Number(a.CON||10),DES=Number(a.DES||10),
+          INT=Number(a.INT||10),POD=Number(a.POD||10),CAR=Number(a.CAR||10);
+    const q=npcSlugPericia_(nome);
+    if(q.includes('atletismo'))return FOR+DES;
+    if(q.includes('resistencia'))return CON*2;
+    if(q.includes('vontade'))return POD*2;
+    if(q.includes('percepcao')||q.includes('insight'))return INT+POD;
+    if(q.includes('furtividade'))return DES+INT;
+    if(q.includes('enganacao'))return INT+CAR;
+    if(q.includes('influencia'))return CAR*2;
+    if(q.includes('primeiros_socorros'))return INT+DES;
+    if(q.includes('operacao_tecnica'))return INT+DES;
+    if(/engenharia|historia|pesquisa|estrategia|ciencia/.test(q))return INT*2;
+    if(q.includes('comercio'))return INT+CAR;
+    if(q.includes('locale')||q.includes('costumes'))return INT*2;
+    if(q.includes('pilotagem'))return DES+INT;
+    if(q.includes('conduc'))return DES+POD;
+    if(q.includes('navegacao'))return INT+POD;
+    if(q.includes('sobrevivencia')||q.includes('rastrear'))return INT+CON;
+    if(q.includes('mineracao'))return FOR+INT;
+    if(q.includes('mecanica')||q.includes('eletronica'))return INT+DES;
+    if(q.includes('prestidigitacao'))return DES+CAR;
+    if(q.includes('meditacao'))return POD+CON;
+    if(q.includes('psiquismo'))return POD+INT;
+    if(q.includes('arremesso'))return FOR+DES;
+    if(q.includes('esquiva'))return DES*2;
+    if(q.includes('combate')||q.includes('estilo_de_combate'))return FOR+DES;
+    return INT+DES;
+}
+
 function obterValorRegistroPericia_(char, id, ehEspecializacao = false) {
+    if(char?.__npcTemporario){
+        const fonte=ehEspecializacao ? char.especializacoes : char.pericias;
+        const reg=fonte?.[id];
+        if(reg){
+            return Math.max(0,baseNPCPericia_(char,reg.nomeOriginal||id)+Number(reg.treino||0));
+        }
+    }
+
     const banco = ehEspecializacao ? especializacoesDB : periciasDB;
     const registro = banco.find(x => x.id === id);
     if (!registro) return 0;
@@ -5590,8 +5635,58 @@ function batalhaTipoChar_(c){
     return c?.dono===currentUserUid?'PM':'PJ';
 }
 
-function batalhaCharLocal_(id){ return (userCharacters||[]).find(c=>c.id===id)||null; }
-function batalhaParticipante_(id){ return (batalhaEstado_?.participantes||[]).find(p=>p.id===id)||null; }
+function npcBancoPorId_(id){
+    return (npcsDB||[]).find(n=>String(n.id)===String(id))||null;
+}
+function npcSlugPericia_(nome){
+    return normalizarTextoCombate_(nome||'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+}
+function npcPericiasParaCombate_(texto){
+    const out={};
+    String(texto||'').split('|').forEach(par=>{
+        const pos=par.lastIndexOf(':');
+        if(pos<0)return;
+        const nome=par.slice(0,pos).trim(), investimento=Number(par.slice(pos+1))||0;
+        if(!nome)return;
+        out[npcSlugPericia_(nome)]={base:0,treino:investimento,nomeOriginal:nome};
+    });
+    return out;
+}
+function criarNPCCombateDoBanco_(modelo,participante=null){
+    if(!modelo)return null;
+    const combateSalvo=participante?.npcCombate&&typeof participante.npcCombate==='object'
+        ? JSON.parse(JSON.stringify(participante.npcCombate))
+        : {hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[]};
+    return {
+        id:participante?.id||`npc:${modelo.id}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
+        npcBancoId:modelo.id,
+        nome:modelo.nome||'NPC',
+        imagem:modelo.imagem||'',
+        tipo:'npc',
+        dono:currentUserUid,
+        atributos:{
+            FOR:Number(modelo.FOR||10),CON:Number(modelo.CON||10),TAM:Number(modelo.TAM||10),
+            DES:Number(modelo.DES||10),INT:Number(modelo.INT||10),POD:Number(modelo.POD||10),CAR:Number(modelo.CAR||10)
+        },
+        bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
+        pericias:npcPericiasParaCombate_(modelo.periciasTexto),
+        especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
+        combate:combateSalvo,
+        conceito:modelo.descricao||'',
+        carreira:modelo.tipo||'NPC',
+        __npcTemporario:true
+    };
+}
+function batalhaCharLocal_(id){
+    const normal=(userCharacters||[]).find(c=>String(c.id)===String(id));
+    if(normal)return normal;
+    const p=(batalhaEstado_?.participantes||[]).find(x=>String(x.id)===String(id));
+    if(p?.npcBancoId){
+        return criarNPCCombateDoBanco_(npcBancoPorId_(p.npcBancoId),p);
+    }
+    return null;
+}
+function batalhaParticipante_(id){ return (batalhaEstado_?.participantes||[]).find(p=>String(p.id)===String(id))||null; }
 
 function batalhaIniBase_(c){
     const a=c?.atributos||{}, b=c?.bonus||{};
@@ -5611,7 +5706,8 @@ function batalhaSanitizarParticipante_(c){
         tipo:batalhaTipoChar_(c),
         iniciativa:null,
         acoesAtuais:batalhaAcoesMax_(c),
-        acoesMax:batalhaAcoesMax_(c)
+        acoesMax:batalhaAcoesMax_(c),
+        ...(c.__npcTemporario?{npcBancoId:String(c.npcBancoId||''),npcCombate:JSON.parse(JSON.stringify(c.combate||{}))}:{})
     };
 }
 
@@ -5944,13 +6040,20 @@ function renderizarBatalhaCandidatos_(){
     if(!box||!setup)return;
     setup.style.display=batalhaEhMestre_()?'block':'none';
     if(!batalhaEhMestre_())return;
-    const atuais=new Set((batalhaEstado_?.participantes||[]).map(x=>x.id));
-    box.innerHTML=(userCharacters||[]).filter(c=>!atuais.has(c.id)).map(c=>`
+    const atuais=new Set((batalhaEstado_?.participantes||[]).map(x=>String(x.id)));
+    const chars=(userCharacters||[]).filter(c=>!atuais.has(String(c.id))).map(c=>({
+        token:String(c.id),nome:c.nome||'Sem nome',imagem:c.imagem||'',tipo:batalhaTipoChar_(c)
+    }));
+    const modelos=(npcsDB||[]).filter(n=>n.selecionavelCombate!==false).map(n=>({
+        token:`npcdb:${n.id}`,nome:n.nome||'NPC',imagem:n.imagem||'',tipo:'NPC'
+    }));
+    const candidatos=[...chars,...modelos];
+    box.innerHTML=candidatos.map(c=>`
         <label style="display:flex;gap:9px;align-items:center;padding:8px;border-radius:9px;background:rgba(255,255,255,.035);">
-            <input type="checkbox" onchange="batalhaSelecionarCandidato_('${c.id}',this.checked)" ${batalhaSelecaoMestre_.has(c.id)?'checked':''}>
+            <input type="checkbox" onchange="batalhaSelecionarCandidato_('${c.token}',this.checked)" ${batalhaSelecaoMestre_.has(c.token)?'checked':''}>
             ${c.imagem?`<img src="${escaparHtmlInventario_(c.imagem)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;">`:''}
-            <span><strong>${escaparHtmlInventario_(c.nome||'Sem nome')}</strong><br><small style="color:#888;">${batalhaTipoChar_(c)}</small></span>
-        </label>`).join('')||'<div style="color:#888;">Todos os personagens já estão na batalha.</div>';
+            <span><strong>${escaparHtmlInventario_(c.nome)}</strong><br><small style="color:#888;">${c.tipo}</small></span>
+        </label>`).join('')||'<div style="color:#888;">Nenhum participante disponível.</div>';
 }
 window.batalhaSelecionarCandidato_=(id,v)=>{ if(v)batalhaSelecaoMestre_.add(id);else batalhaSelecaoMestre_.delete(id); };
 
@@ -5961,9 +6064,17 @@ window.batalhaAdicionarSelecionados_=async()=>{
     estado.ativo=true;
     estado.participantes=Array.isArray(estado.participantes)?estado.participantes:[];
     for(const id of ids){
-        if(estado.participantes.some(p=>p.id===id))continue;
-        const c=batalhaCharLocal_(id);if(!c)continue;
-        estado.participantes.push(batalhaSanitizarParticipante_(c));
+        let c=null;
+        if(String(id).startsWith('npcdb:')){
+            const modelo=npcBancoPorId_(String(id).slice(6));
+            c=criarNPCCombateDoBanco_(modelo);
+        }else{
+            c=batalhaCharLocal_(id);
+        }
+        if(!c)continue;
+        const participante=batalhaSanitizarParticipante_(c);
+        if(estado.participantes.some(p=>String(p.id)===String(participante.id)))continue;
+        estado.participantes.push(participante);
         batalhaLogPush_(estado,`${c.nome||'Personagem'} entrou na batalha.`,'entrada');
     }
     batalhaSelecaoMestre_.clear();
@@ -6315,7 +6426,11 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
         alvo.combate.hitLocations[local]=pvDepois;
     }
 
-    await setDoc(doc(db,'personagens',alvo.id),{combate:alvo.combate},{merge:true});
+    if(alvo.__npcTemporario){
+        defensor.npcCombate=JSON.parse(JSON.stringify(alvo.combate||{}));
+    }else{
+        await setDoc(doc(db,'personagens',alvo.id),{combate:alvo.combate},{merge:true});
+    }
 
     const resultado={
         d20:roll,local,bruto:Number(total||0),penetracao,pa,paEfetivo,danoFinal,pvAntes,pvDepois,
@@ -8264,7 +8379,9 @@ function estatisticasMestre_() {
     const chars=userCharacters||[];
     const pcs=chars.filter(c=>c.dono!==currentUserUid && !['npc','npc_rapido','monstro'].includes(String(c.tipo||'pc').toLowerCase())).length;
     const pms=chars.filter(c=>c.dono===currentUserUid && !['npc','npc_rapido','monstro'].includes(String(c.tipo||'pc').toLowerCase())).length;
-    const npcs=chars.filter(c=>['npc','npc_rapido'].includes(String(c.tipo||'').toLowerCase())).length;
+    const npcsPersonagem=chars.filter(c=>['npc','npc_rapido'].includes(String(c.tipo||'').toLowerCase())).length;
+    const npcsBanco=(npcsDB||[]).length;
+    const npcs=npcsPersonagem+npcsBanco;
     const monstros=chars.filter(c=>String(c.tipo||'').toLowerCase()==='monstro').length;
     return {pcs,pms,npcs,monstros};
 }
