@@ -7126,6 +7126,73 @@ window.removerPoderPsi = async (id) => {
 };
 
 
+function renderizarBancoItens() {
+    const container = document.getElementById('listaBancoItens');
+    if (!container) return;
+
+    if (!itensDB.length) {
+        container.innerHTML = '<p style="color:#aaa;">Nenhum item cadastrado</p>';
+        return;
+    }
+
+    const esc = escaparBanco_;
+    const linhas = [...itensDB]
+        .sort((a, b) => String(a.nome || '').localeCompare(String(b.nome || ''), 'pt'))
+        .map(i => {
+            const img = i.imagem
+                ? `<img class="db-item-thumb" src="${esc(i.imagem)}" alt="${esc(i.nome || '')}">`
+                : `<div class="db-item-thumb placeholder">📦</div>`;
+            const desc = i.descricao || i.observacoes || '';
+            const meta = [
+                i.peso !== undefined ? `${Number(i.peso || 0)} kg` : '',
+                `PA: ${Number(i.pa || 0)}`,
+                `PV: ${Number(i.pv ?? 1)}`,
+                i.preco !== undefined ? `Preço: ${Number(i.preco || 0)}` : '',
+                i.alcance ? `Alcance: ${i.alcance}` : '',
+                i.dano ? `Dano: ${i.dano}` : '',
+                String(i.categoria||'').toLowerCase()==='armas' ? `Pen.: ${Number(i.penetracao || 0)}` : '',
+                i.municao ? `Munição: ${i.municao}` : '',
+                i.uso !== undefined && i.uso !== '' ? `Uso: ${i.uso}` : '',
+                (i.nivelAcesso || i.acesso) ? `Acesso: ${i.nivelAcesso || i.acesso}` : '',
+                i.material ? `Material: ${i.material}` : ''
+            ].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ');
+
+            return `
+                <tr class="db-item-main-row">
+                    <td rowspan="2">${img}</td>
+                    <td class="name-pt">${esc(i.nome || '')}</td>
+                    <td>${esc(i.nome_en || '')}</td>
+                    <td>${esc(i.nome_zh || '')}</td>
+                    <td>${esc(i.categoria || 'Diversos')}</td>
+                    <td class="db-item-description">${esc(desc)}</td>
+                </tr>
+                <tr class="db-item-meta-row">
+                    <td colspan="4">${meta}</td>
+                    <td class="actions">
+                        <button class="btn-small btn-select" onclick="editarItemBanco('${esc(i.id)}')">Editar</button>
+                        <button class="btn-small btn-delete" onclick="removerItemBanco('${esc(i.id)}')">Remover</button>
+                    </td>
+                </tr>`;
+        }).join('');
+
+    container.innerHTML = `
+        <div class="db-table-wrap">
+            <table class="db-table" style="min-width:1180px;">
+                <thead>
+                    <tr>
+                        <th>Imagem</th>
+                        <th>Nome (PT)</th>
+                        <th>Name (EN)</th>
+                        <th>名称 (中文)</th>
+                        <th>Categoria</th>
+                        <th>Descrição / Observações</th>
+                    </tr>
+                </thead>
+                <tbody>${linhas}</tbody>
+            </table>
+        </div>`;
+}
+
 function renderizarBancoCenarios() {
     const container=document.getElementById('listaBancoCenarios');
     if(!container)return;
