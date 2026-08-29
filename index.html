@@ -383,7 +383,7 @@
                     </div>
 
                     <div id="marketPaneVender" class="hidden">
-                        <p style="color:#aaa;">Itens do personagem atual. Venda normal: 80% do preço pago, multiplicado pela condição atual do item. Um item com 0 PV vale 0 e pode ser descartado.</p>
+                        <p style="color:#aaa;">Itens do personagem atual. Venda normal: 80% do preço pago, multiplicado pela condição atual do item. Um item com 0 PV vale 0 e pode ser descartado. Itens danificados podem ser enviados para reparo.</p>
                         <div class="market-toolbar">
                             <input id="marketSellSearch" placeholder="Buscar no inventário..." oninput="renderizarVendaMercado_()">
                             <select id="marketSellCategory" onchange="renderizarVendaMercado_()"><option value="">Todas as categorias</option></select>
@@ -554,9 +554,15 @@
                         <div class="form-section">
                             <div class="inventory-title-row">
                                 <h3 data-i18n="inventoryTitle">🎒 Inventário</h3>
-                                <div class="inventory-resources-box">
-                                    <label for="editRecursos" data-i18n="resourcesLabel">Recursos</label>
-                                    <input type="number" id="editRecursos" min="0" step="1" onchange="salvarRecursos()" title="Somente o mestre pode alterar diretamente os recursos">
+                                <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
+                                    <div class="inventory-resources-box" style="min-width:130px;">
+                                        <label>📅 Dia de campanha</label>
+                                        <div id="charCampaignDay" style="font-size:1.35em;font-weight:800;color:#ffd166;line-height:38px;">1</div>
+                                    </div>
+                                    <div class="inventory-resources-box">
+                                        <label for="editRecursos" data-i18n="resourcesLabel">Recursos</label>
+                                        <input type="number" id="editRecursos" min="0" step="1" onchange="salvarRecursos()" title="Somente o mestre pode alterar diretamente os recursos">
+                                    </div>
                                 </div>
                             </div>
                             <p class="inventory-help">Arraste os itens entre os compartimentos para movê-los. Soltar sobre um item ocupado troca as posições.</p>
@@ -927,6 +933,14 @@
                                 <div class="form-group"><label>Clima atual:</label><input id="gmCampanhaClima" type="text"></div>
                                 <div class="form-group"><label>Cenário ativo:</label><input id="gmCampanhaCenario" type="text"></div>
                                 <div class="form-group"><label>Data / período no jogo:</label><input id="gmCampanhaData" type="text"></div>
+                                <div class="form-group">
+                                    <label>Dia de campanha:</label>
+                                    <div style="display:flex;gap:6px;align-items:center;">
+                                        <input id="gmCampanhaDia" type="number" min="1" step="1" value="1" style="max-width:110px;">
+                                        <button class="btn-small" type="button" onclick="avancarDiaCampanha_(1)">+1</button>
+                                        <button class="btn-small" type="button" onclick="avancarDiaCampanha_(7)">+7</button>
+                                    </div>
+                                </div>
                             </div>
                             <div class="form-group"><label>Resumo atual:</label><textarea id="gmCampanhaResumo" rows="4" placeholder="Situação geral, missão em andamento, acontecimentos importantes..."></textarea></div>
                             <button class="btn-save" onclick="salvarEstadoCampanha()" style="width:auto;">💾 Salvar estado da campanha</button>
@@ -1404,7 +1418,7 @@ const REGRAS_PADRAO_ZH = `# D100系统规则 - 星际桌游RPG
 `;
 let escudoTexto = '';
 let estadoCampanhaMestre = {
-    nome:'', planeta:'', cidade:'', clima:'', cenario:'', dataJogo:'', resumo:''
+    nome:'', planeta:'', cidade:'', clima:'', cenario:'', dataJogo:'', diaCampanha:1, resumo:''
 };
 let estadoCombateMestre = {
     ativo:false,
@@ -2166,6 +2180,8 @@ async function carregarPersonagens() {
     if (currentCharId && !userCharacters.some(c => c.id === currentCharId)) currentCharId = null;
 
     renderizarListaPersonagens();
+    renderizarDiaCampanhaFicha_();
+    await processarReparosConcluidos_();
     if (userData && userData.role==='mestre' && document.getElementById('gmCampaignStats')) {
         renderizarCampanhaMestre_();
         renderizarHistoricoMestre_();
@@ -2220,6 +2236,7 @@ function renderizarListaPersonagens() {
             document.getElementById('characterSection').classList.remove('hidden');
             atualizarVisualizacao(char);
             preencherFormulario(char);
+            renderizarDiaCampanhaFicha_();
         }
     } else {
         document.getElementById('characterSection').classList.add('hidden');
@@ -4840,6 +4857,101 @@ function percorrerInventarioItens_(char){
     }
     return out;
 }
+
+function estadoReparos_(char){
+    if(!Array.isArray(char.reparosPendentes))char.reparosPendentes=[];
+    return char.reparosPendentes;
+}
+function previewReparo_(item,local=false){
+    const banco=itensDB.find(x=>String(x.id)===String(item.idBanco||item.id))||item;
+    const pvMax=Math.max(0,Number(banco.pv??item.pv??0));
+    const pvAtual=Math.max(0,Number(item.pvAtual??pvMax));
+    const perdidos=Math.max(0,pvMax-pvAtual);
+    const frac= pvMax>0 ? perdidos/pvMax : 0;
+    const precoOriginal=Math.max(0,Number(item.precoPago??banco.preco??item.preco??0));
+    let custo=Math.max(0,Math.floor(precoOriginal*0.80*frac));
+    if(local)custo=Math.max(0,Math.floor(custo*0.90));
+    return {pvMax,pvAtual,perdidos,frac,precoOriginal,custo};
+}
+function rolarPrazoReparo_(item){
+    const p=previewReparo_(item,false);
+    const dados=[0,0,0].map(()=>Math.floor(Math.random()*20)+1);
+    const horasDano=Math.ceil(p.frac*24);
+    const horas=dados.reduce((a,b)=>a+b,0)+horasDano;
+    const diasCalendario=Math.max(1,Math.ceil(horas/24));
+    // Ex.: no dia 1, 49 h cai no dia 3.
+    const entregaDia=obterDiaCampanha_()+diasCalendario-1;
+    return {dados,horasDano,horas,diasCalendario,entregaDia};
+}
+async function iniciarReparoItem_(comp,index,local=false){
+    const char=obterPersonagemAtual_();if(!char)return;
+    const inv=normalizarInventario_(char),item=inv?.[comp]?.[index];if(!item)return;
+    const p=previewReparo_(item,local);
+    if(p.perdidos<=0){notificar_('Este item está com PV completos.','aviso');return;}
+    if(Number(char.recursos||0)<p.custo){notificar_('Recursos insuficientes para o reparo.','aviso');return;}
+    const prazo=rolarPrazoReparo_(item);
+    const dadosTxt=prazo.dados.join('+');
+    if(!confirm(`Reparar ${getNome(item)} por ${p.custo} recursos?\nPrazo: 3d20 (${dadosTxt}) + ${prazo.horasDano} h por dano = ${prazo.horas} h.\nEntrega no dia de campanha ${prazo.entregaDia}.`))return;
+
+    char.recursos=Number(char.recursos||0)-p.custo;
+    const reparos=estadoReparos_(char);
+    reparos.push({
+        id:`rep_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+        item:{...item},origemComp:comp,origemIndex:index,
+        iniciadoDia:obterDiaCampanha_(),entregaDia:prazo.entregaDia,
+        horas:prazo.horas,dadosPrazo:prazo.dados,horasDano:prazo.horasDano,
+        custo:p.custo,local:!!local
+    });
+    inv[comp][index]=null;
+    char.inventario=inv;
+    await setDoc(doc(db,'personagens',char.id),{inventario:inv,reparosPendentes:reparos,recursos:char.recursos},{merge:true});
+    const r=document.getElementById('editRecursos');if(r)r.value=char.recursos;
+    renderizarInventario(char);renderizarVendaMercado_();renderizarMercadoLocal_();renderizarMercado();
+    notificar_(`${getNome(item)} enviado para reparo. Entrega no dia ${prazo.entregaDia}.`,'info');
+}
+window.iniciarReparoMercado_=async(comp,index)=>iniciarReparoItem_(comp,index,false);
+window.iniciarReparoMercadoLocal_=async(comp,index)=>iniciarReparoItem_(comp,index,true);
+
+async function processarReparosConcluidos_(){
+    const dia=obterDiaCampanha_();
+    const chars=(userData?.role==='mestre' ? userCharacters : [obterPersonagemAtual_()]).filter(Boolean);
+    for(const char of chars){
+        const reparos=Array.isArray(char.reparosPendentes)?char.reparosPendentes:[];
+        const concluidos=reparos.filter(r=>Number(r.entregaDia||999999)<=dia);
+        if(!concluidos.length)continue;
+        const inv=normalizarInventario_(char);
+        const entregues=new Set();
+        for(const r of concluidos){
+            const item=atualizarInstanciaPeloBanco_({...r.item});
+            const banco=itensDB.find(x=>String(x.id)===String(item.idBanco||item.id))||item;
+            item.pvAtual=Math.max(0,Number(banco.pv??item.pv??0));
+            let destino=(r.origemComp&&Array.isArray(inv[r.origemComp]))?r.origemComp:'mochila';
+            let slot=inv[destino].findIndex(x=>!x);
+            if(slot<0){
+                for(const c of ['mochila','bolso','veiculo','casa','equipado']){
+                    const ix=inv[c].findIndex(x=>!x);
+                    if(ix>=0){destino=c;slot=ix;break;}
+                }
+            }
+            if(slot>=0){inv[destino][slot]=item;entregues.add(r.id);}
+            else r.entregaDia=dia+1;
+        }
+        char.reparosPendentes=reparos.filter(r=>!entregues.has(r.id));
+        char.inventario=inv;
+        await setDoc(doc(db,'personagens',char.id),{inventario:inv,reparosPendentes:char.reparosPendentes},{merge:true});
+    }
+    const atual=obterPersonagemAtual_();
+    if(atual){renderizarInventario(atual);renderizarVendaMercado_();renderizarMercadoLocal_();}
+}
+function reparosPendentesHtml_(char){
+    const rs=Array.isArray(char?.reparosPendentes)?char.reparosPendentes:[];
+    if(!rs.length)return '';
+    return `<div style="margin:10px 0 14px;padding:10px;border:1px solid rgba(255,209,102,.28);border-radius:9px;background:rgba(255,209,102,.05);">
+      <strong style="color:#ffd166;">🛠️ Itens em reparo</strong>
+      ${rs.map(r=>`<div style="margin-top:6px;color:#ccc;">${escaparHtmlInventario_(getNome(r.item))} · entrega no dia <strong>${r.entregaDia}</strong> · ${r.horas} h · ${Number(r.custo||0).toLocaleString('pt-BR')} recursos</div>`).join('')}
+    </div>`;
+}
+
 function precoVendaNormal_(registro){
     const item=registro.item;
     const banco=itensDB.find(x=>String(x.id)===String(item.idBanco||item.id));
@@ -4893,7 +5005,7 @@ window.renderizarVendaMercado_=()=>{
         const n=`${r.item.nome||''} ${r.item.nome_en||''}`.toLowerCase();
         return (!busca||n.includes(busca))&&(!cat||String(r.item.categoria||'')===cat);
     }).sort((a,b)=>getNome(a.item).localeCompare(getNome(b.item)));
-    notice.textContent=`${char.nome} • ${regs.length} item(ns) listado(s).`;
+    notice.innerHTML=`${escaparHtmlInventario_(char.nome)} • ${regs.length} item(ns) listado(s).`+reparosPendentesHtml_(char);
     grid.innerHTML=regs.map(r=>{
         const item=r.item,nome=escaparBanco_(getNome(item)),preco=precoVendaNormal_(r);
         const banco=itensDB.find(x=>String(x.id)===String(item.idBanco||item.id));
@@ -4903,6 +5015,8 @@ window.renderizarVendaMercado_=()=>{
           <div class="market-meta">${escaparBanco_(item.categoria||'')} • ${escaparBanco_(r.comp)} • PV ${pvAtual}/${pvMax}</div>
           <div style="margin:8px 0;"><strong>${preco.toLocaleString('pt-BR')}</strong> recursos</div>
           <button class="market-buy" ${preco<=0?'disabled':''} onclick="venderItemMercado_('${r.comp}',${r.index})">Vender</button>
+          <button class="btn-small" style="margin-top:6px;" ${pvAtual>=pvMax?'disabled':''} onclick="iniciarReparoMercado_('${r.comp}',${r.index})">🛠️ Reparar</button>
+          ${pvAtual<pvMax?`<small style="display:block;color:#aaa;margin-top:5px;">Custo-base: 80% do preço × fração dos PV perdidos. Prazo: 3d20 h + dano.</small>`:''}
           <button class="btn-small btn-delete" style="margin-top:6px;" onclick="descartarItemMercado_('${r.comp}',${r.index})">Descartar</button>
         </div></div>`;
     }).join('')||'<p style="color:#aaa;">Nenhum item encontrado.</p>';
@@ -4985,7 +5099,8 @@ window.renderizarMercadoLocal_=()=>{
     const char=obterPersonagemAtual_();
     const ids=new Set((mercadoLocalConfig_?.itens||[]).map(String));
     header.innerHTML=`<strong>📍 ${escaparHtmlInventario_(mercadoLocalConfig_?.cenarioNome||'Nenhum mercado local publicado')}</strong><br>
-      <small>Preço comum local: 90% do valor do mercado geral. A negociação vale para a próxima transação.</small>`;
+      <small>Preço comum local: 90% do valor do mercado geral. A negociação vale para a próxima transação.</small>
+      ${reparosPendentesHtml_(char)}`;
 
     if(userData?.role==='mestre'){
         gm.classList.remove('hidden');
@@ -5026,6 +5141,7 @@ window.renderizarMercadoLocal_=()=>{
             cards.push(`<div class="market-card">${img}<div><h4>${nome} · seu item</h4>
               <div class="market-meta">PV ${pv}/${Number(item.pv||0)} • venda local <strong>${venda.toLocaleString('pt-BR')}</strong></div>
               <button class="market-buy" ${venda>0?'':'disabled'} onclick="venderItemMercadoLocal_('${r.comp}',${r.index})">Vender aqui</button>
+              <button class="btn-small" style="margin-top:6px;" ${pv>=Number(item.pv||0)?'disabled':''} onclick="iniciarReparoMercadoLocal_('${r.comp}',${r.index})">🛠️ Reparar na oficina</button>
             </div></div>`);
         });
     });
@@ -7897,13 +8013,35 @@ function estatisticasMestre_() {
     return {pcs,pms,npcs,monstros};
 }
 
+
+function obterDiaCampanha_(){
+    const n=Number(estadoCampanhaMestre?.diaCampanha||1);
+    return Math.max(1,Math.floor(Number.isFinite(n)?n:1));
+}
+function renderizarDiaCampanhaFicha_(){
+    const el=document.getElementById('charCampaignDay');
+    if(el)el.textContent=obterDiaCampanha_();
+}
+window.avancarDiaCampanha_=async(qtd=1)=>{
+    if(!(userData&&userData.role==='mestre'))return;
+    const antes=obterDiaCampanha_();
+    estadoCampanhaMestre={...(estadoCampanhaMestre||{}),diaCampanha:antes+Math.max(1,Math.floor(Number(qtd)||1))};
+    await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
+    const campo=document.getElementById('gmCampanhaDia');
+    if(campo)campo.value=obterDiaCampanha_();
+    renderizarDiaCampanhaFicha_();
+    await processarReparosConcluidos_();
+    notificar_(`Dia de campanha ${obterDiaCampanha_()}.`,'info');
+};
+
 function preencherEstadoCampanha_() {
     const e=estadoCampanhaMestre||{};
     const campos={
         gmCampanhaNome:'nome',gmCampanhaPlaneta:'planeta',gmCampanhaCidade:'cidade',
-        gmCampanhaClima:'clima',gmCampanhaCenario:'cenario',gmCampanhaData:'dataJogo',gmCampanhaResumo:'resumo'
+        gmCampanhaClima:'clima',gmCampanhaCenario:'cenario',gmCampanhaData:'dataJogo',gmCampanhaDia:'diaCampanha',gmCampanhaResumo:'resumo'
     };
     Object.entries(campos).forEach(([id,k])=>{const el=document.getElementById(id);if(el)el.value=e[k]||'';});
+    const dia=document.getElementById('gmCampanhaDia');if(dia)dia.value=obterDiaCampanha_();
 }
 
 function renderizarCampanhaMestre_() {
@@ -7925,6 +8063,7 @@ function renderizarCampanhaMestre_() {
         cartaoNumeroMestre_((cenariosDB||[]).length,'Cenários','🪐')
     ].join('');
     preencherEstadoCampanha_();
+    renderizarDiaCampanhaFicha_();
 }
 
 window.salvarEstadoCampanha = async () => {
@@ -7936,9 +8075,12 @@ window.salvarEstadoCampanha = async () => {
         clima:document.getElementById('gmCampanhaClima')?.value?.trim()||'',
         cenario:document.getElementById('gmCampanhaCenario')?.value?.trim()||'',
         dataJogo:document.getElementById('gmCampanhaData')?.value?.trim()||'',
+        diaCampanha:Math.max(1,Math.floor(Number(document.getElementById('gmCampanhaDia')?.value)||1)),
         resumo:document.getElementById('gmCampanhaResumo')?.value?.trim()||''
     };
     await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
+    renderizarDiaCampanhaFicha_();
+    await processarReparosConcluidos_();
     somSalvar_();
     alert('Estado da campanha salvo.');
 };
