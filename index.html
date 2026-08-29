@@ -359,20 +359,46 @@
             <div id="mercado" class="tab-content">
                 <div class="form-section">
                     <h2 data-i18n="marketTitle">🛒 Mercado</h2>
-                    <p data-i18n="marketIntro">Compre itens do banco de dados para o personagem atualmente selecionado.</p>
-                    <div class="market-toolbar">
-                        <input type="text" id="marketSearch" data-i18n-placeholder="marketSearchPlaceholder" placeholder="Buscar item..." oninput="renderizarMercado()">
-                        <select id="marketCategory" onchange="renderizarMercado()"><option value="" data-i18n="allCategories">Todas as categorias</option></select>
-                        <select id="marketDestination">
-                            <option value="mochila" data-i18n="backpack">Mochila</option>
-                            <option value="bolso" data-i18n="pocket">Bolso</option>
-                            <option value="veiculo" data-i18n="vehicleShip">Veículo/Nave</option>
-                            <option value="casa" data-i18n="homeBase">Casa/Base</option>
-                        </select>
-                        <div class="market-balance"><span data-i18n="resourcesLabel">Recursos</span>: <span id="marketBalance">0</span></div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 15px;">
+                        <button id="marketSubtabComprar" class="btn-small btn-select" onclick="mostrarSubAbaMercado_('comprar')">🛒 Comprar</button>
+                        <button id="marketSubtabVender" class="btn-small" onclick="mostrarSubAbaMercado_('vender')">💰 Vender</button>
+                        <button id="marketSubtabLocal" class="btn-small" onclick="mostrarSubAbaMercado_('local')">🏪 Mercado local</button>
                     </div>
-                    <div id="marketNotice" style="color:#aaa;margin-bottom:14px;"></div>
-                    <div id="marketGrid" class="market-grid"></div>
+
+                    <div id="marketPaneComprar">
+                        <p data-i18n="marketIntro">Compre itens do banco de dados para o personagem atualmente selecionado. Itens aparecem por nível de acesso: Livre → Restrito → Militar.</p>
+                        <div class="market-toolbar">
+                            <input type="text" id="marketSearch" data-i18n-placeholder="marketSearchPlaceholder" placeholder="Buscar item..." oninput="renderizarMercado()">
+                            <select id="marketCategory" onchange="renderizarMercado()"><option value="" data-i18n="allCategories">Todas as categorias</option></select>
+                            <select id="marketDestination">
+                                <option value="mochila" data-i18n="backpack">Mochila</option>
+                                <option value="bolso" data-i18n="pocket">Bolso</option>
+                                <option value="veiculo" data-i18n="vehicleShip">Veículo/Nave</option>
+                                <option value="casa" data-i18n="homeBase">Casa/Base</option>
+                            </select>
+                            <div class="market-balance"><span data-i18n="resourcesLabel">Recursos</span>: <span id="marketBalance">0</span></div>
+                        </div>
+                        <div id="marketNotice" style="color:#aaa;margin-bottom:14px;"></div>
+                        <div id="marketGrid" class="market-grid"></div>
+                    </div>
+
+                    <div id="marketPaneVender" class="hidden">
+                        <p style="color:#aaa;">Itens do personagem atual. Venda normal: 80% do preço pago, multiplicado pela condição atual do item. Um item com 0 PV vale 0 e pode ser descartado.</p>
+                        <div class="market-toolbar">
+                            <input id="marketSellSearch" placeholder="Buscar no inventário..." oninput="renderizarVendaMercado_()">
+                            <select id="marketSellCategory" onchange="renderizarVendaMercado_()"><option value="">Todas as categorias</option></select>
+                            <div class="market-balance">Recursos: <span id="marketSellBalance">0</span></div>
+                        </div>
+                        <div id="marketSellNotice" style="color:#aaa;margin-bottom:14px;"></div>
+                        <div id="marketSellGrid" class="market-grid"></div>
+                    </div>
+
+                    <div id="marketPaneLocal" class="hidden">
+                        <div id="marketLocalHeader" style="margin-bottom:12px;color:#aaa;"></div>
+                        <div id="marketLocalNegotiation" style="padding:12px;border-radius:10px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);margin-bottom:14px;"></div>
+                        <div id="marketLocalMasterControls" class="hidden" style="padding:14px;border-radius:10px;background:rgba(255,193,7,.06);border:1px solid rgba(255,193,7,.28);margin-bottom:14px;"></div>
+                        <div id="marketLocalGrid" class="market-grid"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1260,6 +1286,10 @@ let especializacoesDB = [];
 let poderesPsiDB = [];
 let itensDB = [];
 let cenariosDB = [];
+let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',itens:[]};
+let mercadoLocalUnsub_ = null;
+let mercadoLocalNegociacao_ = {};
+let marketSubtabAtual_ = 'comprar';
 let regrasTexto = '';
 let regrasTextoPT = '';
 let regrasTextoEN = '';
@@ -1905,8 +1935,10 @@ onAuthStateChanged(auth, async (user) => {
         try { await carregarRegras(); } catch (erro) { console.error('Erro ao carregar regras:', erro); }
         try { await carregarEscudo(); } catch (erro) { console.error('Erro ao carregar escudo:', erro); }
         await carregarPersonagens();
+        iniciarMercadoLocal_();
         iniciarBatalhaCompartilhada_();
     } else {
+        if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
         currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
         document.getElementById('loginScreen').classList.remove('hidden');
         document.getElementById('appScreen').classList.add('hidden');
@@ -2372,6 +2404,8 @@ window.salvarRecursos = async () => {
     if (char) char.recursos = recursos;
     await setDoc(doc(db, 'personagens', currentCharId), { recursos }, { merge: true });
     renderizarMercado();
+    if(marketSubtabAtual_==='vender')renderizarVendaMercado_();
+    if(marketSubtabAtual_==='local')renderizarMercadoLocal_();
 };
 
 window.salvarClasseSocial = async () => {
@@ -3041,6 +3075,49 @@ function calcularPAEquipado_(char, localizacoes) {
     return resultado;
 }
 
+
+function penalidadePercentualItemArmadura_(item,pericia){
+    if(!itemEhArmadura_(item))return 0;
+    const desc=`${item.descricao||''} ${item.descricao_en||''}`.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    let pct=Number(item.penalidadePercentual??item.penalidadeArmaduraItem??NaN);
+    if(!Number.isFinite(pct)){
+        const m=desc.match(/-\s*(\d+(?:[.,]\d+)?)\s*%/);
+        pct=m?Number(m[1].replace(',','.')):0;
+    }
+    if(!pct)return 0;
+
+    const cat=normalizarTextoCombate_(pericia?.categoria||pericia?.tipo||'');
+    const nome=normalizarTextoCombate_(pericia?.nome||'');
+    const ehCombate=cat.includes('combate') || pericia?.__especializacao===true ||
+        ['esquiva','combate_desarmado'].includes(pericia?.id);
+
+    if(/percep|perception/.test(desc)){
+        return (cat.includes('percep')||nome.includes('percep')) ? pct : 0;
+    }
+    if(/fisic|physical/.test(desc)){
+        let fator=Number(pericia?.penalidadeArmadura);
+        if(!Number.isFinite(fator))fator=ehCombate?1:0;
+        return pct*Math.max(0,fator);
+    }
+    let fator=Number(pericia?.penalidadeArmadura);
+    if(!Number.isFinite(fator))fator=ehCombate?1:0;
+    return pct*Math.max(0,fator);
+}
+
+function penalidadeArmaduraTotal_(char,pericia){
+    const total=obterItensEquipados_(char)
+      .filter(itemEhArmadura_)
+      .reduce((soma,item)=>soma+penalidadePercentualItemArmadura_(item,pericia),0);
+    return Math.min(90,Math.max(0,total));
+}
+
+function valorPericiaComArmadura_(char,pericia,valorBase){
+    const pct=penalidadeArmaduraTotal_(char,pericia);
+    const valor=Math.max(1,Math.floor((Number(valorBase)||0)*(1-pct/100)));
+    return {valor,pct};
+}
+
 function normalizarTextoCombate_(texto) {
     return String(texto || '').trim().toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -3334,7 +3411,9 @@ function penalidadeCompatibilidadeArma_(pericia, item) {
       pistolas_revolveres:['submetralhadora'], submetralhadoras:['pistola'],
       combate_pistola_laser:['energia'], pistolas_laser:['energia'],
       rifles_laser:['energia','laser_pesada'], arma_laser_pesada:['laser_rifle','energia'],
-      armas_energia:['laser_pistola','laser_rifle','laser_pesada']
+      armas_energia:['laser_pistola','laser_rifle','laser_pesada'],
+      esgrima_plasma_vibro:['branca_curta','branca_longa','haste'],
+      armas_brancas_curtas:['plasma_vibro'], armas_brancas_longas:['plasma_vibro'], armas_haste:['plasma_vibro']
     };
     if ((proximas[pericia.id] || []).includes(fam)) return 1;
     return 2;
@@ -3688,7 +3767,9 @@ window.rolarCombateD100 = async () => {
         }
     }
 
-    const valorBase = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
+    const valorBaseOriginal = obterValorRegistroPericia_(char, pericia.id, pericia.__especializacao);
+    const armaduraAjuste = valorPericiaComArmadura_(char,pericia,valorBaseOriginal);
+    const valorBase = armaduraAjuste.valor;
     const dificuldadeEscolhidaId = document.getElementById('combatDifficultySelect')?.value || 'padrao';
     const grausCompatibilidade = armaUsada ? penalidadeCompatibilidadeArma_(pericia, armaUsada) : 0;
     const ajuste = aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeEscolhidaId, grausCompatibilidade);
@@ -3709,7 +3790,8 @@ window.rolarCombateD100 = async () => {
     const nomePericia = getNome(pericia);
     const fadigaTxt = ajuste.degrausFadiga > 0 ? ` · Fadiga +${ajuste.degrausFadiga} degrau${ajuste.degrausFadiga > 1 ? 's' : ''}` : '';
     const compatTxt = grausCompatibilidade > 0 ? ` · Compatibilidade de arma +${grausCompatibilidade} grau${grausCompatibilidade > 1 ? 's' : ''}` : '';
-    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}<br><small>Dificuldade: ${escaparHtmlInventario_(ajuste.escolhida.nome)}${fadigaTxt}${compatTxt} → <strong>${escaparHtmlInventario_(ajuste.efetiva.nome)}</strong> · ${valorBase} → ${valor}</small>`;
+    const armTxt = armaduraAjuste.pct>0 ? ` · Armadura -${armaduraAjuste.pct.toFixed(armaduraAjuste.pct%1?1:0)}% (${valorBaseOriginal}→${valorBase})` : '';
+    resumo.innerHTML = `<strong>${escaparHtmlInventario_(nomePericia)}</strong> · D100 <strong>${roll}</strong> / ${valor} → <strong>${r.grau}</strong> · Margem ${margem}<br><small>Dificuldade: ${escaparHtmlInventario_(ajuste.escolhida.nome)}${fadigaTxt}${compatTxt}${armTxt} → <strong>${escaparHtmlInventario_(ajuste.efetiva.nome)}</strong> · ${valorBase} → ${valor}</small>`;
 
     await registrarHistoricoCombate_(
         'D100',
@@ -4713,6 +4795,264 @@ function atualizarCategoriasMercado_() {
     if ([...select.options].some(o => o.value === atual)) select.value = atual;
 }
 
+
+function nivelAcessoNormalizado_(item){
+    const raw=String(item?.nivelAcesso||'Livre').trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(!raw || /livre|comum|sem restr/.test(raw))return 'Livre';
+    if(/militar/.test(raw))return 'Militar';
+    return 'Restrito';
+}
+function rankAcesso_(item){
+    return ({Livre:0,Restrito:1,Militar:2})[nivelAcessoNormalizado_(item)]??0;
+}
+function textoPersonagemAcesso_(char){
+    const origem=origensDB.find(o=>o.id===char?.origem);
+    const carreira=carreirasDB.find(c=>c.id===char?.carreira);
+    return `${origem?.id||''} ${origem?.nome||''} ${carreira?.id||''} ${carreira?.nome||''}`.toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+function nivelMaxAcessoPersonagem_(char){
+    const t=textoPersonagemAcesso_(char);
+    const origemMilitar=String(char?.origem||'')==='militar';
+    const origemArist=String(char?.origem||'')==='aristocratico';
+    const carreiraMilitar=/\b(militar|soldad|polic|agente|espia|inteligencia|marinha|exercito|forcas armadas)\b/.test(t);
+    const carreiraRestrita=carreiraMilitar || /\b(pirata|bandido|crim|contraband|submundo|mercen|cacador de recompensas|cacador_recompensas|guarda-costas|guarda_costas|seguranca)\b/.test(t);
+    if(origemMilitar||carreiraMilitar)return 'Militar';
+    if(origemArist||carreiraRestrita)return 'Restrito';
+    return 'Livre';
+}
+function acessoPermitidoItem_(char,item){
+    const max=({Livre:0,Restrito:1,Militar:2})[nivelMaxAcessoPersonagem_(char)]??0;
+    return rankAcesso_(item)<=max;
+}
+function badgeAcesso_(item,permitido=true){
+    const n=nivelAcessoNormalizado_(item);
+    const cor=n==='Livre'?'#8ff0a8':n==='Restrito'?'#ffd166':'#ff8f8f';
+    return `<span style="display:inline-block;padding:2px 7px;border-radius:999px;border:1px solid ${cor};color:${cor};font-size:.78em;">${n}${permitido?'':' · sem acesso'}</span>`;
+}
+
+function percorrerInventarioItens_(char){
+    const inv=normalizarInventario_(char);
+    const out=[];
+    for(const [comp,arr] of Object.entries(inv)){
+        (arr||[]).forEach((item,index)=>{if(item)out.push({item,comp,index});});
+    }
+    return out;
+}
+function precoVendaNormal_(registro){
+    const item=registro.item;
+    const banco=itensDB.find(x=>String(x.id)===String(item.idBanco||item.id));
+    const precoPago=Math.max(0,Number(item.precoPago ?? banco?.preco ?? item.preco ?? 0));
+    const pvMax=Math.max(0,Number(banco?.pv ?? item.pv ?? 0));
+    const pvAtual=Math.max(0,Number(item.pvAtual ?? pvMax));
+    const cond=pvMax>0?Math.max(0,Math.min(1,pvAtual/pvMax)):1;
+    return Math.max(0,Math.floor(precoPago*0.80*cond));
+}
+function precoBaseLocalCompra_(item,mult=0.90){
+    const q='Básica';
+    return Math.max(0,Math.floor(precoComQualidade_(item,q)*mult));
+}
+function precoBaseLocalVenda_(registro,mult=0.90){
+    const item=registro.item,banco=itensDB.find(x=>String(x.id)===String(item.idBanco||item.id));
+    const precoPago=Math.max(0,Number(item.precoPago ?? banco?.preco ?? item.preco ?? 0));
+    const pvMax=Math.max(0,Number(banco?.pv ?? item.pv ?? 0));
+    const pvAtual=Math.max(0,Number(item.pvAtual ?? pvMax));
+    const cond=pvMax>0?Math.max(0,Math.min(1,pvAtual/pvMax)):1;
+    return Math.max(0,Math.floor(precoPago*mult*cond));
+}
+
+window.mostrarSubAbaMercado_=(aba)=>{
+    marketSubtabAtual_=aba||'comprar';
+    ['comprar','vender','local'].forEach(x=>{
+        document.getElementById(`marketPane${x[0].toUpperCase()+x.slice(1)}`)?.classList.toggle('hidden',x!==marketSubtabAtual_);
+        const b=document.getElementById(`marketSubtab${x[0].toUpperCase()+x.slice(1)}`);
+        if(b)b.classList.toggle('btn-select',x===marketSubtabAtual_);
+    });
+    if(aba==='vender')renderizarVendaMercado_();
+    else if(aba==='local')renderizarMercadoLocal_();
+    else renderizarMercado();
+};
+
+function atualizarCategoriasVenda_(){
+    const sel=document.getElementById('marketSellCategory'),char=obterPersonagemAtual_();if(!sel||!char)return;
+    const atual=sel.value;
+    const cats=[...new Set(percorrerInventarioItens_(char).map(r=>String(r.item.categoria||'Diversos')).filter(Boolean))].sort();
+    sel.innerHTML='<option value="">Todas as categorias</option>'+cats.map(c=>`<option value="${escaparBanco_(c)}">${escaparBanco_(c)}</option>`).join('');
+    if(cats.includes(atual))sel.value=atual;
+}
+window.renderizarVendaMercado_=()=>{
+    const grid=document.getElementById('marketSellGrid'),notice=document.getElementById('marketSellNotice'),bal=document.getElementById('marketSellBalance');
+    if(!grid||!notice||!bal)return;
+    const char=obterPersonagemAtual_();bal.textContent=char?Number(char.recursos||0).toLocaleString('pt-BR'):'—';
+    if(!char){grid.innerHTML='';notice.textContent='Selecione um personagem.';return;}
+    atualizarCategoriasVenda_();
+    const busca=String(document.getElementById('marketSellSearch')?.value||'').toLowerCase();
+    const cat=String(document.getElementById('marketSellCategory')?.value||'');
+    const regs=percorrerInventarioItens_(char).filter(r=>{
+        const n=`${r.item.nome||''} ${r.item.nome_en||''}`.toLowerCase();
+        return (!busca||n.includes(busca))&&(!cat||String(r.item.categoria||'')===cat);
+    }).sort((a,b)=>getNome(a.item).localeCompare(getNome(b.item)));
+    notice.textContent=`${char.nome} • ${regs.length} item(ns) listado(s).`;
+    grid.innerHTML=regs.map(r=>{
+        const item=r.item,nome=escaparBanco_(getNome(item)),preco=precoVendaNormal_(r);
+        const banco=itensDB.find(x=>String(x.id)===String(item.idBanco||item.id));
+        const pvMax=Number(banco?.pv??item.pv??0),pvAtual=Number(item.pvAtual??pvMax);
+        const imagem=item.imagem?`<img src="${escaparBanco_(item.imagem)}" alt="${nome}">`:'<div class="market-card-placeholder">📦</div>';
+        return `<div class="market-card">${imagem}<div><h4>${nome}</h4>
+          <div class="market-meta">${escaparBanco_(item.categoria||'')} • ${escaparBanco_(r.comp)} • PV ${pvAtual}/${pvMax}</div>
+          <div style="margin:8px 0;"><strong>${preco.toLocaleString('pt-BR')}</strong> recursos</div>
+          <button class="market-buy" ${preco<=0?'disabled':''} onclick="venderItemMercado_('${r.comp}',${r.index})">Vender</button>
+          <button class="btn-small btn-delete" style="margin-top:6px;" onclick="descartarItemMercado_('${r.comp}',${r.index})">Descartar</button>
+        </div></div>`;
+    }).join('')||'<p style="color:#aaa;">Nenhum item encontrado.</p>';
+};
+window.venderItemMercado_=async(comp,index)=>{
+    const char=obterPersonagemAtual_();if(!char)return;
+    const inv=normalizarInventario_(char),item=inv?.[comp]?.[index];if(!item)return;
+    const registro={item,comp,index},preco=precoVendaNormal_(registro);
+    if(preco<=0){notificar_('Este item vale 0. Você pode descartá-lo.','aviso');return;}
+    inv[comp][index]=null;char.recursos=Math.max(0,Number(char.recursos||0))+preco;char.inventario=inv;
+    await setDoc(doc(db,'personagens',char.id),{inventario:inv,recursos:char.recursos},{merge:true});
+    await registrarEventoMestreNoPersonagem_(char,'Mercado',`${getNome(item)} vendido por ${preco}`,{subtipo:'venda',itemId:item.idBanco||item.id,preco});
+    somCaixaRegistradora_();renderizarInventario(char);renderizarVendaMercado_();renderizarMercado();
+    notificar_(`${getNome(item)} vendido por ${preco}.`,'info');
+};
+window.descartarItemMercado_=async(comp,index)=>{
+    const char=obterPersonagemAtual_();if(!char)return;const inv=normalizarInventario_(char),item=inv?.[comp]?.[index];if(!item)return;
+    if(!confirm(`Descartar ${getNome(item)}?`))return;
+    inv[comp][index]=null;char.inventario=inv;
+    await setDoc(doc(db,'personagens',char.id),{inventario:inv},{merge:true});
+    renderizarInventario(char);renderizarVendaMercado_();renderizarMercadoLocal_();
+};
+
+function iniciarMercadoLocal_(){
+    if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
+    mercadoLocalUnsub_=onSnapshot(doc(db,'configuracoes','mercadoLocal'),snap=>{
+        mercadoLocalConfig_=snap.exists()?{cenarioId:'',cenarioNome:'',itens:[],...snap.data()}:{cenarioId:'',cenarioNome:'',itens:[]};
+        if(document.getElementById('mercado')?.classList.contains('active')&&marketSubtabAtual_==='local')renderizarMercadoLocal_();
+    },err=>console.warn('Mercado local indisponível',err));
+}
+function periciasNegociacaoLocal_(char){
+    const ids=['comercio','influencia','submundo'];
+    return ids.map(id=>{
+        const p=periciasDB.find(x=>x.id===id);if(!p)return null;
+        const val=obterValorRegistroPericia_(char,p.id,false);
+        return {p,val};
+    }).filter(x=>x&&x.val>0);
+}
+function resultadoNegociacaoLocal_(grau,tipo){
+    const g=normalizarTextoCombate_(grau);
+    if(tipo==='compra'){
+        if(g.includes('crit'))return .80;
+        if(g.includes('sucesso'))return .85;
+        if(g.includes('fiasco')||g.includes('falha critica'))return 1.10;
+        return 1.00;
+    }
+    if(g.includes('crit'))return 1.00;
+    if(g.includes('sucesso'))return .95;
+    if(g.includes('fiasco')||g.includes('falha critica'))return .70;
+    return .80;
+}
+window.rolarNegociacaoMercadoLocal_=async(tipo)=>{
+    const char=obterPersonagemAtual_();if(!char)return;
+    const token=document.getElementById('marketLocalSkill')?.value||'';
+    const p=periciasDB.find(x=>x.id===token);if(!p)return;
+    const bruto=obterValorRegistroPericia_(char,p.id,false),ajArm=valorPericiaComArmadura_(char,p,bruto);
+    const aj=aplicarDificuldadeEFadiga_(char,ajArm.valor,'padrao',0);
+    if(aj.bloqueado){notificar_('A fadiga impede a negociação.','aviso');return;}
+    const roll=Math.floor(Math.random()*100)+1,r=classificarD100_(aj.valor,roll);
+    const mult=resultadoNegociacaoLocal_(r.grau,tipo);
+    mercadoLocalNegociacao_[char.id]=mercadoLocalNegociacao_[char.id]||{};
+    mercadoLocalNegociacao_[char.id][tipo]={mult,grau:r.grau,roll,valor:aj.valor,pericia:getNome(p)};
+    somDado_();renderizarMercadoLocal_();
+    notificar_(`${getNome(p)}: ${roll}/${aj.valor} → ${r.grau}.`,'info');
+};
+window.salvarMercadoLocalMestre_=async()=>{
+    if(!(userData&&userData.role==='mestre'))return;
+    const ativos=[...document.querySelectorAll('.market-local-item-check:checked')].map(x=>x.value);
+    const cenarioId=estadoCampanhaMestre?.cenarioId||'';
+    const cenario=(cenariosDB||[]).find(x=>x.id===cenarioId);
+    const dados={cenarioId,cenarioNome:cenario?.nome||estadoCampanhaMestre?.cenario||'',itens:ativos,atualizadoEm:new Date().toISOString()};
+    await setDoc(doc(db,'configuracoes','mercadoLocal'),dados,{merge:false});
+    mercadoLocalConfig_=dados;notificar_('Mercado local publicado para o cenário ativo.','info');renderizarMercadoLocal_();
+};
+
+window.renderizarMercadoLocal_=()=>{
+    const grid=document.getElementById('marketLocalGrid'),header=document.getElementById('marketLocalHeader'),
+      neg=document.getElementById('marketLocalNegotiation'),gm=document.getElementById('marketLocalMasterControls');
+    if(!grid||!header||!neg||!gm)return;
+    const char=obterPersonagemAtual_();
+    const ids=new Set((mercadoLocalConfig_?.itens||[]).map(String));
+    header.innerHTML=`<strong>📍 ${escaparHtmlInventario_(mercadoLocalConfig_?.cenarioNome||'Nenhum mercado local publicado')}</strong><br>
+      <small>Preço comum local: 90% do valor do mercado geral. A negociação vale para a próxima transação.</small>`;
+
+    if(userData?.role==='mestre'){
+        gm.classList.remove('hidden');
+        const ativo=estadoCampanhaMestre?.cenarioId||'';
+        gm.innerHTML=`<strong style="color:#ffd166;">Controle do mestre</strong>
+          <div style="color:#aaa;margin:5px 0 10px;">Cenário ativo: ${escaparHtmlInventario_((cenariosDB||[]).find(x=>x.id===ativo)?.nome||ativo||'Nenhum')}. Marque apenas o que existe neste local.</div>
+          <div style="max-height:220px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:5px;">
+          ${[...itensDB].sort((a,b)=>getNome(a).localeCompare(getNome(b))).map(i=>`<label style="padding:6px 8px;background:rgba(255,255,255,.035);border-radius:6px;"><input class="market-local-item-check" type="checkbox" value="${escaparBanco_(i.id)}" ${ids.has(String(i.id))?'checked':''}> ${escaparBanco_(getNome(i))}</label>`).join('')}</div>
+          <button class="btn-small btn-select" style="margin-top:10px;" onclick="salvarMercadoLocalMestre_()">💾 Publicar mercado deste cenário</button>`;
+    }else gm.classList.add('hidden');
+
+    if(!char){neg.innerHTML='Selecione um personagem para negociar.';grid.innerHTML='';return;}
+    const skills=periciasNegociacaoLocal_(char),state=mercadoLocalNegociacao_[char.id]||{};
+    const resumo=(tipo)=>{
+      const x=state[tipo];return x?`${x.pericia}: ${x.roll}/${x.valor} → ${x.grau} · ×${x.mult.toFixed(2)}`:'padrão ×0,90';
+    };
+    neg.innerHTML=`<strong>🤝 Negociação</strong>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px;">
+      <select id="marketLocalSkill">${skills.map(x=>`<option value="${x.p.id}">${escaparHtmlInventario_(getNome(x.p))} (${x.val})</option>`).join('')||'<option value="">Sem perícia disponível</option>'}</select>
+      <button class="btn-small btn-select" ${skills.length?'':'disabled'} onclick="rolarNegociacaoMercadoLocal_('compra')">🎲 Negociar compra</button>
+      <button class="btn-small" ${skills.length?'':'disabled'} onclick="rolarNegociacaoMercadoLocal_('venda')">🎲 Negociar venda</button>
+      </div><small style="display:block;margin-top:7px;color:#aaa;">Compra: ${resumo('compra')} · Venda: ${resumo('venda')}</small>`;
+
+    const compraMult=state.compra?.mult??.90,vendaMult=state.venda?.mult??.90;
+    const itens=[...itensDB].filter(i=>ids.has(String(i.id))).sort((a,b)=>rankAcesso_(a)-rankAcesso_(b)||getNome(a).localeCompare(getNome(b)));
+    const owned=percorrerInventarioItens_(char);
+    const cards=[];
+    itens.forEach(item=>{
+        const permitido=acessoPermitidoItem_(char,item),preco=precoBaseLocalCompra_(item,compraMult),nome=escaparBanco_(getNome(item));
+        const img=item.imagem?`<img src="${escaparBanco_(item.imagem)}" alt="${nome}">`:'<div class="market-card-placeholder">📦</div>';
+        cards.push(`<div class="market-card">${img}<div><h4>${nome}</h4>${badgeAcesso_(item,permitido)}
+          <div class="market-meta" style="margin-top:5px;">Comprar localmente: <strong>${preco.toLocaleString('pt-BR')}</strong></div>
+          <button class="market-buy" ${permitido?'':'disabled'} onclick="comprarItemMercadoLocal_('${escaparBanco_(item.id)}')">${permitido?'Comprar':'Sem acesso'}</button>
+        </div></div>`);
+        owned.filter(r=>String(r.item.idBanco||r.item.id)===String(item.id)).forEach(r=>{
+            const pv=Number(r.item.pvAtual??r.item.pv??0);
+            const venda=precoBaseLocalVenda_(r,vendaMult);
+            cards.push(`<div class="market-card">${img}<div><h4>${nome} · seu item</h4>
+              <div class="market-meta">PV ${pv}/${Number(item.pv||0)} • venda local <strong>${venda.toLocaleString('pt-BR')}</strong></div>
+              <button class="market-buy" ${venda>0?'':'disabled'} onclick="venderItemMercadoLocal_('${r.comp}',${r.index})">Vender aqui</button>
+            </div></div>`);
+        });
+    });
+    grid.innerHTML=cards.join('')||'<p style="color:#aaa;">Nenhum item disponível neste mercado local.</p>';
+};
+window.comprarItemMercadoLocal_=async(itemId)=>{
+    const char=obterPersonagemAtual_(),item=itensDB.find(i=>i.id===itemId);if(!char||!item)return;
+    if(!acessoPermitidoItem_(char,item)){notificar_('Este personagem não possui o nível de acesso necessário.','aviso');return;}
+    const state=mercadoLocalNegociacao_[char.id]||{},mult=state.compra?.mult??.90,preco=precoBaseLocalCompra_(item,mult);
+    const recursos=Number(char.recursos||0);if(recursos<preco){notificar_('Recursos insuficientes.','aviso');return;}
+    const inv=normalizarInventario_(char),dest='mochila',slot=inv[dest].findIndex(x=>!x);if(slot<0){notificar_('Mochila cheia.','aviso');return;}
+    inv[dest][slot]={...item,idBanco:item.id,instanciaId:`item_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,pvAtual:Number(item.pv||0),origemAquisicao:'mercado_local',precoPago:preco,adquiridoEm:new Date().toISOString(),...(itemUsaMunicao_(item)?{cargaMax:cargaMaxArma_(item),cargaAtual:0}:{})};
+    char.inventario=inv;char.recursos=recursos-preco;delete state.compra;
+    await setDoc(doc(db,'personagens',char.id),{inventario:inv,recursos:char.recursos},{merge:true});
+    somCaixaRegistradora_();renderizarInventario(char);renderizarMercadoLocal_();renderizarMercado();
+};
+window.venderItemMercadoLocal_=async(comp,index)=>{
+    const char=obterPersonagemAtual_();if(!char)return;const inv=normalizarInventario_(char),item=inv?.[comp]?.[index];if(!item)return;
+    const ids=new Set((mercadoLocalConfig_?.itens||[]).map(String));
+    if(!ids.has(String(item.idBanco||item.id))){notificar_('Este mercado não negocia esse item.','aviso');return;}
+    const state=mercadoLocalNegociacao_[char.id]||{},mult=state.venda?.mult??.90,preco=precoBaseLocalVenda_({item,comp,index},mult);
+    if(preco<=0){notificar_('O item não possui valor de revenda.','aviso');return;}
+    inv[comp][index]=null;char.inventario=inv;char.recursos=Number(char.recursos||0)+preco;delete state.venda;
+    await setDoc(doc(db,'personagens',char.id),{inventario:inv,recursos:char.recursos},{merge:true});
+    somCaixaRegistradora_();renderizarInventario(char);renderizarMercadoLocal_();renderizarVendaMercado_();
+};
+
 window.renderizarMercado = () => {
     const grid = document.getElementById('marketGrid');
     const notice = document.getElementById('marketNotice');
@@ -4729,7 +5069,7 @@ window.renderizarMercado = () => {
     const filtrados = itensDB.filter(item => {
         const nomes = `${item.nome || ''} ${item.nome_en || ''} ${item.nome_zh || ''}`.toLowerCase();
         return (!busca || nomes.includes(busca)) && (!categoria || String(item.categoria || '') === categoria);
-    }).sort((a,b) => getNome(a).localeCompare(getNome(b)));
+    }).sort((a,b) => rankAcesso_(a)-rankAcesso_(b) || getNome(a).localeCompare(getNome(b)));
 
     grid.innerHTML = filtrados.map(item => {
         const nome = escaparBanco_(getNome(item));
@@ -4738,8 +5078,9 @@ window.renderizarMercado = () => {
         const imagem = item.imagem ? `<img src="${escaparBanco_(item.imagem)}" alt="${nome}">` : '<div class="market-card-placeholder">📦</div>';
         const detalhes = [item.categoria || '', item.peso != null ? `${item.peso} kg` : '', item.pa != null ? `PA ${item.pa}` : '', item.pv != null ? `PV ${item.pv}` : '', item.dano ? `Dano ${item.dano}` : '', categoriaNormalizada_(item)==='armas' ? `Pen. ${Number(item.penetracao ?? obterPenetracaoArma_(item) ?? 0)}` : '', item.nivelAcesso ? `Acesso ${item.nivelAcesso}` : ''].filter(Boolean).join(' • ');
         const ehArma = categoriaNormalizada_(item) === 'armas';
+        const permitido=char?acessoPermitidoItem_(char,item):false;
         const qualidade = ehArma ? `<label style="display:block;margin:8px 0 4px;color:#aaa;font-size:.88em;">Qualidade</label><select id="marketQuality_${escaparBanco_(item.id)}" onchange="atualizarPrecoQualidadeMercado_('${escaparBanco_(item.id)}')" style="width:100%;padding:7px;border-radius:7px;background:rgba(255,255,255,.10);color:white;border:1px solid rgba(255,255,255,.18);"><option value="Básica">Básica ×1</option><option value="Média">Média ×2</option><option value="Superior">Superior ×4</option></select>` : '';
-        return `<div class="market-card">${imagem}<div><h4>${nome}</h4><div class="market-meta">${escaparBanco_(detalhes)}</div>${desc ? `<div class="market-desc">${desc}</div>` : ''}${qualidade}<div style="margin-top:8px;"><strong id="marketPrice_${escaparBanco_(item.id)}">${preco.toLocaleString('pt-BR')}</strong></div><button class="market-buy" onclick="comprarItemMercado('${escaparBanco_(item.id)}')">Comprar</button></div></div>`;
+        return `<div class="market-card">${imagem}<div><h4>${nome}</h4>${badgeAcesso_(item,permitido)}<div class="market-meta" style="margin-top:5px;">${escaparBanco_(detalhes)}</div>${desc ? `<div class="market-desc">${desc}</div>` : ''}${qualidade}<div style="margin-top:8px;"><strong id="marketPrice_${escaparBanco_(item.id)}">${preco.toLocaleString('pt-BR')}</strong></div><button class="market-buy" ${permitido?'':'disabled'} onclick="comprarItemMercado('${escaparBanco_(item.id)}')">${permitido?'Comprar':'Sem acesso'}</button></div></div>`;
     }).join('') || '<p style="color:#aaa;">Nenhum item encontrado.</p>';
 };
 
@@ -4757,6 +5098,10 @@ window.comprarItemMercado = async (itemId) => {
     if (!char) { alert('Selecione um personagem antes de comprar.'); return; }
     const itemBanco = itensDB.find(i => i.id === itemId);
     if (!itemBanco) { alert('Item não encontrado no banco.'); return; }
+    if(!acessoPermitidoItem_(char,itemBanco)){
+        notificar_(`Acesso ${nivelAcessoNormalizado_(itemBanco)} não permitido para a origem/profissão deste personagem.`,'aviso');
+        return;
+    }
     const ehArma = categoriaNormalizada_(itemBanco) === 'armas';
     const qualidade = ehArma ? normalizarQualidade_(document.getElementById(`marketQuality_${itemId}`)?.value || 'Básica') : '';
     const preco = ehArma ? precoComQualidade_(itemBanco, qualidade) : Math.max(0, Number(itemBanco.preco || 0));
@@ -4819,7 +5164,11 @@ window.mostrarAba = (abaId, btn) => {
     if (!alvo) return;
     alvo.classList.add('active');
     if (btn) btn.classList.add('active');
-    if (abaId === 'mercado') renderizarMercado();
+    if (abaId === 'mercado') {
+        if(marketSubtabAtual_==='vender')renderizarVendaMercado_();
+        else if(marketSubtabAtual_==='local')renderizarMercadoLocal_();
+        else renderizarMercado();
+    }
     if (abaId === 'batalha') renderizarBatalhaCompartilhada_();
 };
 
@@ -5180,7 +5529,8 @@ function batalhaDefesaHtml_(p,char,pend){
     });
     const opts=skills.map(x=>`<option value="${batalhaTokenPericia_(x)}">${escaparHtmlInventario_(getNome(x))}</option>`).join('');
     const padrao=skills[0];
-    const valorPadrao=padrao?obterValorRegistroPericia_(char,padrao.id,padrao.__especializacao):0;
+    const valorPadraoBruto=padrao?obterValorRegistroPericia_(char,padrao.id,padrao.__especializacao):0;
+    const valorPadrao=padrao?valorPericiaComArmadura_(char,padrao,valorPadraoBruto).valor:0;
     return `<div style="margin-top:11px;padding:12px;border-radius:10px;background:rgba(231,76,60,.11);border:1px solid rgba(231,76,60,.40);">
         <strong style="color:#ff9c90;">⚔️ ${escaparHtmlInventario_(pend.atacanteNome||'Atacante')} está atacando ${escaparHtmlInventario_(p.nome)}</strong>
         <div style="margin-top:6px;color:#ddd;">Ataque: <strong>${escaparHtmlInventario_(pend.ataque?.grau||'')}</strong> · AÇ disponíveis: <strong>${ac}/${p.acoesMax}</strong></div>
@@ -5201,7 +5551,9 @@ window.batalhaAtualizarValorDefesa_=(id,token)=>{
     const p=batalhaResolverPericia_(token);
     const el=document.getElementById(`battleDefenseValue_${id}`);
     if(!c||!p||!el)return;
-    el.textContent=obterValorRegistroPericia_(c,p.id,p.__especializacao);
+    const bruto=obterValorRegistroPericia_(c,p.id,p.__especializacao);
+    const aj=valorPericiaComArmadura_(c,p,bruto);
+    el.textContent=aj.valor+(aj.pct?` (-${aj.pct.toFixed(aj.pct%1?1:0)}%)`:'');
 };
 
 
@@ -5367,7 +5719,9 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
         return;
     }
 
-    const base=obterValorRegistroPericia_(c,per.id,per.__especializacao);
+    const baseOriginal=obterValorRegistroPericia_(c,per.id,per.__especializacao);
+    const armaduraAjuste=valorPericiaComArmadura_(c,per,baseOriginal);
+    const base=armaduraAjuste.valor;
     const ajuste=aplicarDificuldadeEFadiga_(c,base,prefs.dificuldade||'padrao',graus);
     if(ajuste.bloqueado){batalhaUltimoResultado_[id]='Ação bloqueada por fadiga.';return;}
 
@@ -5375,7 +5729,7 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
     const r=classificarD100_(ajuste.valor,roll);
     const margem=batalhaMargem_(ajuste.valor,roll);
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
-    batalhaUltimoResultado_[id]=`${getNome(per)}: ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}`;
+    batalhaUltimoResultado_[id]=`${getNome(per)}: ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}${armaduraAjuste.pct?` · Armadura -${armaduraAjuste.pct.toFixed(armaduraAjuste.pct%1?1:0)}%`:''}`;
 
     if(periciaEhOfensiva_(per)&&r.sucesso&&alvoId){
         const alvo=batalhaParticipante_(alvoId);
@@ -5491,7 +5845,8 @@ window.batalhaResponderDefesa_=async(id,defender)=>{
         if(Number(p.acoesAtuais||0)<=0){notificar_('Sem AÇ para defender.','aviso');return;}
         const token=document.getElementById(`battleDefenseSkill_${id}`)?.value||'';
         const per=batalhaResolverPericia_(token);if(!per)return;
-        const base=obterValorRegistroPericia_(c,per.id,per.__especializacao);
+        const baseBruto=obterValorRegistroPericia_(c,per.id,per.__especializacao);
+        const base=valorPericiaComArmadura_(c,per,baseBruto).valor;
         const ajuste=aplicarDificuldadeEFadiga_(c,base,'padrao',0);
         const roll=Math.floor(Math.random()*100)+1;
         const r=classificarD100_(ajuste.valor,roll);
@@ -7404,9 +7759,9 @@ function renderizarTabelaCompatibilidadeCombate_(){
     const alvo=document.getElementById('combatCompatibilityRules');
     if(!alvo)return;
     const linhas=[
-      ['Armas Brancas Curtas','Facas, adagas','Demais armas brancas corpo a corpo','Armas de outras famílias'],
-      ['Armas Brancas Longas','Espadas, sabres, machados','Demais armas brancas corpo a corpo','Armas de outras famílias'],
-      ['Armas de Haste','Lanças, alabardas e armas de haste','Demais armas brancas corpo a corpo','Armas de outras famílias'],
+      ['Armas Brancas Curtas','Facas, adagas','Lâminas tecnológicas equivalentes (plasma/vibro/energia)','Armas de outras famílias'],
+      ['Armas Brancas Longas','Espadas, sabres, machados','Espadas/lâminas plasma, vibro ou energia','Armas de outras famílias'],
+      ['Armas de Haste','Lanças, alabardas e armas de haste','Armas tecnológicas de haste equivalentes','Armas de outras famílias'],
       ['Pistolas e Revólveres','Pistolas e revólveres convencionais','Submetralhadoras','Demais armas'],
       ['Fuzis e Carabinas','Fuzis e carabinas convencionais','Rifles de precisão / sniper','Demais armas'],
       ['Escopetas','Escopetas','—','Demais armas'],
@@ -7417,7 +7772,7 @@ function renderizarTabelaCompatibilidadeCombate_(){
       ['Rifles Laser','Rifles e carabinas laser','Armas de energia e laser pesado','Demais armas'],
       ['Arma Laser Pesada','Armas laser pesadas','Rifles laser e armas de energia','Demais armas'],
       ['Armas de Energia','Blaster, phaser, disruptor e similares','Pistolas laser, rifles laser e laser pesado','Demais armas'],
-      ['Esgrima Plasma/Vibro','Espadas e lâminas plasma/vibro','—','Demais armas']
+      ['Esgrima Plasma/Vibro','Espadas e lâminas plasma/vibro/energia','Armas brancas convencionais equivalentes','Armas de funcionamento muito diferente']
     ];
     alvo.innerHTML=`<div style="padding:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;">
       <h3 style="color:#00d4ff;margin:0 0 8px;">⚔️ Compatibilidade entre Perícias e Armas</h3>
