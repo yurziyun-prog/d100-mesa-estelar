@@ -419,6 +419,7 @@
                         <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)" data-i18n="charTabInventory">🎒 Inventário</button>
                         <button class="char-tab-btn" id="charOtherTraitsTabBtn" onclick="mostrarCharAba('combate', this)">🧩 Outras Características</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)" data-i18n="charTabNotes">📔 Anotações</button>
+                        <button class="char-tab-btn" onclick="mostrarCharAba('cenario-atual', this)">🪐 Cenário Atual</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)" data-i18n="charTabRolls">🎲 Rolagem</button>
                     </div>
 
@@ -648,6 +649,14 @@
                             <h3 style="margin-top:20px; color:#ffd700;" data-i18n="specialEventsTitle">⭐ Eventos Especiais</h3>
                             <textarea id="charEventos" rows="6" placeholder="Eventos especiais..."></textarea>
                             <button class="btn-save" onclick="salvarAnotacoes()" style="margin-top:15px;">💾 Salvar</button>
+                        </div>
+                    </div>
+
+                    <!-- CENÁRIO ATUAL -->
+                    <div id="char-cenario-atual" class="char-tab-content">
+                        <div class="form-section">
+                            <h3>🪐 Cenário Atual</h3>
+                            <div id="charCurrentScenarioPublic"><div style="color:#888;">Nenhum cenário público carregado.</div></div>
                         </div>
                     </div>
 
@@ -898,6 +907,7 @@
                             <button class="btn-template" onclick="exportarBancoCSV('npcs')">📤 Exportar CSV</button>
                         </div>
                         <div id="listaBancoNPCs"></div>
+                        <button class="btn-save" onclick="adicionarNPCBanco_()" style="margin-top:15px;">➕ Adicionar NPC</button>
                     </div>
                 </div>
             </div>
@@ -946,14 +956,26 @@
                                 <div class="form-group"><label>Clima atual:</label><input id="gmCampanhaClima" type="text"></div>
                                 <div class="form-group"><label>Cenário ativo:</label><input id="gmCampanhaCenario" type="text"></div>
                                 <div class="form-group"><label>Data / período no jogo:</label><input id="gmCampanhaData" type="text"></div>
-<div class="form-group"><label>Fadiga geral dos jogadores:</label><div style="display:flex;gap:6px"><select id="gmFadigaGeral">
-<option value="Fresh">Descansado</option><option value="Winded">Ofegante</option><option value="Tired">Cansado</option><option value="Wearied">Fatigado</option><option value="Exhausted">Exausto</option><option value="Debilitated">Debilitado</option><option value="Incapacitated">Incapacitado</option></select><button class="btn-small" onclick="aplicarFadigaGeral_()">Aplicar a todos</button></div></div>
-                                <div class="form-group">
+                                <div class="form-group" style="min-width:360px;">
+                                    <label>Fadiga dos jogadores:</label>
+                                    <div style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(170px,1fr);gap:6px;margin-bottom:6px;">
+                                        <select id="gmFadigaGeral">
+                                            <option value="Fresh">Descansado</option><option value="Winded">Ofegante</option><option value="Tired">Cansado</option><option value="Wearied">Fatigado</option><option value="Exhausted">Exausto</option><option value="Debilitated">Debilitado</option><option value="Incapacitated">Incapacitado</option>
+                                        </select>
+                                        <select id="gmFadigaAlvo"><option value="">Escolher personagem...</option></select>
+                                    </div>
+                                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                        <button class="btn-small" type="button" onclick="aplicarFadigaSelecionado_()">Aplicar ao selecionado</button>
+                                        <button class="btn-small" type="button" onclick="aplicarFadigaGeral_()">Aplicar a todos</button>
+                                    </div>
+                                </div>
+                                <div class="form-group" style="min-width:350px;">
                                     <label>Dia de campanha:</label>
-                                    <div style="display:flex;gap:6px;align-items:center;">
-                                        <input id="gmCampanhaDia" type="number" min="1" step="1" value="1" style="max-width:110px;">
+                                    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-height:44px;">
+                                        <input id="gmCampanhaDia" type="number" min="1" step="1" value="1" style="width:105px;min-width:105px;">
                                         <button class="btn-small" type="button" onclick="avancarDiaCampanha_(1)">+1</button>
-                                        <button class="btn-small" type="button" onclick="avancarDiaCampanha_(7)">+7</button><button class="btn-small" type="button" onclick="novaSessaoCampanha_()">🎲 Nova sessão</button>
+                                        <button class="btn-small" type="button" onclick="avancarDiaCampanha_(7)">+7</button>
+                                        <button class="btn-small" type="button" onclick="novaSessaoCampanha_()">🎲 Nova sessão</button>
                                     </div>
                                 </div>
                             </div>
@@ -1155,6 +1177,34 @@
         </div>
     </div>
 
+
+    <!-- MODAL DO BANCO DE NPCs -->
+    <div class="modal-overlay" id="dbNPCModal">
+      <div class="modal-content" style="max-width:980px;max-height:92vh;overflow:auto;">
+        <h3 id="dbNPCModalTitulo">NPC</h3><input type="hidden" id="dbNPCIdOriginal">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:9px;">
+          <label>Nome<input id="dbNPCNome"></label><label>ID<input id="dbNPCId"></label><label>Tipo/função<input id="dbNPCTipo"></label>
+          <label>Raça/espécie<input id="dbNPCRaca"></label><label>Sexo<input id="dbNPCSexo"></label><label>Idade<input id="dbNPCIdade"></label>
+          <label>Origem<input id="dbNPCOrigem"></label><label>Carreira<input id="dbNPCCarreira"></label><label>Conceito<input id="dbNPCConceito"></label>
+          <label>Sociedade<input id="dbNPCSociedade"></label><label>Classe social<input id="dbNPCClasse"></label><label>Recursos<input id="dbNPCRecursos"></label>
+          <label>Altura<input id="dbNPCAltura"></label><label>Tamanho corporal<input id="dbNPCTamanho"></label><label>Peso corporal<input id="dbNPCPesoCorporal"></label>
+        </div>
+        <h4>Atributos</h4><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:7px;">
+          ${['FOR','CON','TAM','DES','INT','POD','CAR'].map(a=>`<label>${a}<input id="dbNPC${a}" type="number" min="1"></label>`).join('')}
+        </div>
+        <label>Perícias — pontos investidos<textarea id="dbNPCPericias" rows="3"></textarea></label>
+        <label>Especializações — pontos investidos<textarea id="dbNPCEspecializacoes" rows="3"></textarea></label>
+        <label>Armas/ataques<input id="dbNPCArmas" placeholder="Lança de Choque|Pistola 9 mm"></label>
+        <label>Inventário narrativo<input id="dbNPCInventario"></label>
+        <label>Motivação<input id="dbNPCMotivacao"></label><label>Valor da motivação<input id="dbNPCValorMotivacao" type="number"></label>
+        <label>Imagem URL<input id="dbNPCImagem"></label><label>Descrição<textarea id="dbNPCDescricao" rows="4"></textarea></label>
+        <label><input id="dbNPCSelecionavel" type="checkbox"> Selecionável para combate</label>
+        <div class="modal-buttons"><button class="btn-confirm" onclick="salvarNPCBanco_()">💾 Salvar</button>
+        <button class="btn-cancel" onclick="fecharNPCBancoModal_()">❌ Cancelar</button>
+        <button class="btn-delete" id="dbNPCRemoverBtn" onclick="removerNPCBancoEditado_()" style="margin-left:auto;">🗑️ Remover</button></div>
+      </div>
+    </div>
+
     <!-- MODAL DO BANCO DE ITENS -->
     <div class="modal-overlay" id="dbItemModal">
         <div class="modal-content" style="max-width:900px;">
@@ -1169,7 +1219,7 @@
 
             <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
                 <div class="form-group"><label>Categoria:</label><input type="text" id="dbItemCategoria" placeholder="Armas, Armaduras, Ferramentas..."></div>
-                <div class="form-group"><label>Peso (kg):</label><input type="number" id="dbItemPeso" step="0.1" min="0"></div>
+                <div class="form-group"><label>Peso (kg):</label><input type="number" id="dbItemPeso" step="0.1" min="-100"></div>
                 <div class="form-group"><label>Preço:</label><input type="number" id="dbItemPreco" step="1" min="0"></div>
                 <div class="form-group"><label>Nível de acesso:</label><input type="text" id="dbItemAcesso" placeholder="Livre, Licença, Restrito..."></div>
             </div>
@@ -1228,6 +1278,10 @@
             <div class="form-group"><label>Imagem (URL):</label><input type="text" id="modalItemImg"></div>
             <div class="form-group"><label>Ou Upload de Imagem:</label><input type="file" id="modalItemFile" accept="image/*" onchange="handleItemImageUpload(event)"></div>
             <div class="form-group"><label>Descrição:</label><textarea id="modalItemDesc" rows="3"></textarea></div>
+            <div class="form-group" id="modalItemProtegeBox" style="display:none;">
+                <label>🛡️ Partes do corpo protegidas:</label>
+                <div id="modalItemProtege" style="padding:10px 12px;border-radius:8px;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.20);color:#bdefff;"></div>
+            </div>
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                 <div class="form-group"><label>Peso (kg):</label><input type="number" id="modalItemPeso" step="0.1"></div>
                 <div class="form-group"><label>PA:</label><input type="number" id="modalItemPA"></div>
@@ -1320,6 +1374,8 @@ let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',estabelecimentoNome:'',es
 let mercadoLocalUnsub_ = null;
 let mercadoLocalNegociacao_ = {};
 let marketSubtabAtual_ = 'comprar';
+let campanhaPublica_ = {};
+let campanhaPublicaUnsub_ = null;
 let regrasTexto = '';
 let regrasTextoPT = '';
 let regrasTextoEN = '';
@@ -1980,9 +2036,11 @@ onAuthStateChanged(auth, async (user) => {
         try { await carregarEscudo(); } catch (erro) { console.error('Erro ao carregar escudo:', erro); }
         await carregarPersonagens();
         iniciarMercadoLocal_();
+        iniciarCampanhaPublica_();
         iniciarBatalhaCompartilhada_();
     } else {
         if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
+        if(campanhaPublicaUnsub_){campanhaPublicaUnsub_();campanhaPublicaUnsub_=null;}
         currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
         document.getElementById('loginScreen').classList.remove('hidden');
         document.getElementById('appScreen').classList.add('hidden');
@@ -2883,16 +2941,25 @@ function obterAtributoTotal_(char, nome) {
 function pesoItem_(item) {
     return Math.max(0, Number(item?.peso || 0));
 }
-
+function bonusMochilaEspecial_(char){
+    const equipados=(normalizarInventario_(char).equipado||[]).filter(Boolean);
+    const bonus=equipados
+      .filter(i=>/mochila|backpack/.test(normalizarTextoCombate_(i.nome||i.nome_en||'')) && Number(i.peso||0)<0)
+      .map(i=>Math.abs(Number(i.peso||0)));
+    return bonus.length?Math.max(...bonus):0;
+}
 function pesoCompartimento_(inv, comp) {
     return (Array.isArray(inv?.[comp]) ? inv[comp] : []).reduce((soma, item) => soma + (item ? pesoItem_(item) : 0), 0);
 }
-
+function pesoEfetivoCompartimento_(char,inv,comp){
+    const bruto=pesoCompartimento_(inv,comp);
+    return comp==='mochila'?Math.max(0,bruto-bonusMochilaEspecial_(char)):bruto;
+}
 function limitePesoCompartimento_(char, comp) {
     const forca = obterAtributoTotal_(char, 'FOR');
     const tam = obterAtributoTotal_(char, 'TAM');
     if (comp === 'bolso') return 2;
-    if (comp === 'mochila') return Math.max(0, 10 + forca + tam);
+    if (comp === 'mochila') return Math.max(0, forca + tam);
     if (comp === 'equipado') return Math.max(0, forca + tam);
     return Infinity;
 }
@@ -2900,9 +2967,9 @@ function limitePesoCompartimento_(char, comp) {
 function validarPesoCompartimento_(char, inv, comp, mensagem = true) {
     const limite = limitePesoCompartimento_(char, comp);
     if (!Number.isFinite(limite)) return true;
-    const peso = pesoCompartimento_(inv, comp);
+    const peso = pesoEfetivoCompartimento_(char,inv,comp);
     if (peso <= limite + 1e-9) return true;
-    if (mensagem) alert(`${comp === 'mochila' ? 'Mochila' : comp === 'equipado' ? 'Equipado' : 'Bolso'} excederia o limite de peso: ${peso.toFixed(1)} kg / ${limite.toFixed(1)} kg.`);
+    if (mensagem) alert(`${comp === 'mochila' ? 'Mochila' : comp === 'equipado' ? 'Equipado' : 'Bolso'} excederia o limite de peso: ${peso.toFixed(1)} kg efetivos / ${limite.toFixed(1)} kg.`);
     return false;
 }
 
@@ -2917,11 +2984,13 @@ function atualizarCapacidadesInventario_(char, inv) {
     Object.entries(defs).forEach(([comp,d]) => {
         const alvo = document.getElementById(d.id);
         if (!alvo) return;
-        const peso = pesoCompartimento_(inv, comp);
+        const pesoBruto = pesoCompartimento_(inv, comp);
+        const peso = pesoEfetivoCompartimento_(char,inv,comp);
         const usados = (inv[comp] || []).filter(Boolean).length;
         const limite = limitePesoCompartimento_(char, comp);
+        const bonus=comp==='mochila'?bonusMochilaEspecial_(char):0;
         if (Number.isFinite(limite)) {
-            alvo.textContent = `${peso.toFixed(1)} / ${limite.toFixed(1)} kg | ${usados}/${d.slots} itens`;
+            alvo.textContent = `${peso.toFixed(1)} / ${limite.toFixed(1)} kg${bonus?` (bruto ${pesoBruto.toFixed(1)}, mochila −${bonus.toFixed(1)})`:''} | ${usados}/${d.slots} itens`;
             alvo.style.color = peso > limite ? '#ff6b6b' : '';
         } else {
             alvo.textContent = `${peso.toFixed(1)} kg | ${usados}/${d.slots} itens | peso sem limite`;
@@ -2953,7 +3022,7 @@ function renderizarInventario(char) {
                     ondragover="permitirSoltarInventario(event)"
                     ondrop="soltarInventario(event, '${comp}', ${i})"
                     onclick="editarItem('${comp}', ${i})">${img}
-                    <div class="item-tooltip"><h5>${nome}</h5><p>${desc}</p><p>Peso: ${Number(item.peso || 0)}kg | PA: ${Number(item.pa || 0)} | PV: ${Number(item.pv || 0)}${categoriaNormalizada_(item)==='armas' ? ` | Pen.: ${Number(item.penetracao ?? obterPenetracaoArma_(item) ?? 0)} | Qualidade: ${normalizarQualidade_(item.qualidade)}` : ''}${itemUsaMunicao_(item) ? ` | Carga: ${cargaAtualArma_(item)}/${cargaMaxArma_(item)}` : (categoriaNormalizada_(item)==='municao' ? ` | Quantidade: ${Number(item.quantidade ?? item.uso ?? 1)}` : '')}</p></div></div>`;
+                    <div class="item-tooltip"><h5>${nome}</h5><p>${desc}</p><p>Peso: ${Number(item.peso || 0)}kg | PA: ${Number(item.pa || 0)} | PV: ${Number(item.pv || 0)}${categoriaNormalizada_(item)==='armas' ? ` | Pen.: ${Number(item.penetracao ?? obterPenetracaoArma_(item) ?? 0)} | Qualidade: ${normalizarQualidade_(item.qualidade)}` : ''}${itemUsaMunicao_(item) ? ` | Carga: ${cargaAtualArma_(item)}/${cargaMaxArma_(item)}` : (categoriaNormalizada_(item)==='municao' ? ` | Quantidade: ${Number(item.quantidade ?? item.uso ?? 1)}` : '')}</p>${itemEhArmadura_(item)?`<p style="color:#8feaff;"><strong>🛡️ Protege:</strong> ${locaisProtegidosItem_(item,['Cabeça','Peito','Abdômen','Braço Direito','Braço Esquerdo','Perna Direita','Perna Esquerda']).join(', ')}</p>`:''}</div></div>`;
             }
             return `<div class="inventory-slot"
                 ondragover="permitirSoltarInventario(event)"
@@ -2982,6 +3051,44 @@ window.permitirSoltarInventario = (event) => {
     event.dataTransfer.dropEffect = 'move';
     if (event.currentTarget) event.currentTarget.classList.add('drag-over');
 };
+
+
+function personagemEstaEmBatalha_(char){
+    return !!(batalhaEstado_?.ativo && (batalhaEstado_?.participantes||[]).some(p=>String(p.id)===String(char?.id)));
+}
+function custoRecargaCombate_(arma){
+    const n=normalizarTextoCombate_(`${arma?.nome||''} ${arma?.categoria||''}`);
+    return /pesada|heavy|canhao|cannon|metralhadora pesada/.test(n)?2:1;
+}
+async function gastarAcaoInventarioEmCombate_(char,custo,motivo){
+    if(!personagemEstaEmBatalha_(char))return true;
+    const p=batalhaParticipante_(char.id);
+    const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
+    if(!p||!atual||String(atual.id)!==String(char.id)){
+        notificar_(`Em combate, ${motivo} só pode ser feito na própria oportunidade.`,'aviso',4200);
+        return false;
+    }
+    if(batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente){
+        notificar_('Resolva a ação/reação pendente antes de mexer no equipamento.','aviso',4200);
+        return false;
+    }
+    custo=Math.max(1,Math.floor(Number(custo)||1));
+    if(Number(p.acoesAtuais||0)<custo){
+        notificar_(`${motivo} exige ${custo} AÇ e não há AÇ suficientes.`,'aviso',4300);
+        return false;
+    }
+    if(batalhaEhMestre_()){
+        p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-custo);
+        batalhaLogPush_(batalhaEstado_,`${p.nome}: ${motivo} (${custo} AÇ).`,'inventario_combate',{actorId:p.id});
+        await batalhaSalvarEstado_();
+    }else{
+        p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-custo);
+        await batalhaEnviarAcao_(char.id,'inventario_acao',{custo,motivo});
+        renderizarBatalhaCompartilhada_();
+    }
+    notificar_(`⚔️ Em combate: ${motivo} consumiu ${custo} AÇ.`,'aviso',3800);
+    return true;
+}
 
 window.soltarInventario = async (event, destinoComp, destinoIndex) => {
     event.preventDefault();
@@ -3014,6 +3121,12 @@ window.soltarInventario = async (event, destinoComp, destinoIndex) => {
     // Atalho de recarga: arraste munição/bateria/célula diretamente sobre a arma.
     const origemEhMunicao=['municao','munição'].includes(categoriaNormalizada_(itemOrigem));
     if(origemEhMunicao && itemDestino && itemUsaMunicao_(itemDestino) && nomesMunicaoCompativeis_(itemDestino,itemOrigem)){
+        if(personagemEstaEmBatalha_(char) && ['veiculo','casa'].includes(origemComp)){
+            notificar_('Em combate, munição no veículo ou em casa está fora de alcance.','aviso',4300);
+            return;
+        }
+        const custoRecarga=custoRecargaCombate_(itemDestino);
+        if(!(await gastarAcaoInventarioEmCombate_(char,custoRecarga,`recarregar ${getNome(itemDestino)}`)))return;
         const fornecida=cargaFornecidaMunicao_(itemDestino,itemOrigem);
         const max=cargaMaxArma_(itemDestino);
         const atual=cargaAtualArma_(itemDestino);
@@ -3032,6 +3145,14 @@ window.soltarInventario = async (event, destinoComp, destinoIndex) => {
             {subtipo:'recargaArrasto',armaId:itemDestino.idBanco||itemDestino.id||'',municaoId:itemOrigem.idBanco||itemOrigem.id||'',carga:cargaAtualArma_(itemDestino)}
         );
         return;
+    }
+
+    if(personagemEstaEmBatalha_(char) && destinoComp==='equipado' && origemComp!=='equipado'){
+        if(['veiculo','casa'].includes(origemComp)){
+            notificar_('Em combate, itens no veículo ou em casa não podem ser equipados.','aviso',4300);
+            return;
+        }
+        if(!(await gastarAcaoInventarioEmCombate_(char,1,`equipar ${getNome(itemOrigem)}`)))return;
     }
 
     inv[destinoComp][destinoIndex] = itemOrigem;
@@ -5610,6 +5731,7 @@ window.mostrarCharAba = (abaId, btn) => {
             renderizarPericias(char);
         }
         if (char && abaId === 'combate') renderizarCombate(char);
+        if (abaId === 'cenario-atual') renderizarCenarioAtualPublico_();
         if (char && abaId === 'rolagem') {
             atualizarListaPericias();
             renderizarPsiRolagem_(char);
@@ -5703,8 +5825,16 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
             DES:Number(modelo.DES||10),INT:Number(modelo.INT||10),POD:Number(modelo.POD||10),CAR:Number(modelo.CAR||10)
         },
         bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
-        pericias:npcPericiasParaCombate_(modelo.periciasTexto),
-        especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
+        pericias:npcPericiasParaCombate_(modelo.periciasTexto),especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
+        inventario:(()=>{
+            const inv={equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)};
+            let slot=0;
+            for(const nome of String(modelo.armasTexto||'').split('|').map(x=>x.trim()).filter(Boolean)){
+                const q=normalizarTextoCombate_(nome),b=(itensDB||[]).find(i=>normalizarTextoCombate_(i.nome||'')===q);
+                if(b&&slot<12)inv.equipado[slot++]={...b,idBanco:String(b.id),instanciaId:`npc_${modelo.id}_${slot}`,pvAtual:Number(b.pv||1),cargaAtual:cargaMaxArma_(b),cargaMax:cargaMaxArma_(b)};
+            }
+            return inv;
+        })(),
         combate:combateSalvo,
         conceito:modelo.descricao||'',
         carreira:modelo.tipo||'NPC',
@@ -6911,6 +7041,12 @@ window.batalhaRolarDano_=async(id)=>{
         if(!item){notificar_('Selecione uma arma.','aviso');return;}
         if(itemCombateInutilizavel_(item)){notificar_(`${getNome(item)} está inutilizável (0 PV). Troque de arma.`,'aviso');return;}
         expr=String(item.dano||'').trim();nome=getNome(item);
+        // Permite armas do banco com +MD/-MD, usando o Modificador de Dano derivado do personagem/NPC.
+        if(/MD/i.test(expr)){
+            const a=c.atributos||{},b=c.bonus||{};
+            const mod=String(calcularModDano(Number(a.FOR||0)+Number(b.FOR||0),Number(a.TAM||0)+Number(b.TAM||0))||'0').trim();
+            expr=expr.replace(/\+?MD/ig,mod&&mod!=='0'&&mod!=='+0'?(mod.startsWith('+')||mod.startsWith('-')?mod:`+${mod}`):'');
+        }
     }
     if(!expr){notificar_('Dano não cadastrado.','aviso');return;}
     const r=rolarExpressaoDanoCombate_(expr);
@@ -6961,6 +7097,14 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
             if(batalhaEstado_.danoPendente?.atacanteId===p.id){
                 const total=Number(acao.payload?.total||0);
                 await batalhaAplicarDanoNoAlvo_(p.id,total,acao.payload?.nome||'Dano');
+            }
+        }else if(acao.tipo==='inventario_acao'){
+            const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
+            const custo=Math.max(1,Math.floor(Number(acao.payload?.custo)||1));
+            if(atual?.id===p.id && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente && Number(p.acoesAtuais||0)>=custo){
+                p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-custo);
+                batalhaLogPush_(batalhaEstado_,`${p.nome}: ${String(acao.payload?.motivo||'ação de inventário')} (${custo} AÇ).`,'inventario_combate',{actorId:p.id});
+                await batalhaSalvarEstado_();
             }
         }
     }finally{
@@ -7955,18 +8099,53 @@ window.removerCenarioBanco=async(id)=>{
 
 
 function renderizarBancoNPCs_(){
-    const e=document.getElementById('listaBancoNPCs');if(!e)return;
-    e.innerHTML=npcsDB.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th>Nome</th><th>Tipo</th><th>Atributos</th><th>Perícias / serviços</th><th>Combate</th><th>Ação</th></tr></thead><tbody>
-    ${npcsDB.map(n=>`<tr>
-      <td><strong>${escaparBanco_(n.nome)}</strong>${n.imagem?`<br><img src="${escaparBanco_(n.imagem)}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;margin-top:5px;">`:''}</td>
-      <td>${escaparBanco_(n.tipo||'NPC')}</td>
-      <td>FOR ${n.FOR||10} · CON ${n.CON||10} · TAM ${n.TAM||10} · DES ${n.DES||10} · INT ${n.INT||10} · POD ${n.POD||10} · CAR ${n.CAR||10}</td>
-      <td><small>${escaparBanco_(n.periciasTexto||'—')}</small></td>
-      <td>${n.selecionavelCombate!==false?'✅ Selecionável':'⛔ Oculto'}</td>
-      <td><button class="btn-small" onclick="converterNPCemPM_('${n.id}')">Converter em PM</button>
-<button class="btn-small" style="margin-left:5px;" onclick="restaurarNPCBanco_('${n.id}')">❤️ Restaurar PV</button></td>
-    </tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Nenhum NPC.</p>';
+ const e=document.getElementById('listaBancoNPCs');if(!e)return;
+ e.innerHTML=npcsDB.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th>Nome</th><th>Dados</th><th>Atributos</th><th>Perícias</th><th>Especializações / armas</th><th>Combate</th><th>Ações</th></tr></thead><tbody>
+ ${npcsDB.map(n=>`<tr><td><strong>${escaparBanco_(n.nome)}</strong></td>
+ <td><small>${escaparBanco_(n.tipo||'NPC')} · ${escaparBanco_(n.raca||'—')} · Sexo ${escaparBanco_(n.sexo||'—')} · Idade ${escaparBanco_(n.idade||'—')}<br>${escaparBanco_(n.origem||'—')} · ${escaparBanco_(n.carreira||'—')}<br>${escaparBanco_(n.conceito||'')}</small></td>
+ <td>FOR ${n.FOR||10} · CON ${n.CON||10} · TAM ${n.TAM||10} · DES ${n.DES||10} · INT ${n.INT||10} · POD ${n.POD||10} · CAR ${n.CAR||10}</td>
+ <td><small>${escaparBanco_(n.periciasTexto||'—')}</small></td>
+ <td><small><b>Esp.:</b> ${escaparBanco_(n.especializacoesTexto||'—')}<br><b>Armas:</b> ${escaparBanco_(n.armasTexto||'—')}</small></td>
+ <td>${n.selecionavelCombate!==false?'✅ Selecionável':'⛔ Oculto'}</td>
+ <td><button class="btn-small btn-select" onclick="editarNPCBanco_('${n.id}')">✏️ Editar</button>
+ <button class="btn-small" onclick="converterNPCemPM_('${n.id}')">Converter em PM</button>
+ <button class="btn-small" onclick="restaurarNPCBanco_('${n.id}')">❤️ Restaurar PV</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Nenhum NPC.</p>';
 }
+
+
+function preencherModalNPCBanco_(n=null){
+ const set=(id,v='')=>{const e=document.getElementById(id);if(e)e.value=v??'';};
+ set('dbNPCIdOriginal',n?.id||'');set('dbNPCId',n?.id||'');set('dbNPCNome',n?.nome||'');set('dbNPCTipo',n?.tipo||'NPC');
+ set('dbNPCRaca',n?.raca||'');set('dbNPCSexo',n?.sexo||'');set('dbNPCIdade',n?.idade||'');set('dbNPCOrigem',n?.origem||'');
+ set('dbNPCCarreira',n?.carreira||'');set('dbNPCConceito',n?.conceito||'');set('dbNPCSociedade',n?.sociedade||'');set('dbNPCClasse',n?.classeSocial||'');
+ set('dbNPCRecursos',n?.recursos||'');set('dbNPCAltura',n?.altura||'');set('dbNPCTamanho',n?.tamanho||'');set('dbNPCPesoCorporal',n?.pesoCorporal||'');
+ for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])set(`dbNPC${a}`,n?.[a]??10);
+ set('dbNPCPericias',n?.periciasTexto||'');set('dbNPCEspecializacoes',n?.especializacoesTexto||'');set('dbNPCArmas',n?.armasTexto||'');
+ set('dbNPCInventario',n?.inventarioTexto||'');set('dbNPCMotivacao',n?.motivacao||'');set('dbNPCValorMotivacao',n?.valorMotivacao||'');
+ set('dbNPCImagem',n?.imagem||'');set('dbNPCDescricao',n?.descricao||'');
+ document.getElementById('dbNPCSelecionavel').checked=n?.selecionavelCombate!==false;
+ document.getElementById('dbNPCModalTitulo').textContent=n?`Editar NPC — ${n.nome}`:'Adicionar NPC';
+ document.getElementById('dbNPCRemoverBtn').style.display=n?'':'none';
+}
+window.adicionarNPCBanco_=()=>{preencherModalNPCBanco_(null);document.getElementById('dbNPCModal').classList.add('active');};
+window.editarNPCBanco_=(id)=>{const n=npcsDB.find(x=>x.id===id);if(!n)return;preencherModalNPCBanco_(n);document.getElementById('dbNPCModal').classList.add('active');};
+window.fecharNPCBancoModal_=()=>document.getElementById('dbNPCModal').classList.remove('active');
+window.salvarNPCBanco_=async()=>{
+ const v=id=>document.getElementById(id)?.value?.trim()||'',orig=v('dbNPCIdOriginal');
+ const id=v('dbNPCId')||normalizarTextoCombate_(v('dbNPCNome')).replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+ if(!id||!v('dbNPCNome'))return alert('Informe ID e nome.');
+ const n={id,nome:v('dbNPCNome'),nome_en:'',nome_zh:'',tipo:v('dbNPCTipo')||'NPC',raca:v('dbNPCRaca'),origem:v('dbNPCOrigem'),idade:v('dbNPCIdade'),sexo:v('dbNPCSexo'),
+ altura:v('dbNPCAltura'),tamanho:v('dbNPCTamanho'),pesoCorporal:v('dbNPCPesoCorporal'),sociedade:v('dbNPCSociedade'),carreira:v('dbNPCCarreira'),conceito:v('dbNPCConceito'),
+ classeSocial:v('dbNPCClasse'),recursos:v('dbNPCRecursos'),FOR:Number(v('dbNPCFOR'))||10,CON:Number(v('dbNPCCON'))||10,TAM:Number(v('dbNPCTAM'))||10,
+ DES:Number(v('dbNPCDES'))||10,INT:Number(v('dbNPCINT'))||10,POD:Number(v('dbNPCPOD'))||10,CAR:Number(v('dbNPCCAR'))||10,motivacao:v('dbNPCMotivacao'),
+ valorMotivacao:Number(v('dbNPCValorMotivacao'))||0,periciasTexto:v('dbNPCPericias'),especializacoesTexto:v('dbNPCEspecializacoes'),armasTexto:v('dbNPCArmas'),
+ inventarioTexto:v('dbNPCInventario'),selecionavelCombate:document.getElementById('dbNPCSelecionavel').checked,imagem:v('dbNPCImagem'),descricao:v('dbNPCDescricao')};
+ const antigo=npcsDB.find(x=>x.id===orig);if(antigo?.estadoCombate)n.estadoCombate=antigo.estadoCombate;
+ if(orig&&orig!==id)await deleteDoc(doc(db,'npcs',orig));await setDoc(doc(db,'npcs',id),n,{merge:false});
+ const ix=npcsDB.findIndex(x=>x.id===orig||x.id===id);if(ix>=0)npcsDB[ix]=n;else npcsDB.push(n);
+ npcsDB.sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));fecharNPCBancoModal_();renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();somSalvar_();
+};
+window.removerNPCBancoEditado_=async()=>{const id=document.getElementById('dbNPCIdOriginal')?.value;if(!id||!confirm('Remover este NPC?'))return;await deleteDoc(doc(db,'npcs',id));npcsDB=npcsDB.filter(x=>x.id!==id);fecharNPCBancoModal_();renderizarBancoNPCs_();};
 
 function preencherModalItemBanco_(item = null) {
     const set = (id, valor = '') => {
@@ -8330,7 +8509,7 @@ function normalizarLinhaImportacao_(tipo, bruto) {
         };
     }
 
-    if(tipo==='npcs')return {...comum,tipo:String(bruto.tipo||'NPC'),raca:String(bruto.raca||'Humano'),FOR:parseNumero_(bruto.FOR,10),CON:parseNumero_(bruto.CON,10),TAM:parseNumero_(bruto.TAM,10),DES:parseNumero_(bruto.DES,10),INT:parseNumero_(bruto.INT,10),POD:parseNumero_(bruto.POD,10),CAR:parseNumero_(bruto.CAR,10),periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),imagem:String(bruto.imagem||''),descricao:String(bruto.descricao||'')};
+    if(tipo==='npcs')return {...comum,tipo:String(bruto.tipo||'NPC'),raca:String(bruto.raca||'Humano'),origem:String(bruto.origem||''),idade:String(bruto.idade||''),sexo:String(bruto.sexo||''),altura:String(bruto.altura||''),tamanho:String(bruto.tamanho||''),pesoCorporal:String(bruto.pesoCorporal||''),sociedade:String(bruto.sociedade||''),carreira:String(bruto.carreira||bruto.tipo||''),conceito:String(bruto.conceito||''),classeSocial:String(bruto.classeSocial||''),recursos:String(bruto.recursos||''),FOR:parseNumero_(bruto.FOR,10),CON:parseNumero_(bruto.CON,10),TAM:parseNumero_(bruto.TAM,10),DES:parseNumero_(bruto.DES,10),INT:parseNumero_(bruto.INT,10),POD:parseNumero_(bruto.POD,10),CAR:parseNumero_(bruto.CAR,10),motivacao:String(bruto.motivacao||''),valorMotivacao:parseNumero_(bruto.valorMotivacao,0),periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),armasTexto:String(bruto.armasTexto||bruto.armas||''),inventarioTexto:String(bruto.inventarioTexto||bruto.inventario||''),selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),imagem:String(bruto.imagem||''),descricao:String(bruto.descricao||'')};
     if (tipo === 'itens') {
         const usoBruto = bruto.uso ?? bruto.quantidade ?? '';
         return {
@@ -8575,7 +8754,7 @@ function dadosExportacaoBanco_(tipo) {
                 imagem:c.imagem||''
             })
         },
-        npcs:{dados:npcsDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','raca','FOR','CON','TAM','DES','INT','POD','CAR','periciasTexto','especializacoesTexto','selecionavelCombate','imagem','descricao'],map:n=>n},
+        npcs:{dados:npcsDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','raca','origem','idade','sexo','altura','tamanho','pesoCorporal','sociedade','carreira','conceito','classeSocial','recursos','FOR','CON','TAM','DES','INT','POD','CAR','motivacao','valorMotivacao','periciasTexto','especializacoesTexto','armasTexto','inventarioTexto','selecionavelCombate','imagem','descricao'],map:n=>n},
         itens: {
             dados: itensDB,
             cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','penetracao','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','imagem','descricao','descricao_en','descricao_zh'],
@@ -8791,6 +8970,7 @@ function renderizarRegras() {
     renderizarTabelaCompatibilidadeCombate_();
     renderizarTabelaFadigaCompleta_();
     renderizarTabelaFerimentosCompleta_();
+    renderizarRegrasInventarioCombate_();
     const btnEditar = document.getElementById('btnEditarRegras');
     if (userData && userData.role === 'mestre') btnEditar.style.display = 'block';
     else btnEditar.style.display = 'none';
@@ -8867,6 +9047,114 @@ async function curaNatural_(c,a,b){
     await setDoc(doc(db,'personagens',c.id),{combate:c.combate},{merge:true});
 };
 
+
+function renderizarCenarioAtualPublico_(){
+    const el=document.getElementById('charCurrentScenarioPublic');if(!el)return;
+    const p=campanhaPublica_||{};
+    const img=p.imagem
+        ? `<img src="${escaparHtmlInventario_(p.imagem)}" alt="${escaparHtmlInventario_(p.cenario||'Cenário')}" style="width:100%;max-height:390px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.12);">`
+        : `<div style="height:190px;border-radius:12px;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:4em;">🪐</div>`;
+    el.innerHTML=`${img}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:12px;">
+        <div class="stat-box"><div class="stat-label">Campanha</div><div>${escaparHtmlInventario_(p.nomeCampanha||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Planeta</div><div>${escaparHtmlInventario_(p.planeta||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Cidade / região</div><div>${escaparHtmlInventario_(p.cidade||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Clima</div><div>${escaparHtmlInventario_(p.clima||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Data / período</div><div>${escaparHtmlInventario_(p.dataJogo||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Dia de campanha</div><div>${Number(p.diaCampanha||1)}</div></div>
+      </div>
+      <div style="margin-top:14px;padding:14px;border-radius:10px;background:rgba(155,89,182,.07);border:1px solid rgba(155,89,182,.24);">
+        <h3 style="margin:0 0 5px;color:#d8b4ff;">🪐 ${escaparHtmlInventario_(p.cenario||'Nenhum cenário ativo')}</h3>
+        ${p.local?`<div style="color:#999;margin-bottom:10px;">📍 ${escaparHtmlInventario_(p.local)}</div>`:''}
+        <div style="white-space:pre-wrap;line-height:1.55;color:#ddd;">${escaparHtmlInventario_(p.descricaoJogadores||'Nenhuma descrição pública disponível.')}</div>
+      </div>`;
+}
+function iniciarCampanhaPublica_(){
+    if(campanhaPublicaUnsub_){try{campanhaPublicaUnsub_();}catch(e){}}
+    if(!currentUserUid)return;
+    campanhaPublicaUnsub_=onSnapshot(doc(db,'configuracoes','campanhaPublica'),snap=>{
+        campanhaPublica_=snap.exists()?snap.data():{};
+        renderizarCenarioAtualPublico_();
+    },err=>console.warn('Campanha pública:',err));
+}
+async function publicarCampanhaAtual_(){
+    if(userData?.role!=='mestre')return;
+    let cenario=(cenariosDB||[]).find(c=>c.id===estadoCampanhaMestre?.cenarioId);
+    if(!cenario && estadoCampanhaMestre?.cenario){
+        const q=normalizarTextoCombate_(estadoCampanhaMestre.cenario);
+        cenario=(cenariosDB||[]).find(c=>normalizarTextoCombate_(c.nome||c.id)===q);
+    }
+    const dados={
+        nomeCampanha:estadoCampanhaMestre?.nome||'',
+        planeta:estadoCampanhaMestre?.planeta||'',
+        cidade:estadoCampanhaMestre?.cidade||'',
+        clima:estadoCampanhaMestre?.clima||'',
+        dataJogo:estadoCampanhaMestre?.dataJogo||'',
+        diaCampanha:obterDiaCampanha_(),
+        cenarioId:cenario?.id||estadoCampanhaMestre?.cenarioId||'',
+        cenario:cenario?.nome||estadoCampanhaMestre?.cenario||'',
+        local:cenario?.local||'',
+        imagem:cenario?.imagem||'',
+        descricaoJogadores:cenario?.descricaoJogadores||'',
+        atualizadoEm:new Date().toISOString()
+    };
+    campanhaPublica_=dados;
+    await setDoc(doc(db,'configuracoes','campanhaPublica'),dados,{merge:false});
+    renderizarCenarioAtualPublico_();
+}
+function popularAlvosFadigaMestre_(){
+    const sel=document.getElementById('gmFadigaAlvo');if(!sel)return;
+    const atual=sel.value;
+    const pcs=(userCharacters||[]).filter(c=>String(c.tipo||'pc')==='pc');
+    sel.innerHTML='<option value="">Escolher personagem...</option>'+pcs.map(c=>`<option value="${escaparHtmlInventario_(c.id)}">${escaparHtmlInventario_(c.nome||'Sem nome')}</option>`).join('');
+    if(pcs.some(c=>c.id===atual))sel.value=atual;
+}
+window.aplicarFadigaSelecionado_=async()=>{
+    if(userData?.role!=='mestre')return;
+    const id=document.getElementById('gmFadigaAlvo')?.value||'';
+    const nivel=document.getElementById('gmFadigaGeral')?.value||'Fresh';
+    const c=(userCharacters||[]).find(x=>x.id===id);
+    if(!c){notificar_('Escolha um personagem.','aviso');return;}
+    c.combate=c.combate||{};c.combate.fadiga=nivel;
+    await setDoc(doc(db,'personagens',c.id),{combate:c.combate},{merge:true});
+    const atual=obterPersonagemAtual_();if(atual?.id===c.id)renderizarCombate(atual);
+    renderizarBatalhaCompartilhada_();
+    notificar_(`Fadiga aplicada a ${c.nome}.`,'info');
+};
+window.aplicarFadigaGeral_=async()=>{
+    if(userData?.role!=='mestre')return;
+    const nivel=document.getElementById('gmFadigaGeral')?.value||'Fresh';
+    const alvos=(userCharacters||[]).filter(c=>String(c.tipo||'pc')==='pc');
+    for(const c of alvos){
+        c.combate=c.combate||{};c.combate.fadiga=nivel;
+        await setDoc(doc(db,'personagens',c.id),{combate:c.combate},{merge:true});
+    }
+    const atual=obterPersonagemAtual_();if(atual)renderizarCombate(atual);
+    renderizarBatalhaCompartilhada_();
+    notificar_(`Fadiga aplicada a ${alvos.length} personagem(ns).`,'info');
+};
+window.avancarDiaCampanha_=async(qtd=1)=>{
+    if(userData?.role!=='mestre')return;
+    const antes=obterDiaCampanha_(),depois=antes+Math.max(1,Math.floor(Number(qtd)||1));
+    for(const c of (userCharacters||[]))await curaNatural_(c,antes,depois);
+    estadoCampanhaMestre={...(estadoCampanhaMestre||{}),diaCampanha:depois};
+    await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
+    await publicarCampanhaAtual_();
+    const campo=document.getElementById('gmCampanhaDia');if(campo)campo.value=depois;
+    renderizarDiaCampanhaFicha_();
+    await processarReparosConcluidos_();
+    notificar_(`Dia de campanha ${depois}.`,'info');
+};
+window.novaSessaoCampanha_=async()=>{
+    if(userData?.role!=='mestre')return;
+    for(const c of (userCharacters||[]).filter(x=>String(x.tipo||'pc')==='pc')){
+        c.pontosSorte=pontosSorteMax_(c);c.pontosSorteDerivadoV15=true;
+        await setDoc(doc(db,'personagens',c.id),{pontosSorte:c.pontosSorte,pontosSorteDerivadoV15:true},{merge:true});
+    }
+    const atual=obterPersonagemAtual_();if(atual)atualizarVisualizacao(atual);
+    notificar_('Pontos de Sorte restaurados para a nova sessão.','info');
+};
+
 function preencherEstadoCampanha_() {
     const e=estadoCampanhaMestre||{};
     const campos={
@@ -8896,6 +9184,7 @@ function renderizarCampanhaMestre_() {
         cartaoNumeroMestre_((cenariosDB||[]).length,'Cenários','🪐')
     ].join('');
     preencherEstadoCampanha_();
+    popularAlvosFadigaMestre_();
     renderizarDiaCampanhaFicha_();
 }
 
@@ -8912,6 +9201,7 @@ window.salvarEstadoCampanha = async () => {
         resumo:document.getElementById('gmCampanhaResumo')?.value?.trim()||''
     };
     await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
+    await publicarCampanhaAtual_();
     renderizarDiaCampanhaFicha_();
     await processarReparosConcluidos_();
     somSalvar_();
@@ -9103,6 +9393,7 @@ window.ativarCenarioMestre = async () => {
         cenario:c.nome || c.id
     };
     await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
+    await publicarCampanhaAtual_();
     preencherEstadoCampanha_();
     renderizarCenarioMestre_();
     somSalvar_();
@@ -10423,6 +10714,13 @@ window.editarItem = (compartment, index) => {
     document.getElementById('modalItemNome').value = item ? item.nome || '' : '';
     document.getElementById('modalItemImg').value = item ? item.imagem || '' : '';
     document.getElementById('modalItemDesc').value = item ? item.descricao || '' : '';
+    const protegeBox=document.getElementById('modalItemProtegeBox'),protege=document.getElementById('modalItemProtege');
+    if(protegeBox&&protege){
+        if(item&&itemEhArmadura_(item)){
+            protegeBox.style.display='';
+            protege.textContent=locaisProtegidosItem_(item,['Cabeça','Peito','Abdômen','Braço Direito','Braço Esquerdo','Perna Direita','Perna Esquerda']).join(', ');
+        }else protegeBox.style.display='none';
+    }
     document.getElementById('modalItemPeso').value = item ? item.peso || '' : '';
     document.getElementById('modalItemPA').value = item ? item.pa || '' : '';
     document.getElementById('modalItemPV').value = item ? item.pv || '' : '';
@@ -10662,6 +10960,24 @@ function renderizarTabelaFadigaCompleta_(){
     const rows=[['Fresh','Nenhuma'],['Winded','Difícil'],['Tired','Difícil'],['Wearied','Formidável'],['Exhausted','Formidável'],['Debilitated','Hercúleo'],['Incapacitated','Hercúleo'],['Semi-Conscious','Sem atividades'],['Comatose','Sem ações'],['Dead','Morto']];
     el.innerHTML=`<h3>😮‍💨 Fadiga</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Efeito</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;
 }
+
+function renderizarRegrasInventarioCombate_(){
+    let el=document.getElementById('inventoryCombatRules');
+    if(!el){
+        const base=document.getElementById('woundRulesFull')||document.getElementById('combatCompatibilityRules');
+        if(!base)return;
+        el=document.createElement('div');el.id='inventoryCombatRules';el.style.marginTop='22px';base.insertAdjacentElement('afterend',el);
+    }
+    el.innerHTML=`<h3>🎒 Inventário durante combate</h3><table style="width:100%;border-collapse:collapse;">
+      <thead><tr><th>Ação</th><th>Custo/restrição</th></tr></thead><tbody>
+      <tr><td>Equipar item do bolso/mochila</td><td>1 AÇ por item.</td></tr>
+      <tr><td>Equipar item de veículo/casa</td><td>Não permitido em combate.</td></tr>
+      <tr><td>Recarregar arma</td><td>1 AÇ; armas pesadas exigem 2 AÇ.</td></tr>
+      <tr><td>Usar munição de veículo/casa</td><td>Não permitido em combate.</td></tr>
+      <tr><td>Fora de combate</td><td>Equipar e recarregar são ações livres.</td></tr>
+      </tbody></table>`;
+}
+
 function renderizarTabelaFerimentosCompleta_(){
     const el=document.getElementById('woundRulesFull');if(!el)return;
     const rows=[
