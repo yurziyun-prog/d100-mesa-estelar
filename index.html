@@ -3590,18 +3590,56 @@ function obterValorRegistroPericia_(char, id, ehEspecializacao = false) {
     return calcularFormulaPersonagem_(registro.formula, char) + totalTreinoPericia_(dados);
 }
 
+const NPC_ESPECIALIZACOES_COMBATE_META_={
+  armas_brancas_curtas:{nome:'Armas Brancas Curtas',uso:'corpo a corpo'},
+  armas_brancas_longas:{nome:'Armas Brancas Longas',uso:'corpo a corpo'},
+  armas_haste:{nome:'Armas de Haste',uso:'corpo a corpo'},
+  armas_improvisadas:{nome:'Armas Improvisadas',uso:'corpo a corpo'},
+  armas_arremesso:{nome:'Armas de Arremesso',uso:'distancia'},
+  arqueiro:{nome:'Arqueiro',uso:'distancia'},
+  pistolas_revolveres:{nome:'Pistolas e Revólveres',uso:'distancia'},
+  fuzis_carabinas:{nome:'Fuzis e Carabinas',uso:'distancia'},
+  escopetas:{nome:'Escopetas',uso:'distancia'},
+  submetralhadoras:{nome:'Submetralhadoras',uso:'distancia'},
+  armas_pesadas:{nome:'Armas Pesadas',uso:'distancia'},
+  atirador_elite:{nome:'Atirador de Elite',uso:'distancia'},
+  combate_pistola_laser:{nome:'Pistolas Laser',uso:'distancia'},
+  pistolas_laser:{nome:'Pistolas Laser',uso:'distancia'},
+  rifles_laser:{nome:'Rifles Laser',uso:'distancia'},
+  arma_laser_pesada:{nome:'Arma Laser Pesada',uso:'distancia'},
+  armas_energia:{nome:'Armas de Energia',uso:'distancia'},
+  esgrima_plasma_vibro:{nome:'Esgrima Plasma/Vibro',uso:'corpo a corpo'}
+};
+function especializacaoCombateFallback_(id){
+    const m=NPC_ESPECIALIZACOES_COMBATE_META_[id];
+    return m?{id,nome:m.nome,tipo:'Combate',uso:m.uso,usoCombate:m.uso,__especializacao:true,__fallbackNPC:true}:null;
+}
 function obterPericiasCombate_(char) {
-    const basicas = periciasDB.filter(p => ['combate_desarmado','esquiva'].includes(p.id));
+    // Esquiva NÃO é uma opção de ataque. Ela é adicionada separadamente na defesa.
+    const basicas = periciasDB.filter(p => p.id === 'combate_desarmado');
+
+    if(char?.__npcTemporario){
+        const especializacoes=Object.entries(char.especializacoes||{})
+          .filter(([id,d])=>Number(d?.treino||0)>0)
+          .map(([id])=>{
+              const real=(especializacoesDB||[]).find(e=>e.id===id);
+              return real?{...real,__especializacao:true}:(especializacaoCombateFallback_(id)||{id,nome:id,tipo:'Combate',uso:'combate',__especializacao:true,__fallbackNPC:true});
+          });
+        return [...basicas.map(x=>({...x,__especializacao:false})),...especializacoes];
+    }
+
     const especializacoes = especializacoesDB.filter(e => {
         const treino = totalTreinoPericia_((char.especializacoes || {})[e.id] || {});
         const tipo = normalizarTextoCombate_(e.tipo);
         const uso = normalizarTextoCombate_(e.uso || e.usoCombate);
         return treino > 0 && tipo === 'combate' && uso !== 'teste';
     });
-    return [
-        ...basicas.map(x => ({...x, __especializacao:false})),
-        ...especializacoes.map(x => ({...x, __especializacao:true}))
-    ];
+    return [...basicas.map(x=>({...x,__especializacao:false})),...especializacoes.map(x=>({...x,__especializacao:true}))];
+}
+function batalhaListaPericiasDefesa_(char){
+    const esquiva=(periciasDB||[]).find(p=>p.id==='esquiva');
+    const ofensivas=obterPericiasCombate_(char)||[];
+    return [...(esquiva?[{...esquiva,__especializacao:false}]:[]),...ofensivas];
 }
 
 
@@ -3797,8 +3835,10 @@ window.mostrarDanoEquipamentoCombate = () => {
 
 function classificarD100_(valor, rolagem) {
     const v = Math.max(1, parseInt(valor) || 1);
-    const critico = Math.max(1, Math.floor(v * 0.1));
-    if (rolagem === 100) return {grau:'Fiasco', sucesso:false};
+    const critico = Math.max(1, Math.ceil(v * 0.1));
+    // Mythras: 99 e 00 são Fiasco; se a perícia efetiva passar de 100, apenas 00.
+    const fiasco = v > 100 ? rolagem === 100 : rolagem >= 99;
+    if (fiasco) return {grau:'Fiasco', sucesso:false};
     if (rolagem <= critico) return {grau:'Crítico', sucesso:true};
     if (rolagem <= v) return {grau:'Sucesso', sucesso:true};
     return {grau:'Falha', sucesso:false};
@@ -5961,8 +6001,9 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
     const combateSalvo=participante?.npcCombate&&typeof participante.npcCombate==='object'
         ? JSON.parse(JSON.stringify(participante.npcCombate))
         : (modelo?.estadoCombate&&typeof modelo.estadoCombate==='object'
-            ? JSON.parse(JSON.stringify(modelo.estadoCombate))
+            ? batalhaEstadoPersistenteNPC_(modelo.estadoCombate)
             : {hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[]});
+    if(!participante)delete combateSalvo.primeirosSocorrosEmAndamento;
     return {
         id:participante?.id||`npc:${modelo.id}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
         npcBancoId:modelo.id,
@@ -5980,8 +6021,15 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
             const inv={equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)};
             let slot=0;
             for(const nome of String(modelo.armasTexto||'').split('|').map(x=>x.trim()).filter(Boolean)){
-                const q=normalizarTextoCombate_(nome),b=(itensDB||[]).find(i=>normalizarTextoCombate_(i.nome||'')===q);
-                if(b&&slot<12)inv.equipado[slot++]={...b,idBanco:String(b.id),instanciaId:`npc_${modelo.id}_${slot}`,pvAtual:Number(b.pv||1),cargaAtual:cargaMaxArma_(b),cargaMax:cargaMaxArma_(b)};
+                const q=normalizarTextoCombate_(nome);
+                const b=(itensDB||[]).find(i=>{
+                    const nomes=[i.nome,i.nome_en,i.nome_zh,i.id].filter(Boolean).map(normalizarTextoCombate_);
+                    return nomes.includes(q)||nomes.some(x=>x.replace(/_/g,' ')===q);
+                });
+                if(b&&slot<12){
+                    const maxCarga=cargaMaxArma_(b);
+                    inv.equipado[slot++]={...b,idBanco:String(b.id),instanciaId:`npc_${modelo.id}_${slot}`,pvAtual:Number(b.pv||1),cargaAtual:maxCarga,cargaMax:maxCarga};
+                }
             }
             return inv;
         })(),
@@ -6142,8 +6190,10 @@ function batalhaResolverPericia_(token){
     const [tipo,id]=String(token||'').split(':');
     const banco=tipo==='esp'?especializacoesDB:periciasDB;
     const p=(banco||[]).find(x=>x.id===id);
-    if(p&&tipo==='esp')p.__especializacao=true;
-    return p||null;
+    if(p&&tipo==='esp')return {...p,__especializacao:true};
+    if(p)return p;
+    if(tipo==='esp')return especializacaoCombateFallback_(id);
+    return null;
 }
 
 function batalhaListaPericias_(char){
@@ -6289,10 +6339,19 @@ function batalhaPenalidadeFerimento_(char,per){
     return Math.min(2,deg);
 }
 function batalhaPericiaPorNomes_(char,nomes){
-    const all=[...(batalhaListaPericias_(char)||[])];
+    let all=[...(batalhaListaPericiasDefesa_(char)||[])];
+    if(char?.__npcTemporario){
+        for(const [id,d] of Object.entries(char.pericias||{})){
+            if(all.some(x=>x.id===id))continue;
+            const real=(periciasDB||[]).find(x=>x.id===id);
+            all.push(real?{...real,__especializacao:false}:{id,nome:d?.nomeOriginal||id,__especializacao:false});
+        }
+    }else{
+        all=[...all,...(periciasDB||[]).filter(x=>!all.some(y=>y.id===x.id)).map(x=>({...x,__especializacao:false}))];
+    }
     for(const alvo of nomes){
         const q=normalizarTextoCombate_(alvo);
-        const p=all.find(x=>normalizarTextoCombate_(getNome(x)||x.id||'').includes(q)||normalizarTextoCombate_(x.id||'').includes(q));
+        const p=all.find(x=>normalizarTextoCombate_(getNome(x)||x.nome||x.id||'').includes(q)||normalizarTextoCombate_(x.id||'').includes(q));
         if(p)return p;
     }
     return null;
@@ -6315,15 +6374,23 @@ function batalhaConsumirTurnoBloqueioFerimento_(char){
     const n=Number(char.combate.ataquesBloqueadosTurnos||0);
     if(n>0)char.combate.ataquesBloqueadosTurnos=Math.max(0,n-1);
 }
+function batalhaEstadoPersistenteNPC_(combate){
+    const estado=JSON.parse(JSON.stringify(combate||{}));
+    // Estados de procedimento pertencem somente à batalha atual.
+    delete estado.primeirosSocorrosEmAndamento;
+    return estado;
+}
 async function batalhaPersistirCombateChar_(char,participante){
     if(char?.__npcTemporario){
-        const estado=JSON.parse(JSON.stringify(char.combate||{}));
-        if(participante)participante.npcCombate=estado;
+        const estadoSessao=JSON.parse(JSON.stringify(char.combate||{}));
+        if(participante)participante.npcCombate=estadoSessao;
+        const estadoBanco=batalhaEstadoPersistenteNPC_(estadoSessao);
         const bancoId=char.npcBancoId||participante?.npcBancoId;
         if(bancoId&&userData?.role==='mestre'){
             const modelo=npcBancoPorId_(bancoId);
-            if(modelo)modelo.estadoCombate=estado;
-            await setDoc(doc(db,'npcs',String(bancoId)),{estadoCombate:estado},{merge:true});
+            if(modelo)modelo.estadoCombate=estadoBanco;
+            // mergeFields substitui o mapa estadoCombate inteiro, evitando chaves antigas "fantasmas".
+            await setDoc(doc(db,'npcs',String(bancoId)),{estadoCombate:estadoBanco},{mergeFields:['estadoCombate']});
         }
     }else if(char?.id){
         await setDoc(doc(db,'personagens',char.id),{combate:char.combate},{merge:true});
@@ -6514,7 +6581,14 @@ async function batalhaIniciarPrimeirosSocorrosMestre_(id,alvoId,local){
 async function batalhaConcluirPrimeirosSocorrosMestre_(id){
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id),t=batalhaTratamentoPrimeirosSocorros_(c);
     if(!p||!c||!t||t.fase!=='executando')return false;
-    const ap=batalhaParticipante_(t.alvoId),alvo=batalhaCharLocal_(t.alvoId);if(!ap||!alvo)return false;
+    const ap=batalhaParticipante_(t.alvoId),alvo=batalhaCharLocal_(t.alvoId);
+    if(!ap||!alvo){
+        delete c.combate.primeirosSocorrosEmAndamento;
+        await batalhaPersistirCombateChar_(c,p);
+        batalhaUltimoResultado_[p.id]='Primeiros Socorros cancelados: o alvo original não está mais nesta batalha.';
+        await batalhaAvancarTurnoInterno_();await batalhaSalvarEstado_();
+        return false;
+    }
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
     const max=pvMaxLocais_(alvo)[t.local],x={local:t.local,max,atual:Number(alvo.combate?.hitLocations?.[t.local]??max)};
     const per=batalhaPrimeirosSocorrosPericia_(c),base=obterValorRegistroPericia_(c,per.id,per.__especializacao),kit=batalhaKitPrimeirosSocorros_(c);
@@ -6603,7 +6677,7 @@ function batalhaDefesaHtml_(p,char,pend){
           💤 <strong>${escaparHtmlInventario_(p.nome)}</strong> está inconsciente/incapacitado e não pode defender.
         </div>`;
     }
-    const skills=[...(batalhaListaPericias_(char)||[])].sort((a,b)=>{
+    const skills=[...(batalhaListaPericiasDefesa_(char)||[])].sort((a,b)=>{
         if(a.id==='esquiva'&&b.id!=='esquiva')return -1;
         if(b.id==='esquiva'&&a.id!=='esquiva')return 1;
         return getNome(a).localeCompare(getNome(b));
@@ -8339,10 +8413,11 @@ window.removerCenarioBanco=async(id)=>{
 
 function renderizarBancoNPCs_(){
  const e=document.getElementById('listaBancoNPCs');if(!e)return;
- e.innerHTML=npcsDB.length?`<div class="db-table-wrap"><table class="db-table" style="min-width:1450px;"><thead><tr>
+ const lista=[...npcsDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
+ e.innerHTML=lista.length?`<div class="db-table-wrap"><table class="db-table" style="min-width:1450px;"><thead><tr>
  <th style="width:76px;">Imagem</th><th style="width:140px;">Nome</th><th style="width:245px;">Dados</th><th style="width:210px;">Atributos</th>
  <th style="width:300px;">Perícias</th><th style="width:300px;">Especializações / armas</th><th style="width:105px;">Combate</th><th>Ações</th></tr></thead><tbody>
- ${npcsDB.map(n=>`<tr>
+ ${lista.map(n=>`<tr>
  <td>${n.imagem?`<img src="${escaparBanco_(n.imagem)}" style="width:58px;height:58px;object-fit:cover;border-radius:9px;">`:`<div style="width:58px;height:58px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:1.5em;">🎭</div>`}</td>
  <td><strong>${escaparBanco_(n.nome)}</strong></td>
  <td><small>${escaparBanco_(n.tipo||'NPC')} · ${escaparBanco_(n.raca||'—')} · Sexo ${escaparBanco_(n.sexo||'—')} · Idade ${escaparBanco_(n.idade||'—')}<br>${escaparBanco_(n.origem||'—')} · ${escaparBanco_(n.carreira||'—')}<br>${escaparBanco_(n.conceito||'')}</small></td>
@@ -8351,6 +8426,7 @@ function renderizarBancoNPCs_(){
  <td style="max-width:300px;font-size:.87em;overflow-wrap:anywhere;"><b>Esp.:</b> ${escaparBanco_(n.especializacoesTexto||'—')}<br><b>Armas:</b> ${escaparBanco_(n.armasTexto||'—')}</td>
  <td>${n.selecionavelCombate!==false?'✅ Selecionável':'⛔ Oculto'}</td>
  <td><button class="btn-small btn-select" onclick="editarNPCBanco_('${n.id}')">✏️ Editar</button>
+ <button class="btn-small" onclick="duplicarNPCBanco_('${n.id}')">📑 Duplicar</button>
  <button class="btn-small" onclick="converterNPCemPM_('${n.id}')">Converter em PM</button>
  <button class="btn-small" onclick="restaurarNPCBanco_('${n.id}')">❤️ Restaurar PV</button></td></tr>`).join('')}
  </tbody></table></div>`:'<p style="color:#aaa">Nenhum NPC.</p>';
@@ -8415,6 +8491,29 @@ window.salvarNPCBanco_=async()=>{
  const ix=npcsDB.findIndex(x=>x.id===orig||x.id===id);if(ix>=0)npcsDB[ix]=n;else npcsDB.push(n);
  npcsDB.sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));fecharNPCBancoModal_();renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();somSalvar_();
 };
+
+function proximoNomeDuplicadoNPC_(nome){
+    const base=String(nome||'NPC').replace(/\s+\d+$/,'').trim();
+    const usados=new Set((npcsDB||[]).map(n=>normalizarTextoCombate_(n.nome||'')));
+    let n=2;
+    while(usados.has(normalizarTextoCombate_(`${base} ${n}`)))n++;
+    return `${base} ${n}`;
+}
+window.duplicarNPCBanco_=async(id)=>{
+    if(userData?.role!=='mestre')return;
+    const orig=(npcsDB||[]).find(x=>String(x.id)===String(id));if(!orig)return;
+    const copia=JSON.parse(JSON.stringify(orig));
+    copia.nome=proximoNomeDuplicadoNPC_(orig.nome);
+    copia.id=normalizarTextoCombate_(copia.nome).replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||`npc_${Date.now()}`;
+    copia.estadoCombate={hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[],ferimentos:{},inconsciente:false,incapacitado:false,morto:false,ataquesBloqueadosTurnos:0,sangramentoAtivo:false,caido:false};
+    delete copia.estadoCombate.primeirosSocorrosEmAndamento;
+    await setDoc(doc(db,'npcs',copia.id),copia,{merge:false});
+    npcsDB.push(copia);
+    npcsDB.sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
+    renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();
+    notificar_(`${orig.nome} duplicado como ${copia.nome}.`,'info');
+};
+
 window.removerNPCBancoEditado_=async()=>{const id=document.getElementById('dbNPCIdOriginal')?.value;if(!id||!confirm('Remover este NPC?'))return;await deleteDoc(doc(db,'npcs',id));npcsDB=npcsDB.filter(x=>x.id!==id);fecharNPCBancoModal_();renderizarBancoNPCs_();};
 
 function preencherModalItemBanco_(item = null) {
@@ -9237,6 +9336,7 @@ function renderizarRegras() {
                 </div>
             </div>`;
     }
+    renderizarRegrasD100_();
     renderizarTabelaCompatibilidadeCombate_();
     renderizarTabelaFadigaCompleta_();
     renderizarTabelaFerimentosCompleta_();
@@ -11252,10 +11352,10 @@ window.restaurarNPCBanco_=async id=>{
 window.restaurarTodosNPCsBanco_=async()=>{
     if(userData?.role!=='mestre'||!npcsDB.length)return;
     if(!confirm(`Restaurar PV, fadiga e estados de combate de todos os ${npcsDB.length} NPCs?`))return;
-    const estado=()=>({hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[],ferimentos:{},inconsciente:false,incapacitado:false,morto:false,ataquesBloqueadosTurnos:0,sangramentoAtivo:false,caido:false});
+    const estado=()=>({hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[],ferimentos:{},inconsciente:false,incapacitado:false,morto:false,ataquesBloqueadosTurnos:0,sangramentoAtivo:false,caido:false,primeirosSocorrosEmAndamento:null});
     for(const n of npcsDB){
         n.estadoCombate=estado();
-        await setDoc(doc(db,'npcs',String(n.id)),{estadoCombate:n.estadoCombate},{merge:true});
+        await setDoc(doc(db,'npcs',String(n.id)),{estadoCombate:n.estadoCombate},{mergeFields:['estadoCombate']});
     }
     for(const p of batalhaEstado_?.participantes||[]){
         if(p.npcBancoId)p.npcCombate=estado();
@@ -11265,6 +11365,21 @@ window.restaurarTodosNPCsBanco_=async()=>{
     notificar_('Todos os NPCs foram restaurados.','info');
 };
 
+
+
+function renderizarRegrasD100_(){
+    let el=document.getElementById('d100CoreRules');
+    if(!el){
+        const base=document.getElementById('combatCompatibilityRules');if(!base)return;
+        el=document.createElement('div');el.id='d100CoreRules';el.style.marginTop='22px';base.insertAdjacentElement('beforebegin',el);
+    }
+    el.innerHTML=`<h3>🎲 Resultados D100</h3><table style="width:100%;border-collapse:collapse;"><thead><tr><th>Resultado</th><th>Regra</th></tr></thead><tbody>
+      <tr><td>Crítico</td><td>1/10 da perícia efetiva, arredondado para cima.</td></tr>
+      <tr><td>Sucesso</td><td>Igual ou abaixo da perícia efetiva.</td></tr>
+      <tr><td>Falha</td><td>Acima da perícia efetiva.</td></tr>
+      <tr><td>Fiasco</td><td>99 ou 00. Se a perícia efetiva exceder 100%, somente 00 é Fiasco. Portanto 97 normalmente é apenas Falha.</td></tr>
+      </tbody></table>`;
+}
 
 function renderizarTabelaFadigaCompleta_(){
     const el=document.getElementById('fatigueRulesFull');if(!el)return;
