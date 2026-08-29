@@ -2041,69 +2041,37 @@ function getDescricao(item) {
     return item.descricao || '';
 }
 
-function timeoutMesa_(promessa, ms=7000, rotulo='operação'){
-    return Promise.race([
-        promessa,
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error(`Tempo excedido: ${rotulo}`)),ms))
-    ]);
-}
-function mostrarAppMesa_(){
-    document.getElementById('loginScreen')?.classList.add('hidden');
-    document.getElementById('appScreen')?.classList.remove('hidden');
-}
-function mostrarLoginMesa_(){
-    document.getElementById('loginScreen')?.classList.remove('hidden');
-    document.getElementById('appScreen')?.classList.add('hidden');
-}
 onAuthStateChanged(auth, async (user) => {
-    try{
-        if (user) {
-            currentUserUid = user.uid;
-            const emailEl=document.getElementById('currentUser'); if(emailEl)emailEl.textContent=user.email||'Usuário';
-            // Não deixe Firestore bloquear a abertura da interface.
-            mostrarAppMesa_();
-
-            try{
-                const userDoc = await timeoutMesa_(getDoc(doc(db, "usuarios", user.uid)),7000,'perfil do usuário');
-                if (userDoc.exists()) userData = userDoc.data();
-            }catch(e){
-                console.error('Falha ao carregar perfil:',e);
-                userData = userData || {role:'jogador'};
-                notificar_('A interface abriu, mas o perfil do Firebase não respondeu. Algumas funções podem ficar limitadas.','warning',7000);
-            }
-
-            const t=traducoes[idiomaAtual];
-            const roleEl=document.getElementById('userRole');
-            if(roleEl)roleEl.textContent=userData?.role==='mestre'?t.mestre:t.jogador;
-            document.getElementById('configTabBtn')?.style && (document.getElementById('configTabBtn').style.display=userData?.role==='mestre'?'block':'none');
-            document.getElementById('bancoTabBtn')?.classList.toggle('hidden',userData?.role!=='mestre');
-            document.getElementById('escudoTabBtn')?.classList.toggle('hidden',userData?.role!=='mestre');
-
-            const tarefas=[
-                ['configurações',()=>carregarConfiguracoes()],
-                ['bancos',()=>carregarBancosDeDados()],
-                ['regras',()=>carregarRegras()],
-                ['escudo',()=>carregarEscudo()],
-                ['personagens',()=>carregarPersonagens()]
-            ];
-            for(const [nome,fn] of tarefas){
-                try{await timeoutMesa_(Promise.resolve().then(fn),7000,nome);}
-                catch(e){console.error(`Falha ao carregar ${nome}:`,e);}
-            }
-            try{iniciarMercadoLocal_();}catch(e){console.error(e);}
-            try{iniciarCampanhaPublica_();}catch(e){console.error(e);}
-            try{iniciarBatalhaCompartilhada_();}catch(e){console.error(e);}
-        } else {
-            if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
-            if(campanhaPublicaUnsub_){campanhaPublicaUnsub_();campanhaPublicaUnsub_=null;}
-            currentUserUid=null;userData=null;userCharacters=[];currentCharId=null;
-            mostrarLoginMesa_();
+    if (user) {
+        currentUserUid = user.uid;
+        document.getElementById('currentUser').textContent = user.email;
+        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+        if (userDoc.exists()) {
+            userData = userDoc.data();
+            const t = traducoes[idiomaAtual];
+            document.getElementById('userRole').textContent = userData.role === 'mestre' ? t.mestre : t.jogador;
+            document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none';
+            document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
+            document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
+            // Configurações globais também afetam jogadores (recursos iniciais e modo de combate).
+            // A aba continua escondida para jogadores; eles apenas leem os valores.
+            await carregarConfiguracoes();
         }
-    }catch(e){
-        console.error('Erro geral de inicialização:',e);
-        // Failsafe: nunca deixe a página eternamente presa.
-        if(user){mostrarAppMesa_();notificar_('O site abriu em modo de recuperação. Houve erro ao carregar alguns dados.','warning',8000);}
-        else mostrarLoginMesa_();
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('appScreen').classList.remove('hidden');
+        try { await carregarBancosDeDados(); } catch (erro) { console.error('Erro parcial ao carregar bancos:', erro); }
+        try { await carregarRegras(); } catch (erro) { console.error('Erro ao carregar regras:', erro); }
+        try { await carregarEscudo(); } catch (erro) { console.error('Erro ao carregar escudo:', erro); }
+        await carregarPersonagens();
+        iniciarMercadoLocal_();
+        iniciarCampanhaPublica_();
+        iniciarBatalhaCompartilhada_();
+    } else {
+        if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
+        if(campanhaPublicaUnsub_){campanhaPublicaUnsub_();campanhaPublicaUnsub_=null;}
+        currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('appScreen').classList.add('hidden');
     }
 });
 
@@ -5685,12 +5653,39 @@ function prestadorSeguroNPC_(n,servicos=[]){
       periciasTexto:n.periciasTexto||'',especializacoesTexto:n.especializacoesTexto||'',servicos};
 }
 
+function pdmsDisponiveisMercado_(){
+    // PMs são personagens controlados pelo mestre. No texto da interface usamos PDM,
+    // nomenclatura preferida para personagens do mestre.
+    return (userCharacters||[])
+      .filter(c=>c && c.dono===currentUserUid && String(c.tipo||'pc').toLowerCase()!=='monstro')
+      .sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+}
+function textoPericiasPrestadorPDM_(c,ehEspecializacao=false){
+    const banco=ehEspecializacao?especializacoesDB:periciasDB;
+    return (banco||[]).map(p=>{
+        const v=obterValorRegistroPericia_(c,p.id,ehEspecializacao);
+        return v>0?`${p.nome||p.id}:${Math.round(v)}`:'';
+    }).filter(Boolean).join('|');
+}
+function prestadorSeguroPDM_(c,servicos=[]){
+    return {
+      id:`pdm:${c.id}`,personagemId:c.id,nome:c.nome||'PDM',imagem:c.imagem||'',
+      tipo:'PDM',periciasTexto:textoPericiasPrestadorPDM_(c,false),
+      especializacoesTexto:textoPericiasPrestadorPDM_(c,true),servicos
+    };
+}
+
 window.salvarMercadoLocalMestre_=async()=>{
     if(!(userData&&userData.role==='mestre'))return;
     const ativos=[...document.querySelectorAll('.market-local-item-check:checked')].map(x=>x.value);
     const servicos=[...document.querySelectorAll('.market-local-service-check:checked')].map(x=>x.value);
     const prestadorIds=[...document.querySelectorAll('.market-local-provider-check:checked')].map(x=>x.value);
     let prestadores=prestadorIds.map(id=>{
+        if(String(id).startsWith('pdm:')){
+            const cid=String(id).slice(4);
+            const c=pdmsDisponiveisMercado_().find(x=>String(x.id)===cid);
+            return c?prestadorSeguroPDM_(c,servicos):null;
+        }
         const n=npcsDB.find(x=>String(x.id)===String(id));
         return n?prestadorSeguroNPC_(n,servicos):null;
     }).filter(Boolean);
@@ -5752,12 +5747,15 @@ window.renderizarMercadoLocal_=()=>{
             🪐 Vincular aos NPCs visíveis do cenário ativo
             <small style="display:block;color:#999;margin-left:21px;">Quando marcado, NPCs do banco vinculados e visíveis neste cenário entram automaticamente como prestadores/testadores locais.</small>
           </label>
-          <div style="margin-top:12px;"><strong>Prestadores NPC deste estabelecimento:</strong>
+          <div style="margin-top:12px;"><strong>Prestadores NPC/PDM deste estabelecimento:</strong>
             <div style="margin-top:6px;max-height:180px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:5px;">
-              ${npcsDB.map(n=>`<label style="padding:6px;background:rgba(255,255,255,.035);border-radius:6px;">
+              ${[
+                ...npcsDB.map(n=>({id:String(n.id),nome:n.nome,tipo:n.tipo||'NPC'})),
+                ...pdmsDisponiveisMercado_().map(c=>({id:`pdm:${c.id}`,nome:c.nome,tipo:'PDM'}))
+              ].map(n=>`<label style="padding:6px;background:rgba(255,255,255,.035);border-radius:6px;">
                 <input class="market-local-provider-check" type="checkbox" value="${escaparBanco_(n.id)}" ${(mercadoLocalConfig_.prestadores||[]).some(p=>String(p.id)===String(n.id))?'checked':''}>
-                ${escaparHtmlInventario_(n.nome)} <small style="color:#aaa;">${escaparHtmlInventario_(n.tipo||'NPC')}</small>
-              </label>`).join('')||'<span style="color:#888;">Cadastre NPCs no Banco de Dados → NPCs.</span>'}
+                ${escaparHtmlInventario_(n.nome)} <small style="color:#aaa;">${escaparHtmlInventario_(n.tipo)}</small>
+              </label>`).join('')||'<span style="color:#888;">Nenhum NPC/PDM disponível.</span>'}
             </div>
           </div>
           <button class="btn-small btn-select" style="margin-top:10px;" onclick="salvarMercadoLocalMestre_()">💾 Publicar estabelecimento neste cenário</button>`;
@@ -6494,6 +6492,11 @@ async function batalhaPersistirCombateChar_(char,participante){
     }
 }
 function batalhaArmaEhDistancia_(ataque){
+    const txt=normalizarTextoCombate_(`${ataque?.familia||''} ${ataque?.pericia||''} ${ataque?.especializacao||''} ${ataque?.equipamento||''}`);
+    // Famílias explicitamente corpo a corpo têm prioridade sobre o campo numérico de alcance.
+    // Isso impede lanças/armas de haste de serem tratadas como armas à distância só por terem alcance > 2.
+    if(/armas?_de?_haste|armas? de haste|armas?_brancas?_curtas?|armas? brancas? curtas?|armas?_brancas?_longas?|armas? brancas? longas?|esgrima.*(plasma|vibro)|combate_desarmado|combate desarmado/.test(txt))return false;
+    if(/arremesso|pistola|revolver|rifle|fuzil|escopeta|submetralhadora|carabina|blaster|arma.*distancia|armas.*distancia/.test(txt))return true;
     return !!ataque?.distancia;
 }
 function batalhaArmaPodeSangrar_(ataque){
@@ -11659,14 +11662,7 @@ function renderizarTabelaFerimentosCompleta_(){
     el.innerHTML=`<h3>🩸 Ferimentos por localização</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Quando</th><th>Consequência</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 ;
-
-setTimeout(()=>{
-    const login=document.getElementById('loginScreen'),app=document.getElementById('appScreen');
-    if(login?.classList.contains('hidden') && app?.classList.contains('hidden')){
-        console.warn('Failsafe de inicialização acionado.');
-        login.classList.remove('hidden');
-    }
-},9000);
 </script>
+<!-- Mesa Estelar v46.0: base v43 + localização melee + PDMs no comércio -->
 </body>
 </html>
