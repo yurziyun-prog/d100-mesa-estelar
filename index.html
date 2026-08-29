@@ -817,7 +817,7 @@
                         <button class="tab-btn" onclick="mostrarBancoAba('especializacoes', this)">Especializações</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('poderesPsi', this)">Poderes Psi</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('itens', this)">Itens</button>
-                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button>
+                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button><button class="tab-btn" onclick="mostrarBancoAba('criaturas', this)">Criaturas</button>
                     </div>
 
                     <div id="banco-pericias" class="tab-content active">
@@ -927,6 +927,19 @@
   <button class="btn-save" onclick="adicionarNPCBanco_()" style="margin:0;width:auto;">➕ Adicionar NPC</button>
   <button class="btn-small" onclick="restaurarTodosNPCsBanco_()" style="padding:12px 18px;">❤️ Restaurar PV de todos os NPCs</button>
 </div>
+                    </div>
+                    <div id="banco-criaturas" class="tab-content">
+                      <h4 style="color:#fff">Criaturas reutilizáveis</h4>
+                      <p style="color:#aaa">Banco privado do mestre, paralelo ao banco de NPCs. As criaturas marcadas como selecionáveis aparecem no Painel de Batalha.</p>
+                      <div class="import-section">
+                        <input type="file" id="importCriaturasFile" accept=".csv" style="display:none" onchange="importarPlanilha('criaturas',this,this.dataset.modo==='substituir')">
+                        <button class="btn-import" onclick="selecionarImportacaoBanco_('importCriaturasFile',false)">📥 Importar/Atualizar CSV</button>
+                        <button class="btn-template" onclick="selecionarImportacaoBanco_('importCriaturasFile',true)">♻️ Substituir pelo CSV</button>
+                        <button class="btn-template" onclick="baixarTemplate('criaturas')">📄 Template</button>
+                        <button class="btn-template" onclick="exportarBancoCSV('criaturas')">📤 Exportar</button>
+                      </div>
+                      <div id="listaBancoCriaturas"></div>
+                      <button class="btn-save" onclick="adicionarCriaturaBanco_()" style="margin-top:15px">➕ Adicionar Criatura</button>
                     </div>
                 </div>
             </div>
@@ -1203,6 +1216,23 @@
     </div>
 
 
+    <div class="modal-overlay" id="dbCriaturaModal"><div class="modal-content" style="max-width:950px;max-height:92vh;overflow:auto">
+      <h3 id="dbCriaturaTitulo">Criatura</h3><input type="hidden" id="crOrig">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px">
+       <label>Nome<input id="crNome"></label><label>ID<input id="crId"></label><label>Tipo<input id="crTipo"></label><label>Espécie<input id="crEspecie"></label>
+       <label>Habitat<input id="crHabitat"></label><label>Comportamento<input id="crComportamento"></label><label>Altura<input id="crAltura"></label><label>Tamanho<input id="crTamanho"></label><label>Peso<input id="crPeso"></label>
+      </div><h4>Atributos</h4><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+       <label>FOR<input id="crFOR" type="number"></label><label>CON<input id="crCON" type="number"></label><label>TAM<input id="crTAM" type="number"></label><label>DES<input id="crDES" type="number"></label><label>INT<input id="crINT" type="number"></label><label>POD<input id="crPOD" type="number"></label><label>CAR<input id="crCAR" type="number"></label>
+      </div>
+      <label>Perícias (investimento)<textarea id="crPericias" rows="3"></textarea></label>
+      <label>Especializações (investimento)<textarea id="crEspec" rows="2"></textarea></label>
+      <label>Ataques naturais<input id="crArmas" placeholder="Mordida|Garras"></label>
+      <label>Propriedades<input id="crProps" placeholder="Mordida:infeccioso|Garras:infeccioso"></label>
+      <label>Imagem URL<input id="crImagem"></label><label>Descrição<textarea id="crDescricao" rows="3"></textarea></label>
+      <label><input type="checkbox" id="crSelecionavel"> Selecionável para combate</label>
+      <div class="modal-buttons"><button class="btn-confirm" onclick="salvarCriaturaBanco_()">💾 Salvar</button><button class="btn-cancel" onclick="fecharCriaturaBanco_()">Cancelar</button><button class="btn-delete" id="crDelete" onclick="removerCriaturaBanco_()">🗑️ Remover</button></div>
+    </div></div>
+
     <!-- MODAL DO BANCO DE NPCs -->
     <div class="modal-overlay" id="dbNPCModal">
       <div class="modal-content" style="max-width:980px;max-height:92vh;overflow:auto;">
@@ -1413,6 +1443,7 @@ let poderesPsiDB = [];
 let itensDB = [];
 let cenariosDB = [];
 let npcsDB = [];
+let criaturasDB = [];
 let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],vincularNPCsCenario:false,precosServicos:{reparo:0,cura:0,primeiros_socorros:0}};
 let mercadoLocalUnsub_ = null;
 let mercadoLocalNegociacao_ = {};
@@ -2179,7 +2210,10 @@ async function carregarBancosDeDados() {
         }
     }
 
-    if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'npcs'));npcsDB=[];q.forEach(d=>npcsDB.push({id:d.id,...d.data()}));}catch(e){console.warn(e);}}
+    if(userData?.role==='mestre'){
+ try{let q=await getDocs(collection(db,'npcs'));npcsDB=[];q.forEach(d=>npcsDB.push({id:d.id,...d.data()}));}catch(e){console.warn(e);}
+ try{let q=await getDocs(collection(db,'criaturas'));criaturasDB=[];q.forEach(d=>criaturasDB.push({id:d.id,...d.data()}));}catch(e){console.warn('Criaturas:',e);}
+}
     if(userData?.role==='mestre'){
         renderizarCampanhaMestre_();
         if(document.getElementById('batalha')?.classList.contains('active'))renderizarBatalhaCompartilhada_();
@@ -2286,6 +2320,7 @@ function renderizarBancoDados() {
     renderizarBancoItens();
     renderizarBancoCenarios();
     renderizarBancoNPCs_();
+    renderizarBancoCriaturas_();
 }
 
 async function carregarPersonagens() {
@@ -4442,7 +4477,7 @@ function aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeId, degrausExtra
     const escolhida = obterGrauDificuldade_(dificuldadeId);
     const indiceEscolhido = GRAUS_DIFICULDADE.findIndex(g => g.id === escolhida.id);
     const indiceFadiga = indiceMinimoDificuldadeFadiga_(char);
-    const extras = Math.max(0, parseInt(degrausExtras)||0);
+    const extras = Math.max(0, parseInt(degrausExtras)||0) + (char?.combate?.infectado?.ativo ? 1 : 0);
 
     // Fadiga estabelece o piso de dificuldade; incompatibilidade da arma agrava depois.
     const indiceBase = Math.max(indiceEscolhido, Math.min(indiceFadiga,GRAUS_DIFICULDADE.length-1));
@@ -5966,6 +6001,7 @@ window.mostrarBancoAba = (abaId, btn) => {
     if (abaId === 'poderesPsi') renderizarBancoPoderesPsi();
     if (abaId === 'itens') renderizarBancoItens();
     if (abaId === 'npcs') renderizarBancoNPCs_();
+    if (abaId === 'criaturas') renderizarBancoCriaturas_();
     if (abaId === 'cenarios') renderizarBancoCenarios();
 };
 
@@ -6028,6 +6064,9 @@ function npcPericiasParaCombate_(texto){
     });
     return out;
 }
+
+function criaturaProps_(m){const o={};String(m?.propriedadesAtaques||'').split('|').forEach(x=>{const i=x.indexOf(':');if(i>0)o[normalizarTextoCombate_(x.slice(0,i))]=x.slice(i+1).split(',').map(normalizarTextoCombate_);});return o;}
+function criarCriaturaCombate_(m,p=null){if(!m)return null;return {id:p?.id||`criatura:${m.id}:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,criaturaBancoId:m.id,nome:m.nome,imagem:m.imagem||'',tipo:'criatura',dono:currentUserUid,atributos:{FOR:+m.FOR||10,CON:+m.CON||10,TAM:+m.TAM||10,DES:+m.DES||10,INT:+m.INT||5,POD:+m.POD||10,CAR:+m.CAR||5},bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},pericias:npcPericiasParaCombate_(m.periciasTexto),especializacoes:npcPericiasParaCombate_(m.especializacoesTexto),armasNaturais:String(m.armasTexto||'').split('|').map(x=>x.trim()).filter(x=>ataqueNaturalPorNome_(x)).map(x=>ataqueNaturalPorNome_(x).nome),propriedadesAtaques:criaturaProps_(m),inventario:{equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)},combate:p?.criaturaCombate||m.estadoCombate||{hitLocations:{},armor:{},fadiga:'Fresh'},__npcTemporario:true,__criaturaTemporaria:true};}
 function criarNPCCombateDoBanco_(modelo,participante=null){
     if(!modelo)return null;
     const combateSalvo=participante?.npcCombate&&typeof participante.npcCombate==='object'
@@ -6079,9 +6118,8 @@ function batalhaCharLocal_(id){
     const normal=(userCharacters||[]).find(c=>String(c.id)===String(id));
     if(normal)return normal;
     const p=(batalhaEstado_?.participantes||[]).find(x=>String(x.id)===String(id));
-    if(p?.npcBancoId){
-        return criarNPCCombateDoBanco_(npcBancoPorId_(p.npcBancoId),p);
-    }
+    if(p?.npcBancoId)return criarNPCCombateDoBanco_(npcBancoPorId_(p.npcBancoId),p);
+    if(p?.criaturaBancoId)return criarCriaturaCombate_(criaturaBancoPorId_(p.criaturaBancoId),p);
     return null;
 }
 function batalhaParticipante_(id){ return (batalhaEstado_?.participantes||[]).find(p=>String(p.id)===String(id))||null; }
@@ -6107,11 +6145,7 @@ function batalhaSanitizarParticipante_(c){
         acoesMax:batalhaAcoesMax_(c),
         gridX:null,
         gridY:null,
-        ...(c.__npcTemporario?{
-            npcBancoId:String(c.npcBancoId||''),
-            npcCombate:JSON.parse(JSON.stringify(c.combate||{})),
-            npcInventario:JSON.parse(JSON.stringify(c.inventario||{}))
-        }:{})
+        ...(c.__criaturaTemporaria?{criaturaBancoId:String(c.criaturaBancoId),criaturaCombate:JSON.parse(JSON.stringify(c.combate||{}))}:c.__npcTemporario?{npcBancoId:String(c.npcBancoId||''),npcCombate:JSON.parse(JSON.stringify(c.combate||{})),npcInventario:JSON.parse(JSON.stringify(c.inventario||{}))}:{})
     };
 }
 
@@ -6288,7 +6322,7 @@ function ataqueNaturalPorNome_(nome){
 }
 function ataquesNaturaisChar_(char){
     const nomes=Array.isArray(char?.armasNaturais)?char.armasNaturais:[];
-    const arr=nomes.map(ataqueNaturalPorNome_).filter(Boolean);
+    const props=char?.propriedadesAtaques||{};const arr=nomes.map(nome=>{const a=ataqueNaturalPorNome_(nome);if(!a)return null;const p=props[normalizarTextoCombate_(nome)]||[];a.infeccioso=p.includes('infeccioso');return a;}).filter(Boolean);
     if(!arr.some(x=>normalizarTextoCombate_(x.nome)==='punhos') && !char?.__npcTemporario)return [ataqueNaturalPorNome_('Punhos'),...arr];
     return arr.length?arr:[ataqueNaturalPorNome_('Punhos')];
 }
@@ -6394,7 +6428,7 @@ function batalhaAtaqueBloqueadoFerimento_(char){
 }
 function batalhaDescricaoBloqueioFerimento_(char){
     if(char?.combate?.morto)return 'Morto';
-    if(char?.combate?.incapacitado)return 'Incapacitado por Ferimento Grave';
+    if(char?.combate?.incapacitado)return 'Incapacitado por Ferimento Crítico';
     if(char?.combate?.inconsciente)return 'Inconsciente';
     const n=Number(char?.combate?.ataquesBloqueadosTurnos||0);
     return n>0?`Choque da ferida: não pode atacar por ${n} turno(s)`:'';
@@ -6459,7 +6493,8 @@ function batalhaEstadoPersistenteNPC_(combate){
     return estado;
 }
 async function batalhaPersistirCombateChar_(char,participante){
-    if(char?.__npcTemporario){
+    if(char?.__criaturaTemporaria){const st=batalhaEstadoPersistenteNPC_(JSON.parse(JSON.stringify(char.combate||{})));if(participante)participante.criaturaCombate=st;const id=char.criaturaBancoId||participante?.criaturaBancoId;if(id){const m=criaturaBancoPorId_(id);if(m)m.estadoCombate=st;await setDoc(doc(db,'criaturas',String(id)),{estadoCombate:st},{mergeFields:['estadoCombate']});}}
+    else if(char?.__npcTemporario){
         const estadoSessao=JSON.parse(JSON.stringify(char.combate||{}));
         if(participante){
             participante.npcCombate=estadoSessao;
@@ -6493,6 +6528,7 @@ function batalhaEspeciaisDisponiveis_(dp){
     const crit=batalhaResultadoGradeValor_(ataque.grau)>=3;
     const defensor=batalhaCharLocal_(dp?.defensorId);
     if(!batalhaArmaEhDistancia_(ataque)||crit)arr.push({id:'localizacao',nome:'🎯 Escolher localização'});
+    if(ataque.infeccioso)arr.push({id:'infectar',nome:'🦠 Infectar'});
     if(batalhaArmaPodeSangrar_(ataque))arr.push({id:'sangrar',nome:'🩸 Sangrar'});
     if(batalhaArmaAtualDefensor_(dp))arr.push({id:'danificar_arma',nome:'🗡️ Danificar arma'});
     if(!batalhaArmaEhDistancia_(ataque) && !defensor?.combate?.caido && !batalhaEstaInconsciente_(defensor))arr.push({id:'derrubar',nome:'💥 Derrubar'});
@@ -6546,6 +6582,8 @@ window.batalhaEscolherEspecial_=async(atacanteId,tipo)=>{
         dp.ignorarArmadura=true;
     }else if(tipo==='sangrar'){
         dp.sangrar=true;
+    }else if(tipo==='infectar'){
+        dp.infectar=true;
     }else if(tipo==='derrubar'){
         await batalhaAplicarTrip_(dp);
     }else if(tipo==='danificar_arma'){
@@ -6575,6 +6613,7 @@ function batalhaPublicCard_(p){
 function batalhaPenalidadeCaido_(char){
     return char?.combate?.caido ? 2 : 0;
 }
+function batalhaStatusInfeccaoHtml_(char){return char?.combate?.infectado?.ativo?`<div style="margin-top:9px;padding:8px;border:1px solid rgba(150,220,90,.4);border-radius:8px;color:#d8f5b4">🦠 <strong>Infectado</strong> · +1 grau de dificuldade em todos os testes.</div>`:'';}
 function batalhaStatusCaidoHtml_(char){
     if(!char?.combate?.caido)return '';
     return `<div style="margin-top:9px;padding:8px 10px;border-radius:8px;background:rgba(255,193,7,.09);border:1px solid rgba(255,193,7,.35);color:#ffd88a;">
@@ -6641,6 +6680,7 @@ function batalhaAplicarFiascoPrimeirosSocorros_(alvo,x){
     alvo.combate.hitLocations[x.local]=Math.max(-x.max,Number(alvo.combate.hitLocations[x.local]??x.max)-1);
 }
 function batalhaAplicarSucessoPrimeirosSocorros_(alvo,x,critico=false){
+    if(alvo.combate?.infectado?.ativo){alvo.combate.infectado.ativo=false;alvo.combate.infectado.tratada=true;}
     alvo.combate.hitLocations=alvo.combate.hitLocations||{};const atual=Number(alvo.combate.hitLocations[x.local]??x.max);
     if(critico){alvo.combate.hitLocations[x.local]=x.max;delete batalhaWoundState_(alvo)[x.local];alvo.combate.inconsciente=false;return `Crítico: ${x.local} restaurado totalmente.`;}
     if(atual>0){const cura=Math.floor(Math.random()*3)+1;alvo.combate.hitLocations[x.local]=Math.min(x.max,atual+cura);return `Recuperou ${Math.min(cura,x.max-atual)} PV.`;}
@@ -6734,6 +6774,7 @@ function batalhaControlCard_(p,char){
         ${batalhaEspeciaisHtml_(p,batalhaEstado_?.danoPendente)}
         ${batalhaDescricaoBloqueioFerimento_(char)?`<div style="margin-top:9px;padding:8px 10px;border-radius:8px;background:rgba(231,76,60,.10);border:1px solid rgba(231,76,60,.35);color:#ffb0a8;">🩸 ${escaparHtmlInventario_(batalhaDescricaoBloqueioFerimento_(char))}</div>`:''}
         ${batalhaStatusCaidoHtml_(char)}
+        ${batalhaStatusInfeccaoHtml_(char)}
         ${batalhaStatusPrimeirosSocorrosHtml_(char)}
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;">
@@ -6835,7 +6876,8 @@ function renderizarBatalhaCandidatos_(){
     const modelos=(npcsDB||[]).filter(n=>n.selecionavelCombate!==false).map(n=>({
         token:`npcdb:${n.id}`,nome:n.nome||'NPC',imagem:n.imagem||'',tipo:'NPC'
     })).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR',{sensitivity:'base'}));
-    const candidatos=[...chars,...modelos];
+    const criaturas=(criaturasDB||[]).filter(n=>n.selecionavelCombate!==false).map(n=>({token:`criaturadb:${n.id}`,nome:n.nome,imagem:n.imagem||'',tipo:'Criatura'})).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+    const candidatos=[...chars,...modelos,...criaturas];
     box.innerHTML=candidatos.map(c=>`
         <label style="display:flex;gap:9px;align-items:center;padding:8px;border-radius:9px;background:rgba(255,255,255,.035);">
             <input type="checkbox" onchange="batalhaSelecionarCandidato_('${c.token}',this.checked)" ${batalhaSelecaoMestre_.has(c.token)?'checked':''}>
@@ -6853,12 +6895,9 @@ window.batalhaAdicionarSelecionados_=async()=>{
     estado.participantes=Array.isArray(estado.participantes)?estado.participantes:[];
     for(const id of ids){
         let c=null;
-        if(String(id).startsWith('npcdb:')){
-            const modelo=npcBancoPorId_(String(id).slice(6));
-            c=criarNPCCombateDoBanco_(modelo);
-        }else{
-            c=batalhaCharLocal_(id);
-        }
+        if(String(id).startsWith('npcdb:'))c=criarNPCCombateDoBanco_(npcBancoPorId_(String(id).slice(6)));
+        else if(String(id).startsWith('criaturadb:'))c=criarCriaturaCombate_(criaturaBancoPorId_(String(id).slice(10)));
+        else c=batalhaCharLocal_(id);
         if(!c)continue;
         const participante=batalhaSanitizarParticipante_(c);
         if(estado.participantes.some(p=>String(p.id)===String(participante.id)))continue;
@@ -7100,7 +7139,7 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
         const alvo=batalhaParticipante_(alvoId);
         const ataqueInfo={
             grau:r.grau,rolagem:roll,valor:ajuste.valor,margem,
-            pericia:getNome(per),equipamento:item?getNome(item):'Punhos',
+            pericia:getNome(per),equipamento:item?getNome(item):'Punhos',infeccioso:!!item?.infeccioso,
             penetracao:item?obterPenetracaoArma_(item):0,
             distancia:!!(item&&(Number(item.alcance||0)>2||String(item.municao||'').trim())),
             familia:String(item?.familia||item?.tipo||item?.categoria||''),
@@ -7392,6 +7431,7 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
         }
     }
 
+    if(dp.infectar&&danoFinal>0&&!alvo.combate?.infectado?.ativo){alvo.combate.infectado={ativo:true,origem:dp.ataque?.equipamento||'Ataque infeccioso'};batalhaLogPush_(batalhaEstado_,`${defensor.nome}: 🦠 Infectado; +1 grau em todos os testes até tratamento.`,'infeccao',{targetId:defensor.id});}
     // Bleed: only if the hit actually penetrated and injured.
     if(dp.sangrar && danoFinal>0){
         const end=batalhaRolarResistenciaFerimento_(alvo,dp.ataque);
@@ -8621,6 +8661,19 @@ window.removerCenarioBanco=async(id)=>{
 };
 
 
+
+function criaturaBancoPorId_(id){return (criaturasDB||[]).find(x=>String(x.id)===String(id))||null;}
+function renderizarBancoCriaturas_(){const e=document.getElementById('listaBancoCriaturas');if(!e)return;const l=[...criaturasDB].sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));e.innerHTML=l.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th>Nome</th><th>Tipo</th><th>Atributos</th><th>Ataques</th><th>Combate</th><th>Ações</th></tr></thead><tbody>${l.map(n=>`<tr><td><b>${escaparBanco_(n.nome)}</b><br><small>${escaparBanco_(n.especie||'')}</small></td><td>${escaparBanco_(n.tipo||'Criatura')}<br><small>${escaparBanco_(n.habitat||'')}</small></td><td>FOR ${n.FOR} · CON ${n.CON} · TAM ${n.TAM} · DES ${n.DES}<br>INT ${n.INT} · POD ${n.POD} · CAR ${n.CAR}</td><td>${escaparBanco_(n.armasTexto||'—')}<br><small>${escaparBanco_(n.propriedadesAtaques||'')}</small></td><td><input type="checkbox" ${n.selecionavelCombate!==false?'checked':''} onchange="toggleCriaturaSelecionavel_('${n.id}',this.checked)"> selecionável</td><td><button class="btn-small" onclick="editarCriaturaBanco_('${n.id}')">✏️</button> <button class="btn-small" onclick="duplicarCriaturaBanco_('${n.id}')">📑</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Banco vazio.</p>';}
+function crSet_(id,v){document.getElementById(id).value=v??'';}
+function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_('crNome',n.nome||'');crSet_('crTipo',n.tipo||'Criatura');crSet_('crEspecie',n.especie||'');crSet_('crHabitat',n.habitat||'');crSet_('crComportamento',n.comportamento||'');crSet_('crAltura',n.altura||'');crSet_('crTamanho',n.tamanho||'');crSet_('crPeso',n.pesoCorporal||'');for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])crSet_('cr'+a,n[a]??10);crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');document.getElementById('crSelecionavel').checked=n.selecionavelCombate!==false;document.getElementById('crDelete').style.display=n.id?'':'none';}
+window.adicionarCriaturaBanco_=()=>{crFill_();document.getElementById('dbCriaturaModal').classList.add('active');};
+window.editarCriaturaBanco_=id=>{const n=criaturaBancoPorId_(id);if(n){crFill_(n);document.getElementById('dbCriaturaModal').classList.add('active');}};
+window.fecharCriaturaBanco_=()=>document.getElementById('dbCriaturaModal').classList.remove('active');
+window.salvarCriaturaBanco_=async()=>{const v=id=>String(document.getElementById(id).value||'').trim(),orig=v('crOrig'),nome=v('crNome'),id=v('crId')||npcSlugPericia_(nome);if(!nome)return;const n={id,nome,tipo:v('crTipo'),especie:v('crEspecie'),habitat:v('crHabitat'),comportamento:v('crComportamento'),altura:v('crAltura'),tamanho:v('crTamanho'),pesoCorporal:v('crPeso'),FOR:+v('crFOR')||10,CON:+v('crCON')||10,TAM:+v('crTAM')||10,DES:+v('crDES')||10,INT:+v('crINT')||5,POD:+v('crPOD')||10,CAR:+v('crCAR')||5,periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),armasTexto:v('crArmas'),propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),selecionavelCombate:document.getElementById('crSelecionavel').checked};if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));await setDoc(doc(db,'criaturas',id),n,{merge:true});criaturasDB=criaturasDB.filter(x=>x.id!==orig&&x.id!==id);criaturasDB.push(n);fecharCriaturaBanco_();renderizarBancoCriaturas_();renderizarBatalhaCompartilhada_();};
+window.removerCriaturaBanco_=async()=>{const id=document.getElementById('crOrig').value;if(id&&confirm('Remover criatura?')){await deleteDoc(doc(db,'criaturas',id));criaturasDB=criaturasDB.filter(x=>x.id!==id);fecharCriaturaBanco_();renderizarBancoCriaturas_();}};
+window.toggleCriaturaSelecionavel_=async(id,v)=>{const n=criaturaBancoPorId_(id);if(n){n.selecionavelCombate=v;await setDoc(doc(db,'criaturas',id),{selecionavelCombate:v},{merge:true});renderizarBatalhaCompartilhada_();}};
+window.duplicarCriaturaBanco_=async id=>{const o=criaturaBancoPorId_(id);if(!o)return;let k=2,base=String(o.nome).replace(/\s+\d+$/,'');while(criaturasDB.some(x=>x.nome===`${base} ${k}`))k++;const n={...JSON.parse(JSON.stringify(o)),id:npcSlugPericia_(`${base}_${k}`),nome:`${base} ${k}`,estadoCombate:{hitLocations:{},armor:{},fadiga:'Fresh'}};await setDoc(doc(db,'criaturas',n.id),n);criaturasDB.push(n);renderizarBancoCriaturas_();renderizarBatalhaCompartilhada_();};
+
 function renderizarBancoNPCs_(){
  const e=document.getElementById('listaBancoNPCs');if(!e)return;
  const lista=[...npcsDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
@@ -9100,6 +9153,7 @@ function normalizarLinhaImportacao_(tipo, bruto) {
         };
     }
 
+    if(tipo==='criaturas')return {...comum,tipo:String(bruto.tipo||'Criatura'),especie:String(bruto.especie||''),habitat:String(bruto.habitat||''),comportamento:String(bruto.comportamento||''),altura:String(bruto.altura||''),tamanho:String(bruto.tamanho||''),pesoCorporal:String(bruto.pesoCorporal||''),FOR:parseNumero_(bruto.FOR,10),CON:parseNumero_(bruto.CON,10),TAM:parseNumero_(bruto.TAM,10),DES:parseNumero_(bruto.DES,10),INT:parseNumero_(bruto.INT,5),POD:parseNumero_(bruto.POD,10),CAR:parseNumero_(bruto.CAR,5),periciasTexto:String(bruto.periciasTexto||''),especializacoesTexto:String(bruto.especializacoesTexto||''),armasTexto:String(bruto.armasTexto||''),propriedadesAtaques:String(bruto.propriedadesAtaques||''),selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),imagem:String(bruto.imagem||''),descricao:String(bruto.descricao||'')};
     if(tipo==='npcs')return {...comum,tipo:String(bruto.tipo||'NPC'),raca:String(bruto.raca||'Humano'),origem:String(bruto.origem||''),idade:String(bruto.idade||''),sexo:String(bruto.sexo||''),altura:String(bruto.altura||''),tamanho:String(bruto.tamanho||''),pesoCorporal:String(bruto.pesoCorporal||''),sociedade:String(bruto.sociedade||''),carreira:String(bruto.carreira||bruto.tipo||''),conceito:String(bruto.conceito||''),classeSocial:String(bruto.classeSocial||''),recursos:String(bruto.recursos||''),FOR:parseNumero_(bruto.FOR,10),CON:parseNumero_(bruto.CON,10),TAM:parseNumero_(bruto.TAM,10),DES:parseNumero_(bruto.DES,10),INT:parseNumero_(bruto.INT,10),POD:parseNumero_(bruto.POD,10),CAR:parseNumero_(bruto.CAR,10),motivacao:String(bruto.motivacao||''),valorMotivacao:parseNumero_(bruto.valorMotivacao,0),periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),armasTexto:String(bruto.armasTexto||bruto.armas||''),inventarioTexto:String(bruto.inventarioTexto||bruto.inventario||''),selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),imagem:String(bruto.imagem||''),descricao:String(bruto.descricao||'')};
     if (tipo === 'itens') {
         const usoBruto = bruto.uso ?? bruto.quantidade ?? '';
@@ -9345,6 +9399,7 @@ function dadosExportacaoBanco_(tipo) {
                 imagem:c.imagem||''
             })
         },
+        criaturas:{dados:criaturasDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','especie','habitat','comportamento','altura','tamanho','pesoCorporal','FOR','CON','TAM','DES','INT','POD','CAR','periciasTexto','especializacoesTexto','armasTexto','propriedadesAtaques','selecionavelCombate','imagem','descricao'],map:n=>n},
         npcs:{dados:npcsDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','raca','origem','idade','sexo','altura','tamanho','pesoCorporal','sociedade','carreira','conceito','classeSocial','recursos','FOR','CON','TAM','DES','INT','POD','CAR','motivacao','valorMotivacao','periciasTexto','especializacoesTexto','armasTexto','inventarioTexto','selecionavelCombate','imagem','descricao'],map:n=>n},
         itens: {
             dados: itensDB,
@@ -9430,6 +9485,7 @@ window.baixarTemplate = (tipo) => {
         especializacoes: 'id;nome;nome_en;nome_zh;tipo;uso;formula;descricao;descricao_en;descricao_zh\ncombate_pistola_laser;Combate com Pistola Laser;Laser Pistol Combat;激光手枪战斗;Combate;Distância;DES+POD;;;',
         poderesPsi: 'id;nome;nome_en;nome_zh;esfera;arco;custo;observacao;observacao_en;observacao_zh\nevitar_dano;Evitar Dano;Avoid Damage;避免伤害;Sentidos;1;1;1 PP por ponto de dano absorvido;;',
         cenarios: 'id;nome;nome_en;nome_zh;local;local_en;local_zh;tipo;tipo_en;tipo_zh;descricaoJogadores;descricaoJogadores_en;descricaoJogadores_zh;descricaoGM;descricaoGM_en;descricaoGM_zh;objetivo;objetivo_en;objetivo_zh;segredos;segredos_en;segredos_zh;testesSugeridos;estadoInicial;eventos;encontros;observacoes;observacoes_en;observacoes_zh;destino1;condicao1;destino2;condicao2;destino3;condicao3;npcsCena;imagem\nC001;Exemplo;;;Local;;;Social;;;Descrição pública;;;Descrição GM;;;Objetivo;;;Segredo;;;Percepção|Influência;Ativo;Evento 1|Evento 2;Encontro 1|Encontro 2;;;;C002;Seguir adiante;;;;;NPC Exemplo;https://...',
+        criaturas: 'id;nome;nome_en;nome_zh;tipo;especie;habitat;comportamento;altura;tamanho;pesoCorporal;FOR;CON;TAM;DES;INT;POD;CAR;periciasTexto;especializacoesTexto;armasTexto;propriedadesAtaques;selecionavelCombate;imagem;descricao\\nstridulus;Stridulus;;;Predador;Stridulus sp.;Planícies rochosas;Emboscada;1,4 m;Médio;68;15;14;13;14;6;12;5;Combate Desarmado:32|Percepção:28;;Mordida|Garras;Mordida:infeccioso|Garras:infeccioso;true;;Predador de Calico',
         npcs: 'id;nome;nome_en;nome_zh;tipo;raca;FOR;CON;TAM;DES;INT;POD;CAR;periciasTexto;especializacoesTexto;selecionavelCombate;imagem;descricao\nseguranca;Segurança Genérico;;;Humano;Humano;12;12;12;12;10;10;9;atletismo:45|esquiva:40;fuzis_carabinas:50;true;;Sem armadura',
         itens: 'id;nome;nome_en;nome_zh;categoria;peso;preco;pa;pv;alcance;dano;penetracao;municao;uso;destinoLocal;locaisProtegidos;nivelAcesso;material;unidade;imagem;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;9000;4;5;60 m;2d6;3;Bateria;100;Armas laser;;Restrito;Liga metálica;Peça;;;;'
     };
