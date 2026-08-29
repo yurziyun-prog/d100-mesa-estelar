@@ -2833,7 +2833,7 @@ function atualizarInstanciaPeloBanco_(item) {
     const estadoInstancia = {};
     [
         'idBanco','instanciaId','pvAtual','origemAquisicao','precoPago','adquiridoEm',
-        'qualidade','cargaAtual','cargaMax','quantidade','notasInstancia'
+        'qualidade','cargaAtual','cargaMax','quantidade','notasInstancia','inutilizavel','quebradoEm'
     ].forEach(k => {
         if (Object.prototype.hasOwnProperty.call(item,k)) estadoInstancia[k]=item[k];
     });
@@ -5874,6 +5874,27 @@ function batalhaValorEquip_(item,idx){
     return String(item.instanciaId||item.instanceId||item.idInstancia||item.id||`equipado_${idx}`);
 }
 
+
+function itemCombateInutilizavel_(item){
+    if(!item)return false;
+    const max=Math.max(0,Number(item.pv||0));
+    const atual=Number(item.pvAtual??max);
+    return item.inutilizavel===true || (max>0 && atual<=0);
+}
+function batalhaPrefsDefensor_(char){
+    // Para o alvo, prefira a seleção realmente gravada na ficha; o mestre
+    // não deve sobrescrever isso com sua preferência local só para descobrir a arma empunhada.
+    return char?.combate?.batalhaPrefs || batalhaPrefsChar_(char);
+}
+function batalhaArmaAtualDefensor_(dp){
+    const alvo=batalhaCharLocal_(dp?.defensorId);
+    if(!alvo)return null;
+    const prefs=batalhaPrefsDefensor_(alvo);
+    if(!prefs || ['desarmado','nenhum',''].includes(String(prefs.equipamento||'')))return null;
+    const item=encontrarEquipamentoCombateChar_(alvo,prefs.equipamento);
+    if(!item || !itemEhArmaOuEscudo_(item) || itemCombateInutilizavel_(item))return null;
+    return item;
+}
 function batalhaEquipamentos_(char,pericia,selecionado=''){
     if(!pericia)return [];
     if(pericia.id==='combate_desarmado')return [{valor:'desarmado',rotulo:'Punhos',item:null,graus:0}];
@@ -5881,7 +5902,7 @@ function batalhaEquipamentos_(char,pericia,selecionado=''){
 
     const eq=obterItensEquipados_(char)||[];
     return eq.map((item,idx)=>({item,idx}))
-        .filter(x=>itemEhArmaOuEscudo_(x.item))
+        .filter(x=>itemEhArmaOuEscudo_(x.item) && !itemCombateInutilizavel_(x.item))
         .map(({item,idx})=>{
             const graus=penalidadeCompatibilidadeArma_(pericia,item);
             return {
@@ -6042,10 +6063,11 @@ function batalhaEspeciaisDisponiveis_(dp){
     const arr=[];
     const ataque=dp?.ataque||{};
     const crit=batalhaResultadoGradeValor_(ataque.grau)>=3;
+    const defensor=batalhaCharLocal_(dp?.defensorId);
     if(!batalhaArmaEhDistancia_(ataque)||crit)arr.push({id:'localizacao',nome:'🎯 Escolher localização'});
     if(batalhaArmaPodeSangrar_(ataque))arr.push({id:'sangrar',nome:'🩸 Sangrar'});
-    arr.push({id:'danificar_arma',nome:'🗡️ Danificar arma'});
-    arr.push({id:'derrubar',nome:'💥 Derrubar'});
+    if(batalhaArmaAtualDefensor_(dp))arr.push({id:'danificar_arma',nome:'🗡️ Danificar arma'});
+    if(!defensor?.combate?.caido && !batalhaEstaInconsciente_(defensor))arr.push({id:'derrubar',nome:'💥 Derrubar'});
     if(crit)arr.push({id:'ignorar_armadura',nome:'🛡️ Ignorar armadura'});
     return arr;
 }
@@ -6076,8 +6098,16 @@ window.batalhaEscolherEspecial_=async(atacanteId,tipo)=>{
     if(!dp||String(dp.atacanteId)!==String(atacanteId)||!p||!batalhaPodeControlar_(p)||Number(dp.especiaisRestantes||0)<=0)return;
     let escolha={tipo,timestamp:new Date().toISOString()};
     if(tipo==='localizacao'){
-        const txt=prompt('Escolha a localização:\\n1 Cabeça\\n2 Peito\\n3 Abdômen\\n4 Braço Direito\\n5 Braço Esquerdo\\n6 Perna Direita\\n7 Perna Esquerda','2');
-        const loc=BATALHA_LOCAIS_[Math.max(0,Math.min(6,(Number(txt)||2)-1))];
+        const atacante=batalhaCharLocal_(dp.atacanteId);
+        const somentePernas=!!atacante?.combate?.caido && !batalhaArmaEhDistancia_(dp.ataque);
+        let loc;
+        if(somentePernas){
+            const txt=prompt('Caído em combate corpo a corpo: só é possível alcançar as pernas.\\n1 Perna Direita\\n2 Perna Esquerda','1');
+            loc=Number(txt)===2?'Perna Esquerda':'Perna Direita';
+        }else{
+            const txt=prompt('Escolha a localização:\\n1 Cabeça\\n2 Peito\\n3 Abdômen\\n4 Braço Direito\\n5 Braço Esquerdo\\n6 Perna Direita\\n7 Perna Esquerda','2');
+            loc=BATALHA_LOCAIS_[Math.max(0,Math.min(6,(Number(txt)||2)-1))];
+        }
         escolha.local=loc;
         dp.localEscolhido=loc;
     }else if(tipo==='ignorar_armadura'){
@@ -6109,7 +6139,34 @@ function batalhaPublicCard_(p){
 }
 
 
-function batalhaPrimeirosSocorrosPericia_(char){return batalhaPericiaPorNomes_(char,['primeiros socorros','first aid']);}
+
+function batalhaPenalidadeCaido_(char){
+    return char?.combate?.caido ? 2 : 0;
+}
+function batalhaStatusCaidoHtml_(char){
+    if(!char?.combate?.caido)return '';
+    return `<div style="margin-top:9px;padding:8px 10px;border-radius:8px;background:rgba(255,193,7,.09);border:1px solid rgba(255,193,7,.35);color:#ffd88a;">
+      💥 <strong>Caído</strong> · ataques e defesas +2 graus de dificuldade · ataques corpo a corpo só alcançam as pernas do alvo.
+    </div>`;
+}
+window.batalhaLevantar_=async(id)=>{
+    const p=batalhaParticipante_(id),char=batalhaCharLocal_(id);
+    if(!p||!char||!batalhaPodeControlar_(p)||!char.combate?.caido)return;
+    const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
+    if(!atual||String(atual.id)!==String(id))return notificar_('Só é possível levantar na própria oportunidade.','aviso');
+    if(batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente)return notificar_('Resolva a ação pendente primeiro.','aviso');
+    if(Number(p.acoesAtuais||0)<=0)return notificar_('Sem AÇ para levantar.','aviso');
+    p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+    char.combate.caido=false;
+    await batalhaPersistirCombateChar_(char,p);
+    batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ e se levantou.`,'levantar',{actorId:p.id});
+    await batalhaSalvarEstado_();
+};
+function batalhaPrimeirosSocorrosPericia_(char){
+    const p=(periciasDB||[]).find(x=>x.id==='primeiros_socorros')
+        || (periciasDB||[]).find(x=>normalizarTextoCombate_(getNome(x)||'').includes('primeiros socorros'));
+    return p||null;
+}
 function batalhaPodePrimeirosSocorros_(char){return !!batalhaPrimeirosSocorrosPericia_(char)&&!batalhaEstaInconsciente_(char);}
 window.batalhaPrimeirosSocorros_=async id=>{
     const p=batalhaParticipante_(id),char=batalhaCharLocal_(id);if(!p||!char||!batalhaPodeControlar_(p))return;
@@ -6178,10 +6235,12 @@ function batalhaControlCard_(p,char){
         ${defendendo?batalhaDefesaHtml_(p,char,pend):''}
         ${batalhaEspeciaisHtml_(p,batalhaEstado_?.danoPendente)}
         ${batalhaDescricaoBloqueioFerimento_(char)?`<div style="margin-top:9px;padding:8px 10px;border-radius:8px;background:rgba(231,76,60,.10);border:1px solid rgba(231,76,60,.35);color:#ffb0a8;">🩸 ${escaparHtmlInventario_(batalhaDescricaoBloqueioFerimento_(char))}</div>`:''}
+        ${batalhaStatusCaidoHtml_(char)}
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;">
             <button class="btn-small btn-select" ${Number(p.acoesAtuais||0)<=0||!batalhaIniciativasProntas_()||ataqueBloqueado?'disabled':''} onclick="batalhaRolarD100_('${p.id}')">🎲 Teste D100</button>
             ${batalhaPodePrimeirosSocorros_(char)?`<button class="btn-small" ${Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaPrimeirosSocorros_('${p.id}')">🩹 Primeiros Socorros</button>`:''}
+            ${char?.combate?.caido?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaLevantar_('${p.id}')">⬆️ Levantar (1 AÇ)</button>`:''}
             <button class="btn-small btn-delete" ${!danoLiberado||especiaisPendentes?'disabled':''} onclick="batalhaRolarDano_('${p.id}')">💥 Rolar dano</button>
             <button class="btn-small" ${batalhaTemIniciativa_(p)?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${batalhaTemIniciativa_(p)?'Iniciativa rolada':'Iniciativa'}</button>
             ${atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">⏭ Próximo</button>`:''}
@@ -6193,6 +6252,11 @@ function batalhaControlCard_(p,char){
 
 function batalhaDefesaHtml_(p,char,pend){
     const ac=Number(p.acoesAtuais||0);
+    if(batalhaEstaInconsciente_(char)){
+        return `<div style="margin-top:11px;padding:12px;border-radius:10px;background:rgba(231,76,60,.11);border:1px solid rgba(231,76,60,.40);color:#ffaaa0;">
+          💤 <strong>${escaparHtmlInventario_(p.nome)}</strong> está inconsciente/incapacitado e não pode defender.
+        </div>`;
+    }
     const skills=[...(batalhaListaPericias_(char)||[])].sort((a,b)=>{
         if(a.id==='esquiva'&&b.id!=='esquiva')return -1;
         if(b.id==='esquiva'&&a.id!=='esquiva')return 1;
@@ -6201,7 +6265,8 @@ function batalhaDefesaHtml_(p,char,pend){
     const opts=skills.map(x=>`<option value="${batalhaTokenPericia_(x)}">${escaparHtmlInventario_(getNome(x))}</option>`).join('');
     const padrao=skills[0];
     const valorPadraoBruto=padrao?obterValorRegistroPericia_(char,padrao.id,padrao.__especializacao):0;
-    const valorPadrao=padrao?valorPericiaComArmadura_(char,padrao,valorPadraoBruto).valor:0;
+    const valorPadraoArm=padrao?valorPericiaComArmadura_(char,padrao,valorPadraoBruto).valor:0;
+    const valorPadrao=padrao?aplicarDificuldadeEFadiga_(char,valorPadraoArm,'padrao',batalhaPenalidadeCaido_(char)).valor:0;
     return `<div style="margin-top:11px;padding:12px;border-radius:10px;background:rgba(231,76,60,.11);border:1px solid rgba(231,76,60,.40);">
         <strong style="color:#ff9c90;">⚔️ ${escaparHtmlInventario_(pend.atacanteNome||'Atacante')} está atacando ${escaparHtmlInventario_(p.nome)}</strong>
         <div style="margin-top:6px;color:#ddd;">Ataque: <strong>${escaparHtmlInventario_(pend.ataque?.grau||'')}</strong> · AÇ disponíveis: <strong>${ac}/${p.acoesMax}</strong></div>
@@ -6224,7 +6289,8 @@ window.batalhaAtualizarValorDefesa_=(id,token)=>{
     if(!c||!p||!el)return;
     const bruto=obterValorRegistroPericia_(c,p.id,p.__especializacao);
     const aj=valorPericiaComArmadura_(c,p,bruto);
-    el.textContent=aj.valor+(aj.pct?` (-${aj.pct.toFixed(aj.pct%1?1:0)}%)`:'');
+    const efetivo=aplicarDificuldadeEFadiga_(c,aj.valor,'padrao',batalhaPenalidadeCaido_(c));
+    el.textContent=efetivo.valor+(aj.pct?` (-${aj.pct.toFixed(aj.pct%1?1:0)}%)`:'')+(c.combate?.caido?' · Caído +2 graus':'');
 };
 
 
@@ -6318,16 +6384,32 @@ window.batalhaOrdenarIniciativa_=async()=>{
     await batalhaSalvarEstado_();
 };
 
+function batalhaParticipantePodeReceberTurno_(p){
+    if(!p||Number(p.acoesAtuais||0)<=0)return false;
+    const c=batalhaCharLocal_(p.id);
+    return !batalhaEstaInconsciente_(c);
+}
+function batalhaPrimeiroTurnoValido_(){
+    const ps=batalhaEstado_?.participantes||[];
+    return ps.findIndex(p=>batalhaParticipantePodeReceberTurno_(p));
+}
 async function batalhaAvancarTurnoInterno_(){
     const ps=batalhaEstado_?.participantes||[];if(!ps.length)return;
-    if(ps.every(p=>Number(p.acoesAtuais||0)<=0)){
-        await batalhaNovaRodada_(false);return;
+
+    const algumPodeAgir=ps.some(p=>batalhaParticipantePodeReceberTurno_(p));
+    if(!algumPodeAgir){
+        await batalhaNovaRodada_(false);
+        return;
     }
+
     let idx=Number(batalhaEstado_.turnoIndex||0);
     for(let i=0;i<ps.length;i++){
         idx=(idx+1)%ps.length;
         if(idx===0)batalhaEstado_.ciclo=Math.max(1,Number(batalhaEstado_.ciclo||1)+1);
-        if(Number(ps[idx].acoesAtuais||0)>0){batalhaEstado_.turnoIndex=idx;break;}
+        if(batalhaParticipantePodeReceberTurno_(ps[idx])){
+            batalhaEstado_.turnoIndex=idx;
+            return;
+        }
     }
 }
 
@@ -6335,6 +6417,7 @@ window.batalhaProximo_=async(id)=>{
     const p=batalhaParticipante_(id);if(!p||!batalhaPodeControlar_(p))return;
     const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
     if(!atual||atual.id!==id){notificar_('Não é a oportunidade deste personagem.','aviso');return;}
+    // Mesmo inconsciente/incapacitado, o participante atual pode ser passado adiante pelo mestre.
     if(batalhaEstado_?.pendencia){notificar_('Resolva a reação pendente antes de avançar.','aviso');return;}
     if(batalhaEstado_?.danoPendente){notificar_('Resolva os efeitos especiais e o dano pendente antes de avançar.','aviso');return;}
     if(batalhaEhMestre_()){
@@ -6371,6 +6454,8 @@ window.batalhaNovaRodada_=async(confirmar=false)=>{
         p.acoesMax=c?batalhaAcoesMax_(c):Number(p.acoesMax||0);
         p.acoesAtuais=batalhaEstaInconsciente_(c)?0:p.acoesMax;
     }
+    const primeiroValido=batalhaPrimeiroTurnoValido_();
+    if(primeiroValido>=0)batalhaEstado_.turnoIndex=primeiroValido;
     batalhaLogPush_(batalhaEstado_,`Rodada ${batalhaEstado_.rodada} iniciada.`,'rodada');
     await batalhaSalvarEstado_();
 };
@@ -6418,6 +6503,10 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
     let item=null,graus=0;
     if(!['desarmado','nenhum',''].includes(prefs.equipamento)){
         item=encontrarEquipamentoCombateChar_(c,prefs.equipamento);
+        if(itemCombateInutilizavel_(item)){
+            batalhaUltimoResultado_[id]=`${getNome(item)} está inutilizável (0 PV). Troque de arma.`;
+            return;
+        }
         if(item)graus=penalidadeCompatibilidadeArma_(per,item);
     }
     if(!['combate_desarmado','esquiva'].includes(per.id)&&!item){
@@ -6429,7 +6518,8 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
     const armaduraAjuste=valorPericiaComArmadura_(c,per,baseOriginal);
     const base=armaduraAjuste.valor;
     const grausFerimento=batalhaPenalidadeFerimento_(c,per);
-    const ajuste=aplicarDificuldadeEFadiga_(c,base,prefs.dificuldade||'padrao',graus+grausFerimento);
+    const grausCaido=batalhaPenalidadeCaido_(c);
+    const ajuste=aplicarDificuldadeEFadiga_(c,base,prefs.dificuldade||'padrao',graus+grausFerimento+grausCaido);
     if(ajuste.bloqueado){batalhaUltimoResultado_[id]='Ação bloqueada por fadiga.';return;}
 
     const roll=requestPayload?.roll ?? (Math.floor(Math.random()*100)+1);
@@ -6446,9 +6536,11 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
             pericia:getNome(per),equipamento:item?getNome(item):'Punhos',
             penetracao:item?obterPenetracaoArma_(item):0,
             distancia:!!(item&&(Number(item.alcance||0)>2||String(item.municao||'').trim())),
-            familia:String(item?.familia||item?.tipo||item?.categoria||'')
+            familia:String(item?.familia||item?.tipo||item?.categoria||''),
+            atacanteCaido:!!c.combate?.caido
         };
-        if(Number(alvo?.acoesAtuais||0)<=0){
+        const alvoChar=batalhaCharLocal_(alvoId);
+        if(Number(alvo?.acoesAtuais||0)<=0 || batalhaEstaInconsciente_(alvoChar)){
             batalhaEstado_.pendencia=null;
             const especiais=Math.max(0,batalhaResultadoGradeValor_(r.grau)-1);
             batalhaEstado_.danoPendente={
@@ -6456,15 +6548,15 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
                 especiaisRestantes:especiais,escolhasEspeciais:[],
                 criadoEm:new Date().toISOString()
             };
-            batalhaUltimoResultado_[id]+=' · alvo sem AÇ: dano liberado';
+            batalhaUltimoResultado_[id]+=' · alvo sem reação possível: dano liberado';
             batalhaLogPush_(
                 batalhaEstado_,
-                `${p.nome} atacou ${alvo?.nome||'o alvo'} → ${r.grau}; alvo sem AÇ para reagir.`,
+                `${p.nome} atacou ${alvo?.nome||'o alvo'} → ${r.grau}; alvo sem reação possível.`,
                 'acerto',
                 {
                     actorId:p.id,
                     targetId:alvoId,
-                    textoDetalhado:`${p.nome}: ${getNome(per)} ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}; alvo sem AÇ para reagir.`
+                    textoDetalhado:`${p.nome}: ${getNome(per)} ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}; alvo sem reação possível.`
                 }
             );
         }else{
@@ -6554,6 +6646,10 @@ window.batalhaRolarIniciativa_=async(id)=>{
 window.batalhaResponderDefesa_=async(id,defender)=>{
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id),pend=batalhaEstado_?.pendencia;
     if(!p||!c||!pend||pend.defensorId!==id||!batalhaPodeControlar_(p))return;
+    if(batalhaEstaInconsciente_(c)){
+        if(batalhaEhMestre_())await batalhaProcessarDefesa_({personagemId:id,payload:{resposta:{defendeu:false,grau:'Falha',motivo:'inconsciente'}}});
+        return;
+    }
 
     let resposta={defendeu:false,grau:'Falha'};
     if(defender){
@@ -6562,7 +6658,7 @@ window.batalhaResponderDefesa_=async(id,defender)=>{
         const per=batalhaResolverPericia_(token);if(!per)return;
         const baseBruto=obterValorRegistroPericia_(c,per.id,per.__especializacao);
         const base=valorPericiaComArmadura_(c,per,baseBruto).valor;
-        const ajuste=aplicarDificuldadeEFadiga_(c,base,'padrao',0);
+        const ajuste=aplicarDificuldadeEFadiga_(c,base,'padrao',batalhaPenalidadeCaido_(c));
         const roll=Math.floor(Math.random()*100)+1;
         const r=classificarD100_(ajuste.valor,roll);
         const margem=batalhaMargem_(ajuste.valor,roll);
@@ -6649,7 +6745,12 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
 
     const locRoll=batalhaLocalizacaoD20_();
     const roll=locRoll.roll;
-    const local=dp.localEscolhido||locRoll.local;
+    let local=dp.localEscolhido||locRoll.local;
+    if(dp.ataque?.atacanteCaido && !batalhaArmaEhDistancia_(dp.ataque)){
+        if(!['Perna Direita','Perna Esquerda'].includes(local)){
+            local=Math.random()<0.5?'Perna Direita':'Perna Esquerda';
+        }
+    }
     const penetracao=Math.max(0,Number(dp.ataque?.penetracao||0));
     alvo.combate=alvo.combate||{};
     let pa=0,paEfetivo=0,danoFinal=0,pvAntes=0,pvDepois=0;
@@ -6736,23 +6837,32 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
         }
     }
 
-    // Damage Weapon: redirect a simple equipment-damage roll to the defender's currently selected durable weapon.
+    // Damage Weapon: o equipamento, e não a mão, recebe o dano.
+    let inventarioAlterado=false;
     if(dp.danificarArma){
-        const prefsAlvo=batalhaPrefsChar_(alvo);
-        const armaAlvo=encontrarEquipamentoCombateChar_(alvo,prefsAlvo?.equipamento);
+        const armaAlvo=batalhaArmaAtualDefensor_(dp);
         if(armaAlvo&&Number(armaAlvo.pv||0)>0){
             const apItem=Math.max(0,Number(armaAlvo.pa||0));
             const danoArma=Math.max(0,Number(total||0)-apItem);
             const maxItem=Math.max(1,Number(armaAlvo.pv||1));
             armaAlvo.pvAtual=Math.max(0,Number(armaAlvo.pvAtual??maxItem)-danoArma);
-            batalhaLogPush_(batalhaEstado_,`${getNome(armaAlvo)} sofreu ${danoArma} de dano (PV ${armaAlvo.pvAtual}/${maxItem}).`,'danificar_arma',{targetId:defensor.id});
+            inventarioAlterado=true;
+            if(armaAlvo.pvAtual<=0){
+                armaAlvo.inutilizavel=true;
+                armaAlvo.quebradoEm=new Date().toISOString();
+                batalhaLogPush_(batalhaEstado_,`${getNome(armaAlvo)} chegou a 0 PV e ficou INUTILIZÁVEL. O personagem precisa trocar de arma.`,'arma_quebrada',{targetId:defensor.id});
+            }else{
+                batalhaLogPush_(batalhaEstado_,`${getNome(armaAlvo)} sofreu ${danoArma} de dano (PV ${armaAlvo.pvAtual}/${maxItem}).`,'danificar_arma',{targetId:defensor.id});
+            }
         }
     }
 
     if(alvo.__npcTemporario){
         defensor.npcCombate=JSON.parse(JSON.stringify(alvo.combate||{}));
     }else{
-        await setDoc(doc(db,'personagens',alvo.id),{combate:alvo.combate},{merge:true});
+        const dadosSalvar={combate:alvo.combate};
+        if(inventarioAlterado)dadosSalvar.inventario=alvo.inventario;
+        await setDoc(doc(db,'personagens',alvo.id),dadosSalvar,{merge:true});
     }
 
     const resultado={
@@ -6799,6 +6909,7 @@ window.batalhaRolarDano_=async(id)=>{
     }else{
         item=encontrarEquipamentoCombateChar_(c,prefs.equipamento);
         if(!item){notificar_('Selecione uma arma.','aviso');return;}
+        if(itemCombateInutilizavel_(item)){notificar_(`${getNome(item)} está inutilizável (0 PV). Troque de arma.`,'aviso');return;}
         expr=String(item.dano||'').trim();nome=getNome(item);
     }
     if(!expr){notificar_('Dano não cadastrado.','aviso');return;}
@@ -10557,7 +10668,9 @@ function renderizarTabelaFerimentosCompleta_(){
       ['Leve','PV > 0','Sem penalidade automática; cura diária.'],
       ['Sério','PV ≤ 0 e > -PV máximo','1d3 turnos sem atacar; teste oposto de Resistência; membro pode ficar inutilizado; cabeça/peito/abdômen podem causar inconsciência; cura semanal.'],
       ['Grave','PV ≤ -PV máximo','Incapacitação; novo teste de Resistência; pode destruir membro ou matar; cura mensal só após tratamento.'],
-      ['Sangramento','Bleed','-1 nível de Fadiga por rodada até estancar. Armas laser/plasma/blaster/energia não causam Bleed nesta campanha.']];
+      ['Sangramento','Bleed','-1 nível de Fadiga por rodada até estancar. Armas laser/plasma/blaster/energia não causam Bleed nesta campanha.'],
+      ['Caído','Estado','Ataques e defesas sofrem +2 graus de dificuldade. Em corpo a corpo, um atacante caído só alcança as pernas do adversário. Levantar custa 1 AÇ.'],
+      ['Arma a 0 PV','Equipamento','A arma fica inutilizável e desaparece das opções de combate até ser reparada. Danificar Arma não pode ser escolhido contra Punhos/armas naturais.']];
     el.innerHTML=`<h3>🩸 Ferimentos por localização</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Quando</th><th>Consequência</th></tr></thead><tbody>${rows.map(r=>`<tr>${r.map(x=>`<td>${x}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 ;
