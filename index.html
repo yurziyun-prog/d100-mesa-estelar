@@ -11728,15 +11728,14 @@ function renderizarRolagensCalico_(){
 }
 
 
-const _calicoObserver_=new MutationObserver(()=>{if(document.getElementById('calicoWorldRolls'))renderizarRolagensCalico_();});
-document.addEventListener('DOMContentLoaded',()=>{_calicoObserver_.observe(document.body,{subtree:true,childList:true});renderizarRolagensCalico_();});
+document.addEventListener('DOMContentLoaded',()=>{
+    // Renderiza uma vez. O observer anterior reescrevia o próprio painel,
+    // disparava outra mutação e entrava em um ciclo infinito.
+    renderizarRolagensCalico_();
+});
 
+
+window.atualizarPainelCalico_=()=>renderizarRolagensCalico_();
 </script>
-
-<!-- v45.1 RECOVERY
-     Base restaurada da v44 após regressão de inicialização na v45.
-     Mantém grid tático, Calico, fiascos, PV temporários de armas de NPC,
-     ataques naturais e Primeiros Socorros da última versão estável.
--->
 </body>
 </html>
