@@ -928,6 +928,13 @@
                     <div id="banco-criaturas" class="tab-content">
                       <h4 style="color:#fff">Criaturas reutilizáveis</h4>
                       <p style="color:#aaa">Banco privado do mestre. Nesta etapa é apenas cadastro: criaturas ainda não entram no Painel de Batalha.</p>
+                      <div class="import-section">
+                        <input type="file" id="importCriaturasFile" accept=".csv" style="display:none" onchange="importarPlanilha('criaturas',this,this.dataset.modo==='substituir')">
+                        <button class="btn-import" onclick="selecionarImportacaoBanco_('importCriaturasFile',false)">📥 Importar/Atualizar CSV</button>
+                        <button class="btn-template" onclick="selecionarImportacaoBanco_('importCriaturasFile',true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
+                        <button class="btn-template" onclick="baixarTemplate('criaturas')">📄 Baixar Template</button>
+                        <button class="btn-template" onclick="exportarBancoCSV('criaturas')">📤 Exportar CSV</button>
+                      </div>
                       <div id="listaBancoCriaturas"></div>
                       <button class="btn-save" onclick="adicionarCriaturaBanco_()" style="margin-top:15px">➕ Adicionar Criatura</button>
                     </div>
@@ -9366,6 +9373,30 @@ function normalizarLinhaImportacao_(tipo, bruto) {
     }
 
     if(tipo==='npcs')return {...comum,tipo:String(bruto.tipo||'NPC'),raca:String(bruto.raca||'Humano'),origem:String(bruto.origem||''),idade:String(bruto.idade||''),sexo:String(bruto.sexo||''),altura:String(bruto.altura||''),tamanho:String(bruto.tamanho||''),pesoCorporal:String(bruto.pesoCorporal||''),sociedade:String(bruto.sociedade||''),carreira:String(bruto.carreira||bruto.tipo||''),conceito:String(bruto.conceito||''),classeSocial:String(bruto.classeSocial||''),recursos:String(bruto.recursos||''),FOR:parseNumero_(bruto.FOR,10),CON:parseNumero_(bruto.CON,10),TAM:parseNumero_(bruto.TAM,10),DES:parseNumero_(bruto.DES,10),INT:parseNumero_(bruto.INT,10),POD:parseNumero_(bruto.POD,10),CAR:parseNumero_(bruto.CAR,10),motivacao:String(bruto.motivacao||''),valorMotivacao:parseNumero_(bruto.valorMotivacao,0),periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),armasTexto:String(bruto.armasTexto||bruto.armas||''),inventarioTexto:String(bruto.inventarioTexto||bruto.inventario||''),selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),imagem:String(bruto.imagem||''),descricao:String(bruto.descricao||'')};
+    if(tipo==='criaturas')return {
+        ...comum,
+        tipo:String(bruto.tipo||'Criatura'),
+        especie:String(bruto.especie||bruto.raca||''),
+        habitat:String(bruto.habitat||bruto.origem||''),
+        comportamento:String(bruto.comportamento||bruto.motivacao||''),
+        altura:String(bruto.altura||''),
+        tamanho:String(bruto.tamanho||''),
+        pesoCorporal:String(bruto.pesoCorporal||''),
+        FOR:parseNumero_(bruto.FOR,10),
+        CON:parseNumero_(bruto.CON,10),
+        TAM:parseNumero_(bruto.TAM,10),
+        DES:parseNumero_(bruto.DES,10),
+        INT:parseNumero_(bruto.INT,5),
+        POD:parseNumero_(bruto.POD,10),
+        CAR:parseNumero_(bruto.CAR,5),
+        periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),
+        especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),
+        armasTexto:String(bruto.armasTexto||bruto.armas||''),
+        propriedadesAtaques:String(bruto.propriedadesAtaques||bruto.propriedades||''),
+        selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),
+        imagem:String(bruto.imagem||bruto.urlImagem||''),
+        descricao:String(bruto.descricao||'')
+    };
     if (tipo === 'itens') {
         const usoBruto = bruto.uso ?? bruto.quantidade ?? '';
         return {
@@ -9419,7 +9450,7 @@ async function substituirColecaoPorDados_(tipo, dados) {
     }
 
     // Preserva imagens existentes quando o CSV deixa a imagem vazia.
-    if (tipo === 'itens' || tipo === 'cenarios') {
+    if (tipo === 'itens' || tipo === 'cenarios' || tipo === 'npcs' || tipo === 'criaturas') {
         const porId = new Map();
         const porNome = new Map();
         existentes.forEach(snap => {
@@ -9502,7 +9533,7 @@ Deseja continuar?`;
                 } else {
                     for (const itemOriginal of dados) {
                         const item = { ...itemOriginal };
-                        if ((tipo === 'itens' || tipo === 'cenarios') && !String(item.imagem || '').trim()) delete item.imagem;
+                        if ((tipo === 'itens' || tipo === 'cenarios' || tipo === 'npcs' || tipo === 'criaturas') && !String(item.imagem || '').trim()) delete item.imagem;
                         await setDoc(doc(db, tipo, item.id), item, { merge: true });
                     }
                     somSalvar_();
@@ -9611,6 +9642,7 @@ function dadosExportacaoBanco_(tipo) {
             })
         },
         npcs:{dados:npcsDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','raca','origem','idade','sexo','altura','tamanho','pesoCorporal','sociedade','carreira','conceito','classeSocial','recursos','FOR','CON','TAM','DES','INT','POD','CAR','motivacao','valorMotivacao','periciasTexto','especializacoesTexto','armasTexto','inventarioTexto','selecionavelCombate','imagem','descricao'],map:n=>n},
+        criaturas:{dados:criaturasDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','especie','habitat','comportamento','altura','tamanho','pesoCorporal','FOR','CON','TAM','DES','INT','POD','CAR','periciasTexto','especializacoesTexto','armasTexto','propriedadesAtaques','selecionavelCombate','imagem','descricao'],map:n=>n},
         itens: {
             dados: itensDB,
             cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','penetracao','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','imagem','descricao','descricao_en','descricao_zh'],
@@ -9696,6 +9728,7 @@ window.baixarTemplate = (tipo) => {
         poderesPsi: 'id;nome;nome_en;nome_zh;esfera;arco;custo;observacao;observacao_en;observacao_zh\nevitar_dano;Evitar Dano;Avoid Damage;避免伤害;Sentidos;1;1;1 PP por ponto de dano absorvido;;',
         cenarios: 'id;nome;nome_en;nome_zh;local;local_en;local_zh;tipo;tipo_en;tipo_zh;descricaoJogadores;descricaoJogadores_en;descricaoJogadores_zh;descricaoGM;descricaoGM_en;descricaoGM_zh;objetivo;objetivo_en;objetivo_zh;segredos;segredos_en;segredos_zh;testesSugeridos;estadoInicial;eventos;encontros;observacoes;observacoes_en;observacoes_zh;destino1;condicao1;destino2;condicao2;destino3;condicao3;npcsCena;imagem\nC001;Exemplo;;;Local;;;Social;;;Descrição pública;;;Descrição GM;;;Objetivo;;;Segredo;;;Percepção|Influência;Ativo;Evento 1|Evento 2;Encontro 1|Encontro 2;;;;C002;Seguir adiante;;;;;NPC Exemplo;https://...',
         npcs: 'id;nome;nome_en;nome_zh;tipo;raca;FOR;CON;TAM;DES;INT;POD;CAR;periciasTexto;especializacoesTexto;selecionavelCombate;imagem;descricao\nseguranca;Segurança Genérico;;;Humano;Humano;12;12;12;12;10;10;9;atletismo:45|esquiva:40;fuzis_carabinas:50;true;;Sem armadura',
+        criaturas: 'id;nome;nome_en;nome_zh;tipo;especie;habitat;comportamento;altura;tamanho;pesoCorporal;FOR;CON;TAM;DES;INT;POD;CAR;periciasTexto;especializacoesTexto;armasTexto;propriedadesAtaques;selecionavelCombate;imagem;descricao\nrastejante;Rastejante Genérico;;;Criatura;Predador;Ruínas;Emboscador;0,8;Pequeno;30;9;11;8;16;4;9;2;Furtividade:48|Percepção:42;Combate Desarmado:34;Mordida|Garras;;true;;Modelo genérico de criatura',
         itens: 'id;nome;nome_en;nome_zh;categoria;peso;preco;pa;pv;alcance;dano;penetracao;municao;uso;destinoLocal;locaisProtegidos;nivelAcesso;material;unidade;imagem;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;9000;4;5;60 m;2d6;3;Bateria;100;Armas laser;;Restrito;Liga metálica;Peça;;;;'
     };
 
@@ -12093,6 +12126,6 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.5: grid 24x12 + entrada aleatória + mestre sem limite de atributos + criaturas com upload/seleção -->
+<!-- Mesa Estelar v46.5.1: criaturas com importação/substituição/template/exportação CSV igual aos NPCs -->
 </body>
 </html>
