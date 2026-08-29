@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>D100 - Mesa Estelar RPG</title>
-    <!-- Mesa Estelar v29.2: histórico com privacidade por personagem -->
+    <!-- Mesa Estelar v29.3: correção da iniciativa inicial -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         /* ============================================
@@ -4841,16 +4841,22 @@ function batalhaSanitizarParticipante_(c){
 }
 
 
+function batalhaTemIniciativa_(p){
+    if(!p)return false;
+    const v=p.iniciativa;
+    return v!==null && v!==undefined && v!=='' && Number.isFinite(Number(v));
+}
+
 function batalhaIniciativasProntas_(){
     const ps=batalhaEstado_?.participantes||[];
-    return ps.length>0 && ps.every(p=>Number.isFinite(Number(p.iniciativa)));
+    return ps.length>0 && ps.every(batalhaTemIniciativa_);
 }
 
 function batalhaOrdenarPorIniciativaInterno_(){
     if(!batalhaEstado_)return;
     batalhaEstado_.participantes=(batalhaEstado_.participantes||[]).sort((a,b)=>{
-        const ai=Number.isFinite(Number(a.iniciativa))?Number(a.iniciativa):-999999;
-        const bi=Number.isFinite(Number(b.iniciativa))?Number(b.iniciativa):-999999;
+        const ai=batalhaTemIniciativa_(a)?Number(a.iniciativa):-999999;
+        const bi=batalhaTemIniciativa_(b)?Number(b.iniciativa):-999999;
         return bi-ai;
     });
     batalhaEstado_.turnoIndex=0;
@@ -5066,7 +5072,7 @@ function batalhaControlCard_(p,char){
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;">
             <button class="btn-small btn-select" ${Number(p.acoesAtuais||0)<=0||!batalhaIniciativasProntas_()?'disabled':''} onclick="batalhaRolarD100_('${p.id}')">🎲 Teste D100</button>
             <button class="btn-small btn-delete" ${!danoLiberado?'disabled':''} onclick="batalhaRolarDano_('${p.id}')">💥 Rolar dano</button>
-            <button class="btn-small" ${Number.isFinite(Number(p.iniciativa))?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${Number.isFinite(Number(p.iniciativa))?'Iniciativa rolada':'Iniciativa'}</button>
+            <button class="btn-small" ${batalhaTemIniciativa_(p)?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${batalhaTemIniciativa_(p)?'Iniciativa rolada':'Iniciativa'}</button>
             ${atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">⏭ Próximo</button>`:''}
             ${batalhaEhMestre_()?`<button class="btn-small btn-delete" onclick="batalhaRemoverParticipante_('${p.id}')">✕ Remover</button>`:''}
         </div>
@@ -5357,7 +5363,7 @@ window.batalhaRolarD100_=async(id)=>{
 
 window.batalhaRolarIniciativa_=async(id)=>{
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);if(!p||!c||!batalhaPodeControlar_(p))return;
-    if(Number.isFinite(Number(p.iniciativa))){
+    if(batalhaTemIniciativa_(p)){
         notificar_('A iniciativa deste personagem já foi rolada nesta batalha.','aviso');
         return;
     }
@@ -5571,7 +5577,7 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
 
     try{
         if(acao.tipo==='iniciativa'){
-            if(!Number.isFinite(Number(p.iniciativa))){
+            if(!batalhaTemIniciativa_(p)){
                 p.iniciativa=Number(acao.payload?.total);
                 batalhaUltimoResultado_[p.id]=`Iniciativa: 1d10 [${Number(acao.payload?.d10||0)}] + ${Number(acao.payload?.base||0)} = ${p.iniciativa}`;
                 batalhaLogPush_(batalhaEstado_,`${p.nome} rolou iniciativa ${p.iniciativa}.`,'iniciativa',{actorId:p.id});
@@ -5647,6 +5653,11 @@ function iniciarBatalhaCompartilhada_(){
 
     batalhaUnsub_=onSnapshot(BATALHA_DOC_REF(),snap=>{
         batalhaEstado_=snap.exists()?snap.data():null;
+        if(batalhaEstado_?.participantes){
+            batalhaEstado_.participantes.forEach(p=>{
+                if(p.iniciativa===undefined)p.iniciativa=null;
+            });
+        }
         renderizarBatalhaCompartilhada_();
     },err=>{
         console.warn('Batalha compartilhada:',err);
