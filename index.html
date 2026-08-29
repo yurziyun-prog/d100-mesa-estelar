@@ -263,6 +263,17 @@
                 grid-template-columns:64px minmax(140px,1fr) repeat(4,70px) repeat(2,minmax(120px,1fr)) !important;
             }
         }
+        /* v46.1 — grid tático compartilhado */
+        .battle-grid-wrap{overflow:auto;padding:10px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10)}
+        .battle-grid{--cell:54px;display:grid;grid-template-columns:repeat(20,var(--cell));grid-template-rows:repeat(12,var(--cell));width:max-content;background:#f8f8f8;border-left:1px solid #c8c8c8;border-top:1px solid #c8c8c8}
+        .battle-grid-cell{width:var(--cell);height:var(--cell);box-sizing:border-box;border-right:1px solid #c8c8c8;border-bottom:1px solid #c8c8c8;position:relative;display:flex;align-items:center;justify-content:center}
+        .battle-token{width:44px;height:44px;border-radius:9px;background:#27304f;border:2px solid #6578b9;color:white;display:flex;align-items:center;justify-content:center;cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.35);overflow:hidden;user-select:none}
+        .battle-token:active{cursor:grabbing}.battle-token img{width:100%;height:100%;object-fit:cover}.battle-token span{font-size:11px;font-weight:800;text-align:center;line-height:1.05;padding:2px}
+        .battle-token.current{outline:3px solid #ffd54a;outline-offset:1px}
+        .battle-grid-cell.drag-over{box-shadow:inset 0 0 0 3px #00cfff}
+        .battle-unplaced{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 10px}
+        .battle-unplaced .battle-token{width:auto;min-width:44px;padding:0 7px;gap:5px}
+
 </style>
 </head>
 <body>
@@ -6120,7 +6131,8 @@ function batalhaSanitizarParticipante_(c){
         iniciativa:null,
         acoesAtuais:batalhaAcoesMax_(c),
         acoesMax:batalhaAcoesMax_(c),
-        posicao:'centro',
+        gridX:null,
+        gridY:null,
         ...(c.__npcTemporario?{
             npcBancoId:String(c.npcBancoId||''),
             npcCombate:JSON.parse(JSON.stringify(c.combate||{})),
@@ -7579,42 +7591,72 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
 }
 
 
-const BATALHA_POSICOES_=[
-    {id:'vanguarda',nome:'⚔️ Vanguarda',desc:'Linha de frente'},
-    {id:'centro',nome:'🛡️ Centro',desc:'Posição intermediária'},
-    {id:'retaguarda',nome:'🎯 Retaguarda',desc:'Linha posterior'}
-];
-function batalhaPosicaoValida_(p){return BATALHA_POSICOES_.some(z=>z.id===p?.posicao)?p.posicao:'centro';}
-window.batalhaMoverPosicao_=async(id,posicao)=>{
-    if(!batalhaEhMestre_())return;
-    const p=batalhaParticipante_(id);if(!p||!BATALHA_POSICOES_.some(z=>z.id===posicao))return;
-    p.posicao=posicao;
-    batalhaLogPush_(batalhaEstado_,`${p.nome} mudou para ${BATALHA_POSICOES_.find(z=>z.id===posicao)?.nome.replace(/^[^ ]+ /,'')||posicao}.`,'posicao',{actorId:p.id});
+const BATALHA_GRID_COLS_=20,BATALHA_GRID_ROWS_=12;
+function batalhaPodeMoverToken_(p){
+    if(!p||!currentUser)return false;
+    if(batalhaEhMestre_())return true;
+    return String(p.donoUid||'')===String(currentUser.uid);
+}
+function batalhaPosGridValida_(p){
+    const x=Number(p?.gridX),y=Number(p?.gridY);
+    return Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<BATALHA_GRID_COLS_&&y>=0&&y<BATALHA_GRID_ROWS_;
+}
+function batalhaCelulaOcupada_(x,y,excetoId=''){
+    return (batalhaEstado_?.participantes||[]).find(p=>String(p.id)!==String(excetoId)&&batalhaPosGridValida_(p)&&Number(p.gridX)===x&&Number(p.gridY)===y);
+}
+window.batalhaDragToken_=function(ev,id){
+    const p=batalhaParticipante_(id);
+    if(!batalhaPodeMoverToken_(p)){ev.preventDefault();return;}
+    ev.dataTransfer.setData('text/plain',String(id));
+    ev.dataTransfer.effectAllowed='move';
+};
+window.batalhaGridDragOver_=function(ev){ev.preventDefault();ev.currentTarget.classList.add('drag-over');};
+window.batalhaGridDragLeave_=function(ev){ev.currentTarget.classList.remove('drag-over');};
+window.batalhaGridDrop_=async function(ev,x,y){
+    ev.preventDefault();ev.currentTarget.classList.remove('drag-over');
+    const id=ev.dataTransfer.getData('text/plain'),p=batalhaParticipante_(id);
+    if(!p||!batalhaPodeMoverToken_(p))return;
+    const ocupado=batalhaCelulaOcupada_(x,y,id);
+    if(ocupado){notificar_(`A casa já está ocupada por ${ocupado.nome}.`,'aviso');return;}
+    p.gridX=x;p.gridY=y;
+    batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa.`,'posicao',{actorId:p.id});
+    renderizarBatalhaPosicoes_();
     await batalhaSalvarEstado_();
 };
+window.batalhaGridRemover_=async function(ev){
+    ev.preventDefault();
+    const id=ev.dataTransfer.getData('text/plain'),p=batalhaParticipante_(id);
+    if(!p||!batalhaPodeMoverToken_(p))return;
+    p.gridX=null;p.gridY=null;
+    renderizarBatalhaPosicoes_();
+    await batalhaSalvarEstado_();
+};
+function batalhaTokenHtml_(p){
+    const pode=batalhaPodeMoverToken_(p),atual=batalhaParticipanteAtual_()?.id===p.id;
+    const iniciais=String(p.nome||'?').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
+    return `<div class="battle-token ${atual?'current':''}" draggable="${pode?'true':'false'}" ${pode?`ondragstart="batalhaDragToken_(event,'${p.id}')"`:''} title="${escaparHtmlInventario_(p.nome)}${pode?' · arraste para mover':''}">
+      ${p.imagem?`<img src="${escaparHtmlInventario_(p.imagem)}" alt="${escaparHtmlInventario_(p.nome)}">`:`<span>${escaparHtmlInventario_(iniciais||'👤')}</span>`}
+    </div>`;
+}
 function renderizarBatalhaPosicoes_(){
     const el=document.getElementById('battlePositionPanel');if(!el)return;
     if(!batalhaEstado_?.ativo||!(batalhaEstado_.participantes||[]).length){el.innerHTML='';return;}
+    const ps=batalhaEstado_.participantes||[],fora=ps.filter(p=>!batalhaPosGridValida_(p));
+    let cells='';
+    for(let y=0;y<BATALHA_GRID_ROWS_;y++){
+        for(let x=0;x<BATALHA_GRID_COLS_;x++){
+            const p=ps.find(q=>batalhaPosGridValida_(q)&&Number(q.gridX)===x&&Number(q.gridY)===y);
+            cells+=`<div class="battle-grid-cell" ondragover="batalhaGridDragOver_(event)" ondragleave="batalhaGridDragLeave_(event)" ondrop="batalhaGridDrop_(event,${x},${y})">${p?batalhaTokenHtml_(p):''}</div>`;
+        }
+    }
     el.innerHTML=`<div style="padding:13px;border-radius:12px;background:rgba(0,0,0,.13);border:1px solid rgba(255,255,255,.10);">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-        <h3 style="margin:0;color:#b8c8ff;">🗺️ Posição no combate</h3>
-        <small style="color:#888;">Representação por zonas. Ainda não altera alcance ou movimento.</small>
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px">
+        <h3 style="margin:0;color:#b8c8ff;">🗺️ Mapa do combate</h3>
+        <small style="color:#888;">20 × 12 casas · jogadores movem seus personagens; mestre move todos.</small>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
-        ${BATALHA_POSICOES_.map(z=>{
-            const ps=(batalhaEstado_.participantes||[]).filter(p=>batalhaPosicaoValida_(p)===z.id);
-            return `<div style="min-height:130px;padding:10px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);">
-              <div style="font-weight:800;margin-bottom:2px;">${z.nome}</div><small style="color:#777;">${z.desc}</small>
-              <div style="display:flex;flex-direction:column;gap:7px;margin-top:9px;">
-                ${ps.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:7px;border-radius:8px;background:rgba(0,0,0,.16);">
-                  ${p.imagem?`<img src="${escaparHtmlInventario_(p.imagem)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`:`<div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);">👤</div>`}
-                  <div style="min-width:0;flex:1;"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escaparHtmlInventario_(p.nome)}</strong><small style="color:#888;">${escaparHtmlInventario_(p.tipo||'')}</small></div>
-                  ${batalhaEhMestre_()?`<select style="width:118px;padding:5px;" onchange="batalhaMoverPosicao_('${p.id}',this.value)">${BATALHA_POSICOES_.map(o=>`<option value="${o.id}" ${o.id===z.id?'selected':''}>${o.id==='vanguarda'?'Frente':o.id==='centro'?'Centro':'Retaguarda'}</option>`).join('')}</select>`:''}
-                </div>`).join('')||'<small style="color:#666;">Vazio</small>'}
-              </div>
-            </div>`;
-        }).join('')}
-      </div>
+      ${fora.length?`<div><small style="color:#aaa;">Aguardando posicionamento:</small><div class="battle-unplaced" ondragover="event.preventDefault()" ondrop="batalhaGridRemover_(event)">${fora.map(batalhaTokenHtml_).join('')}</div></div>`:''}
+      <div class="battle-grid-wrap"><div class="battle-grid">${cells}</div></div>
+      <small style="display:block;color:#777;margin-top:7px;">Por enquanto o mapa é apenas posicional: distância, alcance e movimento ainda não são calculados automaticamente.</small>
     </div>`;
 }
 
@@ -7669,7 +7711,11 @@ function iniciarBatalhaCompartilhada_(){
         if(batalhaEstado_?.participantes){
             batalhaEstado_.participantes.forEach(p=>{
                 if(p.iniciativa===undefined)p.iniciativa=null;
-                if(!BATALHA_POSICOES_.some(z=>z.id===p.posicao))p.posicao='centro';
+                const gx=Number(p.gridX),gy=Number(p.gridY);
+                p.gridX=Number.isInteger(gx)&&gx>=0&&gx<BATALHA_GRID_COLS_?gx:null;
+                p.gridY=Number.isInteger(gy)&&gy>=0&&gy<BATALHA_GRID_ROWS_?gy:null;
+                if(p.gridX===null||p.gridY===null){p.gridX=null;p.gridY=null;}
+                delete p.posicao;
             });
         }
         renderizarBatalhaCompartilhada_();
@@ -11663,6 +11709,6 @@ function renderizarTabelaFerimentosCompleta_(){
 }
 ;
 </script>
-<!-- Mesa Estelar v46.0: base v43 + localização melee + PDMs no comércio -->
+<!-- Mesa Estelar v46.1: v46.0 + grid tático 20x12, sem Calico -->
 </body>
 </html>
