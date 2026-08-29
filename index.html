@@ -6896,8 +6896,14 @@ window.batalhaAdicionarSelecionados_=async()=>{
         estado.participantes.push(participante);
         batalhaLogPush_(estado,`${c.nome||'Personagem'} entrou na batalha.`,'entrada');
     }
-    batalhaSelecaoMestre_.clear();
-    await batalhaSalvarEstado_(estado);
+    try{
+        await batalhaSalvarEstado_(estado);
+        batalhaSelecaoMestre_.clear();
+        renderizarBatalhaCompartilhada_();
+    }catch(e){
+        console.error('Erro ao adicionar participantes à batalha:',e);
+        notificar_(`Não foi possível adicionar os participantes: ${e?.message||e}`,'erro',7000);
+    }
 };
 
 window.batalhaRemoverParticipante_=async(id)=>{
@@ -7632,7 +7638,7 @@ window.batalhaGridRemover_=async function(ev){
     await batalhaSalvarEstado_();
 };
 function batalhaTokenHtml_(p){
-    const pode=batalhaPodeMoverToken_(p),atual=batalhaParticipanteAtual_()?.id===p.id;
+    const pode=batalhaPodeMoverToken_(p),atual=(batalhaEstado_?.participantes||[])[Number(batalhaEstado_?.turnoIndex||0)]?.id===p.id;
     const iniciais=String(p.nome||'?').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
     return `<div class="battle-token ${atual?'current':''}" draggable="${pode?'true':'false'}" ${pode?`ondragstart="batalhaDragToken_(event,'${p.id}')"`:''} title="${escaparHtmlInventario_(p.nome)}${pode?' · arraste para mover':''}">
       ${p.imagem?`<img src="${escaparHtmlInventario_(p.imagem)}" alt="${escaparHtmlInventario_(p.nome)}">`:`<span>${escaparHtmlInventario_(iniciais||'👤')}</span>`}
@@ -7711,7 +7717,9 @@ function iniciarBatalhaCompartilhada_(){
         if(batalhaEstado_?.participantes){
             batalhaEstado_.participantes.forEach(p=>{
                 if(p.iniciativa===undefined)p.iniciativa=null;
-                const gx=Number(p.gridX),gy=Number(p.gridY);
+                const temGX=p.gridX!==null&&p.gridX!==undefined&&p.gridX!=='';
+                const temGY=p.gridY!==null&&p.gridY!==undefined&&p.gridY!=='';
+                const gx=temGX?Number(p.gridX):NaN,gy=temGY?Number(p.gridY):NaN;
                 p.gridX=Number.isInteger(gx)&&gx>=0&&gx<BATALHA_GRID_COLS_?gx:null;
                 p.gridY=Number.isInteger(gy)&&gy>=0&&gy<BATALHA_GRID_ROWS_?gy:null;
                 if(p.gridX===null||p.gridY===null){p.gridX=null;p.gridY=null;}
@@ -11709,6 +11717,6 @@ function renderizarTabelaFerimentosCompleta_(){
 }
 ;
 </script>
-<!-- Mesa Estelar v46.1: v46.0 + grid tático 20x12, sem Calico -->
+<!-- Mesa Estelar v46.1.1: corrige renderização e adição no grid tático -->
 </body>
 </html>
