@@ -265,7 +265,7 @@
         }
         /* v46.1 — grid tático compartilhado */
         .battle-grid-wrap{overflow:auto;padding:10px;border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10)}
-        .battle-grid{--cell:54px;display:grid;grid-template-columns:repeat(20,var(--cell));grid-template-rows:repeat(12,var(--cell));width:max-content;background:#f8f8f8;border-left:1px solid #c8c8c8;border-top:1px solid #c8c8c8}
+        .battle-grid{--cell:54px;display:grid;grid-template-columns:repeat(24,var(--cell));grid-template-rows:repeat(12,var(--cell));width:max-content;background:#f8f8f8;border-left:1px solid #c8c8c8;border-top:1px solid #c8c8c8}
         .battle-grid-cell{width:var(--cell);height:var(--cell);box-sizing:border-box;border-right:1px solid #c8c8c8;border-bottom:1px solid #c8c8c8;position:relative;display:flex;align-items:center;justify-content:center}
         .battle-token{width:44px;height:44px;border-radius:9px;background:#27304f;border:2px solid #6578b9;color:white;display:flex;align-items:center;justify-content:center;cursor:grab;box-shadow:0 2px 6px rgba(0,0,0,.35);overflow:hidden;user-select:none}
         .battle-token:active{cursor:grabbing}.battle-token img{width:100%;height:100%;object-fit:cover}.battle-token span{font-size:11px;font-weight:800;text-align:center;line-height:1.05;padding:2px}
@@ -1230,6 +1230,10 @@
         </div>
       </div>
       <label>Descrição<textarea id="crDescricao" rows="3"></textarea></label>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+        <input id="crSelecionavel" type="checkbox" checked style="width:auto;">
+        Selecionável para combate
+      </label>
       <div class="modal-buttons"><button class="btn-confirm" onclick="salvarCriaturaBanco_()">💾 Salvar</button><button class="btn-cancel" onclick="fecharCriaturaBanco_()">Cancelar</button><button class="btn-delete" id="crDelete" onclick="removerCriaturaBanco_()">🗑️ Remover</button></div>
     </div></div>
 
@@ -2838,7 +2842,7 @@ window.salvarPersonagem = async () => {
     const totalCaracteristicas = Object.values(atributos).reduce((soma, valor) => soma + Number(valor || 0), 0);
     const limiteCaracteristicas = Math.max(0, Number(configuracoes.etapa1 ?? 80));
 
-    if (!personagemAtualEhNPC_() && totalCaracteristicas > limiteCaracteristicas) {
+    if (userData?.role !== 'mestre' && !personagemAtualEhNPC_() && totalCaracteristicas > limiteCaracteristicas) {
         const excesso = totalCaracteristicas - limiteCaracteristicas;
         const mensagens = {
             pt: `Não é possível salvar: as características somam ${totalCaracteristicas}, mas o limite atual é ${limiteCaracteristicas}. Reduza ${excesso} ponto(s).`,
@@ -6954,6 +6958,9 @@ window.batalhaAdicionarSelecionados_=async()=>{
         if(!c)continue;
         const participante=batalhaSanitizarParticipante_(c);
         if(estado.participantes.some(p=>String(p.id)===String(participante.id)))continue;
+        const posInicial=batalhaPosicaoAleatoriaLivre_(estado);
+        participante.gridX=posInicial.x;
+        participante.gridY=posInicial.y;
         estado.participantes.push(participante);
         batalhaLogPush_(estado,`${c.nome||'Personagem'} entrou na batalha.`,'entrada');
     }
@@ -7717,7 +7724,7 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
 }
 
 
-const BATALHA_GRID_COLS_=20,BATALHA_GRID_ROWS_=12;
+const BATALHA_GRID_COLS_=24,BATALHA_GRID_ROWS_=12;
 function batalhaPodeMoverToken_(p){
     if(!p||!currentUserUid)return false;
     if(batalhaEhMestre_())return true;
@@ -7729,6 +7736,21 @@ function batalhaPosGridValida_(p){
 }
 function batalhaCelulaOcupada_(x,y,excetoId=''){
     return (batalhaEstado_?.participantes||[]).find(p=>String(p.id)!==String(excetoId)&&batalhaPosGridValida_(p)&&Number(p.gridX)===x&&Number(p.gridY)===y);
+}
+function batalhaPosicaoAleatoriaLivre_(estado){
+    const ocupadas=new Set(
+        (estado?.participantes||[])
+          .filter(batalhaPosGridValida_)
+          .map(p=>`${Number(p.gridX)},${Number(p.gridY)}`)
+    );
+    const livres=[];
+    for(let y=0;y<BATALHA_GRID_ROWS_;y++){
+        for(let x=0;x<BATALHA_GRID_COLS_;x++){
+            if(!ocupadas.has(`${x},${y}`))livres.push({x,y});
+        }
+    }
+    if(!livres.length)return {x:null,y:null};
+    return livres[Math.floor(Math.random()*livres.length)];
 }
 window.batalhaDragToken_=function(ev,id){
     const p=batalhaParticipante_(id);
@@ -7787,7 +7809,7 @@ function renderizarBatalhaPosicoes_(){
     el.innerHTML=`<div style="padding:13px;border-radius:12px;background:rgba(0,0,0,.13);border:1px solid rgba(255,255,255,.10);">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px">
         <h3 style="margin:0;color:#b8c8ff;">🗺️ Mapa do combate</h3>
-        <small style="color:#888;">20 × 12 casas · jogadores movem seus personagens; mestre move todos.</small>
+        <small style="color:#888;">24 × 12 casas · jogadores movem seus personagens; mestre move todos.</small>
       </div>
       ${fora.length?`<div><small style="color:#aaa;">Aguardando posicionamento:</small><div class="battle-unplaced" ondragover="event.preventDefault()" ondrop="batalhaGridRemover_(event)">${fora.map(batalhaTokenHtml_).join('')}</div></div>`:''}
       <div class="battle-grid-wrap"><div class="battle-grid">${cells}</div></div>
@@ -8805,7 +8827,7 @@ function renderizarBancoCriaturas_(){
  e.innerHTML=l.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th style="width:76px;">Imagem</th><th>Nome</th><th>Tipo</th><th>Atributos</th><th>Ataques</th><th>Ações</th></tr></thead><tbody>${l.map(n=>`<tr><td>${n.imagem?`<img src="${escaparBanco_(n.imagem)}" style="width:58px;height:58px;object-fit:cover;border-radius:9px;">`:`<div style="width:58px;height:58px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:1.5em;">🦖</div>`}</td><td><b>${escaparBanco_(n.nome)}</b><br><small>${escaparBanco_(n.especie||'')}</small></td><td>${escaparBanco_(n.tipo||'Criatura')}<br><small>${escaparBanco_(n.habitat||'')}</small></td><td>FOR ${n.FOR||0} · CON ${n.CON||0} · TAM ${n.TAM||0} · DES ${n.DES||0}<br>INT ${n.INT||0} · POD ${n.POD||0} · CAR ${n.CAR||0}</td><td>${escaparBanco_(n.armasTexto||'—')}<br><small>${escaparBanco_(n.propriedadesAtaques||'')}</small></td><td><button class="btn-small" onclick="editarCriaturaBanco_('${n.id}')">✏️ Editar</button> <button class="btn-small" onclick="duplicarCriaturaBanco_('${n.id}')">📑 Duplicar</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Banco vazio.</p>';
 }
 function crSet_(id,v){const e=document.getElementById(id);if(e)e.value=v??'';}
-function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_('crNome',n.nome||'');crSet_('crTipo',n.tipo||'Criatura');crSet_('crEspecie',n.especie||'');crSet_('crHabitat',n.habitat||'');crSet_('crComportamento',n.comportamento||'');crSet_('crAltura',n.altura||'');crSet_('crTamanho',n.tamanho||'');crSet_('crPeso',n.pesoCorporal||'');for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])crSet_('cr'+a,n[a]??10);crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const arq=document.getElementById('crImagemArquivo');if(arq)arq.value='';atualizarPreviewCriaturaBanco_();const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
+function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_('crNome',n.nome||'');crSet_('crTipo',n.tipo||'Criatura');crSet_('crEspecie',n.especie||'');crSet_('crHabitat',n.habitat||'');crSet_('crComportamento',n.comportamento||'');crSet_('crAltura',n.altura||'');crSet_('crTamanho',n.tamanho||'');crSet_('crPeso',n.pesoCorporal||'');for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])crSet_('cr'+a,n[a]??10);crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const sel=document.getElementById('crSelecionavel');if(sel)sel.checked=n.selecionavelCombate!==false;const arq=document.getElementById('crImagemArquivo');if(arq)arq.value='';atualizarPreviewCriaturaBanco_();const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
 
 window.atualizarPreviewCriaturaBanco_=()=>{
     const url=String(document.getElementById('crImagem')?.value||'').trim();
@@ -8838,7 +8860,7 @@ window.handleDbCreatureImageUpload_=async(event)=>{
 window.adicionarCriaturaBanco_=()=>{crFill_();document.getElementById('dbCriaturaModal')?.classList.add('active');};
 window.editarCriaturaBanco_=id=>{const n=criaturaBancoPorId_(id);if(n){crFill_(n);document.getElementById('dbCriaturaModal')?.classList.add('active');}};
 window.fecharCriaturaBanco_=()=>document.getElementById('dbCriaturaModal')?.classList.remove('active');
-window.salvarCriaturaBanco_=async()=>{const v=id=>String(document.getElementById(id)?.value||'').trim(),orig=v('crOrig'),nome=v('crNome'),id=v('crId')||npcSlugPericia_(nome);if(!nome){notificar_('Informe o nome da criatura.','aviso');return;}const n={id,nome,tipo:v('crTipo')||'Criatura',especie:v('crEspecie'),habitat:v('crHabitat'),comportamento:v('crComportamento'),altura:v('crAltura'),tamanho:v('crTamanho'),pesoCorporal:v('crPeso'),FOR:+v('crFOR')||10,CON:+v('crCON')||10,TAM:+v('crTAM')||10,DES:+v('crDES')||10,INT:+v('crINT')||5,POD:+v('crPOD')||10,CAR:+v('crCAR')||5,periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),armasTexto:v('crArmas'),propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao')};try{if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));await setDoc(doc(db,'criaturas',id),n,{merge:true});criaturasDB=criaturasDB.filter(x=>x.id!==orig&&x.id!==id);criaturasDB.push(n);fecharCriaturaBanco_();renderizarBancoCriaturas_();somSalvar_();}catch(e){console.error(e);notificar_('Não foi possível salvar a criatura. Verifique as regras do Firestore para /criaturas.','erro',7000);}};
+window.salvarCriaturaBanco_=async()=>{const v=id=>String(document.getElementById(id)?.value||'').trim(),orig=v('crOrig'),nome=v('crNome'),id=v('crId')||npcSlugPericia_(nome);if(!nome){notificar_('Informe o nome da criatura.','aviso');return;}const n={id,nome,tipo:v('crTipo')||'Criatura',especie:v('crEspecie'),habitat:v('crHabitat'),comportamento:v('crComportamento'),altura:v('crAltura'),tamanho:v('crTamanho'),pesoCorporal:v('crPeso'),FOR:+v('crFOR')||10,CON:+v('crCON')||10,TAM:+v('crTAM')||10,DES:+v('crDES')||10,INT:+v('crINT')||5,POD:+v('crPOD')||10,CAR:+v('crCAR')||5,periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),armasTexto:v('crArmas'),propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked};try{if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));await setDoc(doc(db,'criaturas',id),n,{merge:true});criaturasDB=criaturasDB.filter(x=>x.id!==orig&&x.id!==id);criaturasDB.push(n);fecharCriaturaBanco_();renderizarBancoCriaturas_();somSalvar_();}catch(e){console.error(e);notificar_('Não foi possível salvar a criatura. Verifique as regras do Firestore para /criaturas.','erro',7000);}};
 window.removerCriaturaBanco_=async()=>{const id=String(document.getElementById('crOrig')?.value||'');if(id&&confirm('Remover criatura?')){try{await deleteDoc(doc(db,'criaturas',id));criaturasDB=criaturasDB.filter(x=>x.id!==id);fecharCriaturaBanco_();renderizarBancoCriaturas_();}catch(e){console.error(e);notificar_('Não foi possível remover a criatura.','erro');}}};
 window.duplicarCriaturaBanco_=async id=>{const o=criaturaBancoPorId_(id);if(!o)return;let k=2,base=String(o.nome).replace(/\s+\d+$/,'');while(criaturasDB.some(x=>x.nome===`${base} ${k}`))k++;const n={...JSON.parse(JSON.stringify(o)),id:npcSlugPericia_(`${base}_${k}`),nome:`${base} ${k}`};try{await setDoc(doc(db,'criaturas',n.id),n);criaturasDB.push(n);renderizarBancoCriaturas_();}catch(e){console.error(e);notificar_('Não foi possível duplicar a criatura.','erro');}};
 
@@ -12071,6 +12093,6 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.4.1: corrige uploads de NPC/criatura e adiciona preview/upload de criaturas -->
+<!-- Mesa Estelar v46.5: grid 24x12 + entrada aleatória + mestre sem limite de atributos + criaturas com upload/seleção -->
 </body>
 </html>
