@@ -907,7 +907,10 @@
                             <button class="btn-template" onclick="exportarBancoCSV('npcs')">📤 Exportar CSV</button>
                         </div>
                         <div id="listaBancoNPCs"></div>
-                        <button class="btn-save" onclick="adicionarNPCBanco_()" style="margin-top:15px;">➕ Adicionar NPC</button>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:15px;">
+  <button class="btn-save" onclick="adicionarNPCBanco_()" style="margin:0;width:auto;">➕ Adicionar NPC</button>
+  <button class="btn-small" onclick="restaurarTodosNPCsBanco_()" style="padding:12px 18px;">❤️ Restaurar PV de todos os NPCs</button>
+</div>
                     </div>
                 </div>
             </div>
@@ -956,27 +959,32 @@
                                 <div class="form-group"><label>Clima atual:</label><input id="gmCampanhaClima" type="text"></div>
                                 <div class="form-group"><label>Cenário ativo:</label><input id="gmCampanhaCenario" type="text"></div>
                                 <div class="form-group"><label>Data / período no jogo:</label><input id="gmCampanhaData" type="text"></div>
-                                <div class="form-group" style="min-width:360px;">
+                            </div>
+                            <div style="display:grid;grid-template-columns:minmax(440px,1.7fr) minmax(300px,1fr) minmax(150px,.55fr);gap:16px;align-items:start;margin-top:8px;">
+                                <div class="form-group" style="margin:0;">
                                     <label>Fadiga dos jogadores:</label>
-                                    <div style="display:grid;grid-template-columns:minmax(150px,1fr) minmax(170px,1fr);gap:6px;margin-bottom:6px;">
+                                    <div style="display:grid;grid-template-columns:minmax(145px,.8fr) minmax(210px,1.2fr);gap:8px;margin-bottom:7px;">
                                         <select id="gmFadigaGeral">
                                             <option value="Fresh">Descansado</option><option value="Winded">Ofegante</option><option value="Tired">Cansado</option><option value="Wearied">Fatigado</option><option value="Exhausted">Exausto</option><option value="Debilitated">Debilitado</option><option value="Incapacitated">Incapacitado</option>
                                         </select>
                                         <select id="gmFadigaAlvo"><option value="">Escolher personagem...</option></select>
                                     </div>
-                                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                    <div style="display:flex;gap:7px;flex-wrap:wrap;">
                                         <button class="btn-small" type="button" onclick="aplicarFadigaSelecionado_()">Aplicar ao selecionado</button>
                                         <button class="btn-small" type="button" onclick="aplicarFadigaGeral_()">Aplicar a todos</button>
                                     </div>
                                 </div>
-                                <div class="form-group" style="min-width:350px;">
+                                <div class="form-group" style="margin:0;">
                                     <label>Dia de campanha:</label>
-                                    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-height:44px;">
-                                        <input id="gmCampanhaDia" type="number" min="1" step="1" value="1" style="width:105px;min-width:105px;">
+                                    <div style="display:flex;gap:7px;align-items:center;flex-wrap:nowrap;">
+                                        <input id="gmCampanhaDia" type="number" min="1" step="1" value="1" style="width:100px;min-width:100px;">
                                         <button class="btn-small" type="button" onclick="avancarDiaCampanha_(1)">+1</button>
                                         <button class="btn-small" type="button" onclick="avancarDiaCampanha_(7)">+7</button>
-                                        <button class="btn-small" type="button" onclick="novaSessaoCampanha_()">🎲 Nova sessão</button>
                                     </div>
+                                </div>
+                                <div class="form-group" style="margin:0;">
+                                    <label>Nova sessão:</label>
+                                    <button class="btn-small" style="width:100%;min-height:44px;" type="button" onclick="novaSessaoCampanha_()">🎲 Nova sessão</button>
                                 </div>
                             </div>
                             <div class="form-group"><label>Resumo atual:</label><textarea id="gmCampanhaResumo" rows="4" placeholder="Situação geral, missão em andamento, acontecimentos importantes..."></textarea></div>
@@ -1197,7 +1205,17 @@
         <label>Armas/ataques<input id="dbNPCArmas" placeholder="Lança de Choque|Pistola 9 mm"></label>
         <label>Inventário narrativo<input id="dbNPCInventario"></label>
         <label>Motivação<input id="dbNPCMotivacao"></label><label>Valor da motivação<input id="dbNPCValorMotivacao" type="number"></label>
-        <label>Imagem URL<input id="dbNPCImagem"></label><label>Descrição<textarea id="dbNPCDescricao" rows="4"></textarea></label>
+        <div class="form-group">
+          <label>Imagem URL</label>
+          <input id="dbNPCImagem" oninput="atualizarPreviewNPCBanco_()">
+          <div style="display:flex;gap:10px;align-items:center;margin-top:8px;">
+            <div id="dbNPCImagemPreview" style="width:82px;height:82px;border-radius:10px;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:2em;">🎭</div>
+            <label class="btn-template" style="cursor:pointer;margin:0;">📤 Fazer upload
+              <input id="dbNPCImagemArquivo" type="file" accept="image/*" style="display:none" onchange="handleDbNPCImageUpload_(event)">
+            </label>
+          </div>
+        </div>
+        <label>Descrição<textarea id="dbNPCDescricao" rows="4"></textarea></label>
         <label><input id="dbNPCSelecionavel" type="checkbox"> Selecionável para combate</label>
         <div class="modal-buttons"><button class="btn-confirm" onclick="salvarNPCBanco_()">💾 Salvar</button>
         <button class="btn-cancel" onclick="fecharNPCBancoModal_()">❌ Cancelar</button>
@@ -1370,7 +1388,7 @@ let poderesPsiDB = [];
 let itensDB = [];
 let cenariosDB = [];
 let npcsDB = [];
-let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],precosServicos:{reparo:0,cura:0,primeiros_socorros:0}};
+let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],vincularNPCsCenario:false,precosServicos:{reparo:0,cura:0,primeiros_socorros:0}};
 let mercadoLocalUnsub_ = null;
 let mercadoLocalNegociacao_ = {};
 let marketSubtabAtual_ = 'comprar';
@@ -5271,7 +5289,7 @@ window.descartarItemMercado_=async(comp,index)=>{
 function iniciarMercadoLocal_(){
     if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
     mercadoLocalUnsub_=onSnapshot(doc(db,'configuracoes','mercadoLocal'),snap=>{
-        mercadoLocalConfig_=snap.exists()?{cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],precosServicos:{reparo:0,cura:0,primeiros_socorros:0},...snap.data()}:{cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],precosServicos:{reparo:0,cura:0,primeiros_socorros:0}};
+        mercadoLocalConfig_=snap.exists()?{cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],vincularNPCsCenario:false,precosServicos:{reparo:0,cura:0,primeiros_socorros:0},...snap.data()}:{cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],precosServicos:{reparo:0,cura:0,primeiros_socorros:0}};
         if(document.getElementById('mercado')?.classList.contains('active')&&marketSubtabAtual_==='local')renderizarMercadoLocal_();
     },err=>console.warn('Mercado local indisponível',err));
 }
@@ -5474,15 +5492,35 @@ window.contratarTratamentoLocal_=async(tipo)=>{
     notificar_(`${prest.nome}: atendimento concluído em ${loc}.`,'info');
 };
 
+
+function npcsVisiveisCenarioAtivo_(){
+    const c=(cenariosDB||[]).find(x=>String(x.id)===String(estadoCampanhaMestre?.cenarioId));
+    if(!c)return [];
+    return (c.personagensCena||[])
+      .filter(v=>v.visivel && String(v.id).startsWith('npcdb:'))
+      .map(v=>npcBancoPorId_(String(v.id).slice(6)))
+      .filter(Boolean);
+}
+function prestadorSeguroNPC_(n,servicos=[]){
+    return {id:n.id,nome:n.nome||'NPC',imagem:n.imagem||'',tipo:n.tipo||'NPC',
+      periciasTexto:n.periciasTexto||'',especializacoesTexto:n.especializacoesTexto||'',servicos};
+}
+
 window.salvarMercadoLocalMestre_=async()=>{
     if(!(userData&&userData.role==='mestre'))return;
     const ativos=[...document.querySelectorAll('.market-local-item-check:checked')].map(x=>x.value);
     const servicos=[...document.querySelectorAll('.market-local-service-check:checked')].map(x=>x.value);
     const prestadorIds=[...document.querySelectorAll('.market-local-provider-check:checked')].map(x=>x.value);
-    const prestadores=prestadorIds.map(id=>{
+    let prestadores=prestadorIds.map(id=>{
         const n=npcsDB.find(x=>String(x.id)===String(id));
-        return n?{id:n.id,nome:n.nome||'NPC',imagem:n.imagem||'',tipo:n.tipo||'NPC',periciasTexto:n.periciasTexto||'',especializacoesTexto:n.especializacoesTexto||'',servicos}:null;
+        return n?prestadorSeguroNPC_(n,servicos):null;
     }).filter(Boolean);
+    const vincularNPCsCenario=!!document.getElementById('marketLocalLinkScenarioNPCs')?.checked;
+    if(vincularNPCsCenario){
+        for(const n of npcsVisiveisCenarioAtivo_()){
+            if(!prestadores.some(p=>String(p.id)===String(n.id)))prestadores.push(prestadorSeguroNPC_(n,servicos));
+        }
+    }
     const estabelecimentoNome=document.getElementById('marketLocalEstablishmentName')?.value?.trim()||'';
     const estabelecimentoTipo=document.getElementById('marketLocalEstablishmentType')?.value?.trim()||'';
     const precosServicos={
@@ -5492,7 +5530,7 @@ window.salvarMercadoLocalMestre_=async()=>{
     };
     const cenarioId=estadoCampanhaMestre?.cenarioId||'';
     const cenario=(cenariosDB||[]).find(x=>x.id===cenarioId);
-    const dados={cenarioId,cenarioNome:cenario?.nome||estadoCampanhaMestre?.cenario||'',estabelecimentoNome,estabelecimentoTipo,itens:ativos,servicos,prestadores,precosServicos,atualizadoEm:new Date().toISOString()};
+    const dados={cenarioId,cenarioNome:cenario?.nome||estadoCampanhaMestre?.cenario||'',estabelecimentoNome,estabelecimentoTipo,itens:ativos,servicos,prestadores,vincularNPCsCenario,precosServicos,atualizadoEm:new Date().toISOString()};
     await setDoc(doc(db,'configuracoes','mercadoLocal'),dados,{merge:false});
     mercadoLocalConfig_=dados;notificar_('Mercado local publicado para o cenário ativo.','info');renderizarMercadoLocal_();
 };
@@ -5530,6 +5568,11 @@ window.renderizarMercadoLocal_=()=>{
             <label>Preço tratamento<input id="marketLocalPriceHeal" type="number" min="0" value="${Number(mercadoLocalConfig_?.precosServicos?.cura||0)}"></label>
             <label>Preço primeiros socorros<input id="marketLocalPriceFirstAid" type="number" min="0" value="${Number(mercadoLocalConfig_?.precosServicos?.primeiros_socorros||0)}"></label>
           </div>
+          <label style="display:block;margin-top:12px;padding:8px;border-radius:8px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);">
+            <input id="marketLocalLinkScenarioNPCs" type="checkbox" ${mercadoLocalConfig_?.vincularNPCsCenario?'checked':''}>
+            🪐 Vincular aos NPCs visíveis do cenário ativo
+            <small style="display:block;color:#999;margin-left:21px;">Quando marcado, NPCs do banco vinculados e visíveis neste cenário entram automaticamente como prestadores/testadores locais.</small>
+          </label>
           <div style="margin-top:12px;"><strong>Prestadores NPC deste estabelecimento:</strong>
             <div style="margin-top:6px;max-height:180px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:5px;">
               ${npcsDB.map(n=>`<label style="padding:6px;background:rgba(255,255,255,.035);border-radius:6px;">
@@ -5795,6 +5838,23 @@ function npcBancoPorId_(id){
 function npcSlugPericia_(nome){
     return normalizarTextoCombate_(nome||'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
 }
+function npcIdPericiaSistema_(nome){
+    const q=normalizarTextoCombate_(nome||'');
+    const aliases={
+      'armas_de_haste':'armas_haste','pistolas_e_revolveres':'pistolas_revolveres',
+      'fuzis_e_carabinas':'fuzis_carabinas','armas_brancas_curtas':'armas_brancas_curtas',
+      'armas_brancas_longas':'armas_brancas_longas','armas_pesadas':'armas_pesadas',
+      'atirador_de_elite':'atirador_elite','pistolas_laser':'pistolas_laser','rifles_laser':'rifles_laser',
+      'arma_laser_pesada':'arma_laser_pesada','armas_de_energia':'armas_energia',
+      'esgrima_plasma_vibro':'esgrima_plasma_vibro','combate_desarmado':'combate_desarmado',
+      'primeiros_socorros':'primeiros_socorros'
+    };
+    const slug=npcSlugPericia_(q);
+    if(aliases[slug])return aliases[slug];
+    const banco=[...(periciasDB||[]),...(especializacoesDB||[])];
+    const achou=banco.find(x=>normalizarTextoCombate_(getNome(x)||x.nome||'')===q);
+    return achou?.id||slug;
+}
 function npcPericiasParaCombate_(texto){
     const out={};
     String(texto||'').split('|').forEach(par=>{
@@ -5802,7 +5862,7 @@ function npcPericiasParaCombate_(texto){
         if(pos<0)return;
         const nome=par.slice(0,pos).trim(), investimento=Number(par.slice(pos+1))||0;
         if(!nome)return;
-        out[npcSlugPericia_(nome)]={base:0,treino:investimento,nomeOriginal:nome};
+        out[npcIdPericiaSistema_(nome)]={base:0,treino:investimento,nomeOriginal:nome};
     });
     return out;
 }
@@ -6219,7 +6279,11 @@ async function batalhaAplicarTrip_(dp){
     const val=obterValorRegistroPericia_(alvo,per.id,per.__especializacao);
     const roll=Math.floor(Math.random()*100)+1,r=classificarD100_(val,roll);
     const resistiu=batalhaTesteOpostoPassou_(r.grau,roll,dp.ataque?.grau,dp.ataque?.rolagem);
-    if(!resistiu)alvo.combate.caido=true;
+    if(!resistiu){
+        alvo.combate.caido=true;
+        // Derrubar altera posição, não consciência nem AÇ.
+        alvo.combate.inconsciente=!!alvo.combate.inconsciente;
+    }
     batalhaLogPush_(batalhaEstado_,`${p.nome}: ${getNome(per)} ${roll}/${val} → ${r.grau}; ${resistiu?'permaneceu de pé':'caiu no chão'}.`,'efeito',{targetId:p.id});
     await batalhaPersistirCombateChar_(alvo,p);
 }
@@ -6292,41 +6356,161 @@ window.batalhaLevantar_=async(id)=>{
     batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ e se levantou.`,'levantar',{actorId:p.id});
     await batalhaSalvarEstado_();
 };
+
 function batalhaPrimeirosSocorrosPericia_(char){
     const p=(periciasDB||[]).find(x=>x.id==='primeiros_socorros')
         || (periciasDB||[]).find(x=>normalizarTextoCombate_(getNome(x)||'').includes('primeiros socorros'));
     return p||null;
 }
-function batalhaPodePrimeirosSocorros_(char){return !!batalhaPrimeirosSocorrosPericia_(char)&&!batalhaEstaInconsciente_(char);}
-window.batalhaPrimeirosSocorros_=async id=>{
-    const p=batalhaParticipante_(id),char=batalhaCharLocal_(id);if(!p||!char||!batalhaPodeControlar_(p))return;
-    if(Number(p.acoesAtuais||0)<=0)return notificar_('Sem AÇ.','aviso');
-    if(batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente)return notificar_('Resolva a ação pendente primeiro.','aviso');
-    const prefs=batalhaPrefsChar_(char),alvoId=prefs.alvo||id,alvoP=batalhaParticipante_(alvoId),alvo=batalhaCharLocal_(alvoId);
-    if(!alvo||!alvoP)return;
-    const feridas=Object.entries(pvMaxLocais_(alvo)).filter(([l,m])=>Number(alvo.combate?.hitLocations?.[l]??m)<m);
-    if(!feridas.length&&!alvo.combate?.sangramentoAtivo)return notificar_('Nada a tratar.','aviso');
-    let local=feridas[0]?.[0]||'Geral';
-    if(feridas.length>1){const q=prompt(feridas.map(([l,m],i)=>`${i+1}. ${l} (${alvo.combate?.hitLocations?.[l]??m}/${m})`).join('\n'),'1');local=feridas[Math.max(0,Math.min(feridas.length-1,(Number(q)||1)-1))][0];}
-    const per=batalhaPrimeirosSocorrosPericia_(char),valor=obterValorRegistroPericia_(char,per.id,per.__especializacao),roll=Math.floor(Math.random()*100)+1,r=classificarD100_(valor,roll);
-    somDado_();if(r.grau==='Crítico')somMagico_();else if(r.grau==='Fiasco')somFiasco_();
-    p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
-    if(batalhaResultadoGradeValor_(r.grau)>=2){
-        alvo.combate=alvo.combate||{};
-        if(alvo.combate.sangramentoAtivo){alvo.combate.sangramentoAtivo=false;delete alvo.combate.sangramentoOrigem;}
-        const max=pvMaxLocais_(alvo)[local];
-        if(max!==undefined){
-            const atual=Number(alvo.combate.hitLocations?.[local]??max);
-            alvo.combate.hitLocations=alvo.combate.hitLocations||{};
-            if(atual>0)alvo.combate.hitLocations[local]=Math.min(max,atual+(Math.floor(Math.random()*3)+1));
-            else if(atual<=0&&atual>-max){const f=batalhaWoundState_(alvo);f[local]=f[local]||{};f[local].inutil=false;}
-            else if(atual<=-max){alvo.combate.curaNatural=alvo.combate.curaNatural||{};alvo.combate.curaNatural[local]={...(alvo.combate.curaNatural[local]||{}),graveTratado:true};}
-        }
-        await batalhaPersistirCombateChar_(alvo,alvoP);
+function batalhaPodePrimeirosSocorros_(char){
+    return !!batalhaPrimeirosSocorrosPericia_(char)&&!batalhaEstaInconsciente_(char);
+}
+function batalhaKitPrimeirosSocorros_(char){
+    const acessiveis=new Set(['equipado','bolso','mochila']);
+    return percorrerInventarioItens_(char).find(r=>{
+        if(!acessiveis.has(r.comp))return false;
+        const n=normalizarTextoCombate_(`${r.item?.idBanco||r.item?.id||''} ${getNome(r.item)||''}`);
+        const kit=/kit_medico|kit medico|medical kit|primeiros socorros|first aid/.test(n);
+        const max=Math.max(0,Number(r.item?.pv||0));
+        const atual=Number(r.item?.pvAtual??max);
+        return kit && atual>0;
+    })||null;
+}
+function batalhaConsumirKitPrimeirosSocorros_(char,registro){
+    if(!registro)return false;
+    const inv=normalizarInventario_(char),item=inv?.[registro.comp]?.[registro.index];
+    if(!item)return false;
+    const max=Math.max(0,Number(item.pv||0));
+    const atual=Number(item.pvAtual??max);
+    if(atual<=0)return false;
+    item.pvAtual=Math.max(0,atual-1);
+    char.inventario=inv;
+    return true;
+}
+function batalhaEscolherAlvoPrimeirosSocorros_(atorId){
+    const ps=(batalhaEstado_?.participantes||[]).filter(p=>batalhaCharLocal_(p.id));
+    if(!ps.length)return null;
+    const linhas=ps.map((p,i)=>`${i+1}. ${p.nome}${String(p.id)===String(atorId)?' (você)':''}`).join('\n');
+    const q=prompt(`Primeiros Socorros: quem será tratado?\n\n${linhas}`,'1');
+    if(q===null)return null;
+    return ps[Math.max(0,Math.min(ps.length-1,(Number(q)||1)-1))]||null;
+}
+function batalhaLocaisFeridosPrimeirosSocorros_(char){
+    const maxs=pvMaxLocais_(char);
+    return Object.entries(maxs)
+      .map(([local,max])=>({local,max,atual:Number(char?.combate?.hitLocations?.[local]??max)}))
+      .filter(x=>x.atual<x.max);
+}
+function batalhaEscolherLocalPrimeirosSocorros_(char){
+    const feridas=batalhaLocaisFeridosPrimeirosSocorros_(char);
+    if(!feridas.length)return null;
+    const linhas=feridas.map((x,i)=>`${i+1}. ${x.local} (${x.atual}/${x.max} PV)`).join('\n');
+    const q=prompt(`Escolha a parte do corpo a tratar:\n\n${linhas}`,'1');
+    if(q===null)return null;
+    return feridas[Math.max(0,Math.min(feridas.length-1,(Number(q)||1)-1))]||null;
+}
+function batalhaAplicarFiascoPrimeirosSocorros_(alvo,localInfo){
+    if(!localInfo)return;
+    alvo.combate=alvo.combate||{};alvo.combate.hitLocations=alvo.combate.hitLocations||{};
+    const atual=Number(alvo.combate.hitLocations[localInfo.local]??localInfo.max);
+    alvo.combate.hitLocations[localInfo.local]=Math.max(-localInfo.max,atual-1);
+}
+function batalhaAplicarSucessoPrimeirosSocorros_(alvo,localInfo,critico=false){
+    alvo.combate=alvo.combate||{};
+    alvo.combate.hitLocations=alvo.combate.hitLocations||{};
+    const local=localInfo.local,max=localInfo.max;
+    const atual=Number(alvo.combate.hitLocations[local]??max);
+
+    if(critico){
+        // Não há efeito crítico específico descrito na tabela consultada de M-SPACE.
+        // Regra da campanha: crítico restaura integralmente a localização escolhida.
+        alvo.combate.hitLocations[local]=max;
+        const f=batalhaWoundState_(alvo);delete f[local];
+        alvo.combate.inconsciente=false;
+        if(!Object.values(f).some(x=>x?.grave))alvo.combate.incapacitado=false;
+        return {texto:`Crítico: ${local} restaurado a ${max}/${max} PV.`};
     }
-    batalhaLogPush_(batalhaEstado_,`${p.nome}: Primeiros Socorros em ${alvoP.nome}: ${roll}/${valor} → ${r.grau}.`,'primeiros_socorros',{actorId:p.id,targetId:alvoP.id});
-    await batalhaSalvarEstado_();renderizarBatalhaCompartilhada_();
+
+    if(atual>0){
+        const cura=Math.floor(Math.random()*3)+1;
+        alvo.combate.hitLocations[local]=Math.min(max,atual+cura);
+        return {texto:`Ferimento Leve: recuperou ${Math.min(cura,max-atual)} PV.`};
+    }
+    if(atual<=0 && atual>-max){
+        const f=batalhaWoundState_(alvo);f[local]=f[local]||{};
+        f[local].inutil=false;
+        if(['Cabeça','Peito','Abdômen'].includes(local))alvo.combate.inconsciente=false;
+        return {texto:'Ferimento Sério: funcionalidade parcial restaurada; PV não são devolvidos pelo tratamento.'};
+    }
+
+    alvo.combate.curaNatural=alvo.combate.curaNatural||{};
+    alvo.combate.curaNatural[local]={...(alvo.combate.curaNatural[local]||{}),graveTratado:true};
+    return {texto:'Ferimento Grave: estabilizado/tratado; não recupera PV imediatamente.'};
+}
+window.batalhaPrimeirosSocorros_=async id=>{
+    const p=batalhaParticipante_(id),char=batalhaCharLocal_(id);
+    if(!p||!char||!batalhaPodeControlar_(p))return;
+    const atualTurno=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
+    if(!atualTurno||String(atualTurno.id)!==String(id))return notificar_('Primeiros Socorros só podem ser usados na própria oportunidade.','aviso');
+    if(Number(p.acoesAtuais||0)<=0)return notificar_('Primeiros Socorros exigem 1 AÇ.','aviso');
+    if(batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente)return notificar_('Resolva a ação pendente primeiro.','aviso');
+
+    const alvoP=batalhaEscolherAlvoPrimeirosSocorros_(id);
+    if(!alvoP)return;
+    const alvo=batalhaCharLocal_(alvoP.id);if(!alvo)return;
+
+    const localInfo=batalhaEscolherLocalPrimeirosSocorros_(alvo);
+    if(!localInfo){
+        notificar_(`${alvoP.nome} não possui uma localização com PV perdidos.`,'aviso');
+        return;
+    }
+
+    const per=batalhaPrimeirosSocorrosPericia_(char);
+    const base=obterValorRegistroPericia_(char,per.id,per.__especializacao);
+    const kit=batalhaKitPrimeirosSocorros_(char);
+    const grausSemKit=kit?0:1;
+    const ajuste=aplicarDificuldadeEFadiga_(char,base,'padrao',grausSemKit);
+    const roll=Math.floor(Math.random()*100)+1,r=classificarD100_(ajuste.valor,roll);
+
+    p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+    const consumiuKit=kit?batalhaConsumirKitPrimeirosSocorros_(char,kit):false;
+
+    somDado_();
+    if(r.grau==='Crítico')somMagico_();
+    else if(r.grau==='Fiasco')somFiasco_();
+
+    let resultado='';
+    if(r.grau==='Fiasco'){
+        batalhaAplicarFiascoPrimeirosSocorros_(alvo,localInfo);
+        resultado=`Falha crítica: ${localInfo.local} sofreu +1 de dano.`;
+    }else if(batalhaResultadoGradeValor_(r.grau)>=2){
+        if(alvo.combate?.sangramentoAtivo){
+            alvo.combate.sangramentoAtivo=false;delete alvo.combate.sangramentoOrigem;
+        }
+        resultado=batalhaAplicarSucessoPrimeirosSocorros_(alvo,localInfo,r.grau==='Crítico').texto;
+    }else{
+        resultado='Falha: nenhum benefício.';
+    }
+
+    await batalhaPersistirCombateChar_(alvo,alvoP);
+    if(!char.__npcTemporario){
+        await setDoc(doc(db,'personagens',char.id),{inventario:char.inventario},{merge:true});
+    }else{
+        await batalhaPersistirCombateChar_(char,p);
+    }
+
+    const kitTxt=kit
+      ? `Kit usado: ${getNome(kit.item)} (${Math.max(0,Number(kit.item.pvAtual??kit.item.pv)-1)} PV restantes).`
+      : 'Sem Kit Médico utilizável: +1 grau de dificuldade.';
+    batalhaLogPush_(batalhaEstado_,
+      `${p.nome}: Primeiros Socorros em ${alvoP.nome} (${localInfo.local}) ${roll}/${ajuste.valor} → ${r.grau}. ${resultado} ${kitTxt}`,
+      'primeiros_socorros',{actorId:p.id,targetId:alvoP.id});
+    await batalhaSalvarEstado_();
+    renderizarInventario(char);
+    renderizarBatalhaCompartilhada_();
+    notificar_(`${alvoP.nome} · ${localInfo.local}: ${resultado}`,'info',4800);
 };
+
 function batalhaControlCard_(p,char){
     const prefs=batalhaGarantirPrefsValidas_(char,batalhaPrefsChar_(char));
     const skills=batalhaListaPericias_(char);
@@ -6369,7 +6553,7 @@ function batalhaControlCard_(p,char){
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;">
             <button class="btn-small btn-select" ${Number(p.acoesAtuais||0)<=0||!batalhaIniciativasProntas_()||ataqueBloqueado?'disabled':''} onclick="batalhaRolarD100_('${p.id}')">🎲 Teste D100</button>
-            ${batalhaPodePrimeirosSocorros_(char)?`<button class="btn-small" ${Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaPrimeirosSocorros_('${p.id}')">🩹 Primeiros Socorros</button>`:''}
+            ${batalhaPodePrimeirosSocorros_(char)?`<button class="btn-small" ${Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaPrimeirosSocorros_('${p.id}')">🩹 Primeiros Socorros (escolher alvo)</button>`:''}
             ${char?.combate?.caido?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaLevantar_('${p.id}')">⬆️ Levantar (1 AÇ)</button>`:''}
             <button class="btn-small btn-delete" ${!danoLiberado||especiaisPendentes?'disabled':''} onclick="batalhaRolarDano_('${p.id}')">💥 Rolar dano</button>
             <button class="btn-small" ${batalhaTemIniciativa_(p)?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${batalhaTemIniciativa_(p)?'Iniciativa rolada':'Iniciativa'}</button>
@@ -6517,7 +6701,9 @@ window.batalhaOrdenarIniciativa_=async()=>{
 function batalhaParticipantePodeReceberTurno_(p){
     if(!p||Number(p.acoesAtuais||0)<=0)return false;
     const c=batalhaCharLocal_(p.id);
-    return !batalhaEstaInconsciente_(c);
+    // CAÍDO NÃO remove a oportunidade. Só inconsciência/incapacitação/morte pulam o turno.
+    if(!c)return true;
+    return !(c.combate?.inconsciente||c.combate?.incapacitado||c.combate?.morto);
 }
 function batalhaPrimeiroTurnoValido_(){
     const ps=batalhaEstado_?.participantes||[];
@@ -7915,7 +8101,10 @@ function renderizarBancoCenarios() {
 
 
 function personagensDisponiveisParaCenario_(){
-    return [...(userCharacters||[])].filter(c=>String(c.tipo||'pc').toLowerCase()!=='monstro');
+    const chars=[...(userCharacters||[])].filter(c=>String(c.tipo||'pc').toLowerCase()!=='monstro')
+      .map(c=>({...c,__cenarioId:String(c.id),__cenarioTipo:c.dono===currentUserUid?'PM':'PC'}));
+    const npcs=(npcsDB||[]).map(n=>({...n,__cenarioId:`npcdb:${n.id}`,__cenarioTipo:'NPC'}));
+    return [...chars,...npcs];
 }
 
 function renderizarSeletorPersonagensCenario_(cenario=null){
@@ -7930,21 +8119,21 @@ function renderizarSeletorPersonagensCenario_(cenario=null){
     }
 
     alvo.innerHTML=disponiveis.map(c=>{
-        const marcado=vinculados.has(c.id);
-        const visivel=vinculados.get(c.id)===true;
+        const marcado=vinculados.has(c.__cenarioId);
+        const visivel=vinculados.get(c.__cenarioId)===true;
         const img=c.imagem
           ? `<img src="${escaparBanco_(c.imagem)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
           : `<div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);">👤</div>`;
-        const tipo=c.dono===currentUserUid ? 'PM' : 'PC';
+        const tipo=c.__cenarioTipo||'NPC';
         return `<div style="padding:9px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:center;">
             ${img}
             <div>
                 <label style="display:flex;align-items:center;gap:6px;color:#fff;">
-                    <input type="checkbox" class="cenario-personagem-check" value="${escaparBanco_(c.id)}" ${marcado?'checked':''} onchange="atualizarVisibilidadePersonagemCenario_(this)">
+                    <input type="checkbox" class="cenario-personagem-check" value="${escaparBanco_(c.__cenarioId)}" ${marcado?'checked':''} onchange="atualizarVisibilidadePersonagemCenario_(this)">
                     <strong>${escaparBanco_(c.nome||'Sem Nome')}</strong> <small style="color:#888;">${tipo}</small>
                 </label>
                 <label style="display:flex;align-items:center;gap:6px;margin-top:5px;color:#9fd3ff;font-size:.82em;">
-                    <input type="checkbox" class="cenario-personagem-visivel" data-id="${escaparBanco_(c.id)}" ${visivel?'checked':''} ${marcado?'':'disabled'}>
+                    <input type="checkbox" class="cenario-personagem-visivel" data-id="${escaparBanco_(c.__cenarioId)}" ${visivel?'checked':''} ${marcado?'':'disabled'}>
                     Visível para jogadores
                 </label>
             </div>
@@ -7973,7 +8162,7 @@ window.vincularNomesCenarioAutomaticamente=()=>{
     personagensDisponiveisParaCenario_().forEach(c=>{
         const nomeNorm=normalizarTextoCombate_(c.nome||'');
         if(!nomeNorm||!norm.includes(nomeNorm))return;
-        const ch=document.querySelector(`.cenario-personagem-check[value="${CSS.escape(c.id)}"]`);
+        const ch=document.querySelector(`.cenario-personagem-check[value="${CSS.escape(c.__cenarioId)}"]`);
         if(ch && !ch.checked){
             ch.checked=true;
             atualizarVisibilidadePersonagemCenario_(ch);
@@ -7984,7 +8173,11 @@ window.vincularNomesCenarioAutomaticamente=()=>{
 };
 
 function obterPersonagemCenarioPorId_(id){
-    return (userCharacters||[]).find(c=>c.id===id)||null;
+    if(String(id).startsWith('npcdb:')){
+        const n=npcBancoPorId_(String(id).slice(6));
+        return n?{...n,tipo:'npc',__cenarioTipo:'NPC'}:null;
+    }
+    return (userCharacters||[]).find(c=>String(c.id)===String(id))||null;
 }
 
 function cardsPersonagensCenario_(cenario,permitirControle=false){
@@ -8014,6 +8207,7 @@ window.alternarVisibilidadePersonagemCenario_=async(id)=>{
     if(!v)return;
     v.visivel=!v.visivel;
     await setDoc(doc(db,'cenarios',c.id),{personagensCena:arr},{merge:true});
+    if(String(c.id)===String(estadoCampanhaMestre?.cenarioId))await publicarCampanhaAtual_();
     renderizarCenarioMestre_();
     somSalvar_();
 };
@@ -8100,16 +8294,21 @@ window.removerCenarioBanco=async(id)=>{
 
 function renderizarBancoNPCs_(){
  const e=document.getElementById('listaBancoNPCs');if(!e)return;
- e.innerHTML=npcsDB.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th>Nome</th><th>Dados</th><th>Atributos</th><th>Perícias</th><th>Especializações / armas</th><th>Combate</th><th>Ações</th></tr></thead><tbody>
- ${npcsDB.map(n=>`<tr><td><strong>${escaparBanco_(n.nome)}</strong></td>
+ e.innerHTML=npcsDB.length?`<div class="db-table-wrap"><table class="db-table" style="min-width:1450px;"><thead><tr>
+ <th style="width:76px;">Imagem</th><th style="width:140px;">Nome</th><th style="width:245px;">Dados</th><th style="width:210px;">Atributos</th>
+ <th style="width:300px;">Perícias</th><th style="width:300px;">Especializações / armas</th><th style="width:105px;">Combate</th><th>Ações</th></tr></thead><tbody>
+ ${npcsDB.map(n=>`<tr>
+ <td>${n.imagem?`<img src="${escaparBanco_(n.imagem)}" style="width:58px;height:58px;object-fit:cover;border-radius:9px;">`:`<div style="width:58px;height:58px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:1.5em;">🎭</div>`}</td>
+ <td><strong>${escaparBanco_(n.nome)}</strong></td>
  <td><small>${escaparBanco_(n.tipo||'NPC')} · ${escaparBanco_(n.raca||'—')} · Sexo ${escaparBanco_(n.sexo||'—')} · Idade ${escaparBanco_(n.idade||'—')}<br>${escaparBanco_(n.origem||'—')} · ${escaparBanco_(n.carreira||'—')}<br>${escaparBanco_(n.conceito||'')}</small></td>
- <td>FOR ${n.FOR||10} · CON ${n.CON||10} · TAM ${n.TAM||10} · DES ${n.DES||10} · INT ${n.INT||10} · POD ${n.POD||10} · CAR ${n.CAR||10}</td>
- <td><small>${escaparBanco_(n.periciasTexto||'—')}</small></td>
- <td><small><b>Esp.:</b> ${escaparBanco_(n.especializacoesTexto||'—')}<br><b>Armas:</b> ${escaparBanco_(n.armasTexto||'—')}</small></td>
+ <td style="line-height:1.4;">FOR ${n.FOR||10} · CON ${n.CON||10} · TAM ${n.TAM||10}<br>DES ${n.DES||10} · INT ${n.INT||10} · POD ${n.POD||10} · CAR ${n.CAR||10}</td>
+ <td style="max-width:300px;font-size:.87em;overflow-wrap:anywhere;">${escaparBanco_(n.periciasTexto||'—')}</td>
+ <td style="max-width:300px;font-size:.87em;overflow-wrap:anywhere;"><b>Esp.:</b> ${escaparBanco_(n.especializacoesTexto||'—')}<br><b>Armas:</b> ${escaparBanco_(n.armasTexto||'—')}</td>
  <td>${n.selecionavelCombate!==false?'✅ Selecionável':'⛔ Oculto'}</td>
  <td><button class="btn-small btn-select" onclick="editarNPCBanco_('${n.id}')">✏️ Editar</button>
  <button class="btn-small" onclick="converterNPCemPM_('${n.id}')">Converter em PM</button>
- <button class="btn-small" onclick="restaurarNPCBanco_('${n.id}')">❤️ Restaurar PV</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Nenhum NPC.</p>';
+ <button class="btn-small" onclick="restaurarNPCBanco_('${n.id}')">❤️ Restaurar PV</button></td></tr>`).join('')}
+ </tbody></table></div>`:'<p style="color:#aaa">Nenhum NPC.</p>';
 }
 
 
@@ -8123,10 +8322,36 @@ function preencherModalNPCBanco_(n=null){
  set('dbNPCPericias',n?.periciasTexto||'');set('dbNPCEspecializacoes',n?.especializacoesTexto||'');set('dbNPCArmas',n?.armasTexto||'');
  set('dbNPCInventario',n?.inventarioTexto||'');set('dbNPCMotivacao',n?.motivacao||'');set('dbNPCValorMotivacao',n?.valorMotivacao||'');
  set('dbNPCImagem',n?.imagem||'');set('dbNPCDescricao',n?.descricao||'');
+ const arqNPC=document.getElementById('dbNPCImagemArquivo');if(arqNPC)arqNPC.value='';
+ atualizarPreviewNPCBanco_();
  document.getElementById('dbNPCSelecionavel').checked=n?.selecionavelCombate!==false;
  document.getElementById('dbNPCModalTitulo').textContent=n?`Editar NPC — ${n.nome}`:'Adicionar NPC';
  document.getElementById('dbNPCRemoverBtn').style.display=n?'':'none';
 }
+
+window.atualizarPreviewNPCBanco_=()=>{
+    const url=String(document.getElementById('dbNPCImagem')?.value||'').trim();
+    const p=document.getElementById('dbNPCImagemPreview');if(!p)return;
+    p.innerHTML=url
+      ? `<img src="${escaparBanco_(url)}" alt="NPC" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='⚠️'">`
+      : '🎭';
+};
+window.handleDbNPCImageUpload_=async(event)=>{
+    if(!userData||userData.role!=='mestre'){alert('Apenas o mestre pode enviar imagens de NPCs.');return;}
+    const file=event.target.files?.[0];if(!file)return;
+    try{
+        const storageRef=ref(storage,`banco-npcs/${Date.now()}_${file.name}`);
+        const snapshot=await uploadBytes(storageRef,file);
+        const url=await getDownloadURL(snapshot.ref);
+        document.getElementById('dbNPCImagem').value=url;
+        atualizarPreviewNPCBanco_();
+        notificar_('Imagem do NPC enviada.','info');
+    }catch(error){
+        console.error('Erro no upload da imagem do NPC:',error);
+        alert('Não foi possível enviar a imagem do NPC.');
+    }
+};
+
 window.adicionarNPCBanco_=()=>{preencherModalNPCBanco_(null);document.getElementById('dbNPCModal').classList.add('active');};
 window.editarNPCBanco_=(id)=>{const n=npcsDB.find(x=>x.id===id);if(!n)return;preencherModalNPCBanco_(n);document.getElementById('dbNPCModal').classList.add('active');};
 window.fecharNPCBancoModal_=()=>document.getElementById('dbNPCModal').classList.remove('active');
@@ -8971,6 +9196,7 @@ function renderizarRegras() {
     renderizarTabelaFadigaCompleta_();
     renderizarTabelaFerimentosCompleta_();
     renderizarRegrasInventarioCombate_();
+    renderizarRegrasPrimeirosSocorros_();
     const btnEditar = document.getElementById('btnEditarRegras');
     if (userData && userData.role === 'mestre') btnEditar.style.display = 'block';
     else btnEditar.style.display = 'none';
@@ -9067,7 +9293,13 @@ function renderizarCenarioAtualPublico_(){
         <h3 style="margin:0 0 5px;color:#d8b4ff;">🪐 ${escaparHtmlInventario_(p.cenario||'Nenhum cenário ativo')}</h3>
         ${p.local?`<div style="color:#999;margin-bottom:10px;">📍 ${escaparHtmlInventario_(p.local)}</div>`:''}
         <div style="white-space:pre-wrap;line-height:1.55;color:#ddd;">${escaparHtmlInventario_(p.descricaoJogadores||'Nenhuma descrição pública disponível.')}</div>
-      </div>`;
+      </div>
+      ${(p.personagensVisiveis||[]).length?`<div style="margin-top:14px;"><h4 style="color:#8feaff;margin:0 0 8px;">👥 Personagens presentes</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:9px;">
+        ${(p.personagensVisiveis||[]).map(x=>`<div style="display:flex;align-items:center;gap:9px;padding:9px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);">
+          ${x.imagem?`<img src="${escaparHtmlInventario_(x.imagem)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`:`<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);">👤</div>`}
+          <div><strong>${escaparHtmlInventario_(x.nome)}</strong><br><small style="color:#999;">${escaparHtmlInventario_(x.tipo||'')}</small></div>
+        </div>`).join('')}</div></div>`:''}`;
 }
 function iniciarCampanhaPublica_(){
     if(campanhaPublicaUnsub_){try{campanhaPublicaUnsub_();}catch(e){}}
@@ -9096,6 +9328,10 @@ async function publicarCampanhaAtual_(){
         local:cenario?.local||'',
         imagem:cenario?.imagem||'',
         descricaoJogadores:cenario?.descricaoJogadores||'',
+        personagensVisiveis:(cenario?.personagensCena||[]).filter(x=>x.visivel).map(v=>{
+            const p=obterPersonagemCenarioPorId_(v.id);
+            return p?{id:v.id,nome:p.nome||'Sem nome',imagem:p.imagem||'',tipo:p.__cenarioTipo||(p.dono===currentUserUid?'PM':'PC')} : null;
+        }).filter(Boolean),
         atualizadoEm:new Date().toISOString()
     };
     campanhaPublica_=dados;
@@ -10955,10 +11191,47 @@ window.restaurarNPCBanco_=async id=>{
     renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();
     notificar_(`${n.nome} restaurado.`,'info');
 };
+window.restaurarTodosNPCsBanco_=async()=>{
+    if(userData?.role!=='mestre'||!npcsDB.length)return;
+    if(!confirm(`Restaurar PV, fadiga e estados de combate de todos os ${npcsDB.length} NPCs?`))return;
+    const estado=()=>({hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[],ferimentos:{},inconsciente:false,incapacitado:false,morto:false,ataquesBloqueadosTurnos:0,sangramentoAtivo:false,caido:false});
+    for(const n of npcsDB){
+        n.estadoCombate=estado();
+        await setDoc(doc(db,'npcs',String(n.id)),{estadoCombate:n.estadoCombate},{merge:true});
+    }
+    for(const p of batalhaEstado_?.participantes||[]){
+        if(p.npcBancoId)p.npcCombate=estado();
+    }
+    if(batalhaEstado_?.ativo)await batalhaSalvarEstado_();
+    renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();
+    notificar_('Todos os NPCs foram restaurados.','info');
+};
+
+
 function renderizarTabelaFadigaCompleta_(){
     const el=document.getElementById('fatigueRulesFull');if(!el)return;
     const rows=[['Fresh','Nenhuma'],['Winded','Difícil'],['Tired','Difícil'],['Wearied','Formidável'],['Exhausted','Formidável'],['Debilitated','Hercúleo'],['Incapacitated','Hercúleo'],['Semi-Conscious','Sem atividades'],['Comatose','Sem ações'],['Dead','Morto']];
     el.innerHTML=`<h3>😮‍💨 Fadiga</h3><table style="width:100%"><thead><tr><th>Estado</th><th>Efeito</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;
+}
+
+
+function renderizarRegrasPrimeirosSocorros_(){
+    let el=document.getElementById('firstAidCombatRules');
+    if(!el){
+        const base=document.getElementById('inventoryCombatRules')||document.getElementById('woundRulesFull');
+        if(!base)return;
+        el=document.createElement('div');el.id='firstAidCombatRules';el.style.marginTop='22px';base.insertAdjacentElement('afterend',el);
+    }
+    el.innerHTML=`<h3>🩹 Primeiros Socorros em combate</h3>
+      <table style="width:100%;border-collapse:collapse;"><thead><tr><th>Situação</th><th>Regra</th></tr></thead><tbody>
+      <tr><td>Ação</td><td>Custa 1 AÇ. Primeiro escolhe-se quem será tratado, inclusive o próprio personagem, e depois uma localização ferida.</td></tr>
+      <tr><td>Kit Médico Básico</td><td>Se houver um kit acessível (equipado, bolso ou mochila) com PV restantes, ele perde 1 PV automaticamente. Sem kit utilizável, o teste recebe +1 grau de dificuldade.</td></tr>
+      <tr><td>Sucesso · ferimento leve</td><td>Recupera 1d3 PV na localização.</td></tr>
+      <tr><td>Sucesso · ferimento sério</td><td>Restaura funcionalidade parcial; não devolve PV imediatamente.</td></tr>
+      <tr><td>Sucesso · ferimento grave</td><td>Estabiliza/trata a localização; não devolve PV imediatamente.</td></tr>
+      <tr><td>Crítico</td><td>Regra da campanha: restaura completamente os PV da localização escolhida.</td></tr>
+      <tr><td>Falha crítica</td><td>Regra da campanha: causa +1 de dano na localização tratada.</td></tr>
+      </tbody></table>`;
 }
 
 function renderizarRegrasInventarioCombate_(){
