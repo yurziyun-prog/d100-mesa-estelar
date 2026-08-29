@@ -790,7 +790,7 @@
                         <button class="tab-btn" onclick="mostrarBancoAba('especializacoes', this)">Especializações</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('poderesPsi', this)">Poderes Psi</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('itens', this)">Itens</button>
-                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button>
+                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button>
                     </div>
 
                     <div id="banco-pericias" class="tab-content active">
@@ -888,6 +888,7 @@
                         <button class="btn-save" onclick="adicionarCenarioBanco()" style="margin-top:15px;">➕ Adicionar Cenário</button>
                     </div>
 
+<div id="banco-npcs" class="tab-content"><h4>NPCs reutilizáveis</h4><div class="import-section"><input type="file" id="importNPCsFile" accept=".csv" style="display:none" onchange="importarPlanilha('npcs',this,this.dataset.modo==='substituir')"><button class="btn-import" onclick="selecionarImportacaoBanco_('importNPCsFile',false)">📥 Importar/Atualizar</button><button class="btn-template" onclick="selecionarImportacaoBanco_('importNPCsFile',true)">♻️ Substituir</button><button class="btn-template" onclick="baixarTemplate('npcs')">📄 Template</button><button class="btn-template" onclick="exportarBancoCSV('npcs')">📤 Exportar</button></div><div id="listaBancoNPCs"></div></div>
             <!-- REGRAS -->
             <div id="regras" class="tab-content">
                 <div class="form-section">
@@ -933,12 +934,14 @@
                                 <div class="form-group"><label>Clima atual:</label><input id="gmCampanhaClima" type="text"></div>
                                 <div class="form-group"><label>Cenário ativo:</label><input id="gmCampanhaCenario" type="text"></div>
                                 <div class="form-group"><label>Data / período no jogo:</label><input id="gmCampanhaData" type="text"></div>
+<div class="form-group"><label>Fadiga geral dos jogadores:</label><div style="display:flex;gap:6px"><select id="gmFadigaGeral">
+<option value="Fresh">Descansado</option><option value="Winded">Ofegante</option><option value="Tired">Cansado</option><option value="Wearied">Fatigado</option><option value="Exhausted">Exausto</option><option value="Debilitated">Debilitado</option><option value="Incapacitated">Incapacitado</option></select><button class="btn-small" onclick="aplicarFadigaGeral_()">Aplicar a todos</button></div></div>
                                 <div class="form-group">
                                     <label>Dia de campanha:</label>
                                     <div style="display:flex;gap:6px;align-items:center;">
                                         <input id="gmCampanhaDia" type="number" min="1" step="1" value="1" style="max-width:110px;">
                                         <button class="btn-small" type="button" onclick="avancarDiaCampanha_(1)">+1</button>
-                                        <button class="btn-small" type="button" onclick="avancarDiaCampanha_(7)">+7</button>
+                                        <button class="btn-small" type="button" onclick="avancarDiaCampanha_(7)">+7</button><button class="btn-small" type="button" onclick="novaSessaoCampanha_()">🎲 Nova sessão</button>
                                     </div>
                                 </div>
                             </div>
@@ -1300,7 +1303,8 @@ let especializacoesDB = [];
 let poderesPsiDB = [];
 let itensDB = [];
 let cenariosDB = [];
-let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',itens:[]};
+let npcsDB = [];
+let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',itens:[],servicos:[]};
 let mercadoLocalUnsub_ = null;
 let mercadoLocalNegociacao_ = {};
 let marketSubtabAtual_ = 'comprar';
@@ -2048,6 +2052,7 @@ async function carregarBancosDeDados() {
         }
     }
 
+    if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'npcs'));npcsDB=[];q.forEach(d=>npcsDB.push({id:d.id,...d.data()}));}catch(e){console.warn(e);}}
     popularSelects();
     renderizarBancoDados();
     if (document.getElementById('marketGrid')) renderizarMercado();
@@ -2149,6 +2154,7 @@ function renderizarBancoDados() {
     renderizarBancoPoderesPsi();
     renderizarBancoItens();
     renderizarBancoCenarios();
+    renderizarBancoNPCs_();
 }
 
 async function carregarPersonagens() {
@@ -4285,6 +4291,7 @@ function renderizarCombateSimplificado_(char) {
     if (armorHeader) armorHeader.style.display = 'none';
 
     document.getElementById('fadigaLevel').value = combat.fadiga || 'Fresh';
+    document.getElementById('fadigaLevel').disabled = userData?.role!=='mestre';
     atualizarVisualFadiga_(char);
     atualizarVisualPontosAcao_(char);
     popularEquipamentosCombate_(char);
@@ -4292,6 +4299,7 @@ function renderizarCombateSimplificado_(char) {
 }
 
 window.salvarPVGlobal = async (valor) => {
+    if(userData?.role!=='mestre') return;
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
@@ -4358,7 +4366,7 @@ function renderizarCombate(char) {
         return `<div class="hit-location">
             <span class="hit-location-name">${traduzirLocalCorpo_(loc)}</span>
             <input type="number" value="${pv}" readonly>
-            <input type="number" value="${pvAtual}" class="damage" onchange="salvarCombate('hitLocations', '${loc}', this.value)">
+            <input type="number" value="${pvAtual}" class="damage" ${userData?.role==='mestre'?`onchange="salvarCombate('hitLocations', '${loc}', this.value)"`:'readonly'}>
         </div>`;
     }).join('');
 
@@ -4376,6 +4384,7 @@ function renderizarCombate(char) {
     }).join('');
 
     document.getElementById('fadigaLevel').value = combat.fadiga || 'Fresh';
+    document.getElementById('fadigaLevel').disabled = userData?.role!=='mestre';
     atualizarVisualFadiga_(char);
     atualizarVisualPontosAcao_(char);
     popularEquipamentosCombate_(char);
@@ -4395,6 +4404,7 @@ window.salvarPATotal = async (local, valorTotal, paEquipamento) => {
 };
 
 window.salvarCombate = async (tipo, local, valor) => {
+    if(userData?.role!=='mestre') return;
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
@@ -4408,6 +4418,7 @@ window.salvarCombate = async (tipo, local, valor) => {
 };
 
 window.salvarFadiga = async () => {
+    if(userData?.role!=='mestre') return;
     if (!currentCharId) return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
@@ -4862,6 +4873,13 @@ function estadoReparos_(char){
     if(!Array.isArray(char.reparosPendentes))char.reparosPendentes=[];
     return char.reparosPendentes;
 }
+
+function reparavel_(i){let c=normalizarTextoCombate_(i?.categoria||''),n=normalizarTextoCombate_(i?.nome||'');return Number(i?.pv||0)>1&&!/alimento|bebida|comida|municao|medic|consum/.test(c)&&!/cafe|cerveja|agua|racao|refeicao|nanogel/.test(n);}
+function consumivelAtivo_(i){let n=normalizarTextoCombate_(i?.nome||''),c=normalizarTextoCombate_(i?.categoria||'');return /cafe|cerveja|nanogel|energetic/.test(n)||c.includes('bebida');}
+window.usarConsumivel_=async(comp,ix)=>{let c=obterPersonagemAtual_(),inv=normalizarInventario_(c),i=inv?.[comp]?.[ix];if(!i)return;let n=normalizarTextoCombate_(i.nome||'');c.combate=c.combate||{};
+if(n.includes('nanogel')){let ms=pvMaxLocais_(c),ls=Object.entries(ms).filter(([l,m])=>Number(c.combate.hitLocations?.[l]??m)<m);if(!ls.length)return notificar_('Nenhuma área ferida.','aviso');let q=prompt(ls.map(([l,m],j)=>`${j+1}. ${l} (${c.combate.hitLocations?.[l]??m}/${m})`).join('\n')),z=ls[(+q||0)-1];if(!z)return;let [l,m]=z,w=Math.floor((obterDiaCampanha_()-1)/7)+1;c.combate.nanogelSemana=c.combate.nanogelSemana||{};if(c.combate.nanogelSemana[l]===w)return notificar_('Essa área já recebeu Nanogel nesta semana.','aviso');c.combate.hitLocations=c.combate.hitLocations||{};c.combate.hitLocations[l]=Math.min(m,Number(c.combate.hitLocations[l]??m)+1);c.combate.nanogelSemana[l]=w;}
+else{if(c.combate.estimulanteDia===obterDiaCampanha_())return notificar_('Bebidas só melhoram a fadiga uma vez por dia.','aviso');let a=['Fresh','Winded','Tired','Wearied','Exhausted','Debilitated','Incapacitated','Semi-Conscious','Comatose'],x=a.indexOf(c.combate.fadiga||'Fresh');if(x<=0)return notificar_('Já está Descansado.','aviso');c.combate.fadiga=a[x-1];c.combate.estimulanteDia=obterDiaCampanha_();}
+inv[comp][ix]=null;c.inventario=inv;await setDoc(doc(db,'personagens',c.id),{inventario:inv,combate:c.combate},{merge:true});renderizarInventario(c);renderizarCombate(c);renderizarVendaMercado_();};
 function previewReparo_(item,local=false){
     const banco=itensDB.find(x=>String(x.id)===String(item.idBanco||item.id))||item;
     const pvMax=Math.max(0,Number(banco.pv??item.pv??0));
@@ -5014,8 +5032,9 @@ window.renderizarVendaMercado_=()=>{
         return `<div class="market-card">${imagem}<div><h4>${nome}</h4>
           <div class="market-meta">${escaparBanco_(item.categoria||'')} • ${escaparBanco_(r.comp)} • PV ${pvAtual}/${pvMax}</div>
           <div style="margin:8px 0;"><strong>${preco.toLocaleString('pt-BR')}</strong> recursos</div>
+          ${consumivelAtivo_(item)?`<button class="btn-small btn-select" onclick="usarConsumivel_('${r.comp}',${r.index})">🥤 Usar/Consumir</button>`:''}
           <button class="market-buy" ${preco<=0?'disabled':''} onclick="venderItemMercado_('${r.comp}',${r.index})">Vender</button>
-          <button class="btn-small" style="margin-top:6px;" ${pvAtual>=pvMax?'disabled':''} onclick="iniciarReparoMercado_('${r.comp}',${r.index})">🛠️ Reparar</button>
+          ${reparavel_(item)?`<button class="btn-small" style="margin-top:6px;" ${pvAtual>=pvMax?'disabled':''} onclick="iniciarReparoMercado_('${r.comp}',${r.index})">🛠️ Reparar</button>`:''}
           ${pvAtual<pvMax?`<small style="display:block;color:#aaa;margin-top:5px;">Custo-base: 80% do preço × fração dos PV perdidos. Prazo: 3d20 h + dano.</small>`:''}
           <button class="btn-small btn-delete" style="margin-top:6px;" onclick="descartarItemMercado_('${r.comp}',${r.index})">Descartar</button>
         </div></div>`;
@@ -5043,7 +5062,7 @@ window.descartarItemMercado_=async(comp,index)=>{
 function iniciarMercadoLocal_(){
     if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
     mercadoLocalUnsub_=onSnapshot(doc(db,'configuracoes','mercadoLocal'),snap=>{
-        mercadoLocalConfig_=snap.exists()?{cenarioId:'',cenarioNome:'',itens:[],...snap.data()}:{cenarioId:'',cenarioNome:'',itens:[]};
+        mercadoLocalConfig_=snap.exists()?{cenarioId:'',cenarioNome:'',itens:[],servicos:[],...snap.data()}:{cenarioId:'',cenarioNome:'',itens:[],servicos:[]};
         if(document.getElementById('mercado')?.classList.contains('active')&&marketSubtabAtual_==='local')renderizarMercadoLocal_();
     },err=>console.warn('Mercado local indisponível',err));
 }
@@ -5085,9 +5104,10 @@ window.rolarNegociacaoMercadoLocal_=async(tipo)=>{
 window.salvarMercadoLocalMestre_=async()=>{
     if(!(userData&&userData.role==='mestre'))return;
     const ativos=[...document.querySelectorAll('.market-local-item-check:checked')].map(x=>x.value);
+    const servicos=[...document.querySelectorAll('.market-local-service-check:checked')].map(x=>x.value);
     const cenarioId=estadoCampanhaMestre?.cenarioId||'';
     const cenario=(cenariosDB||[]).find(x=>x.id===cenarioId);
-    const dados={cenarioId,cenarioNome:cenario?.nome||estadoCampanhaMestre?.cenario||'',itens:ativos,atualizadoEm:new Date().toISOString()};
+    const dados={cenarioId,cenarioNome:cenario?.nome||estadoCampanhaMestre?.cenario||'',itens:ativos,servicos,atualizadoEm:new Date().toISOString()};
     await setDoc(doc(db,'configuracoes','mercadoLocal'),dados,{merge:false});
     mercadoLocalConfig_=dados;notificar_('Mercado local publicado para o cenário ativo.','info');renderizarMercadoLocal_();
 };
@@ -5109,6 +5129,7 @@ window.renderizarMercadoLocal_=()=>{
           <div style="color:#aaa;margin:5px 0 10px;">Cenário ativo: ${escaparHtmlInventario_((cenariosDB||[]).find(x=>x.id===ativo)?.nome||ativo||'Nenhum')}. Marque apenas o que existe neste local.</div>
           <div style="max-height:220px;overflow:auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:5px;">
           ${[...itensDB].sort((a,b)=>getNome(a).localeCompare(getNome(b))).map(i=>`<label style="padding:6px 8px;background:rgba(255,255,255,.035);border-radius:6px;"><input class="market-local-item-check" type="checkbox" value="${escaparBanco_(i.id)}" ${ids.has(String(i.id))?'checked':''}> ${escaparBanco_(getNome(i))}</label>`).join('')}</div>
+          <div style="margin-top:10px;"><strong>Serviços:</strong> <label><input class="market-local-service-check" type="checkbox" value="reparo" ${(mercadoLocalConfig_.servicos||[]).includes('reparo')?'checked':''}> 🛠️ Oficina</label> <label><input class="market-local-service-check" type="checkbox" value="cura" ${(mercadoLocalConfig_.servicos||[]).includes('cura')?'checked':''}> 🏥 Cura</label> <label><input class="market-local-service-check" type="checkbox" value="primeiros_socorros" ${(mercadoLocalConfig_.servicos||[]).includes('primeiros_socorros')?'checked':''}> 🩹 Primeiros Socorros</label></div>
           <button class="btn-small btn-select" style="margin-top:10px;" onclick="salvarMercadoLocalMestre_()">💾 Publicar mercado deste cenário</button>`;
     }else gm.classList.add('hidden');
 
@@ -5141,7 +5162,7 @@ window.renderizarMercadoLocal_=()=>{
             cards.push(`<div class="market-card">${img}<div><h4>${nome} · seu item</h4>
               <div class="market-meta">PV ${pv}/${Number(item.pv||0)} • venda local <strong>${venda.toLocaleString('pt-BR')}</strong></div>
               <button class="market-buy" ${venda>0?'':'disabled'} onclick="venderItemMercadoLocal_('${r.comp}',${r.index})">Vender aqui</button>
-              <button class="btn-small" style="margin-top:6px;" ${pv>=Number(item.pv||0)?'disabled':''} onclick="iniciarReparoMercadoLocal_('${r.comp}',${r.index})">🛠️ Reparar na oficina</button>
+              ${reparavel_(r.item)&&(mercadoLocalConfig_.servicos||[]).includes('reparo')?`<button class="btn-small" style="margin-top:6px;" ${pv>=Number(item.pv||0)?'disabled':''} onclick="iniciarReparoMercadoLocal_('${r.comp}',${r.index})">🛠️ Reparar na oficina</button>`:''}
             </div></div>`);
         });
     });
@@ -5323,6 +5344,7 @@ window.mostrarBancoAba = (abaId, btn) => {
     if (abaId === 'especializacoes') renderizarBancoEspecializacoes();
     if (abaId === 'poderesPsi') renderizarBancoPoderesPsi();
     if (abaId === 'itens') renderizarBancoItens();
+    if (abaId === 'npcs') renderizarBancoNPCs_();
     if (abaId === 'cenarios') renderizarBancoCenarios();
 };
 
@@ -7095,6 +7117,11 @@ window.removerCenarioBanco=async(id)=>{
     renderizarBancoCenarios();renderizarCampanhaMestre_();renderizarCenarioMestre_();
 };
 
+
+function renderizarBancoNPCs_(){let e=document.getElementById('listaBancoNPCs');if(!e)return;e.innerHTML=npcsDB.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th>Nome</th><th>Atributos</th><th>Combate</th><th>Ação</th></tr></thead><tbody>${npcsDB.map(n=>`<tr><td>${escaparBanco_(n.nome)}</td><td>FOR ${n.FOR||10} CON ${n.CON||10} TAM ${n.TAM||10} DES ${n.DES||10} INT ${n.INT||10} POD ${n.POD||10} CAR ${n.CAR||10}</td><td>${n.selecionavelCombate!==false?'✅ Selecionável':'⛔'} · ${escaparBanco_(n.periciasTexto||'')}</td><td><button class="btn-small" onclick="converterNPCemPM_('${n.id}')">Converter em PM</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Nenhum NPC.</p>';}
+function npcSkills_(t){let o={};String(t||'').split('|').forEach(x=>{let [k,v]=x.split(':');if(k&&v)o[k]={base:0,treino:+v||0};});return o;}
+window.converterNPCemPM_=async id=>{let n=npcsDB.find(x=>x.id===id);if(!n)return;let a={FOR:+n.FOR||10,CON:+n.CON||10,TAM:+n.TAM||10,DES:+n.DES||10,INT:+n.INT||10,POD:+n.POD||10,CAR:+n.CAR||10};await addDoc(collection(db,'personagens'),{nome:n.nome,raca:n.raca||'Humano',conceito:n.tipo||'NPC',origem:origensDB[0]?.id||'urbano',carreira:carreirasDB[0]?.id||'militar',atributos:a,bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},pericias:npcSkills_(n.periciasTexto),especializacoes:npcSkills_(n.especializacoesTexto),inventario:{equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)},combate:{hitLocations:{},armor:{},fadiga:'Fresh'},dono:currentUserUid,tipo:'pm',etapaCriacao:5});await carregarPersonagens();};
+
 function renderizarBancoItens() {
     const container = document.getElementById('listaBancoItens');
     if (!container) return;
@@ -7524,6 +7551,7 @@ function normalizarLinhaImportacao_(tipo, bruto) {
         };
     }
 
+    if(tipo==='npcs')return {...comum,tipo:String(bruto.tipo||'NPC'),raca:String(bruto.raca||'Humano'),FOR:parseNumero_(bruto.FOR,10),CON:parseNumero_(bruto.CON,10),TAM:parseNumero_(bruto.TAM,10),DES:parseNumero_(bruto.DES,10),INT:parseNumero_(bruto.INT,10),POD:parseNumero_(bruto.POD,10),CAR:parseNumero_(bruto.CAR,10),periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),imagem:String(bruto.imagem||''),descricao:String(bruto.descricao||'')};
     if (tipo === 'itens') {
         const usoBruto = bruto.uso ?? bruto.quantidade ?? '';
         return {
@@ -7768,6 +7796,7 @@ function dadosExportacaoBanco_(tipo) {
                 imagem:c.imagem||''
             })
         },
+        npcs:{dados:npcsDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','raca','FOR','CON','TAM','DES','INT','POD','CAR','periciasTexto','especializacoesTexto','selecionavelCombate','imagem','descricao'],map:n=>n},
         itens: {
             dados: itensDB,
             cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','penetracao','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','imagem','descricao','descricao_en','descricao_zh'],
@@ -7852,6 +7881,7 @@ window.baixarTemplate = (tipo) => {
         especializacoes: 'id;nome;nome_en;nome_zh;tipo;uso;formula;descricao;descricao_en;descricao_zh\ncombate_pistola_laser;Combate com Pistola Laser;Laser Pistol Combat;激光手枪战斗;Combate;Distância;DES+POD;;;',
         poderesPsi: 'id;nome;nome_en;nome_zh;esfera;arco;custo;observacao;observacao_en;observacao_zh\nevitar_dano;Evitar Dano;Avoid Damage;避免伤害;Sentidos;1;1;1 PP por ponto de dano absorvido;;',
         cenarios: 'id;nome;nome_en;nome_zh;local;local_en;local_zh;tipo;tipo_en;tipo_zh;descricaoJogadores;descricaoJogadores_en;descricaoJogadores_zh;descricaoGM;descricaoGM_en;descricaoGM_zh;objetivo;objetivo_en;objetivo_zh;segredos;segredos_en;segredos_zh;testesSugeridos;estadoInicial;eventos;encontros;observacoes;observacoes_en;observacoes_zh;destino1;condicao1;destino2;condicao2;destino3;condicao3;npcsCena;imagem\nC001;Exemplo;;;Local;;;Social;;;Descrição pública;;;Descrição GM;;;Objetivo;;;Segredo;;;Percepção|Influência;Ativo;Evento 1|Evento 2;Encontro 1|Encontro 2;;;;C002;Seguir adiante;;;;;NPC Exemplo;https://...',
+        npcs: 'id;nome;nome_en;nome_zh;tipo;raca;FOR;CON;TAM;DES;INT;POD;CAR;periciasTexto;especializacoesTexto;selecionavelCombate;imagem;descricao\nseguranca;Segurança Genérico;;;Humano;Humano;12;12;12;12;10;10;9;atletismo:45|esquiva:40;fuzis_carabinas:50;true;;Sem armadura',
         itens: 'id;nome;nome_en;nome_zh;categoria;peso;preco;pa;pv;alcance;dano;penetracao;municao;uso;destinoLocal;locaisProtegidos;nivelAcesso;material;unidade;imagem;descricao;descricao_en;descricao_zh\npistola_laser;Pistola Laser;Laser Pistol;激光手枪;Armas;2;9000;4;5;60 m;2d6;3;Bateria;100;Armas laser;;Restrito;Liga metálica;Peça;;;;'
     };
 
@@ -8022,10 +8052,17 @@ function renderizarDiaCampanhaFicha_(){
     const el=document.getElementById('charCampaignDay');
     if(el)el.textContent=obterDiaCampanha_();
 }
+
+function taxaRecuperacao_(c){let x=Number(c?.atributos?.CON||10)+Number(c?.bonus?.CON||0);return x<=6?1:x<=12?2:x<=18?3:x<=24?4:x<=30?5:x<=36?6:6+Math.ceil((x-36)/6);}
+function pvMaxLocais_(c){let x=(c.atributos?.CON||10)+(c.bonus?.CON||0)+(c.atributos?.TAM||10)+(c.bonus?.TAM||0),k=x<=5?0:x<=10?1:x<=15?2:x<=20?3:x<=25?4:x<=30?5:x<=35?6:7,i=x>40?Math.ceil((x-40)/5):0,t={l:[1,2,3,4,5,6,7,8],a:[2,3,4,5,6,7,8,9],c:[3,4,5,6,7,8,9,10],b:[1,1,2,3,4,5,6,7]};return {'Cabeça':t.l[k]+i,'Peito':t.c[k]+i,'Abdômen':t.a[k]+i,'Braço Direito':t.b[k]+i,'Braço Esquerdo':t.b[k]+i,'Perna Direita':t.l[k]+i,'Perna Esquerda':t.l[k]+i};}
+async function curaNatural_(c,a,b){c.combate=c.combate||{};c.combate.hitLocations=c.combate.hitLocations||{};let h=taxaRecuperacao_(c),ms=pvMaxLocais_(c);for(let [l,m] of Object.entries(ms)){let v=Object.hasOwn(c.combate.hitLocations,l)?Number(c.combate.hitLocations[l]):m;if(v>=m)continue;if(v<=-m){if(!c.combate?.curaNatural?.[l]?.graveTratado)continue;v+=(Math.floor(b/30)-Math.floor(a/30))*h;}else if(v<=0)v+=(Math.floor(b/7)-Math.floor(a/7))*h;else v+=(b-a)*h;c.combate.hitLocations[l]=Math.min(m,v);}await setDoc(doc(db,'personagens',c.id),{combate:c.combate},{merge:true});}
+window.aplicarFadigaGeral_=async()=>{if(userData?.role!=='mestre')return;let n=document.getElementById('gmFadigaGeral').value;for(let c of userCharacters.filter(x=>(x.tipo||'pc')==='pc')){c.combate=c.combate||{};c.combate.fadiga=n;await setDoc(doc(db,'personagens',c.id),{combate:c.combate},{merge:true});}let c=obterPersonagemAtual_();if(c)renderizarCombate(c);renderizarBatalhaCompartilhada_();};
+window.novaSessaoCampanha_=async()=>{if(userData?.role!=='mestre')return;for(let c of userCharacters.filter(x=>(x.tipo||'pc')==='pc')){c.pontosSorte=pontosSorteMax_(c);c.pontosSorteDerivadoV15=true;await setDoc(doc(db,'personagens',c.id),{pontosSorte:c.pontosSorte,pontosSorteDerivadoV15:true},{merge:true});}notificar_('Pontos de Sorte restaurados.','info');};
 window.avancarDiaCampanha_=async(qtd=1)=>{
     if(!(userData&&userData.role==='mestre'))return;
-    const antes=obterDiaCampanha_();
-    estadoCampanhaMestre={...(estadoCampanhaMestre||{}),diaCampanha:antes+Math.max(1,Math.floor(Number(qtd)||1))};
+    const antes=obterDiaCampanha_(),depois=antes+Math.max(1,Math.floor(Number(qtd)||1));
+    for(const c of userCharacters) await curaNatural_(c,antes,depois);
+    estadoCampanhaMestre={...(estadoCampanhaMestre||{}),diaCampanha:depois};
     await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
     const campo=document.getElementById('gmCampanhaDia');
     if(campo)campo.value=obterDiaCampanha_();
