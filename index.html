@@ -3542,9 +3542,15 @@ function precoComQualidade_(item, qualidade) {
 
 function cargaMaxArma_(item) {
     if (!itemUsaMunicao_(item)) return Infinity;
-    const explicita = Number(item?.cargaMax ?? item?.capacidadeMunicao ?? item?.uso);
+    // "uso" é um campo genérico do item e, em armas de energia, pode representar
+    // outra característica. Usá-lo como capacidade fazia uma pistola com uso=8
+    // ter bateria máxima 8 e gastar os 8 pontos em um único disparo.
+    const explicita = Number(item?.cargaMax ?? item?.capacidadeMunicao);
     if (Number.isFinite(explicita) && explicita > 0) return Math.floor(explicita);
-    return itemUsaEnergia_(item) ? 100 : 20;
+    if(itemUsaEnergia_(item)) return 100;
+    const legadoFisico=Number(item?.uso);
+    if(Number.isFinite(legadoFisico)&&legadoFisico>0)return Math.floor(legadoFisico);
+    return 20;
 }
 
 function cargaAtualArma_(item) {
@@ -6739,7 +6745,7 @@ function batalhaEspeciaisDisponiveis_(dp){
     const defensor=batalhaCharLocal_(dp?.defensorId);
     if(!batalhaArmaEhDistancia_(ataque)||crit)arr.push({id:'localizacao',nome:'🎯 Escolher localização'});
     if(batalhaArmaPodeSangrar_(ataque))arr.push({id:'sangrar',nome:'🩸 Sangrar'});
-    if(batalhaArmaAtualDefensor_(dp))arr.push({id:'danificar_arma',nome:'🗡️ Danificar arma'});
+    if(dp?.defensorTemArma || batalhaArmaAtualDefensor_(dp))arr.push({id:'danificar_arma',nome:'🗡️ Danificar arma'});
     if(!batalhaArmaEhDistancia_(ataque) && !defensor?.combate?.caido && !batalhaEstaInconsciente_(defensor))arr.push({id:'derrubar',nome:'💥 Derrubar'});
     if(crit)arr.push({id:'ignorar_armadura',nome:'🛡️ Ignorar armadura'});
     if(ataque.infeccioso)arr.push({id:'infectar',nome:'🦠 Infectar'});
@@ -6776,40 +6782,56 @@ async function batalhaAplicarTrip_(dp){
     batalhaLogPush_(batalhaEstado_,`${p.nome}: ${getNome(per)} ${roll}/${val} → ${r.grau}; ${resistiu?'permaneceu de pé':'caiu no chão'}.`,'efeito',{targetId:p.id});
     await batalhaPersistirCombateChar_(alvo,p);
 }
-window.batalhaEscolherEspecial_=async(atacanteId,tipo)=>{
+async function batalhaAplicarEscolhaEspecialMestre_(atacanteId,tipo,localInformado=''){
     const dp=batalhaEstado_?.danoPendente,p=batalhaParticipante_(atacanteId);
-    if(!dp||String(dp.atacanteId)!==String(atacanteId)||!p||!batalhaPodeControlar_(p)||Number(dp.especiaisRestantes||0)<=0)return;
+    if(!batalhaEhMestre_()||!dp||String(dp.atacanteId)!==String(atacanteId)||!p||Number(dp.especiaisRestantes||0)<=0)return;
+    const disponiveis=batalhaEspeciaisDisponiveis_(dp).map(x=>x.id);
+    if(tipo!=='pular'&&!disponiveis.includes(tipo))return;
     let escolha={tipo,timestamp:new Date().toISOString()};
     if(tipo==='localizacao'){
-        const atacante=batalhaCharLocal_(dp.atacanteId);
-        const somentePernas=!!atacante?.combate?.caido && !batalhaArmaEhDistancia_(dp.ataque);
-        let loc;
-        if(somentePernas){
-            const txt=prompt('Caído em combate corpo a corpo: só é possível alcançar as pernas.\\n1 Perna Direita\\n2 Perna Esquerda','1');
-            loc=Number(txt)===2?'Perna Esquerda':'Perna Direita';
-        }else{
-            const txt=prompt('Escolha a localização:\\n1 Cabeça\\n2 Peito\\n3 Abdômen\\n4 Braço Direito\\n5 Braço Esquerdo\\n6 Perna Direita\\n7 Perna Esquerda','2');
-            loc=BATALHA_LOCAIS_[Math.max(0,Math.min(6,(Number(txt)||2)-1))];
+        let loc=localInformado;
+        if(!BATALHA_LOCAIS_.includes(loc)){
+            const atacante=batalhaCharLocal_(dp.atacanteId);
+            const somentePernas=!!atacante?.combate?.caido && !batalhaArmaEhDistancia_(dp.ataque);
+            if(somentePernas)loc='Perna Direita'; else loc='Peito';
         }
-        escolha.local=loc;
-        dp.localEscolhido=loc;
-    }else if(tipo==='ignorar_armadura'){
-        dp.ignorarArmadura=true;
-    }else if(tipo==='sangrar'){
-        dp.sangrar=true;
-    }else if(tipo==='derrubar'){
-        await batalhaAplicarTrip_(dp);
-    }else if(tipo==='danificar_arma'){
-        dp.danificarArma=true;
-    }else if(tipo==='infectar'){
-        dp.infectar=true;
-    }else if(tipo==='trombeta_sonora'){
-        dp.trombetaSonora=true;
-    }
+        escolha.local=loc;dp.localEscolhido=loc;
+    }else if(tipo==='ignorar_armadura')dp.ignorarArmadura=true;
+    else if(tipo==='sangrar')dp.sangrar=true;
+    else if(tipo==='derrubar')await batalhaAplicarTrip_(dp);
+    else if(tipo==='danificar_arma')dp.danificarArma=true;
+    else if(tipo==='infectar')dp.infectar=true;
+    else if(tipo==='trombeta_sonora')dp.trombetaSonora=true;
     dp.escolhasEspeciais=[...(dp.escolhasEspeciais||[]),escolha];
     dp.especiaisRestantes=Math.max(0,Number(dp.especiaisRestantes||0)-1);
     batalhaLogPush_(batalhaEstado_,`${p.nome} escolheu efeito especial: ${tipo}.`,'efeito',{actorId:p.id,targetId:dp.defensorId});
     await batalhaSalvarEstado_();
+}
+
+window.batalhaEscolherEspecial_=async(atacanteId,tipo)=>{
+    const dp=batalhaEstado_?.danoPendente,p=batalhaParticipante_(atacanteId);
+    if(!dp||String(dp.atacanteId)!==String(atacanteId)||!p||!batalhaPodeControlar_(p)||Number(dp.especiaisRestantes||0)<=0)return;
+    let local='';
+    if(tipo==='localizacao'){
+        const atacante=batalhaCharLocal_(dp.atacanteId);
+        const somentePernas=!!atacante?.combate?.caido && !batalhaArmaEhDistancia_(dp.ataque);
+        if(somentePernas){
+            const txt=prompt('Caído em combate corpo a corpo: só é possível alcançar as pernas.\n1 Perna Direita\n2 Perna Esquerda','1');
+            if(txt===null)return;
+            local=Number(txt)===2?'Perna Esquerda':'Perna Direita';
+        }else{
+            const txt=prompt('Escolha a localização:\n1 Cabeça\n2 Peito\n3 Abdômen\n4 Braço Direito\n5 Braço Esquerdo\n6 Perna Direita\n7 Perna Esquerda','2');
+            if(txt===null)return;
+            local=BATALHA_LOCAIS_[Math.max(0,Math.min(6,(Number(txt)||2)-1))];
+        }
+    }
+    if(batalhaEhMestre_()){
+        await batalhaAplicarEscolhaEspecialMestre_(atacanteId,tipo,local);
+    }else{
+        await batalhaEnviarAcao_(atacanteId,'efeito_especial',{tipo,local});
+        batalhaUltimoResultado_[atacanteId]='Efeito especial enviado ao mestre...';
+        renderizarBatalhaCompartilhada_();
+    }
 };
 
 function batalhaPublicCard_(p){
@@ -7180,6 +7202,17 @@ function batalhaPrimeiroTurnoValido_(){
     const ps=batalhaEstado_?.participantes||[];
     return ps.findIndex(p=>batalhaParticipantePodeReceberTurno_(p));
 }
+async function batalhaResetarSelecoesNovoTurno_(p){
+    if(!p)return;
+    const defaults={pericia:'',dificuldade:'padrao',equipamento:'',alvo:''};
+    const c=batalhaCharLocal_(p.id);
+    if(batalhaEhMestre_())batalhaPrefsMestre_[p.id]={...defaults};
+    if(c&&!c.__npcTemporario&&!c.__criaturaTemporaria){
+        c.combate=c.combate||{};
+        c.combate.batalhaPrefs={...defaults};
+        await setDoc(doc(db,'personagens',c.id),{'combate.batalhaPrefs':defaults},{merge:true});
+    }
+}
 async function batalhaAvancarTurnoInterno_(){
     const ps=batalhaEstado_?.participantes||[];if(!ps.length)return;
 
@@ -7195,6 +7228,7 @@ async function batalhaAvancarTurnoInterno_(){
         if(idx===0)batalhaEstado_.ciclo=Math.max(1,Number(batalhaEstado_.ciclo||1)+1);
         if(batalhaParticipantePodeReceberTurno_(ps[idx])){
             batalhaEstado_.turnoIndex=idx;
+            await batalhaResetarSelecoesNovoTurno_(ps[idx]);
             const c=batalhaCharLocal_(ps[idx].id),t=batalhaTratamentoPrimeirosSocorros_(c);
             if(t?.fase==='aguardando'){t.fase='executando';await batalhaPersistirCombateChar_(c,ps[idx]);batalhaUltimoResultado_[ps[idx].id]='O turno está ocupado com Primeiros Socorros. Conclua o atendimento.';}
             return;
@@ -7250,6 +7284,7 @@ window.batalhaNovaRodada_=async(confirmar=false)=>{
     }
     const primeiroValido=batalhaPrimeiroTurnoValido_();
     if(primeiroValido>=0)batalhaEstado_.turnoIndex=primeiroValido;
+    if(primeiroValido>=0)await batalhaResetarSelecoesNovoTurno_(batalhaEstado_.participantes[primeiroValido]);
     batalhaLogPush_(batalhaEstado_,`Rodada ${batalhaEstado_.rodada} iniciada.`,'rodada');
     await batalhaSalvarEstado_();
 };
@@ -7424,6 +7459,7 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
             const especiais=Math.max(0,batalhaResultadoGradeValor_(r.grau)-1);
             batalhaEstado_.danoPendente={
                 atacanteId:id,defensorId:alvoId,ataque:ataqueInfo,
+                defensorTemArma:!!batalhaArmaAtualDefensor_({defensorId:alvoId}),
                 especiaisRestantes:especiais,escolhasEspeciais:[],
                 criadoEm:new Date().toISOString()
             };
@@ -7595,6 +7631,7 @@ async function batalhaProcessarDefesa_(acao){
             atacanteId:pend.atacanteId,
             defensorId:pend.defensorId,
             ataque:pend.ataque,
+            defensorTemArma:!!batalhaArmaAtualDefensor_({defensorId:pend.defensorId}),
             especiaisRestantes:especiais,
             escolhasEspeciais:[],
             criadoEm:new Date().toISOString()
@@ -7796,7 +7833,14 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
 window.batalhaRolarDano_=async(id)=>{
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id),dp=batalhaEstado_?.danoPendente;
     if(!p||!c||!dp||dp.atacanteId!==id||!batalhaPodeControlar_(p))return;
-    if(Number(dp.especiaisRestantes||0)>0){notificar_('Escolha ou descarte todos os Efeitos Especiais antes de rolar o dano.','aviso');return;}
+    if(Number(dp.especiaisRestantes||0)>0){
+        const disponiveis=batalhaEspeciaisDisponiveis_(dp);
+        if(disponiveis.length){
+            notificar_('Escolha ou descarte todos os Efeitos Especiais antes de rolar o dano.','aviso');return;
+        }
+        // Nunca bloquear o jogador por um efeito que seu cliente não consegue apresentar.
+        dp.especiaisRestantes=0;
+    }
     const prefs=batalhaGarantirPrefsValidas_(c,batalhaPrefsChar_(c));
     const per=batalhaResolverPericia_(prefs.pericia);
 
@@ -7871,6 +7915,10 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
                 await batalhaPersistirCombateChar_(c,p);
                 await batalhaAvancarTurnoInterno_();
                 await batalhaSalvarEstado_();
+            }
+        }else if(acao.tipo==='efeito_especial'){
+            if(batalhaEstado_.danoPendente?.atacanteId===p.id){
+                await batalhaAplicarEscolhaEspecialMestre_(p.id,String(acao.payload?.tipo||'pular'),String(acao.payload?.local||''));
             }
         }else if(acao.tipo==='dano'){
             if(batalhaEstado_.danoPendente?.atacanteId===p.id){
@@ -12400,7 +12448,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.7.1: altura decimal em metros e Origem sem perícias profissionais -->
+<!-- Mesa Estelar v46.7.2: efeitos especiais sincronizados, seleções por turno e correção de bateria -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
