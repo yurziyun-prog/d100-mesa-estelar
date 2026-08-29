@@ -969,7 +969,7 @@
                                 <div class="form-group"><label>Nome da campanha:</label><input id="gmCampanhaNome" type="text"></div>
                                 <div class="form-group"><label>Planeta atual:</label><input id="gmCampanhaPlaneta" type="text"></div>
                                 <div class="form-group"><label>Cidade / região:</label><input id="gmCampanhaCidade" type="text"></div>
-                                <div class="form-group"><label>Clima atual:</label><input id="gmCampanhaClima" type="text"></div>
+                                <div class="form-group"><label>Condições locais / observações:</label><input id="gmCampanhaClima" type="text" placeholder="Ex.: fumaça densa, baixa visibilidade, gravidade instável..."></div>
                                 <div class="form-group"><label>Cenário ativo:</label><input id="gmCampanhaCenario" type="text"></div>
                                 <div class="form-group"><label>Data / período no jogo:</label><input id="gmCampanhaData" type="text"></div>
                             </div>
@@ -1530,7 +1530,17 @@ const REGRAS_PADRAO_ZH = `# D100系统规则 - 星际桌游RPG
 `;
 let escudoTexto = '';
 let estadoCampanhaMestre = {
-    nome:'', planeta:'', cidade:'', clima:'', cenario:'', dataJogo:'', diaCampanha:1, resumo:''
+    nome:'', planeta:'', cidade:'', clima:'', cenario:'', dataJogo:'', diaCampanha:1, resumo:'',
+    calico:{
+        hora:'12:00',
+        diaMes:1,
+        diaSemana:'Aurora',
+        lua:'Lua Nova',
+        estacao:'Estação dos Ventos',
+        climaCondicao:'Céu limpo',
+        temperatura:20,
+        umidade:40
+    }
 };
 let estadoCombateMestre = {
     ativo:false,
@@ -2246,9 +2256,14 @@ async function carregarEscudo() {
     if (escudoDoc.exists()) {
         const dadosEscudo = escudoDoc.data() || {};
         escudoTexto = dadosEscudo.texto || '';
+        const campanhaSalva=dadosEscudo.campanha||{};
         estadoCampanhaMestre = {
             ...estadoCampanhaMestre,
-            ...(dadosEscudo.campanha || {})
+            ...campanhaSalva,
+            calico:{
+                ...(estadoCampanhaMestre.calico||{}),
+                ...(campanhaSalva.calico||{})
+            }
         };
         estadoCombateMestre = {
             ...estadoCombateMestre,
@@ -6777,6 +6792,7 @@ function batalhaControlCard_(p,char){
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;">
             <button class="btn-small btn-select" ${Number(p.acoesAtuais||0)<=0||!batalhaIniciativasProntas_()||ataqueBloqueado?'disabled':''} onclick="batalhaRolarD100_('${p.id}')">🎲 Teste D100</button>
+            <button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaMovimento_('${p.id}')">👣 Movimento (1 AÇ)</button>
             ${char?.combate?.caido?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaLevantar_('${p.id}')">⬆️ Levantar (1 AÇ)</button>`:''}
             <button class="btn-small btn-delete" ${!danoLiberado||especiaisPendentes?'disabled':''} onclick="batalhaRolarDano_('${p.id}')">💥 Rolar dano</button>
             <button class="btn-small" ${batalhaTemIniciativa_(p)?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${batalhaTemIniciativa_(p)?'Iniciativa rolada':'Iniciativa'}</button>
@@ -7022,6 +7038,28 @@ window.batalhaEncerrar_=async()=>{
     await batalhaSalvarEstado_({ativo:false,rodada:1,ciclo:1,turnoIndex:0,participantes:[],pendencia:null,danoPendente:null,logPublico:[],atualizadoEm:new Date().toISOString()});
 };
 
+
+window.batalhaMovimento_=async function(id){
+    const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);
+    if(!p||!c||!batalhaPodeControlar_(p))return;
+    const atual=(batalhaEstado_?.participantes||[])[Number(batalhaEstado_?.turnoIndex||0)];
+    if(String(atual?.id)!==String(id)){notificar_('Movimento só pode ser gasto no turno atual.','aviso');return;}
+    if(batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente){notificar_('Resolva a ação pendente antes de se mover.','aviso');return;}
+    if(batalhaEstaTratandoPrimeirosSocorros_(c)){notificar_('O personagem está ocupado com Primeiros Socorros.','aviso');return;}
+    if(Number(p.acoesAtuais||0)<=0){notificar_('Sem AÇ para movimento.','aviso');return;}
+
+    if(batalhaEhMestre_()){
+        p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+        batalhaUltimoResultado_[id]='Movimento declarado: 1 AÇ gasto. Ajuste a posição no mapa manualmente.';
+        batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento.`,'movimento',{actorId:p.id});
+        await batalhaSalvarEstado_();
+        renderizarBatalhaCompartilhada_();
+    }else{
+        await batalhaEnviarAcao_(id,'movimento',{custo:1});
+        batalhaUltimoResultado_[id]='Movimento solicitado: 1 AÇ. Ajuste a posição no mapa manualmente.';
+        renderizarBatalhaCompartilhada_();
+    }
+};
 async function batalhaEnviarAcao_(personagemId,tipo,payload){
     const c=batalhaCharLocal_(personagemId);if(!c)return;
     const acao={
@@ -7595,6 +7633,29 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
                 const total=Number(acao.payload?.total||0);
                 await batalhaAplicarDanoNoAlvo_(p.id,total,acao.payload?.nome||'Dano');
             }
+        }else if(acao.tipo==='posicao'){
+            const gx=acao.payload?.gridX,gy=acao.payload?.gridY;
+            if(gx===null||gy===null){
+                p.gridX=null;p.gridY=null;
+                await batalhaSalvarEstado_();
+            }else{
+                const x=Number(gx),y=Number(gy);
+                const valido=Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<BATALHA_GRID_COLS_&&y>=0&&y<BATALHA_GRID_ROWS_;
+                const ocupado=valido?batalhaCelulaOcupada_(x,y,p.id):true;
+                if(valido&&!ocupado){
+                    p.gridX=x;p.gridY=y;
+                    batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa.`,'posicao',{actorId:p.id});
+                    await batalhaSalvarEstado_();
+                }
+            }
+        }else if(acao.tipo==='movimento'){
+            const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
+            if(atual?.id===p.id && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente && Number(p.acoesAtuais||0)>=1 && !batalhaEstaTratandoPrimeirosSocorros_(c)){
+                p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+                batalhaUltimoResultado_[p.id]='Movimento: 1 AÇ gasto. Posição ajustada manualmente no mapa.';
+                batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento.`,'movimento',{actorId:p.id});
+                await batalhaSalvarEstado_();
+            }
         }else if(acao.tipo==='inventario_acao'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
             const custo=Math.max(1,Math.floor(Number(acao.payload?.custo)||1));
@@ -7612,9 +7673,9 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
 
 const BATALHA_GRID_COLS_=20,BATALHA_GRID_ROWS_=12;
 function batalhaPodeMoverToken_(p){
-    if(!p||!currentUser)return false;
+    if(!p||!currentUserUid)return false;
     if(batalhaEhMestre_())return true;
-    return String(p.donoUid||'')===String(currentUser.uid);
+    return String(p.donoUid||'')===String(currentUserUid);
 }
 function batalhaPosGridValida_(p){
     const x=Number(p?.gridX),y=Number(p?.gridY);
@@ -7637,10 +7698,18 @@ window.batalhaGridDrop_=async function(ev,x,y){
     if(!p||!batalhaPodeMoverToken_(p))return;
     const ocupado=batalhaCelulaOcupada_(x,y,id);
     if(ocupado){notificar_(`A casa já está ocupada por ${ocupado.nome}.`,'aviso');return;}
-    p.gridX=x;p.gridY=y;
-    batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa.`,'posicao',{actorId:p.id});
-    renderizarBatalhaPosicoes_();
-    await batalhaSalvarEstado_();
+
+    if(batalhaEhMestre_()){
+        p.gridX=x;p.gridY=y;
+        batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa.`,'posicao',{actorId:p.id});
+        renderizarBatalhaPosicoes_();
+        await batalhaSalvarEstado_();
+    }else{
+        // Atualização visual imediata; o mestre valida e persiste pelo canal já usado pelas outras ações.
+        p.gridX=x;p.gridY=y;
+        renderizarBatalhaPosicoes_();
+        await batalhaEnviarAcao_(id,'posicao',{gridX:x,gridY:y});
+    }
 };
 window.batalhaGridRemover_=async function(ev){
     ev.preventDefault();
@@ -7648,7 +7717,8 @@ window.batalhaGridRemover_=async function(ev){
     if(!p||!batalhaPodeMoverToken_(p))return;
     p.gridX=null;p.gridY=null;
     renderizarBatalhaPosicoes_();
-    await batalhaSalvarEstado_();
+    if(batalhaEhMestre_())await batalhaSalvarEstado_();
+    else await batalhaEnviarAcao_(id,'posicao',{gridX:null,gridY:null});
 };
 function batalhaTokenHtml_(p){
     const pode=batalhaPodeMoverToken_(p),atual=(batalhaEstado_?.participantes||[])[Number(batalhaEstado_?.turnoIndex||0)]?.id===p.id;
@@ -9639,6 +9709,7 @@ window.mostrarSubAbaMestre = (nome,btn) => {
     if (nome==='campanha') renderizarCampanhaMestre_();
     if (nome==='historico') renderizarHistoricoMestre_();
     if (nome==='cenario') renderizarCenarioMestre_();
+    if (nome==='rolagem') renderizarRolagensCalico_();
     if (nome==='combate') renderizarCombateMestre_();
 };
 
@@ -9713,7 +9784,13 @@ function renderizarCenarioAtualPublico_(){
         <div class="stat-box"><div class="stat-label">Campanha</div><div>${escaparHtmlInventario_(p.nomeCampanha||'—')}</div></div>
         <div class="stat-box"><div class="stat-label">Planeta</div><div>${escaparHtmlInventario_(p.planeta||'—')}</div></div>
         <div class="stat-box"><div class="stat-label">Cidade / região</div><div>${escaparHtmlInventario_(p.cidade||'—')}</div></div>
-        <div class="stat-box"><div class="stat-label">Clima</div><div>${escaparHtmlInventario_(p.clima||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Hora</div><div>${escaparHtmlInventario_(p.calico?.hora||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Dia do mês</div><div>${escaparHtmlInventario_(p.calico?.diaMes??'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Dia da semana</div><div>${escaparHtmlInventario_(p.calico?.diaSemana||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Fase da lua</div><div>${escaparHtmlInventario_(p.calico?.lua||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Estação</div><div>${escaparHtmlInventario_(p.calico?.estacao||'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Clima</div><div>${escaparHtmlInventario_(p.calico?calicoClimaTexto_(p.calico):'—')}</div></div>
+        <div class="stat-box"><div class="stat-label">Condições locais</div><div>${escaparHtmlInventario_(p.clima||'—')}</div></div>
         <div class="stat-box"><div class="stat-label">Data / período</div><div>${escaparHtmlInventario_(p.dataJogo||'—')}</div></div>
         <div class="stat-box"><div class="stat-label">Dia de campanha</div><div>${Number(p.diaCampanha||1)}</div></div>
       </div>
@@ -9749,6 +9826,7 @@ async function publicarCampanhaAtual_(){
         planeta:estadoCampanhaMestre?.planeta||'',
         cidade:estadoCampanhaMestre?.cidade||'',
         clima:estadoCampanhaMestre?.clima||'',
+        calico:{...calicoPadrao_(),...(estadoCampanhaMestre?.calico||{})},
         dataJogo:estadoCampanhaMestre?.dataJogo||'',
         diaCampanha:obterDiaCampanha_(),
         cenarioId:cenario?.id||estadoCampanhaMestre?.cenarioId||'',
@@ -9867,7 +9945,8 @@ window.salvarEstadoCampanha = async () => {
         cenario:document.getElementById('gmCampanhaCenario')?.value?.trim()||'',
         dataJogo:document.getElementById('gmCampanhaData')?.value?.trim()||'',
         diaCampanha:Math.max(1,Math.floor(Number(document.getElementById('gmCampanhaDia')?.value)||1)),
-        resumo:document.getElementById('gmCampanhaResumo')?.value?.trim()||''
+        resumo:document.getElementById('gmCampanhaResumo')?.value?.trim()||'',
+        calico:{...calicoPadrao_(),...(estadoCampanhaMestre?.calico||{})}
     };
     await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
     await publicarCampanhaAtual_();
@@ -11731,8 +11810,9 @@ function renderizarTabelaFerimentosCompleta_(){
 ;
 
 // ============================================================
-// CALICO — rolagens de mundo v46.2
-// Sem MutationObserver: o painel só é redesenhado quando necessário.
+// CALICO — estado de mundo persistente v46.3
+// O mestre pode rolar OU selecionar. Só "Aplicar ao cenário"
+// publica os valores, evitando horários/datas contraditórios.
 // ============================================================
 const CALICO_DIAS_SEMANA_=[
     'Aurora','Vela','Forja','Peregrino','Coroa',
@@ -11752,90 +11832,132 @@ const CALICO_FASES_LUA_=[
     'Lua Nova','Fio de Prata','Crescente','Meia-lua Ascendente','Gibosa Clara',
     'Lua Cheia','Gibosa Tardia','Meia-lua Descendente','Minguante','Lua Escura'
 ];
-const CALICO_CLIMAS_=[
-    {nome:'Céu limpo',t:[16,27],u:[22,45]},
-    {nome:'Parcialmente nublado',t:[13,24],u:[35,60]},
-    {nome:'Nublado',t:[10,20],u:[50,72]},
-    {nome:'Chuva fraca',t:[8,18],u:[70,90]},
-    {nome:'Chuva forte',t:[7,16],u:[82,98]},
-    {nome:'Neblina',t:[5,15],u:[88,100]},
-    {nome:'Ventos fortes',t:[8,20],u:[30,65]},
-    {nome:'Tempestade',t:[5,16],u:[78,98]},
-    {nome:'Calor seco',t:[27,38],u:[12,32]},
-    {nome:'Frio seco',t:[-4,8],u:[20,45]}
+const CALICO_CONDICOES_=[
+    'Céu limpo','Parcialmente nublado','Nublado','Chuva fraca','Chuva forte',
+    'Neblina','Ventos fortes','Tempestade','Calor seco','Frio seco'
 ];
-let calicoResultados_={hora:'—',lua:'—',dia:'—',estacao:'—',clima:'—'};
 
-function calicoAleatorio_(min,max){
-    return Math.floor(Math.random()*(max-min+1))+min;
+function calicoAleatorio_(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+function calicoPadrao_(){
+    return {
+        hora:'12:00',diaMes:1,diaSemana:'Aurora',lua:'Lua Nova',
+        estacao:'Estação dos Ventos',climaCondicao:'Céu limpo',
+        temperatura:20,umidade:40
+    };
 }
-function calicoRolarHora_(){
-    return `${String(calicoAleatorio_(0,23)).padStart(2,'0')}:${String(calicoAleatorio_(0,59)).padStart(2,'0')}`;
+function calicoAtual_(){
+    return {...calicoPadrao_(),...(estadoCampanhaMestre?.calico||{})};
 }
-function calicoRolarLua_(){
-    return CALICO_FASES_LUA_[calicoAleatorio_(0,CALICO_FASES_LUA_.length-1)];
+function calicoLerControles_(){
+    return {
+        hora:document.getElementById('calicoHora')?.value||'12:00',
+        diaMes:Math.max(1,Math.floor(Number(document.getElementById('calicoDiaMes')?.value)||1)),
+        diaSemana:document.getElementById('calicoDiaSemana')?.value||'Aurora',
+        lua:document.getElementById('calicoLua')?.value||'Lua Nova',
+        estacao:document.getElementById('calicoEstacao')?.value||'Estação dos Ventos',
+        climaCondicao:document.getElementById('calicoClimaCondicao')?.value||'Céu limpo',
+        temperatura:Number(document.getElementById('calicoTemperatura')?.value||0),
+        umidade:Math.max(0,Math.min(100,Number(document.getElementById('calicoUmidade')?.value||0)))
+    };
 }
-function calicoRolarDia_(){
-    return CALICO_DIAS_SEMANA_[calicoAleatorio_(0,CALICO_DIAS_SEMANA_.length-1)];
+function calicoClimaTexto_(c){
+    const x={...calicoPadrao_(),...(c||{})};
+    return `${x.climaCondicao} · ${Number(x.temperatura)} °C · umidade ${Number(x.umidade)}%`;
 }
-function calicoRolarEstacao_(){
-    const e=CALICO_ESTACOES_[calicoAleatorio_(0,CALICO_ESTACOES_.length-1)];
-    return `${e.nome} · ${e.dias} dias`;
+function calicoRolarCampo_(tipo,c){
+    const x={...c};
+    if(tipo==='hora')x.hora=`${String(calicoAleatorio_(0,23)).padStart(2,'0')}:${String(calicoAleatorio_(0,59)).padStart(2,'0')}`;
+    else if(tipo==='diaMes')x.diaMes=calicoAleatorio_(1,35);
+    else if(tipo==='diaSemana')x.diaSemana=CALICO_DIAS_SEMANA_[calicoAleatorio_(0,CALICO_DIAS_SEMANA_.length-1)];
+    else if(tipo==='lua')x.lua=CALICO_FASES_LUA_[calicoAleatorio_(0,CALICO_FASES_LUA_.length-1)];
+    else if(tipo==='estacao')x.estacao=CALICO_ESTACOES_[calicoAleatorio_(0,CALICO_ESTACOES_.length-1)].nome;
+    else if(tipo==='clima'){
+        const cond=CALICO_CONDICOES_[calicoAleatorio_(0,CALICO_CONDICOES_.length-1)];
+        x.climaCondicao=cond;
+        const faixas={
+            'Céu limpo':[[16,27],[22,45]],'Parcialmente nublado':[[13,24],[35,60]],'Nublado':[[10,20],[50,72]],
+            'Chuva fraca':[[8,18],[70,90]],'Chuva forte':[[7,16],[82,98]],'Neblina':[[5,15],[88,100]],
+            'Ventos fortes':[[8,20],[30,65]],'Tempestade':[[5,16],[78,98]],'Calor seco':[[27,38],[12,32]],'Frio seco':[[-4,8],[20,45]]
+        };
+        const [t,u]=faixas[cond];
+        x.temperatura=calicoAleatorio_(t[0],t[1]);x.umidade=calicoAleatorio_(u[0],u[1]);
+    }
+    return x;
 }
-function calicoRolarClima_(){
-    const c=CALICO_CLIMAS_[calicoAleatorio_(0,CALICO_CLIMAS_.length-1)];
-    const temp=calicoAleatorio_(c.t[0],c.t[1]);
-    const umid=calicoAleatorio_(c.u[0],c.u[1]);
-    return `${c.nome} · ${temp} °C · umidade ${umid}%`;
-}
-function renderizarRolagensCalico_(){
-    const el=document.getElementById('calicoWorldRolls');
-    if(!el)return;
-    const dados=[
-        ['hora','🕒 Hora'],
-        ['lua','🌙 Fase da lua'],
-        ['dia','📅 Dia da semana'],
-        ['estacao','🍂 Estação'],
-        ['clima','🌦️ Clima']
-    ];
+function renderizarRolagensCalico_(dados=null){
+    const el=document.getElementById('calicoWorldRolls');if(!el)return;
+    const c={...calicoAtual_(),...(dados||{})};
+    const opt=(arr,val)=>arr.map(x=>`<option value="${escaparHtmlInventario_(x)}" ${x===val?'selected':''}>${escaparHtmlInventario_(x)}</option>`).join('');
     el.innerHTML=`<div style="margin-top:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
-            <div>
-                <strong style="color:#00d4ff;">🌍 Mundo de Calico</strong>
-                <div style="font-size:.82em;color:#888;margin-top:3px;">Dia de 24 h · semana de 10 dias · ano de 350 dias.</div>
-            </div>
-            <button type="button" class="btn-small btn-select" onclick="calicoRolarTudo_()">🎲 Rolar tudo</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <div>
+          <strong style="color:#00d4ff;">🌍 Mundo de Calico</strong>
+          <div style="font-size:.82em;color:#888;margin-top:3px;">Dia de 24 h · semana de 10 dias · ano de 350 dias. Valores abaixo só viram "atuais" quando você aplicar ao cenário.</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;">
-            ${dados.map(([id,nome])=>`<div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
-                <div style="font-size:.78em;color:#999;">${nome}</div>
-                <div style="font-weight:700;min-height:40px;margin:5px 0 7px;">${calicoResultados_[id]}</div>
-                <button type="button" class="btn-small" onclick="calicoRolar_('${id}')">Rolar</button>
-            </div>`).join('')}
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <button type="button" class="btn-small" onclick="calicoRolarTudo_()">🎲 Rolar tudo</button>
+          <button type="button" class="btn-small btn-select" onclick="calicoAplicarAoCenario_()">📌 Aplicar ao cenário</button>
         </div>
-        <div style="font-size:.78em;color:#777;margin-top:9px;">Os nomes de dias, estações e fases continuam provisórios enquanto a cosmologia de Calico é definida.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;">
+        <div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
+          <div style="font-size:.78em;color:#999;">🕒 Hora</div>
+          <input id="calicoHora" type="time" value="${escaparHtmlInventario_(c.hora)}" style="width:100%;margin:6px 0;">
+          <button type="button" class="btn-small" onclick="calicoRolar_('hora')">Rolar</button>
+        </div>
+        <div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
+          <div style="font-size:.78em;color:#999;">🔢 Dia do mês</div>
+          <input id="calicoDiaMes" type="number" min="1" step="1" value="${Number(c.diaMes||1)}" style="width:100%;margin:6px 0;">
+          <button type="button" class="btn-small" onclick="calicoRolar_('diaMes')">Rolar</button>
+        </div>
+        <div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
+          <div style="font-size:.78em;color:#999;">📅 Dia da semana</div>
+          <select id="calicoDiaSemana" style="width:100%;margin:6px 0;">${opt(CALICO_DIAS_SEMANA_,c.diaSemana)}</select>
+          <button type="button" class="btn-small" onclick="calicoRolar_('diaSemana')">Rolar</button>
+        </div>
+        <div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
+          <div style="font-size:.78em;color:#999;">🌙 Fase da lua</div>
+          <select id="calicoLua" style="width:100%;margin:6px 0;">${opt(CALICO_FASES_LUA_,c.lua)}</select>
+          <button type="button" class="btn-small" onclick="calicoRolar_('lua')">Rolar</button>
+        </div>
+        <div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
+          <div style="font-size:.78em;color:#999;">🍂 Estação</div>
+          <select id="calicoEstacao" style="width:100%;margin:6px 0;">${opt(CALICO_ESTACOES_.map(x=>x.nome),c.estacao)}</select>
+          <button type="button" class="btn-small" onclick="calicoRolar_('estacao')">Rolar</button>
+        </div>
+        <div style="padding:10px;border-radius:9px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);">
+          <div style="font-size:.78em;color:#999;">🌦️ Clima</div>
+          <select id="calicoClimaCondicao" style="width:100%;margin:6px 0;">${opt(CALICO_CONDICOES_,c.climaCondicao)}</select>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+            <input id="calicoTemperatura" type="number" value="${Number(c.temperatura||0)}" title="Temperatura °C">
+            <input id="calicoUmidade" type="number" min="0" max="100" value="${Number(c.umidade||0)}" title="Umidade %">
+          </div>
+          <div style="font-size:.72em;color:#777;margin:4px 0 6px;">°C / umidade %</div>
+          <button type="button" class="btn-small" onclick="calicoRolar_('clima')">Rolar</button>
+        </div>
+      </div>
+      <div style="font-size:.78em;color:#777;margin-top:9px;">O número do dia pode ser ajustado manualmente; a divisão formal dos meses de Calico ainda não está fixada.</div>
     </div>`;
 }
 window.calicoRolar_=function(tipo){
-    if(tipo==='hora')calicoResultados_.hora=calicoRolarHora_();
-    else if(tipo==='lua')calicoResultados_.lua=calicoRolarLua_();
-    else if(tipo==='dia')calicoResultados_.dia=calicoRolarDia_();
-    else if(tipo==='estacao')calicoResultados_.estacao=calicoRolarEstacao_();
-    else if(tipo==='clima')calicoResultados_.clima=calicoRolarClima_();
-    renderizarRolagensCalico_();
+    const atual=calicoLerControles_();
+    renderizarRolagensCalico_(calicoRolarCampo_(tipo,atual));
 };
 window.calicoRolarTudo_=function(){
-    calicoResultados_={
-        hora:calicoRolarHora_(),
-        lua:calicoRolarLua_(),
-        dia:calicoRolarDia_(),
-        estacao:calicoRolarEstacao_(),
-        clima:calicoRolarClima_()
-    };
-    renderizarRolagensCalico_();
+    let c=calicoLerControles_();
+    for(const k of ['hora','diaMes','diaSemana','lua','estacao','clima'])c=calicoRolarCampo_(k,c);
+    renderizarRolagensCalico_(c);
+};
+window.calicoAplicarAoCenario_=async function(){
+    if(userData?.role!=='mestre')return;
+    const c=calicoLerControles_();
+    estadoCampanhaMestre={...(estadoCampanhaMestre||{}),calico:c};
+    await setDoc(doc(db,'configuracoes','escudoMestre'),{campanha:estadoCampanhaMestre},{merge:true});
+    await publicarCampanhaAtual_();
+    notificar_('Estado de Calico aplicado ao cenário atual.','info',3500);
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.2: Calico seguro + dano automático quando não há efeito aplicável -->
+<!-- Mesa Estelar v46.3: movimento 1 AÇ + drag jogador + Calico persistente e público -->
 </body>
 </html>
