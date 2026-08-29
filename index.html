@@ -814,7 +814,7 @@
                         <button class="tab-btn" onclick="mostrarBancoAba('especializacoes', this)">Especializações</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('poderesPsi', this)">Poderes Psi</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('itens', this)">Itens</button>
-                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button>
+                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button><button class="tab-btn" onclick="mostrarBancoAba('criaturas', this)">Criaturas</button>
                     </div>
 
                     <div id="banco-pericias" class="tab-content active">
@@ -924,6 +924,12 @@
   <button class="btn-save" onclick="adicionarNPCBanco_()" style="margin:0;width:auto;">➕ Adicionar NPC</button>
   <button class="btn-small" onclick="restaurarTodosNPCsBanco_()" style="padding:12px 18px;">❤️ Restaurar PV de todos os NPCs</button>
 </div>
+                    </div>
+                    <div id="banco-criaturas" class="tab-content">
+                      <h4 style="color:#fff">Criaturas reutilizáveis</h4>
+                      <p style="color:#aaa">Banco privado do mestre. Nesta etapa é apenas cadastro: criaturas ainda não entram no Painel de Batalha.</p>
+                      <div id="listaBancoCriaturas"></div>
+                      <button class="btn-save" onclick="adicionarCriaturaBanco_()" style="margin-top:15px">➕ Adicionar Criatura</button>
                     </div>
                 </div>
             </div>
@@ -1200,6 +1206,23 @@
     </div>
 
 
+
+    <div class="modal-overlay" id="dbCriaturaModal"><div class="modal-content" style="max-width:950px;max-height:92vh;overflow:auto">
+      <h3>Criatura</h3><input type="hidden" id="crOrig">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px">
+       <label>Nome<input id="crNome"></label><label>ID<input id="crId"></label><label>Tipo<input id="crTipo"></label><label>Espécie<input id="crEspecie"></label>
+       <label>Habitat<input id="crHabitat"></label><label>Comportamento<input id="crComportamento"></label><label>Altura<input id="crAltura"></label><label>Tamanho<input id="crTamanho"></label><label>Peso<input id="crPeso"></label>
+      </div><h4>Atributos</h4><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
+       <label>FOR<input id="crFOR" type="number"></label><label>CON<input id="crCON" type="number"></label><label>TAM<input id="crTAM" type="number"></label><label>DES<input id="crDES" type="number"></label><label>INT<input id="crINT" type="number"></label><label>POD<input id="crPOD" type="number"></label><label>CAR<input id="crCAR" type="number"></label>
+      </div>
+      <label>Perícias (investimento)<textarea id="crPericias" rows="3"></textarea></label>
+      <label>Especializações (investimento)<textarea id="crEspec" rows="2"></textarea></label>
+      <label>Ataques naturais<input id="crArmas" placeholder="Mordida|Garras"></label>
+      <label>Propriedades dos ataques<input id="crProps" placeholder="Mordida:infeccioso|Garras:infeccioso"></label>
+      <label>Imagem URL<input id="crImagem"></label><label>Descrição<textarea id="crDescricao" rows="3"></textarea></label>
+      <div class="modal-buttons"><button class="btn-confirm" onclick="salvarCriaturaBanco_()">💾 Salvar</button><button class="btn-cancel" onclick="fecharCriaturaBanco_()">Cancelar</button><button class="btn-delete" id="crDelete" onclick="removerCriaturaBanco_()">🗑️ Remover</button></div>
+    </div></div>
+
     <!-- MODAL DO BANCO DE NPCs -->
     <div class="modal-overlay" id="dbNPCModal">
       <div class="modal-content" style="max-width:980px;max-height:92vh;overflow:auto;">
@@ -1410,6 +1433,7 @@ let poderesPsiDB = [];
 let itensDB = [];
 let cenariosDB = [];
 let npcsDB = [];
+let criaturasDB = [];
 let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],vincularNPCsCenario:false,precosServicos:{reparo:0,cura:0,primeiros_socorros:0}};
 let mercadoLocalUnsub_ = null;
 let mercadoLocalNegociacao_ = {};
@@ -2187,6 +2211,7 @@ async function carregarBancosDeDados() {
     }
 
     if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'npcs'));npcsDB=[];q.forEach(d=>npcsDB.push({id:d.id,...d.data()}));}catch(e){console.warn(e);}}
+    if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'criaturas'));criaturasDB=[];q.forEach(d=>criaturasDB.push({id:d.id,...d.data()}));}catch(e){console.warn('Banco de criaturas indisponível:',e);criaturasDB=[];}}
     if(userData?.role==='mestre'){
         renderizarCampanhaMestre_();
         if(document.getElementById('batalha')?.classList.contains('active'))renderizarBatalhaCompartilhada_();
@@ -2298,6 +2323,7 @@ function renderizarBancoDados() {
     renderizarBancoItens();
     renderizarBancoCenarios();
     renderizarBancoNPCs_();
+    renderizarBancoCriaturas_();
 }
 
 async function carregarPersonagens() {
@@ -6008,6 +6034,7 @@ window.mostrarBancoAba = (abaId, btn) => {
     if (abaId === 'poderesPsi') renderizarBancoPoderesPsi();
     if (abaId === 'itens') renderizarBancoItens();
     if (abaId === 'npcs') renderizarBancoNPCs_();
+    if (abaId === 'criaturas') renderizarBancoCriaturas_();
     if (abaId === 'cenarios') renderizarBancoCenarios();
 };
 
@@ -6792,9 +6819,9 @@ function batalhaControlCard_(p,char){
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;">
             <button class="btn-small btn-select" ${Number(p.acoesAtuais||0)<=0||!batalhaIniciativasProntas_()||ataqueBloqueado?'disabled':''} onclick="batalhaRolarD100_('${p.id}')">🎲 Teste D100</button>
-            <button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaMovimento_('${p.id}')">👣 Movimento (1 AÇ)</button>
             ${char?.combate?.caido?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaLevantar_('${p.id}')">⬆️ Levantar (1 AÇ)</button>`:''}
             <button class="btn-small btn-delete" ${!danoLiberado||especiaisPendentes?'disabled':''} onclick="batalhaRolarDano_('${p.id}')">💥 Rolar dano</button>
+            <button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaMovimento_('${p.id}')">👣 Movimento (1 AÇ)</button>
             <button class="btn-small" ${batalhaTemIniciativa_(p)?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${batalhaTemIniciativa_(p)?'Iniciativa rolada':'Iniciativa'}</button>
             <span style="margin-left:auto;"></span>
             ${atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">${tratamentoExecutando?'🩹 Concluir atendimento':'⏭ Próximo'}</button>`:''}
@@ -7052,6 +7079,9 @@ window.batalhaMovimento_=async function(id){
         p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
         batalhaUltimoResultado_[id]='Movimento declarado: 1 AÇ gasto. Ajuste a posição no mapa manualmente.';
         batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento.`,'movimento',{actorId:p.id});
+        if(Number(p.acoesAtuais||0)<=0 && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente){
+            await batalhaAvancarTurnoInterno_();
+        }
         await batalhaSalvarEstado_();
         renderizarBatalhaCompartilhada_();
     }else{
@@ -7654,6 +7684,9 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
                 p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
                 batalhaUltimoResultado_[p.id]='Movimento: 1 AÇ gasto. Posição ajustada manualmente no mapa.';
                 batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento.`,'movimento',{actorId:p.id});
+                if(Number(p.acoesAtuais||0)<=0 && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente){
+                    await batalhaAvancarTurnoInterno_();
+                }
                 await batalhaSalvarEstado_();
             }
         }else if(acao.tipo==='inventario_acao'){
@@ -7662,6 +7695,9 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
             if(atual?.id===p.id && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente && Number(p.acoesAtuais||0)>=custo){
                 p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-custo);
                 batalhaLogPush_(batalhaEstado_,`${p.nome}: ${String(acao.payload?.motivo||'ação de inventário')} (${custo} AÇ).`,'inventario_combate',{actorId:p.id});
+                if(Number(p.acoesAtuais||0)<=0 && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente){
+                    await batalhaAvancarTurnoInterno_();
+                }
                 await batalhaSalvarEstado_();
             }
         }
@@ -8750,6 +8786,22 @@ window.removerCenarioBanco=async(id)=>{
     renderizarBancoCenarios();renderizarCampanhaMestre_();renderizarCenarioMestre_();
 };
 
+
+
+function criaturaBancoPorId_(id){return (criaturasDB||[]).find(x=>String(x.id)===String(id))||null;}
+function renderizarBancoCriaturas_(){
+ const e=document.getElementById('listaBancoCriaturas');if(!e)return;
+ const l=[...criaturasDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+ e.innerHTML=l.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th>Nome</th><th>Tipo</th><th>Atributos</th><th>Ataques</th><th>Ações</th></tr></thead><tbody>${l.map(n=>`<tr><td><b>${escaparBanco_(n.nome)}</b><br><small>${escaparBanco_(n.especie||'')}</small></td><td>${escaparBanco_(n.tipo||'Criatura')}<br><small>${escaparBanco_(n.habitat||'')}</small></td><td>FOR ${n.FOR||0} · CON ${n.CON||0} · TAM ${n.TAM||0} · DES ${n.DES||0}<br>INT ${n.INT||0} · POD ${n.POD||0} · CAR ${n.CAR||0}</td><td>${escaparBanco_(n.armasTexto||'—')}<br><small>${escaparBanco_(n.propriedadesAtaques||'')}</small></td><td><button class="btn-small" onclick="editarCriaturaBanco_('${n.id}')">✏️ Editar</button> <button class="btn-small" onclick="duplicarCriaturaBanco_('${n.id}')">📑 Duplicar</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Banco vazio.</p>';
+}
+function crSet_(id,v){const e=document.getElementById(id);if(e)e.value=v??'';}
+function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_('crNome',n.nome||'');crSet_('crTipo',n.tipo||'Criatura');crSet_('crEspecie',n.especie||'');crSet_('crHabitat',n.habitat||'');crSet_('crComportamento',n.comportamento||'');crSet_('crAltura',n.altura||'');crSet_('crTamanho',n.tamanho||'');crSet_('crPeso',n.pesoCorporal||'');for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])crSet_('cr'+a,n[a]??10);crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
+window.adicionarCriaturaBanco_=()=>{crFill_();document.getElementById('dbCriaturaModal')?.classList.add('active');};
+window.editarCriaturaBanco_=id=>{const n=criaturaBancoPorId_(id);if(n){crFill_(n);document.getElementById('dbCriaturaModal')?.classList.add('active');}};
+window.fecharCriaturaBanco_=()=>document.getElementById('dbCriaturaModal')?.classList.remove('active');
+window.salvarCriaturaBanco_=async()=>{const v=id=>String(document.getElementById(id)?.value||'').trim(),orig=v('crOrig'),nome=v('crNome'),id=v('crId')||npcSlugPericia_(nome);if(!nome){notificar_('Informe o nome da criatura.','aviso');return;}const n={id,nome,tipo:v('crTipo')||'Criatura',especie:v('crEspecie'),habitat:v('crHabitat'),comportamento:v('crComportamento'),altura:v('crAltura'),tamanho:v('crTamanho'),pesoCorporal:v('crPeso'),FOR:+v('crFOR')||10,CON:+v('crCON')||10,TAM:+v('crTAM')||10,DES:+v('crDES')||10,INT:+v('crINT')||5,POD:+v('crPOD')||10,CAR:+v('crCAR')||5,periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),armasTexto:v('crArmas'),propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao')};try{if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));await setDoc(doc(db,'criaturas',id),n,{merge:true});criaturasDB=criaturasDB.filter(x=>x.id!==orig&&x.id!==id);criaturasDB.push(n);fecharCriaturaBanco_();renderizarBancoCriaturas_();somSalvar_();}catch(e){console.error(e);notificar_('Não foi possível salvar a criatura. Verifique as regras do Firestore para /criaturas.','erro',7000);}};
+window.removerCriaturaBanco_=async()=>{const id=String(document.getElementById('crOrig')?.value||'');if(id&&confirm('Remover criatura?')){try{await deleteDoc(doc(db,'criaturas',id));criaturasDB=criaturasDB.filter(x=>x.id!==id);fecharCriaturaBanco_();renderizarBancoCriaturas_();}catch(e){console.error(e);notificar_('Não foi possível remover a criatura.','erro');}}};
+window.duplicarCriaturaBanco_=async id=>{const o=criaturaBancoPorId_(id);if(!o)return;let k=2,base=String(o.nome).replace(/\s+\d+$/,'');while(criaturasDB.some(x=>x.nome===`${base} ${k}`))k++;const n={...JSON.parse(JSON.stringify(o)),id:npcSlugPericia_(`${base}_${k}`),nome:`${base} ${k}`};try{await setDoc(doc(db,'criaturas',n.id),n);criaturasDB.push(n);renderizarBancoCriaturas_();}catch(e){console.error(e);notificar_('Não foi possível duplicar a criatura.','erro');}};
 
 function renderizarBancoNPCs_(){
  const e=document.getElementById('listaBancoNPCs');if(!e)return;
@@ -11958,6 +12010,6 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.3: movimento 1 AÇ + drag jogador + Calico persistente e público -->
+<!-- Mesa Estelar v46.4: movimento reordenado + auto-próximo + banco de criaturas isolado -->
 </body>
 </html>
