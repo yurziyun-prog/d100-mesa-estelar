@@ -540,7 +540,7 @@
                                 <div class="stat-box"><div class="stat-label" data-i18n="movement">Movimento</div><div class="stat-value" id="statMovimento">6</div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="pontosSorte">Pontos de Sorte</div><div class="stat-value"><input type="number" id="editPontosSorte" min="0" step="1" value="1" onchange="salvarPontosSorte()" style="width:100%;text-align:center;"></div></div>
                                 <div class="stat-box hidden" id="statMagiaBox"><div class="stat-label" data-i18n="magicPoints">Pontos de Magia</div><div class="stat-value" id="statPontosMagia">—</div></div>
-                                <div class="stat-box"><div class="stat-label" data-i18n="altura">Altura</div><div class="stat-value"><input type="number" id="editAltura" onchange="salvarAlturaPeso()"></div></div>
+                                <div class="stat-box"><div class="stat-label" data-i18n="altura">Altura</div><div class="stat-value"><input type="number" id="editAltura" min="0.30" max="20" step="0.01" inputmode="decimal" onchange="salvarAlturaPeso()"></div></div>
                                 <div class="stat-box"><div class="stat-label" data-i18n="peso">Peso</div><div class="stat-value"><input type="number" id="editPeso" onchange="salvarAlturaPeso()"></div></div>
                                 <div class="stat-box" style="min-width:190px;">
                                     <div class="stat-label" data-i18n="socialClass">Classe Social</div>
@@ -2673,9 +2673,12 @@ window.calcularAlturaPesoAutomatico = () => {
 
 window.salvarAlturaPeso = async () => {
     if (!currentCharId) return;
-    const altura = parseInt(document.getElementById('editAltura').value);
-    const peso = parseInt(document.getElementById('editPeso').value);
-    await setDoc(doc(db, "personagens", currentCharId), { altura, peso }, { merge: true });
+    const alturaRaw = String(document.getElementById('editAltura').value||'').replace(',','.');
+    const altura = Number.parseFloat(alturaRaw);
+    const peso = Number.parseInt(document.getElementById('editPeso').value);
+    if(!Number.isFinite(altura) || altura<=0)return notificar_('Informe uma altura válida em metros, por exemplo 1,80.','aviso');
+    await setDoc(doc(db, "personagens", currentCharId), { altura:Number(altura.toFixed(2)), peso }, { merge: true });
+    const char=userCharacters.find(c=>c.id===currentCharId);if(char){char.altura=Number(altura.toFixed(2));char.peso=peso;}
     somSalvar_();
 };
 
@@ -2865,7 +2868,10 @@ function atualizarVisualizacao(data) {
     document.getElementById('statModDano').textContent = calcularModDano((attrs.FOR || 10) + (bonus.FOR || 0), (attrs.TAM || 10) + (bonus.TAM || 0));
     
     const calc = calcularAlturaPeso((attrs.TAM || 10) + (bonus.TAM || 0), data.tipoCorporal || 'Médio');
-    document.getElementById('editAltura').value = data.altura || calc.altura;
+    let alturaSalva=Number(String(data.altura??'').replace(',','.'));
+    if(alturaSalva>20)alturaSalva=alturaSalva/100; // legado antigo em centímetros
+    if(!alturaSalva || (alturaSalva===1 && Number(data.atributos?.TAM||10)>=6))alturaSalva=calc.altura; // corrige truncamento antigo 1,xx → 1
+    document.getElementById('editAltura').value = Number(alturaSalva.toFixed(2));
     document.getElementById('editPeso').value = data.peso || calc.peso;
     const recursosInput = document.getElementById('editRecursos');
     if (recursosInput) { recursosInput.value = Number(data.recursos || 0); recursosInput.disabled = !(userData && userData.role === 'mestre'); }
@@ -3052,7 +3058,7 @@ function calcularAlturaPeso(tam, tipo) {
     }
     const meio = a => Math.round((a[0]+a[1])/2);
     const chave = tipo === 'Leve' ? 'l' : tipo === 'Pesado' ? 'p' : 'm';
-    return { altura: meio(faixa.h), peso: meio(faixa[chave]) };
+    return { altura: Number((meio(faixa.h)/100).toFixed(2)), peso: meio(faixa[chave]) };
 }
 
 function atualizarInstanciaPeloBanco_(item) {
@@ -8247,10 +8253,10 @@ function renderizarPericias(char) {
 
     if (visao === 'origem' && origem) {
         const idsBasicas = listaIds_(origem.periciasBasicas);
-        const idsProf = listaIds_(origem.periciasProfissionais);
-        const idsEsp = listaIds_(origem.especializacoes);
-        periciasDisponiveis = periciasDB.filter(p => idsBasicas.includes(p.id) || idsProf.includes(p.id));
-        especializacoesDisponiveis = especializacoesDB.filter(e => idsEsp.includes(e.id));
+        // Regra Mesa Estelar: Origem não libera Perícias Profissionais.
+        // Mantemos os campos no banco para compatibilidade/importação, mas eles não são treináveis nesta etapa.
+        periciasDisponiveis = periciasDB.filter(p => idsBasicas.includes(p.id) && p.tipo === 'Básica');
+        especializacoesDisponiveis = [];
     } else if (visao === 'carreira' && carreira) {
         const idsBasicas = listaIds_(carreira.periciasBasicas);
         const idsProf = listaIds_(carreira.periciasProfissionais);
@@ -8355,6 +8361,14 @@ function renderizarPericias(char) {
     periciasNaoInvestidasBasicas.forEach(p => corpoBasicas.innerHTML += renderLinhaPericia(p, somenteLeitura));
     periciasNaoInvestidasProfissionais.forEach(p => corpoProfissionais.innerHTML += renderLinhaPericia(p, somenteLeitura));
     espNaoInvestidas.forEach(e => corpoEspecializacoes.innerHTML += renderLinhaEspecializacao(e, somenteLeitura));
+    const secProf=corpoProfissionais?.closest('table')?.previousElementSibling;
+    const tabProf=corpoProfissionais?.closest('table');
+    if(secProf)secProf.style.display=(visao==='origem'||(!periciasNaoInvestidasProfissionais.length&&!periciasInvestidas.some(p=>p.tipo==='Profissional')))?'none':'';
+    if(tabProf)tabProf.style.display=(visao==='origem'||!periciasNaoInvestidasProfissionais.length)?'none':'';
+    const secEsp=corpoEspecializacoes?.closest('table')?.previousElementSibling;
+    const tabEsp=corpoEspecializacoes?.closest('table');
+    if(secEsp)secEsp.style.display=(visao==='origem'||(!espNaoInvestidas.length&&!espInvestidas.length))?'none':'';
+    if(tabEsp)tabEsp.style.display=(visao==='origem'||!espNaoInvestidas.length)?'none':'';
 }
 
 window.atualizarTreinoPericia = async (periciaId, valor, tipo, categoria) => {
@@ -12386,7 +12400,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.7: ataques de criaturas, Infectar e Trombeta sonora -->
+<!-- Mesa Estelar v46.7.1: altura decimal em metros e Origem sem perícias profissionais -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
