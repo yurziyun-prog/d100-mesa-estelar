@@ -345,6 +345,8 @@
                         <div id="battleParticipantCards" style="display:flex;flex-direction:column;gap:12px;"></div>
                     </div>
 
+                    <div id="battlePositionPanel" style="margin-top:18px;"></div>
+
                     <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,.10);">
                         <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
                             <h3 style="margin:0;color:#00d4ff;">📜 Histórico da batalha</h3>
@@ -1197,8 +1199,15 @@
           <label>Sociedade<input id="dbNPCSociedade"></label><label>Classe social<input id="dbNPCClasse"></label><label>Recursos<input id="dbNPCRecursos"></label>
           <label>Altura<input id="dbNPCAltura"></label><label>Tamanho corporal<input id="dbNPCTamanho"></label><label>Peso corporal<input id="dbNPCPesoCorporal"></label>
         </div>
-        <h4>Atributos</h4><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:7px;">
-          ${['FOR','CON','TAM','DES','INT','POD','CAR'].map(a=>`<label>${a}<input id="dbNPC${a}" type="number" min="1"></label>`).join('')}
+        <h4>Atributos</h4>
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(82px,1fr));gap:7px;">
+          <label>FOR<input id="dbNPCFOR" type="number" min="1"></label>
+          <label>CON<input id="dbNPCCON" type="number" min="1"></label>
+          <label>TAM<input id="dbNPCTAM" type="number" min="1"></label>
+          <label>DES<input id="dbNPCDES" type="number" min="1"></label>
+          <label>INT<input id="dbNPCINT" type="number" min="1"></label>
+          <label>POD<input id="dbNPCPOD" type="number" min="1"></label>
+          <label>CAR<input id="dbNPCCAR" type="number" min="1"></label>
         </div>
         <label>Perícias — pontos investidos<textarea id="dbNPCPericias" rows="3"></textarea></label>
         <label>Especializações — pontos investidos<textarea id="dbNPCEspecializacoes" rows="3"></textarea></label>
@@ -3636,9 +3645,17 @@ function obterPericiasCombate_(char) {
     });
     return [...basicas.map(x=>({...x,__especializacao:false})),...especializacoes.map(x=>({...x,__especializacao:true}))];
 }
+function periciaPodeAparar_(p){
+    if(!p)return false;
+    if(p.id==='combate_desarmado')return true;
+    const id=normalizarTextoCombate_(p.id||''),uso=normalizarTextoCombate_(p.uso||p.usoCombate||'');
+    if(/pistola|revolver|rifle|fuzil|carabina|escopeta|submetralh|laser|energia|atirador|arremesso|arqueiro|pesada/.test(id))return false;
+    if(uso.includes('distancia'))return false;
+    return /branca|haste|plasma|vibro|improvisada|corpo/.test(`${id} ${uso}`) || p.__fallbackNPC===true;
+}
 function batalhaListaPericiasDefesa_(char){
     const esquiva=(periciasDB||[]).find(p=>p.id==='esquiva');
-    const ofensivas=obterPericiasCombate_(char)||[];
+    const ofensivas=(obterPericiasCombate_(char)||[]).filter(periciaPodeAparar_);
     return [...(esquiva?[{...esquiva,__especializacao:false}]:[]),...ofensivas];
 }
 
@@ -5971,7 +5988,7 @@ function npcSlugPericia_(nome){
 function npcIdPericiaSistema_(nome){
     const q=normalizarTextoCombate_(nome||'');
     const aliases={
-      'armas_de_haste':'armas_haste','pistolas_e_revolveres':'pistolas_revolveres',
+      'armas_de_haste':'armas_haste','pistolas_e_revolveres':'pistolas_revolveres','pistolas_laser':'pistolas_laser','rifles_laser':'rifles_laser','armas_de_energia':'armas_energia',
       'fuzis_e_carabinas':'fuzis_carabinas','armas_brancas_curtas':'armas_brancas_curtas',
       'armas_brancas_longas':'armas_brancas_longas','armas_pesadas':'armas_pesadas',
       'atirador_de_elite':'atirador_elite','pistolas_laser':'pistolas_laser','rifles_laser':'rifles_laser',
@@ -6017,7 +6034,11 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
         },
         bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
         pericias:npcPericiasParaCombate_(modelo.periciasTexto),especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
+        armasNaturais:String(modelo.armasTexto||'').split('|').map(x=>x.trim()).filter(x=>ataqueNaturalPorNome_(x)).map(x=>ataqueNaturalPorNome_(x).nome),
         inventario:(()=>{
+            if(participante?.npcInventario&&typeof participante.npcInventario==='object'){
+                return JSON.parse(JSON.stringify(participante.npcInventario));
+            }
             const inv={equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)};
             let slot=0;
             for(const nome of String(modelo.armasTexto||'').split('|').map(x=>x.trim()).filter(Boolean)){
@@ -6069,7 +6090,12 @@ function batalhaSanitizarParticipante_(c){
         iniciativa:null,
         acoesAtuais:batalhaAcoesMax_(c),
         acoesMax:batalhaAcoesMax_(c),
-        ...(c.__npcTemporario?{npcBancoId:String(c.npcBancoId||''),npcCombate:JSON.parse(JSON.stringify(c.combate||{}))}:{})
+        posicao:'centro',
+        ...(c.__npcTemporario?{
+            npcBancoId:String(c.npcBancoId||''),
+            npcCombate:JSON.parse(JSON.stringify(c.combate||{})),
+            npcInventario:JSON.parse(JSON.stringify(c.inventario||{}))
+        }:{})
     };
 }
 
@@ -6225,9 +6251,43 @@ function batalhaArmaAtualDefensor_(dp){
     if(!item || !itemEhArmaOuEscudo_(item) || itemCombateInutilizavel_(item))return null;
     return item;
 }
+
+const ATAQUES_NATURAIS_={
+  'punhos':{nome:'Punhos',dano:'1d3+MD',penetracao:0},
+  'mordida':{nome:'Mordida',dano:'1d6+MD',penetracao:0},
+  'mandibulas':{nome:'Mandíbulas',dano:'1d6+MD',penetracao:0},
+  'garras':{nome:'Garras',dano:'1d6+MD',penetracao:1},
+  'ferrao':{nome:'Ferrão',dano:'1d4+MD',penetracao:2},
+  'cauda':{nome:'Cauda',dano:'1d6+MD',penetracao:0},
+  'pseudopode':{nome:'Pseudópode',dano:'1d6+MD',penetracao:0},
+  'engolfar':{nome:'Engolfar',dano:'1d8+MD',penetracao:0},
+  'punho mecanico':{nome:'Punho mecânico',dano:'1d6+MD',penetracao:1},
+  'braco manipulador':{nome:'Braço manipulador',dano:'1d4+MD',penetracao:0}
+};
+function ataqueNaturalPorNome_(nome){
+    const q=normalizarTextoCombate_(nome||'');
+    const chave=Object.keys(ATAQUES_NATURAIS_).find(k=>normalizarTextoCombate_(k)===q);
+    if(!chave)return null;
+    return {...ATAQUES_NATURAIS_[chave],id:`natural_${chave.replace(/\s+/g,'_')}`,categoria:'Arma natural',familia:'natural',natural:true,pa:0,pv:999};
+}
+function ataquesNaturaisChar_(char){
+    const nomes=Array.isArray(char?.armasNaturais)?char.armasNaturais:[];
+    const arr=nomes.map(ataqueNaturalPorNome_).filter(Boolean);
+    if(!arr.some(x=>normalizarTextoCombate_(x.nome)==='punhos') && !char?.__npcTemporario)return [ataqueNaturalPorNome_('Punhos'),...arr];
+    return arr.length?arr:[ataqueNaturalPorNome_('Punhos')];
+}
+function ataqueNaturalPorValor_(char,valor){
+    const id=String(valor||'').replace(/^natural:/,'');
+    return ataquesNaturaisChar_(char).find(x=>String(x.id)===id||`natural:${x.id}`===String(valor))||null;
+}
+
 function batalhaEquipamentos_(char,pericia,selecionado=''){
     if(!pericia)return [];
-    if(pericia.id==='combate_desarmado')return [{valor:'desarmado',rotulo:'Punhos',item:null,graus:0}];
+    if(pericia.id==='combate_desarmado'){
+        return ataquesNaturaisChar_(char).map(item=>({
+            valor:`natural:${item.id}`,rotulo:item.nome,item,graus:0
+        }));
+    }
     if(pericia.id==='esquiva')return [{valor:'nenhum',rotulo:'— sem arma —',item:null,graus:0}];
 
     const eq=obterItensEquipados_(char)||[];
@@ -6237,7 +6297,7 @@ function batalhaEquipamentos_(char,pericia,selecionado=''){
             const graus=penalidadeCompatibilidadeArma_(pericia,item);
             return {
                 valor:batalhaValorEquip_(item,idx),
-                rotulo:`${getNome(item)}${graus?` ⚠ +${graus} grau${graus>1?'s':''}`:''}`,
+                rotulo:`${getNome(item)}${Number(item.pv||0)>0?` [PV ${Number(item.pvAtual??item.pv)}/${Number(item.pv)}]`:''}${graus?` ⚠ +${graus} grau${graus>1?'s':''}`:''}`,
                 item,graus
             };
         });
@@ -6259,7 +6319,9 @@ function batalhaGarantirPrefsValidas_(char,prefs){
     const per=batalhaResolverPericia_(prefs.pericia);
     const ops=batalhaEquipamentos_(char,per,prefs.equipamento);
 
-    if(per?.id==='combate_desarmado')prefs.equipamento='desarmado';
+    if(per?.id==='combate_desarmado'){
+        if(!ops.some(x=>x.valor===prefs.equipamento))prefs.equipamento=ops[0]?.valor||'natural:natural_punhos';
+    }
     else if(per?.id==='esquiva')prefs.equipamento='nenhum';
     else if(!ops.some(x=>x.valor===prefs.equipamento)){
         const zero=ops.find(x=>x.graus===0);
@@ -6383,7 +6445,10 @@ function batalhaEstadoPersistenteNPC_(combate){
 async function batalhaPersistirCombateChar_(char,participante){
     if(char?.__npcTemporario){
         const estadoSessao=JSON.parse(JSON.stringify(char.combate||{}));
-        if(participante)participante.npcCombate=estadoSessao;
+        if(participante){
+            participante.npcCombate=estadoSessao;
+            participante.npcInventario=JSON.parse(JSON.stringify(char.inventario||{}));
+        }
         const estadoBanco=batalhaEstadoPersistenteNPC_(estadoSessao);
         const bancoId=char.npcBancoId||participante?.npcBancoId;
         if(bancoId&&userData?.role==='mestre'){
@@ -6414,7 +6479,7 @@ function batalhaEspeciaisDisponiveis_(dp){
     if(!batalhaArmaEhDistancia_(ataque)||crit)arr.push({id:'localizacao',nome:'🎯 Escolher localização'});
     if(batalhaArmaPodeSangrar_(ataque))arr.push({id:'sangrar',nome:'🩸 Sangrar'});
     if(batalhaArmaAtualDefensor_(dp))arr.push({id:'danificar_arma',nome:'🗡️ Danificar arma'});
-    if(!defensor?.combate?.caido && !batalhaEstaInconsciente_(defensor))arr.push({id:'derrubar',nome:'💥 Derrubar'});
+    if(!batalhaArmaEhDistancia_(ataque) && !defensor?.combate?.caido && !batalhaEstaInconsciente_(defensor))arr.push({id:'derrubar',nome:'💥 Derrubar'});
     if(crit)arr.push({id:'ignorar_armadura',nome:'🛡️ Ignorar armadura'});
     return arr;
 }
@@ -6747,12 +6812,13 @@ function renderizarBatalhaCandidatos_(){
     setup.style.display=batalhaEhMestre_()?'block':'none';
     if(!batalhaEhMestre_())return;
     const atuais=new Set((batalhaEstado_?.participantes||[]).map(x=>String(x.id)));
+    const ordemTipo={PJ:0,PC:0,PM:1,NPC:2};
     const chars=(userCharacters||[]).filter(c=>!atuais.has(String(c.id))).map(c=>({
         token:String(c.id),nome:c.nome||'Sem nome',imagem:c.imagem||'',tipo:batalhaTipoChar_(c)
-    }));
+    })).sort((a,b)=>(ordemTipo[a.tipo]??1)-(ordemTipo[b.tipo]??1)||String(a.nome).localeCompare(String(b.nome),'pt-BR',{sensitivity:'base'}));
     const modelos=(npcsDB||[]).filter(n=>n.selecionavelCombate!==false).map(n=>({
         token:`npcdb:${n.id}`,nome:n.nome||'NPC',imagem:n.imagem||'',tipo:'NPC'
-    }));
+    })).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR',{sensitivity:'base'}));
     const candidatos=[...chars,...modelos];
     box.innerHTML=candidatos.map(c=>`
         <label style="display:flex;gap:9px;align-items:center;padding:8px;border-radius:9px;background:rgba(255,255,255,.035);">
@@ -6917,6 +6983,55 @@ function batalhaResultadoGradeValor_(grau){
     return 0;
 }
 
+
+function batalhaLocalFiascoNatural_(item){
+    const n=normalizarTextoCombate_(getNome(item)||item?.nome||'punhos');
+    if(/mordida|mandibula/.test(n))return 'Cabeça';
+    if(/cauda|pseudopode|engolfar/.test(n))return 'Abdômen';
+    if(/ferrao/.test(n))return 'Abdômen';
+    if(/garra|punho|braco manipulador/.test(n))return Math.random()<0.5?'Braço Direito':'Braço Esquerdo';
+    return Math.random()<0.5?'Braço Direito':'Braço Esquerdo';
+}
+function batalhaAplicarUmDanoDireto_(char,local){
+    char.combate=char.combate||{};
+    if(modoCombateAtual_()==='simplificado'){
+        const max=calcularPVGlobalMax_(char);
+        if(!Number.isFinite(Number(char.combate.pvGlobalAtual)))char.combate.pvGlobalAtual=max;
+        const antes=Math.max(0,Number(char.combate.pvGlobalAtual||0));
+        char.combate.pvGlobalAtual=Math.max(0,antes-1);
+        return {local:'PV Global',antes,depois:char.combate.pvGlobalAtual};
+    }
+    const maxs=pvMaxLocais_(char),max=Number(maxs[local]||1);
+    char.combate.hitLocations=char.combate.hitLocations||{};
+    const antes=Number(char.combate.hitLocations[local]??max),depois=antes-1;
+    char.combate.hitLocations[local]=depois;
+    return {local,antes,depois};
+}
+async function batalhaAplicarFiascoAtaque_(p,char,item){
+    if(!p||!char)return '';
+    if(item && !item.natural){
+        const max=Math.max(1,Number(item.pv||1));
+        const antes=Number(item.pvAtual??max);
+        item.pvAtual=Math.max(0,antes-1);
+        if(item.pvAtual<=0){item.inutilizavel=true;item.quebradoEm=new Date().toISOString();}
+        if(char.__npcTemporario){
+            p.npcInventario=JSON.parse(JSON.stringify(char.inventario||{}));
+        }else{
+            await setDoc(doc(db,'personagens',char.id),{inventario:char.inventario},{merge:true});
+        }
+        const txt=`Fiasco: ${getNome(item)} perdeu 1 PV (${item.pvAtual}/${max})${item.pvAtual<=0?' e ficou INUTILIZÁVEL':''}.`;
+        batalhaLogPush_(batalhaEstado_,`${p.nome}: ${txt}`,'fiasco',{actorId:p.id});
+        return txt;
+    }
+    const natural=item||ataqueNaturalPorNome_('Punhos');
+    const local=batalhaLocalFiascoNatural_(natural);
+    const d=batalhaAplicarUmDanoDireto_(char,local);
+    await batalhaPersistirCombateChar_(char,p);
+    const txt=`Fiasco: sofreu 1 de dano em ${d.local} (${d.antes} → ${d.depois} PV) ao errar com ${getNome(natural)||natural.nome||'ataque natural'}.`;
+    batalhaLogPush_(batalhaEstado_,`${p.nome}: ${txt}`,'fiasco',{actorId:p.id,targetId:p.id});
+    return txt;
+}
+
 async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);if(!p||!c)return;
     if(Number(p.acoesAtuais||0)<=0){batalhaUltimoResultado_[id]='Sem AÇ restantes.';return;}
@@ -6930,7 +7045,9 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
     if(periciaEhOfensiva_(per)&&!alvoId){batalhaUltimoResultado_[id]='Selecione um alvo.';return;}
 
     let item=null,graus=0;
-    if(!['desarmado','nenhum',''].includes(prefs.equipamento)){
+    if(String(prefs.equipamento||'').startsWith('natural:')){
+        item=ataqueNaturalPorValor_(c,prefs.equipamento);
+    }else if(!['desarmado','nenhum',''].includes(prefs.equipamento)){
         item=encontrarEquipamentoCombateChar_(c,prefs.equipamento);
         if(itemCombateInutilizavel_(item)){
             batalhaUltimoResultado_[id]=`${getNome(item)} está inutilizável (0 PV). Troque de arma.`;
@@ -6957,6 +7074,11 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
     const margem=batalhaMargem_(ajuste.valor,roll);
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
     batalhaUltimoResultado_[id]=`${getNome(per)}: ${roll}/${ajuste.valor} → ${r.grau} · ${batalhaMargemTexto_(ajuste.valor,roll)}${armaduraAjuste.pct?` · Armadura -${armaduraAjuste.pct.toFixed(armaduraAjuste.pct%1?1:0)}%`:''}`;
+
+    if(periciaEhOfensiva_(per)&&r.grau==='Fiasco'){
+        const efeitoFiasco=await batalhaAplicarFiascoAtaque_(p,c,item);
+        batalhaUltimoResultado_[id]+=` · ${efeitoFiasco}`;
+    }
 
     if(periciaEhOfensiva_(per)&&r.sucesso&&alvoId){
         const alvo=batalhaParticipante_(alvoId);
@@ -7288,6 +7410,7 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
 
     if(alvo.__npcTemporario){
         defensor.npcCombate=JSON.parse(JSON.stringify(alvo.combate||{}));
+        defensor.npcInventario=JSON.parse(JSON.stringify(alvo.inventario||{}));
     }else{
         const dadosSalvar={combate:alvo.combate};
         if(inventarioAlterado)dadosSalvar.inventario=alvo.inventario;
@@ -7330,11 +7453,14 @@ window.batalhaRolarDano_=async(id)=>{
     const per=batalhaResolverPericia_(prefs.pericia);
 
     let expr='',nome='Punhos',item=null;
-    if(per?.id==='combate_desarmado'||prefs.equipamento==='desarmado'){
-        expr='1d3';
-        const a=c.atributos||{},b=c.bonus||{};
-        const mod=String(calcularModDano(Number(a.FOR||0)+Number(b.FOR||0),Number(a.TAM||0)+Number(b.TAM||0))||'').trim();
-        if(mod&&mod!=='0'&&mod!=='+0')expr+=mod.startsWith('+')||mod.startsWith('-')?mod:`+${mod}`;
+    if(per?.id==='combate_desarmado'){
+        item=ataqueNaturalPorValor_(c,prefs.equipamento)||ataqueNaturalPorNome_('Punhos');
+        expr=String(item?.dano||'1d3+MD');nome=getNome(item)||item.nome||'Punhos';
+        if(/MD/i.test(expr)){
+            const a=c.atributos||{},b=c.bonus||{};
+            const mod=String(calcularModDano(Number(a.FOR||0)+Number(b.FOR||0),Number(a.TAM||0)+Number(b.TAM||0))||'0').trim();
+            expr=expr.replace(/\+?MD/ig,mod&&mod!=='0'&&mod!=='+0'?(mod.startsWith('+')||mod.startsWith('-')?mod:`+${mod}`):'');
+        }
     }else{
         item=encontrarEquipamentoCombateChar_(c,prefs.equipamento);
         if(!item){notificar_('Selecione uma arma.','aviso');return;}
@@ -7417,6 +7543,46 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
     }
 }
 
+
+const BATALHA_POSICOES_=[
+    {id:'vanguarda',nome:'⚔️ Vanguarda',desc:'Linha de frente'},
+    {id:'centro',nome:'🛡️ Centro',desc:'Posição intermediária'},
+    {id:'retaguarda',nome:'🎯 Retaguarda',desc:'Linha posterior'}
+];
+function batalhaPosicaoValida_(p){return BATALHA_POSICOES_.some(z=>z.id===p?.posicao)?p.posicao:'centro';}
+window.batalhaMoverPosicao_=async(id,posicao)=>{
+    if(!batalhaEhMestre_())return;
+    const p=batalhaParticipante_(id);if(!p||!BATALHA_POSICOES_.some(z=>z.id===posicao))return;
+    p.posicao=posicao;
+    batalhaLogPush_(batalhaEstado_,`${p.nome} mudou para ${BATALHA_POSICOES_.find(z=>z.id===posicao)?.nome.replace(/^[^ ]+ /,'')||posicao}.`,'posicao',{actorId:p.id});
+    await batalhaSalvarEstado_();
+};
+function renderizarBatalhaPosicoes_(){
+    const el=document.getElementById('battlePositionPanel');if(!el)return;
+    if(!batalhaEstado_?.ativo||!(batalhaEstado_.participantes||[]).length){el.innerHTML='';return;}
+    el.innerHTML=`<div style="padding:13px;border-radius:12px;background:rgba(0,0,0,.13);border:1px solid rgba(255,255,255,.10);">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+        <h3 style="margin:0;color:#b8c8ff;">🗺️ Posição no combate</h3>
+        <small style="color:#888;">Representação por zonas. Ainda não altera alcance ou movimento.</small>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;">
+        ${BATALHA_POSICOES_.map(z=>{
+            const ps=(batalhaEstado_.participantes||[]).filter(p=>batalhaPosicaoValida_(p)===z.id);
+            return `<div style="min-height:130px;padding:10px;border-radius:10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);">
+              <div style="font-weight:800;margin-bottom:2px;">${z.nome}</div><small style="color:#777;">${z.desc}</small>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-top:9px;">
+                ${ps.map(p=>`<div style="display:flex;align-items:center;gap:8px;padding:7px;border-radius:8px;background:rgba(0,0,0,.16);">
+                  ${p.imagem?`<img src="${escaparHtmlInventario_(p.imagem)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;">`:`<div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);">👤</div>`}
+                  <div style="min-width:0;flex:1;"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escaparHtmlInventario_(p.nome)}</strong><small style="color:#888;">${escaparHtmlInventario_(p.tipo||'')}</small></div>
+                  ${batalhaEhMestre_()?`<select style="width:118px;padding:5px;" onchange="batalhaMoverPosicao_('${p.id}',this.value)">${BATALHA_POSICOES_.map(o=>`<option value="${o.id}" ${o.id===z.id?'selected':''}>${o.id==='vanguarda'?'Frente':o.id==='centro'?'Centro':'Retaguarda'}</option>`).join('')}</select>`:''}
+                </div>`).join('')||'<small style="color:#666;">Vazio</small>'}
+              </div>
+            </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
 function renderizarBatalhaCompartilhada_(){
     const badge=document.getElementById('battleRoundBadge');
     const cards=document.getElementById('battleParticipantCards');
@@ -7425,6 +7591,7 @@ function renderizarBatalhaCompartilhada_(){
     if(!badge||!cards)return;
 
     renderizarBatalhaCandidatos_();
+    renderizarBatalhaPosicoes_();
 
     if(!batalhaEstado_?.ativo || !(batalhaEstado_.participantes||[]).length){
         badge.textContent='Fora de combate';
@@ -7467,6 +7634,7 @@ function iniciarBatalhaCompartilhada_(){
         if(batalhaEstado_?.participantes){
             batalhaEstado_.participantes.forEach(p=>{
                 if(p.iniciativa===undefined)p.iniciativa=null;
+                if(!BATALHA_POSICOES_.some(z=>z.id===p.posicao))p.posicao='centro';
             });
         }
         renderizarBatalhaCompartilhada_();
@@ -8424,7 +8592,10 @@ function renderizarBancoNPCs_(){
  <td style="line-height:1.4;">FOR ${n.FOR||10} · CON ${n.CON||10} · TAM ${n.TAM||10}<br>DES ${n.DES||10} · INT ${n.INT||10} · POD ${n.POD||10} · CAR ${n.CAR||10}</td>
  <td style="max-width:300px;font-size:.87em;overflow-wrap:anywhere;">${escaparBanco_(n.periciasTexto||'—')}</td>
  <td style="max-width:300px;font-size:.87em;overflow-wrap:anywhere;"><b>Esp.:</b> ${escaparBanco_(n.especializacoesTexto||'—')}<br><b>Armas:</b> ${escaparBanco_(n.armasTexto||'—')}</td>
- <td>${n.selecionavelCombate!==false?'✅ Selecionável':'⛔ Oculto'}</td>
+ <td><label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+   <input type="checkbox" ${n.selecionavelCombate!==false?'checked':''} onchange="toggleNPCSelecionavelCombate_('${n.id}',this.checked)">
+   <span>${n.selecionavelCombate!==false?'Selecionável':'Oculto'}</span>
+ </label></td>
  <td><button class="btn-small btn-select" onclick="editarNPCBanco_('${n.id}')">✏️ Editar</button>
  <button class="btn-small" onclick="duplicarNPCBanco_('${n.id}')">📑 Duplicar</button>
  <button class="btn-small" onclick="converterNPCemPM_('${n.id}')">Converter em PM</button>
@@ -8499,6 +8670,15 @@ function proximoNomeDuplicadoNPC_(nome){
     while(usados.has(normalizarTextoCombate_(`${base} ${n}`)))n++;
     return `${base} ${n}`;
 }
+
+window.toggleNPCSelecionavelCombate_=async(id,valor)=>{
+    if(userData?.role!=='mestre')return;
+    const n=(npcsDB||[]).find(x=>String(x.id)===String(id));if(!n)return;
+    n.selecionavelCombate=!!valor;
+    await setDoc(doc(db,'npcs',String(id)),{selecionavelCombate:!!valor},{merge:true});
+    renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();
+};
+
 window.duplicarNPCBanco_=async(id)=>{
     if(userData?.role!=='mestre')return;
     const orig=(npcsDB||[]).find(x=>String(x.id)===String(id));if(!orig)return;
@@ -11377,7 +11557,7 @@ function renderizarRegrasD100_(){
       <tr><td>Crítico</td><td>1/10 da perícia efetiva, arredondado para cima.</td></tr>
       <tr><td>Sucesso</td><td>Igual ou abaixo da perícia efetiva.</td></tr>
       <tr><td>Falha</td><td>Acima da perícia efetiva.</td></tr>
-      <tr><td>Fiasco</td><td>99 ou 00. Se a perícia efetiva exceder 100%, somente 00 é Fiasco. Portanto 97 normalmente é apenas Falha.</td></tr>
+      <tr><td>Fiasco</td><td>99 ou 00. Se a perícia efetiva exceder 100%, somente 00 é Fiasco. Em ataques, o atacante sofre um acidente: arma usada perde 1 PV; ataques naturais causam 1 dano na parte corporal correspondente.</td></tr>
       </tbody></table>`;
 }
 
