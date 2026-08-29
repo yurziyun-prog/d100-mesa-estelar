@@ -4891,6 +4891,8 @@ function batalhaLogPush_(estado,textoPublico,tipo='info',dados={}){
         texto:String(textoPublico||''),
         textoPublico:String(textoPublico||''),
         textoDetalhado:String(dados.textoDetalhado||textoPublico||''),
+        textoAtor:String(dados.textoAtor||dados.textoDetalhado||textoPublico||''),
+        textoAlvo:String(dados.textoAlvo||textoPublico||''),
         actorId:String(dados.actorId||''),
         targetId:String(dados.targetId||''),
         tipo,
@@ -4907,8 +4909,15 @@ function batalhaPodeVerDetalheLog_(entry){
 }
 
 function batalhaTextoLogVisivel_(entry){
-    if(batalhaPodeVerDetalheLog_(entry)){
-        return entry.textoDetalhado||entry.textoPublico||entry.texto||'';
+    if(batalhaEhMestre_())return entry.textoDetalhado||entry.textoPublico||entry.texto||'';
+    const uid=String(currentUserUid||'');
+    const ator=entry?.actorId?batalhaCharLocal_(entry.actorId):null;
+    const alvo=entry?.targetId?batalhaCharLocal_(entry.targetId):null;
+    if(ator && String(ator.dono||'')===uid){
+        return entry.textoAtor||entry.textoPublico||entry.texto||'';
+    }
+    if(alvo && String(alvo.dono||'')===uid){
+        return entry.textoAlvo||entry.textoPublico||entry.texto||'';
     }
     return entry.textoPublico||entry.texto||'';
 }
@@ -5526,6 +5535,8 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
         {
             actorId:atacanteId,
             targetId:defensor.id,
+            textoAtor:`${batalhaParticipante_(atacanteId)?.nome||'Atacante'} atingiu ${defensor.nome} em ${local} (D20 ${roll}) · dano causado ${danoFinal}.`,
+            textoAlvo:`${batalhaParticipante_(atacanteId)?.nome||'Atacante'} atingiu ${defensor.nome} em ${local} (D20 ${roll}) · dano recebido ${danoFinal} · PV ${pvAntes} → ${pvDepois}.`,
             textoDetalhado:`${batalhaParticipante_(atacanteId)?.nome||'Atacante'} atingiu ${defensor.nome} em ${local} (D20 ${roll}) · dano bruto ${Number(total||0)} · PA ${pa}${penetracao?` − Pen ${penetracao} = ${paEfetivo}`:''} · dano final ${danoFinal} · PV ${pvAntes} → ${pvDepois}.`
         }
     );
@@ -5561,9 +5572,11 @@ window.batalhaRolarDano_=async(id)=>{
 
     if(batalhaEhMestre_()){
         await batalhaAplicarDanoNoAlvo_(id,r.total,nome);
+        batalhaUltimoResultado_[id]=`${nome}: ${r.detalhes.join(' · ')} → ${r.total} bruto`;
+        renderizarBatalhaCompartilhada_();
     }else{
-        await batalhaEnviarAcao_(id,'dano',{total:r.total,expr,nome});
-        batalhaUltimoResultado_[id]=`${nome}: ${expr} → ${r.total} (enviado)`;
+        await batalhaEnviarAcao_(id,'dano',{total:r.total,expr,nome,detalhes:r.detalhes});
+        batalhaUltimoResultado_[id]=`${nome}: ${r.detalhes.join(' · ')} → ${r.total} (enviado)`;
         renderizarBatalhaCompartilhada_();
     }
 };
