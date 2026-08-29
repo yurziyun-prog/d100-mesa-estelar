@@ -3168,7 +3168,13 @@ function atualizarCapacidadesInventario_(char, inv) {
         if (!alvo) return;
         const pesoBruto = pesoCompartimento_(inv, comp);
         const peso = pesoEfetivoCompartimento_(char,inv,comp);
-        const usados = (inv[comp] || []).filter(Boolean).length;
+        const usados = (inv[comp] || []).filter(item=>{
+            if(!item)return false;
+            // Mochilas/containers especiais de peso negativo representam capacidade,
+            // não um volume de carga consumindo um dos próprios slots.
+            const ehContainerBonus=/mochila|backpack/.test(normalizarTextoCombate_(item.nome||item.nome_en||'')) && Number(item.peso||0)<0;
+            return !ehContainerBonus;
+        }).length;
         const limite = limitePesoCompartimento_(char, comp);
         const bonus=comp==='mochila'?bonusMochilaEspecial_(char):0;
         if (Number.isFinite(limite)) {
@@ -3198,12 +3204,15 @@ function renderizarInventario(char) {
                 const nome = escaparHtmlInventario_(getNome(item));
                 const desc = escaparHtmlInventario_(getDescricao(item));
                 const img = item.imagem ? `<img src="${escaparHtmlInventario_(item.imagem)}" alt="${nome}">` : '📦';
-                return `<div class="inventory-slot filled" draggable="true"
+                const badgeCarga=itemUsaMunicao_(item)
+                    ? `<span style="position:absolute;right:3px;bottom:3px;padding:2px 5px;border-radius:7px;background:rgba(0,0,0,.82);border:1px solid rgba(0,212,255,.65);color:${cargaAtualArma_(item)>0?'#8ff0a8':'#ff8f8f'};font-size:.66em;font-weight:700;pointer-events:none;">${cargaAtualArma_(item)}/${cargaMaxArma_(item)}</span>`
+                    : '';
+                return `<div class="inventory-slot filled" draggable="true" style="position:relative;"
                     ondragstart="iniciarArrastoInventario(event, '${comp}', ${i})"
                     ondragend="finalizarArrastoInventario(event)"
                     ondragover="permitirSoltarInventario(event)"
                     ondrop="soltarInventario(event, '${comp}', ${i})"
-                    onclick="editarItem('${comp}', ${i})">${img}
+                    onclick="editarItem('${comp}', ${i})">${img}${badgeCarga}
                     <div class="item-tooltip"><h5>${nome}</h5><p>${desc}</p><p>Peso: ${Number(item.peso || 0)}kg | PA: ${Number(item.pa || 0)} | PV: ${Number(item.pv || 0)}${categoriaNormalizada_(item)==='armas' ? ` | Pen.: ${Number(item.penetracao ?? obterPenetracaoArma_(item) ?? 0)} | Qualidade: ${normalizarQualidade_(item.qualidade)}` : ''}${itemUsaMunicao_(item) ? ` | Carga: ${cargaAtualArma_(item)}/${cargaMaxArma_(item)}` : (categoriaNormalizada_(item)==='municao' ? ` | Quantidade: ${Number(item.quantidade ?? item.uso ?? 1)}` : '')}</p>${itemEhArmadura_(item)?`<p style="color:#8feaff;"><strong>🛡️ Protege:</strong> ${locaisProtegidosItem_(item,['Cabeça','Peito','Abdômen','Braço Direito','Braço Esquerdo','Perna Direita','Perna Esquerda']).join(', ')}</p>`:''}${consumivelAtivo_(item)&&!normalizarTextoCombate_(item.nome||'').includes('nanogel')?`<p style="color:#a8f0b8;"><strong>🍽️ Consumo:</strong> ${pontosConsumoAtuais_(item)}/${maxPontosConsumo_(item)} ponto(s)</p>`:''}</div></div>`;
             }
             return `<div class="inventory-slot"
@@ -3272,6 +3281,37 @@ async function gastarAcaoInventarioEmCombate_(char,custo,motivo){
     return true;
 }
 
+async function recarregarSlotInventario_(char,destinoComp,destinoIndex,origemComp,origemIndex){
+    if(!char)return null;
+    // Depois de gastar AÇ pode chegar um snapshot do Firestore e substituir o objeto
+    // que iniciou o arrasto. Resolve novamente a ficha atualmente viva na memória.
+    const charAtual=userCharacters.find(c=>String(c.id)===String(char.id))||char;
+    const inv=normalizarInventario_(charAtual);
+    const arma=inv?.[destinoComp]?.[Number(destinoIndex)]||null;
+    const mun=inv?.[origemComp]?.[Number(origemIndex)]||null;
+    if(!arma||!mun||!itemUsaMunicao_(arma)||!nomesMunicaoCompativeis_(arma,mun))return null;
+
+    const max=cargaMaxArma_(arma);
+    const fornecida=cargaFornecidaMunicao_(arma,mun);
+    const nova=itemUsaEnergia_(arma)
+        ? Math.min(max,Math.max(0,fornecida))
+        : Math.min(max,Math.max(cargaAtualArma_(arma),fornecida));
+    definirCargaArma_(arma,nova);
+
+    inv[origemComp][Number(origemIndex)]=null;
+    charAtual.inventario=inv;
+    if(char!==charAtual)char.inventario=inv;
+
+    // Grava a instância fresca com cargaAtual antes de qualquer redesenho.
+    await setDoc(doc(db,'personagens',charAtual.id),{inventario:inv},{merge:true});
+    renderizarInventario(charAtual);
+    renderizarCombate(charAtual);
+    popularEquipamentosCombate_(charAtual);
+    atualizarStatusMunicaoCombate_();
+    const verificada=normalizarInventario_(charAtual)?.[destinoComp]?.[Number(destinoIndex)]||arma;
+    return {arma:verificada,mun,carga:cargaAtualArma_(verificada),max:cargaMaxArma_(verificada)};
+}
+
 window.soltarInventario = async (event, destinoComp, destinoIndex) => {
     event.preventDefault();
     event.stopPropagation();
@@ -3309,22 +3349,16 @@ window.soltarInventario = async (event, destinoComp, destinoIndex) => {
         }
         const custoRecarga=custoRecargaCombate_(itemDestino);
         if(!(await gastarAcaoInventarioEmCombate_(char,custoRecarga,`recarregar ${getNome(itemDestino)}`)))return;
-        const fornecida=cargaFornecidaMunicao_(itemDestino,itemOrigem);
-        const max=cargaMaxArma_(itemDestino);
-        const atual=cargaAtualArma_(itemDestino);
-        const nova=Math.min(max, Math.max(atual, fornecida));
-        definirCargaArma_(itemDestino,nova);
-        inv[origemComp][origemIndex]=null;
-        char.inventario=inv;
-        renderizarInventario(char);
-        renderizarCombate(char);
-        popularEquipamentosCombate_(char);
-        await setDoc(doc(db,'personagens',currentCharId),{inventario:inv},{merge:true});
+        const recarga=await recarregarSlotInventario_(char,destinoComp,destinoIndex,origemComp,origemIndex);
+        if(!recarga){
+            notificar_('A recarga não pôde ser concluída. A munição não foi consumida.','erro',4500);
+            return;
+        }
         somSalvar_();
-        notificar_(`${getNome(itemDestino)} recarregada com ${getNome(itemOrigem)} → ${cargaAtualArma_(itemDestino)}/${cargaMaxArma_(itemDestino)}`,'info',2600);
+        notificar_(`${getNome(recarga.arma)} recarregada com ${getNome(recarga.mun)} → ${recarga.carga}/${recarga.max}`,'info',3200);
         await registrarEventoMestreNoPersonagem_(char,'Inventário',
-            `${getNome(itemOrigem)} usado para recarregar ${getNome(itemDestino)}`,
-            {subtipo:'recargaArrasto',armaId:itemDestino.idBanco||itemDestino.id||'',municaoId:itemOrigem.idBanco||itemOrigem.id||'',carga:cargaAtualArma_(itemDestino)}
+            `${getNome(recarga.mun)} usado para recarregar ${getNome(recarga.arma)}`,
+            {subtipo:'recargaArrasto',armaId:recarga.arma.idBanco||recarga.arma.id||'',municaoId:recarga.mun.idBanco||recarga.mun.id||'',carga:recarga.carga}
         );
         return;
     }
@@ -3665,27 +3699,22 @@ window.recarregarArmaCombate = async () => {
     const arma = encontrarEquipamentoCombate_(valor);
     if (!char || !arma || !itemUsaMunicao_(arma)) return;
 
-    const mun = encontrarMunicaoPessoal_(char, arma);
+    const alvo=localizarInstanciaInventario_(char,valor);
+    const mun=encontrarMunicaoPessoal_(char,arma);
+    if(!alvo){notificar_('Não foi possível localizar essa arma no inventário.','erro');return;}
     if (!mun) {
         alert(`Nenhuma munição compatível (${arma.municao}) no Bolso, Mochila ou Equipado.`);
         return;
     }
 
-    const fornecida = cargaFornecidaMunicao_(arma, mun.item);
-    definirCargaArma_(arma, Math.min(cargaMaxArma_(arma), fornecida));
-    mun.inv[mun.comp][mun.index] = null;
-    char.inventario = mun.inv;
-
-    await salvarInventarioAtual_(char);
-    // Confirma visualmente a carga efetivamente gravada na instância.
-    renderizarInventario(char);
-    atualizarStatusMunicaoCombate_();
-    notificar_(`${getNome(arma)} recarregada → ${cargaAtualArma_(arma)}/${cargaMaxArma_(arma)}`,'info',3000);
+    const recarga=await recarregarSlotInventario_(char,alvo.comp,alvo.index,mun.comp,mun.index);
+    if(!recarga){notificar_('A recarga não pôde ser concluída.','erro');return;}
+    notificar_(`${getNome(recarga.arma)} recarregada → ${recarga.carga}/${recarga.max}`,'info',3200);
     somSalvar_();
     await registrarHistoricoCombate_(
         'Recarregar',
-        `${getNome(arma)} recarregada com ${getNome(mun.item)} → ${cargaAtualArma_(arma)}/${cargaMaxArma_(arma)}`,
-        {subtipo:'recarregar',equipamento:getNome(arma),municao:getNome(mun.item),carga:cargaAtualArma_(arma)}
+        `${getNome(recarga.arma)} recarregada com ${getNome(recarga.mun)} → ${recarga.carga}/${recarga.max}`,
+        {subtipo:'recarregar',equipamento:getNome(recarga.arma),municao:getNome(recarga.mun),carga:recarga.carga}
     );
 };
 
@@ -12553,7 +12582,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.7.4: estados de ferimento reconciliados com PV restaurados -->
+<!-- Mesa Estelar v46.7.6: contagem de mochila e recarga após snapshot -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
