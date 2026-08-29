@@ -6248,36 +6248,43 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
             : {hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[]});
     if(!participante)delete combateSalvo.primeirosSocorrosEmAndamento;
 
-    const nomesAtaques=String(modelo.armasTexto||'')
-        .split('|').map(x=>x.trim()).filter(Boolean)
-        .map(x=>x.split(':')[0].trim())
-        .filter(Boolean);
+    const props={};
+    String(modelo.propriedadesAtaques||'').split('|').map(x=>x.trim()).filter(Boolean).forEach(reg=>{
+        const ix=reg.indexOf(':');
+        if(ix<0)return;
+        const nome=normalizarTextoCombate_(reg.slice(0,ix));
+        props[nome]=reg.slice(ix+1).split(',').map(x=>normalizarTextoCombate_(x)).filter(Boolean);
+    });
+    const ataques=String(modelo.armasTexto||'').split('|').map(x=>x.trim()).filter(Boolean).map(reg=>{
+        const ix=reg.indexOf(':');
+        const nome=(ix>=0?reg.slice(0,ix):reg).trim();
+        const dano=(ix>=0?reg.slice(ix+1):'').trim();
+        const base=ataqueNaturalPorNome_(nome);
+        const ps=props[normalizarTextoCombate_(nome)]||[];
+        return {
+            ...(base||{}),
+            nome,
+            id:`criatura_${npcSlugPericia_(nome)}`,
+            dano:dano||base?.dano||'1d6+MD',
+            penetracao:Number(base?.penetracao||0),
+            categoria:'Arma natural',familia:'natural',natural:true,pa:0,pv:999,
+            propriedades:ps,
+            infeccioso:ps.includes('infeccioso'),
+            sonoro:ps.includes('sonoro')||ps.includes('trombeta')||ps.includes('cone_sonoro')
+        };
+    });
 
     return {
         id:participante?.id||`criatura:${modelo.id}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
-        criaturaBancoId:modelo.id,
-        nome:modelo.nome||'Criatura',
-        imagem:modelo.imagem||'',
-        tipo:'criatura',
-        dono:currentUserUid,
-        atributos:{
-            FOR:Number(modelo.FOR||10),CON:Number(modelo.CON||10),TAM:Number(modelo.TAM||10),
-            DES:Number(modelo.DES||10),INT:Number(modelo.INT||5),POD:Number(modelo.POD||10),CAR:Number(modelo.CAR||5)
-        },
+        criaturaBancoId:modelo.id,nome:modelo.nome||'Criatura',imagem:modelo.imagem||'',tipo:'criatura',dono:currentUserUid,
+        atributos:{FOR:Number(modelo.FOR||10),CON:Number(modelo.CON||10),TAM:Number(modelo.TAM||10),DES:Number(modelo.DES||10),INT:Number(modelo.INT||5),POD:Number(modelo.POD||10),CAR:Number(modelo.CAR||5)},
         bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
         pericias:npcPericiasParaCombate_(modelo.periciasTexto),
         especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
-        armasNaturais:nomesAtaques.map(nome=>{
-            const base=ataqueNaturalPorNome_(nome);
-            return base?base.nome:nome;
-        }),
+        armasNaturais:ataques,
         inventario:{equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)},
-        combate:combateSalvo,
-        conceito:modelo.descricao||'',
-        carreira:modelo.tipo||'Criatura',
-        habitat:modelo.habitat||'',
-        comportamento:modelo.comportamento||'',
-        __criaturaTemporaria:true
+        combate:combateSalvo,conceito:modelo.descricao||'',carreira:modelo.tipo||'Criatura',
+        habitat:modelo.habitat||'',comportamento:modelo.comportamento||'',__criaturaTemporaria:true
     };
 }
 
@@ -6500,11 +6507,12 @@ function ataqueNaturalPorNome_(nome){
 }
 function ataquesNaturaisChar_(char){
     const nomes=Array.isArray(char?.armasNaturais)?char.armasNaturais:[];
-    const arr=nomes.map(nome=>{
-        const base=ataqueNaturalPorNome_(nome);
+    const arr=nomes.map(entrada=>{
+        if(entrada&&typeof entrada==='object')return entrada;
+        const base=ataqueNaturalPorNome_(entrada);
         if(base)return base;
-        const slug=npcSlugPericia_(nome);
-        return {nome:String(nome),dano:'1d6+MD',penetracao:0,id:`natural_${slug}`,categoria:'Arma natural',familia:'natural',natural:true,pa:0,pv:999};
+        const slug=npcSlugPericia_(entrada);
+        return {nome:String(entrada),dano:'1d6+MD',penetracao:0,id:`natural_${slug}`,categoria:'Arma natural',familia:'natural',natural:true,pa:0,pv:999,propriedades:[]};
     }).filter(Boolean);
     if(!arr.some(x=>normalizarTextoCombate_(x.nome)==='punhos') && !char?.__npcTemporario && !char?.__criaturaTemporaria)return [ataqueNaturalPorNome_('Punhos'),...arr];
     return arr.length?arr:[ataqueNaturalPorNome_('Punhos')];
@@ -6728,6 +6736,8 @@ function batalhaEspeciaisDisponiveis_(dp){
     if(batalhaArmaAtualDefensor_(dp))arr.push({id:'danificar_arma',nome:'🗡️ Danificar arma'});
     if(!batalhaArmaEhDistancia_(ataque) && !defensor?.combate?.caido && !batalhaEstaInconsciente_(defensor))arr.push({id:'derrubar',nome:'💥 Derrubar'});
     if(crit)arr.push({id:'ignorar_armadura',nome:'🛡️ Ignorar armadura'});
+    if(ataque.infeccioso)arr.push({id:'infectar',nome:'🦠 Infectar'});
+    if(ataque.sonoro)arr.push({id:'trombeta_sonora',nome:'📯 Trombeta sonora'});
     return arr;
 }
 function batalhaEspeciaisHtml_(p,dp){
@@ -6785,6 +6795,10 @@ window.batalhaEscolherEspecial_=async(atacanteId,tipo)=>{
         await batalhaAplicarTrip_(dp);
     }else if(tipo==='danificar_arma'){
         dp.danificarArma=true;
+    }else if(tipo==='infectar'){
+        dp.infectar=true;
+    }else if(tipo==='trombeta_sonora'){
+        dp.trombetaSonora=true;
     }
     dp.escolhasEspeciais=[...(dp.escolhasEspeciais||[]),escolha];
     dp.especiaisRestantes=Math.max(0,Number(dp.especiaisRestantes||0)-1);
@@ -6807,6 +6821,15 @@ function batalhaPublicCard_(p){
 
 
 
+function batalhaPenalidadeInfeccao_(char){return char?.combate?.infectado?.ativo?1:0;}
+function batalhaStatusCriaturaEfeitosHtml_(char){
+    const partes=[];
+    if(char?.combate?.infectado?.ativo)partes.push('🦠 <strong>Infectado</strong> · +1 grau de dificuldade em todos os testes até tratamento.');
+    const surdez=Number(char?.combate?.surdoRodadas||0);
+    if(surdez>0)partes.push(`🔇 <strong>Surdo</strong> · ${surdez} rodada(s) restante(s); comunicação sonora indisponível.`);
+    if(!partes.length)return '';
+    return `<div style="margin-top:9px;padding:8px 10px;border-radius:8px;background:rgba(155,89,182,.10);border:1px solid rgba(155,89,182,.40);color:#e6c8ff;">${partes.join('<br>')}</div>`;
+}
 function batalhaPenalidadeCaido_(char){
     return char?.combate?.caido ? 2 : 0;
 }
@@ -6971,7 +6994,7 @@ function batalhaControlCard_(p,char){
         ${defendendo?batalhaDefesaHtml_(p,char,pend):''}
         ${batalhaEspeciaisHtml_(p,batalhaEstado_?.danoPendente)}
         ${batalhaDescricaoBloqueioFerimento_(char)?`<div style="margin-top:9px;padding:8px 10px;border-radius:8px;background:rgba(231,76,60,.10);border:1px solid rgba(231,76,60,.35);color:#ffb0a8;">🩸 ${escaparHtmlInventario_(batalhaDescricaoBloqueioFerimento_(char))}</div>`:''}
-        ${batalhaStatusCaidoHtml_(char)}
+        ${batalhaStatusCaidoHtml_(char)}${batalhaStatusCriaturaEfeitosHtml_(char)}
         ${batalhaStatusPrimeirosSocorrosHtml_(char)}
 
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:11px;">
@@ -7006,7 +7029,7 @@ function batalhaDefesaHtml_(p,char,pend){
     const padrao=skills[0];
     const valorPadraoBruto=padrao?obterValorRegistroPericia_(char,padrao.id,padrao.__especializacao):0;
     const valorPadraoArm=padrao?valorPericiaComArmadura_(char,padrao,valorPadraoBruto).valor:0;
-    const valorPadrao=padrao?aplicarDificuldadeEFadiga_(char,valorPadraoArm,'padrao',batalhaPenalidadeCaido_(char)+batalhaPenalidadeTratamento_(char)).valor:0;
+    const valorPadrao=padrao?aplicarDificuldadeEFadiga_(char,valorPadraoArm,'padrao',batalhaPenalidadeCaido_(char)+batalhaPenalidadeTratamento_(char)+batalhaPenalidadeInfeccao_(char)).valor:0;
     return `<div style="margin-top:11px;padding:12px;border-radius:10px;background:rgba(231,76,60,.11);border:1px solid rgba(231,76,60,.40);">
         <strong style="color:#ff9c90;">⚔️ ${escaparHtmlInventario_(pend.atacanteNome||'Atacante')} está atacando ${escaparHtmlInventario_(p.nome)}</strong>
         <div style="margin-top:6px;color:#ddd;">Ataque: <strong>${escaparHtmlInventario_(pend.ataque?.grau||'')}</strong> · AÇ disponíveis: <strong>${ac}/${p.acoesMax}</strong></div>
@@ -7029,7 +7052,7 @@ window.batalhaAtualizarValorDefesa_=(id,token)=>{
     if(!c||!p||!el)return;
     const bruto=obterValorRegistroPericia_(c,p.id,p.__especializacao);
     const aj=valorPericiaComArmadura_(c,p,bruto);
-    const efetivo=aplicarDificuldadeEFadiga_(c,aj.valor,'padrao',batalhaPenalidadeCaido_(c)+batalhaPenalidadeTratamento_(c));
+    const efetivo=aplicarDificuldadeEFadiga_(c,aj.valor,'padrao',batalhaPenalidadeCaido_(c)+batalhaPenalidadeTratamento_(c)+batalhaPenalidadeInfeccao_(c));
     el.textContent=efetivo.valor+(aj.pct?` (-${aj.pct.toFixed(aj.pct%1?1:0)}%)`:'')+(c.combate?.caido?' · Caído +2 graus':'')+(batalhaEstaTratandoPrimeirosSocorros_(c)?' · Tratando +2 graus':'');
 };
 
@@ -7360,7 +7383,8 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
     const base=armaduraAjuste.valor;
     const grausFerimento=batalhaPenalidadeFerimento_(c,per);
     const grausCaido=batalhaPenalidadeCaido_(c);
-    const ajuste=aplicarDificuldadeEFadiga_(c,base,prefs.dificuldade||'padrao',graus+grausFerimento+grausCaido);
+    const grausInfeccao=batalhaPenalidadeInfeccao_(c);
+    const ajuste=aplicarDificuldadeEFadiga_(c,base,prefs.dificuldade||'padrao',graus+grausFerimento+grausCaido+grausInfeccao);
     if(ajuste.bloqueado){batalhaUltimoResultado_[id]='Ação bloqueada por fadiga.';return;}
 
     const roll=requestPayload?.roll ?? (Math.floor(Math.random()*100)+1);
@@ -7383,6 +7407,9 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
             penetracao:item?obterPenetracaoArma_(item):0,
             distancia:!!(item&&(Number(item.alcance||0)>2||String(item.municao||'').trim())),
             familia:String(item?.familia||item?.tipo||item?.categoria||''),
+            propriedades:Array.isArray(item?.propriedades)?item.propriedades:[],
+            infeccioso:!!item?.infeccioso,
+            sonoro:!!item?.sonoro,
             atacanteCaido:!!c.combate?.caido
         };
         const alvoChar=batalhaCharLocal_(alvoId);
@@ -7504,7 +7531,7 @@ window.batalhaResponderDefesa_=async(id,defender)=>{
         const per=batalhaResolverPericia_(token);if(!per)return;
         const baseBruto=obterValorRegistroPericia_(c,per.id,per.__especializacao);
         const base=valorPericiaComArmadura_(c,per,baseBruto).valor;
-        const ajuste=aplicarDificuldadeEFadiga_(c,base,'padrao',batalhaPenalidadeCaido_(c)+batalhaPenalidadeTratamento_(c));
+        const ajuste=aplicarDificuldadeEFadiga_(c,base,'padrao',batalhaPenalidadeCaido_(c)+batalhaPenalidadeTratamento_(c)+batalhaPenalidadeInfeccao_(c));
         const roll=Math.floor(Math.random()*100)+1;
         const r=classificarD100_(ajuste.valor,roll);
         const margem=batalhaMargem_(ajuste.valor,roll);
@@ -7688,7 +7715,20 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
         }
     }
 
-    // Damage Weapon: o equipamento, e não a mão, recebe o dano.
+    
+    // Propriedades especiais de criaturas só entram em vigor quando o golpe causa dano.
+    if(dp.infectar && danoFinal>0 && !alvo.combate?.infectado?.ativo){
+        alvo.combate.infectado={ativo:true,origem:dp.ataque?.equipamento||nomeArma,iniciadoRodada:Number(batalhaEstado_?.rodada||1)};
+        batalhaLogPush_(batalhaEstado_,`${defensor.nome} foi infectado: +1 grau de dificuldade em todos os testes até tratamento.`,'infeccao',{targetId:defensor.id});
+    }
+    if(dp.trombetaSonora && danoFinal>0){
+        const rodadas=Math.floor(Math.random()*20)+1;
+        alvo.combate.surdoRodadas=Math.max(Number(alvo.combate.surdoRodadas||0),rodadas);
+        alvo.combate.empurradoPorSom=true;
+        batalhaLogPush_(batalhaEstado_,`${defensor.nome} foi atingido pela Trombeta sonora: empurre/reposicione o alvo manualmente no grid e ele fica surdo por ${rodadas} rodada(s).`,'som',{targetId:defensor.id});
+    }
+
+// Damage Weapon: o equipamento, e não a mão, recebe o dano.
     let inventarioAlterado=false;
     if(dp.danificarArma){
         const armaAlvo=batalhaArmaAtualDefensor_(dp);
@@ -7711,6 +7751,8 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
     if(alvo.__npcTemporario){
         defensor.npcCombate=JSON.parse(JSON.stringify(alvo.combate||{}));
         defensor.npcInventario=JSON.parse(JSON.stringify(alvo.inventario||{}));
+    }else if(alvo.__criaturaTemporaria){
+        defensor.criaturaCombate=JSON.parse(JSON.stringify(alvo.combate||{}));
     }else{
         const dadosSalvar={combate:alvo.combate};
         if(inventarioAlterado)dadosSalvar.inventario=alvo.inventario;
@@ -12344,7 +12386,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.6.1: preview ampliado de tokens por hover e clique -->
+<!-- Mesa Estelar v46.7: ataques de criaturas, Infectar e Trombeta sonora -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
