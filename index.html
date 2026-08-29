@@ -1219,7 +1219,17 @@
       <label>Especializações (investimento)<textarea id="crEspec" rows="2"></textarea></label>
       <label>Ataques naturais<input id="crArmas" placeholder="Mordida|Garras"></label>
       <label>Propriedades dos ataques<input id="crProps" placeholder="Mordida:infeccioso|Garras:infeccioso"></label>
-      <label>Imagem URL<input id="crImagem"></label><label>Descrição<textarea id="crDescricao" rows="3"></textarea></label>
+      <div class="form-group">
+        <label>Imagem URL</label>
+        <input id="crImagem" oninput="atualizarPreviewCriaturaBanco_()">
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px;">
+          <div id="crImagemPreview" style="width:82px;height:82px;border-radius:10px;background:rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;overflow:hidden;font-size:2em;">🦖</div>
+          <label class="btn-template" style="cursor:pointer;margin:0;">📤 Fazer upload
+            <input id="crImagemArquivo" type="file" accept="image/*" style="display:none" onchange="handleDbCreatureImageUpload_(event)">
+          </label>
+        </div>
+      </div>
+      <label>Descrição<textarea id="crDescricao" rows="3"></textarea></label>
       <div class="modal-buttons"><button class="btn-confirm" onclick="salvarCriaturaBanco_()">💾 Salvar</button><button class="btn-cancel" onclick="fecharCriaturaBanco_()">Cancelar</button><button class="btn-delete" id="crDelete" onclick="removerCriaturaBanco_()">🗑️ Remover</button></div>
     </div></div>
 
@@ -8792,10 +8802,39 @@ function criaturaBancoPorId_(id){return (criaturasDB||[]).find(x=>String(x.id)==
 function renderizarBancoCriaturas_(){
  const e=document.getElementById('listaBancoCriaturas');if(!e)return;
  const l=[...criaturasDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
- e.innerHTML=l.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th>Nome</th><th>Tipo</th><th>Atributos</th><th>Ataques</th><th>Ações</th></tr></thead><tbody>${l.map(n=>`<tr><td><b>${escaparBanco_(n.nome)}</b><br><small>${escaparBanco_(n.especie||'')}</small></td><td>${escaparBanco_(n.tipo||'Criatura')}<br><small>${escaparBanco_(n.habitat||'')}</small></td><td>FOR ${n.FOR||0} · CON ${n.CON||0} · TAM ${n.TAM||0} · DES ${n.DES||0}<br>INT ${n.INT||0} · POD ${n.POD||0} · CAR ${n.CAR||0}</td><td>${escaparBanco_(n.armasTexto||'—')}<br><small>${escaparBanco_(n.propriedadesAtaques||'')}</small></td><td><button class="btn-small" onclick="editarCriaturaBanco_('${n.id}')">✏️ Editar</button> <button class="btn-small" onclick="duplicarCriaturaBanco_('${n.id}')">📑 Duplicar</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Banco vazio.</p>';
+ e.innerHTML=l.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th style="width:76px;">Imagem</th><th>Nome</th><th>Tipo</th><th>Atributos</th><th>Ataques</th><th>Ações</th></tr></thead><tbody>${l.map(n=>`<tr><td>${n.imagem?`<img src="${escaparBanco_(n.imagem)}" style="width:58px;height:58px;object-fit:cover;border-radius:9px;">`:`<div style="width:58px;height:58px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:1.5em;">🦖</div>`}</td><td><b>${escaparBanco_(n.nome)}</b><br><small>${escaparBanco_(n.especie||'')}</small></td><td>${escaparBanco_(n.tipo||'Criatura')}<br><small>${escaparBanco_(n.habitat||'')}</small></td><td>FOR ${n.FOR||0} · CON ${n.CON||0} · TAM ${n.TAM||0} · DES ${n.DES||0}<br>INT ${n.INT||0} · POD ${n.POD||0} · CAR ${n.CAR||0}</td><td>${escaparBanco_(n.armasTexto||'—')}<br><small>${escaparBanco_(n.propriedadesAtaques||'')}</small></td><td><button class="btn-small" onclick="editarCriaturaBanco_('${n.id}')">✏️ Editar</button> <button class="btn-small" onclick="duplicarCriaturaBanco_('${n.id}')">📑 Duplicar</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Banco vazio.</p>';
 }
 function crSet_(id,v){const e=document.getElementById(id);if(e)e.value=v??'';}
-function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_('crNome',n.nome||'');crSet_('crTipo',n.tipo||'Criatura');crSet_('crEspecie',n.especie||'');crSet_('crHabitat',n.habitat||'');crSet_('crComportamento',n.comportamento||'');crSet_('crAltura',n.altura||'');crSet_('crTamanho',n.tamanho||'');crSet_('crPeso',n.pesoCorporal||'');for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])crSet_('cr'+a,n[a]??10);crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
+function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_('crNome',n.nome||'');crSet_('crTipo',n.tipo||'Criatura');crSet_('crEspecie',n.especie||'');crSet_('crHabitat',n.habitat||'');crSet_('crComportamento',n.comportamento||'');crSet_('crAltura',n.altura||'');crSet_('crTamanho',n.tamanho||'');crSet_('crPeso',n.pesoCorporal||'');for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])crSet_('cr'+a,n[a]??10);crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const arq=document.getElementById('crImagemArquivo');if(arq)arq.value='';atualizarPreviewCriaturaBanco_();const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
+
+window.atualizarPreviewCriaturaBanco_=()=>{
+    const url=String(document.getElementById('crImagem')?.value||'').trim();
+    const p=document.getElementById('crImagemPreview');if(!p)return;
+    p.innerHTML=url
+      ? `<img src="${escaparBanco_(url)}" alt="Criatura" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='⚠️'">`
+      : '🦖';
+};
+window.handleDbCreatureImageUpload_=async(event)=>{
+    if(!userData||userData.role!=='mestre'){notificar_('Apenas o mestre pode enviar imagens de criaturas.','aviso');return;}
+    const file=event.target.files?.[0];if(!file)return;
+    const btn=event.target.closest('label');
+    try{
+        if(btn){btn.style.opacity='.6';btn.style.pointerEvents='none';}
+        notificar_('Enviando imagem da criatura...','info',1800);
+        const url=await uploadImagemBanco_(file,'banco-criaturas');
+        const campo=document.getElementById('crImagem');
+        if(campo)campo.value=url;
+        atualizarPreviewCriaturaBanco_();
+        notificar_('Imagem da criatura enviada.','info');
+    }catch(error){
+        console.error('Erro no upload da imagem da criatura:',error);
+        notificar_(`Não foi possível enviar a imagem da criatura: ${error?.code||error?.message||error}`,'erro',7000);
+    }finally{
+        if(btn){btn.style.opacity='';btn.style.pointerEvents='';}
+        event.target.value='';
+    }
+};
+
 window.adicionarCriaturaBanco_=()=>{crFill_();document.getElementById('dbCriaturaModal')?.classList.add('active');};
 window.editarCriaturaBanco_=id=>{const n=criaturaBancoPorId_(id);if(n){crFill_(n);document.getElementById('dbCriaturaModal')?.classList.add('active');}};
 window.fecharCriaturaBanco_=()=>document.getElementById('dbCriaturaModal')?.classList.remove('active');
@@ -8852,19 +8891,41 @@ window.atualizarPreviewNPCBanco_=()=>{
       ? `<img src="${escaparBanco_(url)}" alt="NPC" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='⚠️'">`
       : '🎭';
 };
+function nomeArquivoStorageSeguro_(nome='imagem'){
+    return String(nome||'imagem')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-zA-Z0-9._-]+/g,'_')
+      .slice(-120);
+}
+async function uploadImagemBanco_(file,pasta){
+    if(!file)throw new Error('Nenhum arquivo selecionado.');
+    if(!currentUserUid)throw new Error('Usuário não autenticado.');
+    if(!String(file.type||'').startsWith('image/'))throw new Error('O arquivo selecionado não é uma imagem.');
+    const nome=nomeArquivoStorageSeguro_(file.name);
+    // Usa a mesma árvore autenticada já utilizada pelas imagens de personagens/cenários.
+    const caminho=`personagens/${currentUserUid}/${pasta}/${Date.now()}_${nome}`;
+    const storageRef=ref(storage,caminho);
+    const snapshot=await uploadBytes(storageRef,file);
+    return await getDownloadURL(snapshot.ref);
+}
 window.handleDbNPCImageUpload_=async(event)=>{
-    if(!userData||userData.role!=='mestre'){alert('Apenas o mestre pode enviar imagens de NPCs.');return;}
+    if(!userData||userData.role!=='mestre'){notificar_('Apenas o mestre pode enviar imagens de NPCs.','aviso');return;}
     const file=event.target.files?.[0];if(!file)return;
+    const btn=event.target.closest('label');
     try{
-        const storageRef=ref(storage,`banco-npcs/${Date.now()}_${file.name}`);
-        const snapshot=await uploadBytes(storageRef,file);
-        const url=await getDownloadURL(snapshot.ref);
-        document.getElementById('dbNPCImagem').value=url;
+        if(btn){btn.style.opacity='.6';btn.style.pointerEvents='none';}
+        notificar_('Enviando imagem do NPC...','info',1800);
+        const url=await uploadImagemBanco_(file,'banco-npcs');
+        const campo=document.getElementById('dbNPCImagem');
+        if(campo)campo.value=url;
         atualizarPreviewNPCBanco_();
         notificar_('Imagem do NPC enviada.','info');
     }catch(error){
         console.error('Erro no upload da imagem do NPC:',error);
-        alert('Não foi possível enviar a imagem do NPC.');
+        notificar_(`Não foi possível enviar a imagem do NPC: ${error?.code||error?.message||error}`,'erro',7000);
+    }finally{
+        if(btn){btn.style.opacity='';btn.style.pointerEvents='';}
+        event.target.value='';
     }
 };
 
@@ -12010,6 +12071,6 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.4: movimento reordenado + auto-próximo + banco de criaturas isolado -->
+<!-- Mesa Estelar v46.4.1: corrige uploads de NPC/criatura e adiciona preview/upload de criaturas -->
 </body>
 </html>
