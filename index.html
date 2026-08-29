@@ -274,6 +274,80 @@
         .battle-unplaced{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 10px}
         .battle-unplaced .battle-token{width:auto;min-width:44px;padding:0 7px;gap:5px}
 
+
+        /* v46.6.1 — visualização ampliada dos tokens do mapa */
+        .battle-token{position:relative}
+        .battle-token-preview{
+            position:fixed;
+            z-index:9998;
+            width:220px;
+            padding:8px;
+            border-radius:12px;
+            background:rgba(20,18,34,.97);
+            border:1px solid rgba(255,255,255,.18);
+            box-shadow:0 12px 34px rgba(0,0,0,.45);
+            pointer-events:none;
+            display:none;
+        }
+        .battle-token-preview.visible{display:block}
+        .battle-token-preview img{
+            width:100%;
+            height:220px;
+            object-fit:contain;
+            background:rgba(0,0,0,.28);
+            border-radius:9px;
+            display:block;
+        }
+        .battle-token-preview-name{
+            margin-top:7px;
+            font-weight:800;
+            text-align:center;
+            color:#fff;
+            line-height:1.2;
+        }
+        .battle-token-preview-type{
+            margin-top:2px;
+            font-size:.78em;
+            color:#aaa;
+            text-align:center;
+        }
+        .battle-token-modal{
+            position:fixed;
+            inset:0;
+            z-index:10050;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:22px;
+            background:rgba(0,0,0,.76);
+        }
+        .battle-token-modal-card{
+            width:min(560px,94vw);
+            max-height:90vh;
+            overflow:auto;
+            border-radius:16px;
+            padding:14px;
+            background:#181629;
+            border:1px solid rgba(255,255,255,.18);
+        }
+        .battle-token-modal-card img{
+            width:100%;
+            max-height:68vh;
+            object-fit:contain;
+            display:block;
+            background:rgba(0,0,0,.3);
+            border-radius:12px;
+        }
+        .battle-token-modal-fallback{
+            min-height:280px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:4em;
+            background:rgba(255,255,255,.05);
+            border-radius:12px;
+        }
+
 </style>
 </head>
 <body>
@@ -927,7 +1001,7 @@
                     </div>
                     <div id="banco-criaturas" class="tab-content">
                       <h4 style="color:#fff">Criaturas reutilizáveis</h4>
-                      <p style="color:#aaa">Banco privado do mestre. Nesta etapa é apenas cadastro: criaturas ainda não entram no Painel de Batalha.</p>
+                      <p style="color:#aaa">Banco privado do mestre. Criaturas marcadas como selecionáveis aparecem no Painel de Batalha.</p>
                       <div class="import-section">
                         <input type="file" id="importCriaturasFile" accept=".csv" style="display:none" onchange="importarPlanilha('criaturas',this,this.dataset.modo==='substituir')">
                         <button class="btn-import" onclick="selecionarImportacaoBanco_('importCriaturasFile',false)">📥 Importar/Atualizar CSV</button>
@@ -6079,7 +6153,7 @@ function batalhaEhMestre_(){ return !!(userData && userData.role==='mestre'); }
 
 function batalhaTipoChar_(c){
     const tipo=String(c?.tipo||'pc').toLowerCase();
-    if(tipo==='monstro')return 'Monstro';
+    if(tipo==='criatura'||tipo==='monstro')return 'Criatura';
     if(tipo==='npc'||tipo==='npc_rapido')return 'NPC';
     return c?.dono===currentUserUid?'PM':'PJ';
 }
@@ -6165,12 +6239,57 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
         __npcTemporario:true
     };
 }
+function criarCriaturaCombateDoBanco_(modelo,participante=null){
+    if(!modelo)return null;
+    const combateSalvo=participante?.criaturaCombate&&typeof participante.criaturaCombate==='object'
+        ? JSON.parse(JSON.stringify(participante.criaturaCombate))
+        : (modelo?.estadoCombate&&typeof modelo.estadoCombate==='object'
+            ? batalhaEstadoPersistenteNPC_(modelo.estadoCombate)
+            : {hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[]});
+    if(!participante)delete combateSalvo.primeirosSocorrosEmAndamento;
+
+    const nomesAtaques=String(modelo.armasTexto||'')
+        .split('|').map(x=>x.trim()).filter(Boolean)
+        .map(x=>x.split(':')[0].trim())
+        .filter(Boolean);
+
+    return {
+        id:participante?.id||`criatura:${modelo.id}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
+        criaturaBancoId:modelo.id,
+        nome:modelo.nome||'Criatura',
+        imagem:modelo.imagem||'',
+        tipo:'criatura',
+        dono:currentUserUid,
+        atributos:{
+            FOR:Number(modelo.FOR||10),CON:Number(modelo.CON||10),TAM:Number(modelo.TAM||10),
+            DES:Number(modelo.DES||10),INT:Number(modelo.INT||5),POD:Number(modelo.POD||10),CAR:Number(modelo.CAR||5)
+        },
+        bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
+        pericias:npcPericiasParaCombate_(modelo.periciasTexto),
+        especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
+        armasNaturais:nomesAtaques.map(nome=>{
+            const base=ataqueNaturalPorNome_(nome);
+            return base?base.nome:nome;
+        }),
+        inventario:{equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)},
+        combate:combateSalvo,
+        conceito:modelo.descricao||'',
+        carreira:modelo.tipo||'Criatura',
+        habitat:modelo.habitat||'',
+        comportamento:modelo.comportamento||'',
+        __criaturaTemporaria:true
+    };
+}
+
 function batalhaCharLocal_(id){
     const normal=(userCharacters||[]).find(c=>String(c.id)===String(id));
     if(normal)return normal;
     const p=(batalhaEstado_?.participantes||[]).find(x=>String(x.id)===String(id));
     if(p?.npcBancoId){
         return criarNPCCombateDoBanco_(npcBancoPorId_(p.npcBancoId),p);
+    }
+    if(p?.criaturaBancoId){
+        return criarCriaturaCombateDoBanco_(criaturaBancoPorId_(p.criaturaBancoId),p);
     }
     return null;
 }
@@ -6201,6 +6320,9 @@ function batalhaSanitizarParticipante_(c){
             npcBancoId:String(c.npcBancoId||''),
             npcCombate:JSON.parse(JSON.stringify(c.combate||{})),
             npcInventario:JSON.parse(JSON.stringify(c.inventario||{}))
+        }:c.__criaturaTemporaria?{
+            criaturaBancoId:String(c.criaturaBancoId||''),
+            criaturaCombate:JSON.parse(JSON.stringify(c.combate||{}))
         }:{})
     };
 }
@@ -6378,8 +6500,13 @@ function ataqueNaturalPorNome_(nome){
 }
 function ataquesNaturaisChar_(char){
     const nomes=Array.isArray(char?.armasNaturais)?char.armasNaturais:[];
-    const arr=nomes.map(ataqueNaturalPorNome_).filter(Boolean);
-    if(!arr.some(x=>normalizarTextoCombate_(x.nome)==='punhos') && !char?.__npcTemporario)return [ataqueNaturalPorNome_('Punhos'),...arr];
+    const arr=nomes.map(nome=>{
+        const base=ataqueNaturalPorNome_(nome);
+        if(base)return base;
+        const slug=npcSlugPericia_(nome);
+        return {nome:String(nome),dano:'1d6+MD',penetracao:0,id:`natural_${slug}`,categoria:'Arma natural',familia:'natural',natural:true,pa:0,pv:999};
+    }).filter(Boolean);
+    if(!arr.some(x=>normalizarTextoCombate_(x.nome)==='punhos') && !char?.__npcTemporario && !char?.__criaturaTemporaria)return [ataqueNaturalPorNome_('Punhos'),...arr];
     return arr.length?arr:[ataqueNaturalPorNome_('Punhos')];
 }
 function ataqueNaturalPorValor_(char,valor){
@@ -6560,8 +6687,17 @@ async function batalhaPersistirCombateChar_(char,participante){
         if(bancoId&&userData?.role==='mestre'){
             const modelo=npcBancoPorId_(bancoId);
             if(modelo)modelo.estadoCombate=estadoBanco;
-            // mergeFields substitui o mapa estadoCombate inteiro, evitando chaves antigas "fantasmas".
             await setDoc(doc(db,'npcs',String(bancoId)),{estadoCombate:estadoBanco},{mergeFields:['estadoCombate']});
+        }
+    }else if(char?.__criaturaTemporaria){
+        const estadoSessao=JSON.parse(JSON.stringify(char.combate||{}));
+        if(participante)participante.criaturaCombate=estadoSessao;
+        const estadoBanco=batalhaEstadoPersistenteNPC_(estadoSessao);
+        const bancoId=char.criaturaBancoId||participante?.criaturaBancoId;
+        if(bancoId&&userData?.role==='mestre'){
+            const modelo=criaturaBancoPorId_(bancoId);
+            if(modelo)modelo.estadoCombate=estadoBanco;
+            await setDoc(doc(db,'criaturas',String(bancoId)),{estadoCombate:estadoBanco},{mergeFields:['estadoCombate']});
         }
     }else if(char?.id){
         await setDoc(doc(db,'personagens',char.id),{combate:char.combate},{merge:true});
@@ -6938,7 +7074,10 @@ function renderizarBatalhaCandidatos_(){
     const modelos=(npcsDB||[]).filter(n=>n.selecionavelCombate!==false).map(n=>({
         token:`npcdb:${n.id}`,nome:n.nome||'NPC',imagem:n.imagem||'',tipo:'NPC'
     })).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR',{sensitivity:'base'}));
-    const candidatos=[...chars,...modelos];
+    const criaturas=(criaturasDB||[]).filter(n=>n.selecionavelCombate!==false).map(n=>({
+        token:`crdb:${n.id}`,nome:n.nome||'Criatura',imagem:n.imagem||'',tipo:'Criatura'
+    })).sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR',{sensitivity:'base'}));
+    const candidatos=[...chars,...modelos,...criaturas];
     box.innerHTML=candidatos.map(c=>`
         <label style="display:flex;gap:9px;align-items:center;padding:8px;border-radius:9px;background:rgba(255,255,255,.035);">
             <input type="checkbox" onchange="batalhaSelecionarCandidato_('${c.token}',this.checked)" ${batalhaSelecaoMestre_.has(c.token)?'checked':''}>
@@ -6959,6 +7098,9 @@ window.batalhaAdicionarSelecionados_=async()=>{
         if(String(id).startsWith('npcdb:')){
             const modelo=npcBancoPorId_(String(id).slice(6));
             c=criarNPCCombateDoBanco_(modelo);
+        }else if(String(id).startsWith('crdb:')){
+            const modelo=criaturaBancoPorId_(String(id).slice(5));
+            c=criarCriaturaCombateDoBanco_(modelo);
         }else{
             c=batalhaCharLocal_(id);
         }
@@ -7795,10 +7937,86 @@ window.batalhaGridRemover_=async function(ev){
     if(batalhaEhMestre_())await batalhaSalvarEstado_();
     else await batalhaEnviarAcao_(id,'posicao',{gridX:null,gridY:null});
 };
+
+function batalhaTokenDadosVisuais_(id){
+    const p=batalhaParticipante_(id);
+    if(!p)return null;
+    const c=batalhaCharLocal_(id);
+    return {
+        id:String(p.id),
+        nome:String(p.nome||c?.nome||'Personagem'),
+        imagem:String(p.imagem||c?.imagem||''),
+        tipo:String(p.tipo||batalhaTipoChar_(c)||'')
+    };
+}
+window.batalhaTokenPreviewMostrar_=function(ev,id){
+    if(!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches)return;
+    const d=batalhaTokenDadosVisuais_(id);
+    const box=document.getElementById('battleTokenPreview');
+    if(!d||!box)return;
+    box.innerHTML=`${d.imagem
+        ? `<img src="${escaparHtmlInventario_(d.imagem)}" alt="${escaparHtmlInventario_(d.nome)}">`
+        : `<div class="battle-token-modal-fallback" style="min-height:180px;">👤</div>`}
+      <div class="battle-token-preview-name">${escaparHtmlInventario_(d.nome)}</div>
+      <div class="battle-token-preview-type">${escaparHtmlInventario_(d.tipo)}</div>`;
+    box.classList.add('visible');
+    box.setAttribute('aria-hidden','false');
+    batalhaTokenPreviewMover_(ev);
+};
+window.batalhaTokenPreviewMover_=function(ev){
+    const box=document.getElementById('battleTokenPreview');
+    if(!box||!box.classList.contains('visible'))return;
+    const margem=14;
+    const w=box.offsetWidth||220,h=box.offsetHeight||280;
+    let x=Number(ev.clientX||0)+18,y=Number(ev.clientY||0)+18;
+    if(x+w+margem>window.innerWidth)x=Math.max(margem,Number(ev.clientX||0)-w-18);
+    if(y+h+margem>window.innerHeight)y=Math.max(margem,Number(ev.clientY||0)-h-18);
+    box.style.left=`${x}px`;
+    box.style.top=`${y}px`;
+};
+window.batalhaTokenPreviewEsconder_=function(){
+    const box=document.getElementById('battleTokenPreview');
+    if(!box)return;
+    box.classList.remove('visible');
+    box.setAttribute('aria-hidden','true');
+};
+window.batalhaAbrirTokenPreview_=function(id){
+    batalhaTokenPreviewEsconder_();
+    const d=batalhaTokenDadosVisuais_(id);
+    if(!d)return;
+    document.getElementById('battleTokenModal')?.remove();
+    const modal=document.createElement('div');
+    modal.id='battleTokenModal';
+    modal.className='battle-token-modal';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-label',`Visualização de ${d.nome}`);
+    modal.innerHTML=`<div class="battle-token-modal-card" onclick="event.stopPropagation()">
+        ${d.imagem
+          ? `<img src="${escaparHtmlInventario_(d.imagem)}" alt="${escaparHtmlInventario_(d.nome)}">`
+          : `<div class="battle-token-modal-fallback">👤</div>`}
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:11px;">
+          <div style="min-width:0;">
+            <div style="font-size:1.3em;font-weight:800;color:#fff;">${escaparHtmlInventario_(d.nome)}</div>
+            <div style="color:#aaa;margin-top:2px;">${escaparHtmlInventario_(d.tipo)}</div>
+          </div>
+          <button type="button" class="btn-small" onclick="document.getElementById('battleTokenModal')?.remove()">✕ Fechar</button>
+        </div>
+      </div>`;
+    modal.addEventListener('click',()=>modal.remove());
+    document.body.appendChild(modal);
+};
 function batalhaTokenHtml_(p){
     const pode=batalhaPodeMoverToken_(p),atual=(batalhaEstado_?.participantes||[])[Number(batalhaEstado_?.turnoIndex||0)]?.id===p.id;
     const iniciais=String(p.nome||'?').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
-    return `<div class="battle-token ${atual?'current':''}" draggable="${pode?'true':'false'}" ${pode?`ondragstart="batalhaDragToken_(event,'${p.id}')"`:''} title="${escaparHtmlInventario_(p.nome)}${pode?' · arraste para mover':''}">
+    return `<div class="battle-token ${atual?'current':''}"
+        draggable="${pode?'true':'false'}"
+        ${pode?`ondragstart="batalhaTokenPreviewEsconder_();batalhaDragToken_(event,'${p.id}')"`:''}
+        onmouseenter="batalhaTokenPreviewMostrar_(event,'${p.id}')"
+        onmousemove="batalhaTokenPreviewMover_(event)"
+        onmouseleave="batalhaTokenPreviewEsconder_()"
+        onclick="batalhaAbrirTokenPreview_('${p.id}')"
+        title="${escaparHtmlInventario_(p.nome)}${pode?' · arraste para mover · clique para ampliar':' · clique para ampliar'}">
       ${p.imagem?`<img src="${escaparHtmlInventario_(p.imagem)}" alt="${escaparHtmlInventario_(p.nome)}">`:`<span>${escaparHtmlInventario_(iniciais||'👤')}</span>`}
     </div>`;
 }
@@ -12126,6 +12344,8 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.5.1: criaturas com importação/substituição/template/exportação CSV igual aos NPCs -->
+<!-- Mesa Estelar v46.6.1: preview ampliado de tokens por hover e clique -->
+
+<div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
 </html>
