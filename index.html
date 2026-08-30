@@ -8097,8 +8097,11 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
         }else if(acao.tipo==='posicao'){
             const gx=acao.payload?.gridX,gy=acao.payload?.gridY;
             if(gx===null||gy===null){
-                p.gridX=null;p.gridY=null;
-                await batalhaSalvarEstado_();
+                // Jogador só pode retirar livremente do mapa antes de rolar a própria iniciativa.
+                if(!batalhaTemIniciativa_(p)){
+                    p.gridX=null;p.gridY=null;
+                    await batalhaSalvarEstado_();
+                }
             }else{
                 const x=Number(gx),y=Number(gy);
                 const valido=Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<BATALHA_GRID_COLS_&&y>=0&&y<BATALHA_GRID_ROWS_;
@@ -8146,7 +8149,11 @@ function batalhaPodeMoverToken_(p){
     if(!p||!currentUserUid)return false;
     if(batalhaEhMestre_())return true; // mestre mantém override para reposicionamentos/efeitos forçados
     if(String(p.donoUid||'')!==String(currentUserUid))return false;
-    if(!batalhaIniciativasProntas_())return true; // posicionamento livre antes do combate começar
+    // Posicionamento livre termina para ESTE personagem assim que sua iniciativa é rolada.
+    // Não esperamos todos os participantes rolarem, pois isso deixava jogadores já prontos
+    // continuarem arrastando livremente enquanto outro participante ainda não tinha iniciativa.
+    if(!batalhaTemIniciativa_(p))return true;
+    if(!batalhaIniciativasProntas_())return false;
     const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
     if(String(atual?.id)!==String(p.id))return false;
     if(p.movimentoPendente)return true;
@@ -8157,7 +8164,8 @@ function batalhaDistanciaCasas_(x1,y1,x2,y2){
     return Math.max(Math.abs(Number(x2)-Number(x1)),Math.abs(Number(y2)-Number(y1)));
 }
 function batalhaValidarMovimentoJogador_(p,x,y){
-    if(!batalhaIniciativasProntas_())return {ok:true,tipo:'livre'};
+    if(!batalhaTemIniciativa_(p))return {ok:true,tipo:'livre'};
+    if(!batalhaIniciativasProntas_())return {ok:false,msg:'Sua iniciativa já foi rolada. Aguarde o início dos turnos para se mover.'};
     const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
     if(String(atual?.id)!==String(p.id))return {ok:false,msg:'Você só pode mover durante seu turno.'};
     const ox=Number(p.gridX),oy=Number(p.gridY);
@@ -8230,10 +8238,14 @@ window.batalhaGridRemover_=async function(ev){
     ev.preventDefault();
     const id=ev.dataTransfer.getData('text/plain'),p=batalhaParticipante_(id);
     if(!p||!batalhaPodeMoverToken_(p))return;
+    if(!batalhaEhMestre_()&&batalhaTemIniciativa_(p)){
+        notificar_('Depois de rolar a iniciativa o personagem não pode ser retirado livremente do mapa.','aviso');
+        return;
+    }
     p.gridX=null;p.gridY=null;
     renderizarBatalhaPosicoes_();
     if(batalhaEhMestre_())await batalhaSalvarEstado_();
-    else await batalhaEnviarAcao_(id,'posicao',{gridX:null,gridY:null});
+    else await batalhaEnviarAcao_(id,'posicao',{gridX:null,gridY:null,tipoMovimento:'livre'});
 };
 
 function batalhaTokenDadosVisuais_(id){
@@ -8332,7 +8344,7 @@ function renderizarBatalhaPosicoes_(){
     el.innerHTML=`<div style="padding:13px;border-radius:12px;background:rgba(0,0,0,.13);border:1px solid rgba(255,255,255,.10);">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px">
         <h3 style="margin:0;color:#b8c8ff;">🗺️ Mapa do combate</h3>
-        <small style="color:#888;">24 × 12 casas · antes da iniciativa: posicionamento livre · em combate: 1 casa grátis/rodada ou até 2 casas por 1 AÇ.</small>
+        <small style="color:#888;">24 × 12 casas · cada personagem se posiciona livremente até rolar sua própria iniciativa · depois: só no turno, 1 casa grátis/rodada ou até 2 casas por 1 AÇ.</small>
       </div>
       ${fora.length?`<div><small style="color:#aaa;">Aguardando posicionamento:</small><div class="battle-unplaced" ondragover="event.preventDefault()" ondrop="batalhaGridRemover_(event)">${fora.map(batalhaTokenHtml_).join('')}</div></div>`:''}
       <div class="battle-grid-wrap"><div class="battle-grid">${cells}</div></div>
@@ -12687,7 +12699,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.8: movimento por casas, passo grátis por rodada e estados públicos -->
+<!-- Mesa Estelar v46.8.1: trava de movimento imediatamente após a iniciativa individual -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
