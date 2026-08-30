@@ -8409,6 +8409,24 @@ function listaIds_(valor) {
     return String(valor).split(/[|,]/).map(v => v.trim()).filter(Boolean);
 }
 
+let rascunhoPericias_={};
+
+function rascunhoPericiasChar_(char){
+    if(!char)return null;
+    const id=String(char.id||currentCharId||'');
+    if(!rascunhoPericias_[id]){
+        rascunhoPericias_[id]={
+            pericias:JSON.parse(JSON.stringify(char.pericias||{})),
+            especializacoes:JSON.parse(JSON.stringify(char.especializacoes||{})),
+            sujo:false
+        };
+    }
+    return rascunhoPericias_[id];
+}
+function limparRascunhoPericias_(charId){
+    delete rascunhoPericias_[String(charId||'')];
+}
+
 function renderizarPericias(char) {
     const attrsBase = char.atributos || {};
     const bonus = char.bonus || {};
@@ -8417,8 +8435,11 @@ function renderizarPericias(char) {
         attrs[a] = (parseInt(attrsBase[a]) || 10) + (parseInt(bonus[a]) || 0);
     });
 
-    const pericias = char.pericias || {};
-    const especializacoes = char.especializacoes || {};
+    const periciasSalvas = char.pericias || {};
+    const especializacoesSalvas = char.especializacoes || {};
+    const rascunho=rascunhoPericiasChar_(char);
+    const pericias = rascunho?.pericias || periciasSalvas;
+    const especializacoes = rascunho?.especializacoes || especializacoesSalvas;
     const visao = String(document.getElementById('periciasEtapa').value || 'origem').toLowerCase();
     const origem = origensDB.find(o => o.id === char.origem);
     const carreira = carreirasDB.find(c => c.id === char.carreira);
@@ -8529,14 +8550,20 @@ function renderizarPericias(char) {
         return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(e)}</td><td>${e.tipo} - ${formatarFormulaIdioma_(e.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
 
-    const estaInvestidaNestaVisao = (dados) => visao === 'todas' ? totalTreinoPericia_(dados) > 0 : investimentoNaVisao(dados) > 0;
+    const estaInvestidaSalvaNestaVisao = (dados) => {
+        if(visao==='todas')return totalTreinoPericia_(dados)>0;
+        const inv=obterInvestimentosPericia_(dados);
+        return Number(inv[visao]||0)>0;
+    };
     const somenteLeitura = visao === 'todas';
 
-    const periciasInvestidas = periciasDisponiveis.filter(p => estaInvestidaNestaVisao(pericias[p.id] || {}));
-    const espInvestidas = especializacoesDisponiveis.filter(e => estaInvestidaNestaVisao(especializacoes[e.id] || {}));
-    const periciasNaoInvestidasBasicas = periciasDisponiveis.filter(p => p.tipo === 'Básica' && !estaInvestidaNestaVisao(pericias[p.id] || {}));
-    const periciasNaoInvestidasProfissionais = periciasDisponiveis.filter(p => p.tipo === 'Profissional' && !estaInvestidaNestaVisao(pericias[p.id] || {}));
-    const espNaoInvestidas = especializacoesDisponiveis.filter(e => !estaInvestidaNestaVisao(especializacoes[e.id] || {}));
+    // Enquanto edita, a linha permanece onde estava. Só "sobe" para
+    // Perícias com Investimento depois de clicar Salvar Perícias.
+    const periciasInvestidas = periciasDisponiveis.filter(p => estaInvestidaSalvaNestaVisao(periciasSalvas[p.id] || {}));
+    const espInvestidas = especializacoesDisponiveis.filter(e => estaInvestidaSalvaNestaVisao(especializacoesSalvas[e.id] || {}));
+    const periciasNaoInvestidasBasicas = periciasDisponiveis.filter(p => p.tipo === 'Básica' && !estaInvestidaSalvaNestaVisao(periciasSalvas[p.id] || {}));
+    const periciasNaoInvestidasProfissionais = periciasDisponiveis.filter(p => p.tipo === 'Profissional' && !estaInvestidaSalvaNestaVisao(periciasSalvas[p.id] || {}));
+    const espNaoInvestidas = especializacoesDisponiveis.filter(e => !estaInvestidaSalvaNestaVisao(especializacoesSalvas[e.id] || {}));
 
     periciasInvestidas.forEach(p => corpoInvestidas.innerHTML += renderLinhaPericia(p, somenteLeitura));
     espInvestidas.forEach(e => corpoInvestidas.innerHTML += renderLinhaEspecializacao(e, somenteLeitura));
@@ -8553,12 +8580,12 @@ function renderizarPericias(char) {
     if(tabEsp)tabEsp.style.display=(visao==='origem'||!espNaoInvestidas.length)?'none':'';
 }
 
-window.atualizarTreinoPericia = async (periciaId, valor, tipo, categoria) => {
+window.atualizarTreinoPericia = (periciaId, valor, tipo, categoria) => {
     if (!currentCharId || categoria === 'todas') return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
-
-    const pericias = { ...(char.pericias || {}) };
+    const draft=rascunhoPericiasChar_(char);
+    const pericias = draft.pericias;
     const atual = { ...(pericias[periciaId] || {}) };
     const inv = obterInvestimentosPericia_(atual);
     const limite = userData && userData.role === 'mestre' ? 999 : (configuracoes.maxTreino || 30);
@@ -8567,7 +8594,7 @@ window.atualizarTreinoPericia = async (periciaId, valor, tipo, categoria) => {
 
     const totalOutras = [
         ...Object.entries(pericias).filter(([id]) => id !== periciaId).map(([, d]) => obterInvestimentosPericia_(d)[categoria] || 0),
-        ...Object.values(char.especializacoes || {}).map(d => obterInvestimentosPericia_(d)[categoria] || 0)
+        ...Object.values(draft.especializacoes || {}).map(d => obterInvestimentosPericia_(d)[categoria] || 0)
     ].reduce((a, b) => a + b, 0);
     valorNum = Math.min(valorNum, Math.max(0, (pontosDisponiveis[categoria] || 9999) - totalOutras));
 
@@ -8577,18 +8604,16 @@ window.atualizarTreinoPericia = async (periciaId, valor, tipo, categoria) => {
     atual.tipo = tipo;
     delete atual.treinoTotalAnterior;
     pericias[periciaId] = atual;
-
-    char.pericias = pericias;
+    draft.sujo=true;
     renderizarPericias(char);
-    await setDoc(doc(db, 'personagens', currentCharId), { pericias }, { merge: true });
 };
 
-window.atualizarTreinoEspecializacao = async (espId, valor, categoria) => {
+window.atualizarTreinoEspecializacao = (espId, valor, categoria) => {
     if (!currentCharId || categoria === 'todas') return;
     const char = userCharacters.find(c => c.id === currentCharId);
     if (!char) return;
-
-    const especializacoes = { ...(char.especializacoes || {}) };
+    const draft=rascunhoPericiasChar_(char);
+    const especializacoes = draft.especializacoes;
     const atual = { ...(especializacoes[espId] || {}) };
     const inv = obterInvestimentosPericia_(atual);
     const limite = userData && userData.role === 'mestre' ? 999 : (configuracoes.maxTreino || 30);
@@ -8596,7 +8621,7 @@ window.atualizarTreinoEspecializacao = async (espId, valor, categoria) => {
     let valorNum = Math.max(0, Math.min(parseInt(valor) || 0, limite));
 
     const totalOutras = [
-        ...Object.values(char.pericias || {}).map(d => obterInvestimentosPericia_(d)[categoria] || 0),
+        ...Object.values(draft.pericias || {}).map(d => obterInvestimentosPericia_(d)[categoria] || 0),
         ...Object.entries(especializacoes).filter(([id]) => id !== espId).map(([, d]) => obterInvestimentosPericia_(d)[categoria] || 0)
     ].reduce((a, b) => a + b, 0);
     valorNum = Math.min(valorNum, Math.max(0, (pontosDisponiveis[categoria] || 9999) - totalOutras));
@@ -8606,14 +8631,26 @@ window.atualizarTreinoEspecializacao = async (espId, valor, categoria) => {
     atual.treinoTotal = inv.origem + inv.carreira + inv.hobbie;
     delete atual.treinoTotalAnterior;
     especializacoes[espId] = atual;
-
-    char.especializacoes = especializacoes;
+    draft.sujo=true;
     renderizarPericias(char);
-    await setDoc(doc(db, 'personagens', currentCharId), { especializacoes }, { merge: true });
 };
 
 window.salvarPericias = async () => {
+    if(!currentCharId)return;
+    const char=userCharacters.find(c=>c.id===currentCharId);
+    if(!char)return;
+    const draft=rascunhoPericiasChar_(char);
+    if(!draft)return;
+    char.pericias=JSON.parse(JSON.stringify(draft.pericias||{}));
+    char.especializacoes=JSON.parse(JSON.stringify(draft.especializacoes||{}));
+    await setDoc(doc(db,'personagens',currentCharId),{
+        pericias:char.pericias,
+        especializacoes:char.especializacoes
+    },{merge:true});
+    limparRascunhoPericias_(currentCharId);
     somSalvar_();
+    notificar_('Perícias salvas. Os investimentos foram organizados.','info',2600);
+    renderizarPericias(char);
 };
 window.mudarEtapaPericias = () => {
     if (!currentCharId) return;
@@ -12582,7 +12619,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.7.6: contagem de mochila e recarga após snapshot -->
+<!-- Mesa Estelar v46.7.7: investimentos de perícias só são consolidados ao salvar -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
