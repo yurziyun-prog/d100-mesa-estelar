@@ -6430,6 +6430,36 @@ function batalhaAcoesMax_(c){
     return Math.max(0,Number(info.max||0));
 }
 
+function batalhaStatusPublicoDoChar_(char){
+    const c=char?.combate||{}, partes=[];
+    if(c.morto)partes.push('☠️ Morto');
+    else if(c.incapacitado)partes.push('🩸 Incapacitado');
+    if(c.inconsciente&&!c.morto)partes.push('💤 Inconsciente');
+    if(c.caido)partes.push('💥 Derrubado');
+    if(c.sangramentoAtivo)partes.push('🩸 Sangrando');
+    const feridos=Object.entries(c.ferimentos||{});
+    if(feridos.some(([,f])=>f?.grave))partes.push('🔴 Ferido gravemente');
+    else if(feridos.some(([,f])=>f?.serio))partes.push('🟠 Ferido seriamente');
+    const t=c.primeirosSocorrosEmAndamento;
+    if(t)partes.push(t.fase==='executando'?'🩹 Recebendo/realizando Primeiros Socorros':'🩹 Primeiros Socorros iniciados');
+    return partes;
+}
+function batalhaSincronizarStatusPublico_(char,participante){
+    if(!participante||!char)return;
+    participante.statusPublico=batalhaStatusPublicoDoChar_(char);
+    // Estado público da arma atualmente selecionada/equipável, sem expor inventário.
+    const prefs=batalhaPrefsChar_(char);
+    const arma=encontrarEquipamentoCombate_(prefs?.equipamento);
+    participante.armaIncapacitada=!!(arma&&(arma.inutilizavel||Number(arma.pvAtual??arma.pv??1)<=0));
+    participante.armaIncapacitadaNome=participante.armaIncapacitada?String(getNome(arma)||'Arma'):'';
+}
+function batalhaStatusPublicoHtml_(p){
+    const partes=[...(p?.statusPublico||[])];
+    if(p?.armaIncapacitada)partes.push(`🔧 Arma incapacitada: ${escaparHtmlInventario_(p.armaIncapacitadaNome||'arma')}`);
+    if(!partes.length)return '';
+    return `<div style="margin-top:8px;color:#ffb4a8;font-size:.9em;font-weight:700;">${partes.join(' · ')}</div>`;
+}
+
 function batalhaSanitizarParticipante_(c){
     return {
         id:c.id,
@@ -6442,6 +6472,9 @@ function batalhaSanitizarParticipante_(c){
         acoesMax:batalhaAcoesMax_(c),
         gridX:null,
         gridY:null,
+        movimentoPendente:null,
+        movimentoGratisUsadoRodada:0,
+        statusPublico:batalhaStatusPublicoDoChar_(c),
         ...(c.__npcTemporario?{
             npcBancoId:String(c.npcBancoId||''),
             npcCombate:JSON.parse(JSON.stringify(c.combate||{})),
@@ -6811,6 +6844,7 @@ function batalhaEstadoPersistenteNPC_(combate){
     return estado;
 }
 async function batalhaPersistirCombateChar_(char,participante){
+    if(participante)batalhaSincronizarStatusPublico_(char,participante);
     if(char?.__npcTemporario){
         const estadoSessao=JSON.parse(JSON.stringify(char.combate||{}));
         if(participante){
@@ -6957,6 +6991,7 @@ function batalhaPublicCard_(p){
             <div style="min-width:0;">
                 <strong>${escaparHtmlInventario_(p.nome||'Sem nome')}</strong>
                 <div style="color:#aaa;font-size:.88em;">INI ${p.iniciativa??'—'}${atual?' · ▶ agora':''}</div>
+                ${batalhaStatusPublicoHtml_(p)}
             </div>
         </div>
     </div>`;
@@ -7133,6 +7168,7 @@ function batalhaControlCard_(p,char){
         </div>
 
         ${fullPrivacy?batalhaLocaisHtml_(char):''}
+        ${batalhaStatusPublicoHtml_(p)}
 
         ${defendendo?batalhaDefesaHtml_(p,char,pend):''}
         ${batalhaEspeciaisHtml_(p,batalhaEstado_?.danoPendente)}
@@ -7415,6 +7451,9 @@ window.batalhaNovaRodada_=async(confirmar=false)=>{
         }
         p.acoesMax=c?batalhaAcoesMax_(c):Number(p.acoesMax||0);
         p.acoesAtuais=batalhaEstaInconsciente_(c)?0:p.acoesMax;
+        p.movimentoPendente=null;
+        p.movimentoGratisUsadoRodada=0;
+        if(c)batalhaSincronizarStatusPublico_(c,p);
     }
     const primeiroValido=batalhaPrimeiroTurnoValido_();
     if(primeiroValido>=0)batalhaEstado_.turnoIndex=primeiroValido;
@@ -7438,21 +7477,14 @@ window.batalhaMovimento_=async function(id){
     if(batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente){notificar_('Resolva a ação pendente antes de se mover.','aviso');return;}
     if(batalhaEstaTratandoPrimeirosSocorros_(c)){notificar_('O personagem está ocupado com Primeiros Socorros.','aviso');return;}
     if(Number(p.acoesAtuais||0)<=0){notificar_('Sem AÇ para movimento.','aviso');return;}
-
-    if(batalhaEhMestre_()){
-        p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
-        batalhaUltimoResultado_[id]='Movimento declarado: 1 AÇ gasto. Ajuste a posição no mapa manualmente.';
-        batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento.`,'movimento',{actorId:p.id});
-        if(Number(p.acoesAtuais||0)<=0 && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente){
-            await batalhaAvancarTurnoInterno_();
-        }
-        await batalhaSalvarEstado_();
-        renderizarBatalhaCompartilhada_();
-    }else{
-        await batalhaEnviarAcao_(id,'movimento',{custo:1});
-        batalhaUltimoResultado_[id]='Movimento solicitado: 1 AÇ. Ajuste a posição no mapa manualmente.';
-        renderizarBatalhaCompartilhada_();
-    }
+    if(p.movimentoPendente){notificar_('Já existe um Movimento aguardando deslocamento no mapa.','aviso');return;}
+    p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+    p.movimentoPendente={tipo:'pago',rodada:Number(batalhaEstado_.rodada||1),origemX:Number(p.gridX),origemY:Number(p.gridY),max:2};
+    batalhaUltimoResultado_[id]='Movimento: 1 AÇ gasto. Arraste até 2 casas em qualquer direção.';
+    batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento (até 2 casas).`,'movimento',{actorId:p.id});
+    if(batalhaEhMestre_())await batalhaSalvarEstado_();
+    else await batalhaEnviarAcao_(id,'movimento',{custo:1,origemX:p.gridX,origemY:p.gridY});
+    renderizarBatalhaCompartilhada_();
 };
 async function batalhaEnviarAcao_(personagemId,tipo,payload){
     const c=batalhaCharLocal_(personagemId);if(!c)return;
@@ -7917,6 +7949,8 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
             inventarioAlterado=true;
             if(armaAlvo.pvAtual<=0){
                 armaAlvo.inutilizavel=true;
+                defensor.armaIncapacitada=true;
+                defensor.armaIncapacitadaNome=String(getNome(armaAlvo)||'Arma');
                 armaAlvo.quebradoEm=new Date().toISOString();
                 batalhaLogPush_(batalhaEstado_,`${getNome(armaAlvo)} chegou a 0 PV e ficou INUTILIZÁVEL. O personagem precisa trocar de arma.`,'arma_quebrada',{targetId:defensor.id});
             }else{
@@ -7925,6 +7959,7 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
         }
     }
 
+    batalhaSincronizarStatusPublico_(alvo,defensor);
     if(alvo.__npcTemporario){
         defensor.npcCombate=JSON.parse(JSON.stringify(alvo.combate||{}));
         defensor.npcInventario=JSON.parse(JSON.stringify(alvo.inventario||{}));
@@ -8069,20 +8104,23 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
                 const valido=Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<BATALHA_GRID_COLS_&&y>=0&&y<BATALHA_GRID_ROWS_;
                 const ocupado=valido?batalhaCelulaOcupada_(x,y,p.id):true;
                 if(valido&&!ocupado){
-                    p.gridX=x;p.gridY=y;
-                    batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa.`,'posicao',{actorId:p.id});
-                    await batalhaSalvarEstado_();
+                    const regra=batalhaValidarMovimentoJogador_(p,x,y);
+                    if(regra.ok){
+                        p.gridX=x;p.gridY=y;
+                        if(regra.tipo==='gratis')p.movimentoGratisUsadoRodada=Number(batalhaEstado_.rodada||1);
+                        if(regra.tipo==='pago')p.movimentoPendente=null;
+                        batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa${regra.tipo==='gratis'?' (movimento gratuito)':regra.tipo==='pago'?' (Movimento 1 AÇ)':''}.`,'posicao',{actorId:p.id});
+                        await batalhaSalvarEstado_();
+                    }
                 }
             }
         }else if(acao.tipo==='movimento'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
             if(atual?.id===p.id && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente && Number(p.acoesAtuais||0)>=1 && !batalhaEstaTratandoPrimeirosSocorros_(c)){
                 p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
-                batalhaUltimoResultado_[p.id]='Movimento: 1 AÇ gasto. Posição ajustada manualmente no mapa.';
-                batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento.`,'movimento',{actorId:p.id});
-                if(Number(p.acoesAtuais||0)<=0 && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente){
-                    await batalhaAvancarTurnoInterno_();
-                }
+                p.movimentoPendente={tipo:'pago',rodada:Number(batalhaEstado_.rodada||1),origemX:Number(acao.payload?.origemX??p.gridX),origemY:Number(acao.payload?.origemY??p.gridY),max:2};
+                batalhaUltimoResultado_[p.id]='Movimento: 1 AÇ gasto. Arraste até 2 casas em qualquer direção.';
+                batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento (até 2 casas).`,'movimento',{actorId:p.id});
                 await batalhaSalvarEstado_();
             }
         }else if(acao.tipo==='inventario_acao'){
@@ -8106,8 +8144,33 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
 const BATALHA_GRID_COLS_=24,BATALHA_GRID_ROWS_=12;
 function batalhaPodeMoverToken_(p){
     if(!p||!currentUserUid)return false;
-    if(batalhaEhMestre_())return true;
-    return String(p.donoUid||'')===String(currentUserUid);
+    if(batalhaEhMestre_())return true; // mestre mantém override para reposicionamentos/efeitos forçados
+    if(String(p.donoUid||'')!==String(currentUserUid))return false;
+    if(!batalhaIniciativasProntas_())return true; // posicionamento livre antes do combate começar
+    const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
+    if(String(atual?.id)!==String(p.id))return false;
+    if(p.movimentoPendente)return true;
+    return Number(p.movimentoGratisUsadoRodada||0)!==Number(batalhaEstado_?.rodada||1);
+}
+function batalhaDistanciaCasas_(x1,y1,x2,y2){
+    // Regra simples escolhida para Mesa Estelar: diagonal, horizontal e vertical custam igual.
+    return Math.max(Math.abs(Number(x2)-Number(x1)),Math.abs(Number(y2)-Number(y1)));
+}
+function batalhaValidarMovimentoJogador_(p,x,y){
+    if(!batalhaIniciativasProntas_())return {ok:true,tipo:'livre'};
+    const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
+    if(String(atual?.id)!==String(p.id))return {ok:false,msg:'Você só pode mover durante seu turno.'};
+    const ox=Number(p.gridX),oy=Number(p.gridY);
+    if(!Number.isInteger(ox)||!Number.isInteger(oy))return {ok:true,tipo:'livre'};
+    if(p.movimentoPendente){
+        const origemX=Number(p.movimentoPendente.origemX),origemY=Number(p.movimentoPendente.origemY);
+        const dist=batalhaDistanciaCasas_(origemX,origemY,x,y);
+        return dist<=2?{ok:true,tipo:'pago'}:{ok:false,msg:'Movimento de 1 AÇ permite no máximo 2 casas.'};
+    }
+    if(Number(p.movimentoGratisUsadoRodada||0)===Number(batalhaEstado_?.rodada||1))
+        return {ok:false,msg:'O movimento gratuito desta rodada já foi usado. Gaste 1 AÇ para mover novamente.'};
+    const dist=batalhaDistanciaCasas_(ox,oy,x,y);
+    return dist<=1?{ok:true,tipo:'gratis'}:{ok:false,msg:'O movimento gratuito permite 1 casa adjacente. Para mover até 2 casas, gaste 1 AÇ.'};
 }
 function batalhaPosGridValida_(p){
     const x=Number(p?.gridX),y=Number(p?.gridY);
@@ -8148,14 +8211,19 @@ window.batalhaGridDrop_=async function(ev,x,y){
 
     if(batalhaEhMestre_()){
         p.gridX=x;p.gridY=y;
+        if(p.movimentoPendente)p.movimentoPendente=null;
         batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa.`,'posicao',{actorId:p.id});
         renderizarBatalhaPosicoes_();
         await batalhaSalvarEstado_();
     }else{
-        // Atualização visual imediata; o mestre valida e persiste pelo canal já usado pelas outras ações.
+        const regra=batalhaValidarMovimentoJogador_(p,x,y);
+        if(!regra.ok){notificar_(regra.msg,'aviso');return;}
+        const origemX=p.gridX,origemY=p.gridY;
         p.gridX=x;p.gridY=y;
+        if(regra.tipo==='gratis')p.movimentoGratisUsadoRodada=Number(batalhaEstado_.rodada||1);
+        if(regra.tipo==='pago')p.movimentoPendente=null;
         renderizarBatalhaPosicoes_();
-        await batalhaEnviarAcao_(id,'posicao',{gridX:x,gridY:y});
+        await batalhaEnviarAcao_(id,'posicao',{gridX:x,gridY:y,origemX,origemY,tipoMovimento:regra.tipo});
     }
 };
 window.batalhaGridRemover_=async function(ev){
@@ -8264,11 +8332,11 @@ function renderizarBatalhaPosicoes_(){
     el.innerHTML=`<div style="padding:13px;border-radius:12px;background:rgba(0,0,0,.13);border:1px solid rgba(255,255,255,.10);">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px">
         <h3 style="margin:0;color:#b8c8ff;">🗺️ Mapa do combate</h3>
-        <small style="color:#888;">24 × 12 casas · jogadores movem seus personagens; mestre move todos.</small>
+        <small style="color:#888;">24 × 12 casas · antes da iniciativa: posicionamento livre · em combate: 1 casa grátis/rodada ou até 2 casas por 1 AÇ.</small>
       </div>
       ${fora.length?`<div><small style="color:#aaa;">Aguardando posicionamento:</small><div class="battle-unplaced" ondragover="event.preventDefault()" ondrop="batalhaGridRemover_(event)">${fora.map(batalhaTokenHtml_).join('')}</div></div>`:''}
       <div class="battle-grid-wrap"><div class="battle-grid">${cells}</div></div>
-      <small style="display:block;color:#777;margin-top:7px;">Por enquanto o mapa é apenas posicional: distância, alcance e movimento ainda não são calculados automaticamente.</small>
+      <small style="display:block;color:#777;margin-top:7px;">Movimento: diagonal, vertical e horizontal têm o mesmo custo. O mestre mantém reposicionamento livre para efeitos forçados e ajustes.</small>
     </div>`;
 }
 
@@ -12619,7 +12687,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.7.7: investimentos de perícias só são consolidados ao salvar -->
+<!-- Mesa Estelar v46.8: movimento por casas, passo grátis por rodada e estados públicos -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
