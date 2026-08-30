@@ -6266,6 +6266,7 @@ let batalhaPersonagensUnsub_ = null;
 let batalhaProcessandoAcoes_ = false;
 let batalhaPrefsMestre_ = {};
 let batalhaPrefsJogador_ = {};
+let batalhaMovimentoIntentoJogador_ = {};
 let batalhaSelecaoMestre_ = new Set();
 
 function batalhaEhMestre_(){ return !!(userData && userData.role==='mestre'); }
@@ -6474,6 +6475,7 @@ function batalhaSanitizarParticipante_(c){
         gridY:null,
         movimentoPendente:null,
         movimentoGratisUsadoRodada:0,
+        passagensNaRodada:0,
         statusPublico:batalhaStatusPublicoDoChar_(c),
         ...(c.__npcTemporario?{
             npcBancoId:String(c.npcBancoId||''),
@@ -7183,7 +7185,7 @@ function batalhaControlCard_(p,char){
             <button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaMovimento_('${p.id}')">👣 Movimento (1 AÇ)</button>
             <button class="btn-small" ${batalhaTemIniciativa_(p)?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${batalhaTemIniciativa_(p)?'Iniciativa rolada':'Iniciativa'}</button>
             <span style="margin-left:auto;"></span>
-            ${atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">${tratamentoExecutando?'🩹 Concluir atendimento':'⏭ Próximo'}</button>`:''}
+            ${atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">${tratamentoExecutando?'🩹 Concluir atendimento':Number(p.passagensNaRodada||0)>0?'⏭ Passar (-1 AÇ)':'⏭ Adiar'}</button>`:''}
             <span style="width:14px;"></span>
             ${batalhaPodePrimeirosSocorros_(char)&&!tratandoPS?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaPrimeirosSocorros_('${p.id}')">🩹 Primeiros Socorros</button>`:''}
             ${batalhaEhMestre_()?`<button class="btn-small btn-delete" onclick="batalhaRemoverParticipante_('${p.id}')">✕ Remover</button>`:''}
@@ -7406,6 +7408,15 @@ async function batalhaAvancarTurnoInterno_(){
     }
 }
 
+function batalhaAplicarPassagem_(p){
+    if(!p)return {custo:0,numero:0};
+    const numero=Math.max(0,Number(p.passagensNaRodada||0))+1;
+    p.passagensNaRodada=numero;
+    const custo=numero>=2 && Number(p.acoesAtuais||0)>0 ? 1 : 0;
+    if(custo)p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+    return {custo,numero};
+}
+
 window.batalhaProximo_=async(id)=>{
     const p=batalhaParticipante_(id);if(!p||!batalhaPodeControlar_(p))return;
     const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
@@ -7420,10 +7431,17 @@ window.batalhaProximo_=async(id)=>{
     }
     if(batalhaEhMestre_()){
         const c=batalhaCharLocal_(id);
+        const passagem=batalhaAplicarPassagem_(p);
         if(c){
             batalhaConsumirTurnoBloqueioFerimento_(c);
             await batalhaPersistirCombateChar_(c,p);
         }
+        batalhaUltimoResultado_[id]=passagem.custo
+            ?`Passou novamente e abdicou de 1 AÇ. Restam ${p.acoesAtuais}/${p.acoesMax}.`
+            :'Ação adiada. Se passar novamente nesta rodada, perderá 1 AÇ.';
+        batalhaLogPush_(batalhaEstado_,passagem.custo
+            ?`${p.nome} passou e abdicou de 1 AÇ.`
+            :`${p.nome} adiou sua ação.`, 'passar',{actorId:p.id});
         await batalhaAvancarTurnoInterno_();await batalhaSalvarEstado_();
     }else{
         await batalhaEnviarAcao_(id,'proximo',{});
@@ -7453,6 +7471,8 @@ window.batalhaNovaRodada_=async(confirmar=false)=>{
         p.acoesAtuais=batalhaEstaInconsciente_(c)?0:p.acoesMax;
         p.movimentoPendente=null;
         p.movimentoGratisUsadoRodada=0;
+        p.passagensNaRodada=0;
+        delete batalhaMovimentoIntentoJogador_[String(p.id)];
         if(c)batalhaSincronizarStatusPublico_(c,p);
     }
     const primeiroValido=batalhaPrimeiroTurnoValido_();
@@ -7473,18 +7493,32 @@ window.batalhaMovimento_=async function(id){
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);
     if(!p||!c||!batalhaPodeControlar_(p))return;
     const atual=(batalhaEstado_?.participantes||[])[Number(batalhaEstado_?.turnoIndex||0)];
-    if(String(atual?.id)!==String(id)){notificar_('Movimento só pode ser gasto no turno atual.','aviso');return;}
+    if(String(atual?.id)!==String(id)){notificar_('Movimento só pode ser usado no turno atual.','aviso');return;}
     if(batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente){notificar_('Resolva a ação pendente antes de se mover.','aviso');return;}
     if(batalhaEstaTratandoPrimeirosSocorros_(c)){notificar_('O personagem está ocupado com Primeiros Socorros.','aviso');return;}
     if(Number(p.acoesAtuais||0)<=0){notificar_('Sem AÇ para movimento.','aviso');return;}
-    if(p.movimentoPendente){notificar_('Já existe um Movimento aguardando deslocamento no mapa.','aviso');return;}
-    p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
-    p.movimentoPendente={tipo:'pago',rodada:Number(batalhaEstado_.rodada||1),origemX:Number(p.gridX),origemY:Number(p.gridY),max:2};
-    batalhaUltimoResultado_[id]='Movimento: 1 AÇ gasto. Arraste até 2 casas em qualquer direção.';
-    batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento (até 2 casas).`,'movimento',{actorId:p.id});
-    if(batalhaEhMestre_())await batalhaSalvarEstado_();
-    else await batalhaEnviarAcao_(id,'movimento',{custo:1,origemX:p.gridX,origemY:p.gridY});
-    renderizarBatalhaCompartilhada_();
+
+    if(batalhaEhMestre_()){
+        if(p.movimentoPendente){notificar_('Já existe um Movimento aguardando deslocamento no mapa.','aviso');return;}
+        p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+        p.movimentoPendente={tipo:'pago',rodada:Number(batalhaEstado_.rodada||1),origemX:Number(p.gridX),origemY:Number(p.gridY),max:2};
+        batalhaUltimoResultado_[id]='Movimento preparado: arraste até 2 casas.';
+        batalhaLogPush_(batalhaEstado_,`${p.nome} gastou 1 AÇ em Movimento (até 2 casas).`,'movimento',{actorId:p.id});
+        await batalhaSalvarEstado_();
+    }else{
+        const chave=String(id);
+        if(batalhaMovimentoIntentoJogador_[chave]){
+            delete batalhaMovimentoIntentoJogador_[chave];
+            notificar_('Movimento de 1 AÇ cancelado.','info');
+        }else{
+            batalhaMovimentoIntentoJogador_[chave]={
+                origemX:Number(p.gridX),origemY:Number(p.gridY),rodada:Number(batalhaEstado_.rodada||1)
+            };
+            batalhaUltimoResultado_[id]='Movimento preparado: arraste até 2 casas. A AÇ será gasta quando o deslocamento for confirmado.';
+            notificar_('👣 Movimento preparado: arraste até 2 casas.','info',3000);
+        }
+        renderizarBatalhaCompartilhada_();
+    }
 };
 async function batalhaEnviarAcao_(personagemId,tipo,payload){
     const c=batalhaCharLocal_(personagemId);if(!c)return;
@@ -8080,8 +8114,15 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
         }else if(acao.tipo==='proximo'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
             if(atual?.id===p.id && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente){
+                const passagem=batalhaAplicarPassagem_(p);
                 batalhaConsumirTurnoBloqueioFerimento_(c);
                 await batalhaPersistirCombateChar_(c,p);
+                batalhaUltimoResultado_[p.id]=passagem.custo
+                    ?`Passou novamente e abdicou de 1 AÇ. Restam ${p.acoesAtuais}/${p.acoesMax}.`
+                    :'Ação adiada. Se passar novamente nesta rodada, perderá 1 AÇ.';
+                batalhaLogPush_(batalhaEstado_,passagem.custo
+                    ?`${p.nome} passou e abdicou de 1 AÇ.`
+                    :`${p.nome} adiou sua ação.`, 'passar',{actorId:p.id});
                 await batalhaAvancarTurnoInterno_();
                 await batalhaSalvarEstado_();
             }
@@ -8097,7 +8138,6 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
         }else if(acao.tipo==='posicao'){
             const gx=acao.payload?.gridX,gy=acao.payload?.gridY;
             if(gx===null||gy===null){
-                // Jogador só pode retirar livremente do mapa antes de rolar a própria iniciativa.
                 if(!batalhaTemIniciativa_(p)){
                     p.gridX=null;p.gridY=null;
                     await batalhaSalvarEstado_();
@@ -8107,12 +8147,27 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
                 const valido=Number.isInteger(x)&&Number.isInteger(y)&&x>=0&&x<BATALHA_GRID_COLS_&&y>=0&&y<BATALHA_GRID_ROWS_;
                 const ocupado=valido?batalhaCelulaOcupada_(x,y,p.id):true;
                 if(valido&&!ocupado){
-                    const regra=batalhaValidarMovimentoJogador_(p,x,y);
-                    if(regra.ok){
-                        p.gridX=x;p.gridY=y;
-                        if(regra.tipo==='gratis')p.movimentoGratisUsadoRodada=Number(batalhaEstado_.rodada||1);
-                        if(regra.tipo==='pago')p.movimentoPendente=null;
-                        batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa${regra.tipo==='gratis'?' (movimento gratuito)':regra.tipo==='pago'?' (Movimento 1 AÇ)':''}.`,'posicao',{actorId:p.id});
+                    let permitido=false,tipo=String(acao.payload?.tipoMovimento||'');
+                    const ox=Number(p.gridX),oy=Number(p.gridY);
+                    if(!batalhaTemIniciativa_(p)){
+                        permitido=true;tipo='livre';
+                    }else if(batalhaIniciativasProntas_()){
+                        const turno=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
+                        if(String(turno?.id)===String(p.id)&&Number.isInteger(ox)&&Number.isInteger(oy)){
+                            const dist=batalhaDistanciaCasas_(ox,oy,x,y);
+                            if(tipo==='pago'&&dist<=2&&Number(p.acoesAtuais||0)>=1&&!batalhaEstado_.pendencia&&!batalhaEstado_.danoPendente&&!batalhaEstaTratandoPrimeirosSocorros_(c)){
+                                p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+                                permitido=true;
+                            }else if(tipo!=='pago'&&dist<=1&&Number(p.movimentoGratisUsadoRodada||0)!==Number(batalhaEstado_.rodada||1)){
+                                tipo='gratis';
+                                p.movimentoGratisUsadoRodada=Number(batalhaEstado_.rodada||1);
+                                permitido=true;
+                            }
+                        }
+                    }
+                    if(permitido){
+                        p.gridX=x;p.gridY=y;p.movimentoPendente=null;
+                        batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa${tipo==='gratis'?' (movimento gratuito)':tipo==='pago'?' (Movimento 1 AÇ)':''}.`,'posicao',{actorId:p.id});
                         await batalhaSalvarEstado_();
                     }
                 }
@@ -8147,17 +8202,11 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
 const BATALHA_GRID_COLS_=24,BATALHA_GRID_ROWS_=12;
 function batalhaPodeMoverToken_(p){
     if(!p||!currentUserUid)return false;
-    if(batalhaEhMestre_())return true; // mestre mantém override para reposicionamentos/efeitos forçados
-    if(String(p.donoUid||'')!==String(currentUserUid))return false;
-    // Posicionamento livre termina para ESTE personagem assim que sua iniciativa é rolada.
-    // Não esperamos todos os participantes rolarem, pois isso deixava jogadores já prontos
-    // continuarem arrastando livremente enquanto outro participante ainda não tinha iniciativa.
-    if(!batalhaTemIniciativa_(p))return true;
-    if(!batalhaIniciativasProntas_())return false;
-    const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
-    if(String(atual?.id)!==String(p.id))return false;
-    if(p.movimentoPendente)return true;
-    return Number(p.movimentoGratisUsadoRodada||0)!==Number(batalhaEstado_?.rodada||1);
+    if(batalhaEhMestre_())return true;
+    // O token do próprio jogador pode iniciar o gesto de arrastar.
+    // A autorização real ocorre no DROP, onde turno, distância, passo grátis e AÇ
+    // são validados. Isso evita o HTML draggable ficar preso por snapshots atrasados.
+    return String(p.donoUid||'')===String(currentUserUid);
 }
 function batalhaDistanciaCasas_(x1,y1,x2,y2){
     // Regra simples escolhida para Mesa Estelar: diagonal, horizontal e vertical custam igual.
@@ -8169,16 +8218,22 @@ function batalhaValidarMovimentoJogador_(p,x,y){
     const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
     if(String(atual?.id)!==String(p.id))return {ok:false,msg:'Você só pode mover durante seu turno.'};
     const ox=Number(p.gridX),oy=Number(p.gridY);
-    if(!Number.isInteger(ox)||!Number.isInteger(oy))return {ok:true,tipo:'livre'};
-    if(p.movimentoPendente){
-        const origemX=Number(p.movimentoPendente.origemX),origemY=Number(p.movimentoPendente.origemY);
+    if(!Number.isInteger(ox)||!Number.isInteger(oy))return {ok:false,msg:'O personagem precisa estar posicionado no mapa.'};
+
+    const intentoLocal=batalhaMovimentoIntentoJogador_[String(p.id)];
+    const pago=!!p.movimentoPendente||!!intentoLocal;
+    if(pago){
+        const origemX=Number(p.movimentoPendente?.origemX ?? intentoLocal?.origemX ?? ox);
+        const origemY=Number(p.movimentoPendente?.origemY ?? intentoLocal?.origemY ?? oy);
         const dist=batalhaDistanciaCasas_(origemX,origemY,x,y);
         return dist<=2?{ok:true,tipo:'pago'}:{ok:false,msg:'Movimento de 1 AÇ permite no máximo 2 casas.'};
     }
+
     if(Number(p.movimentoGratisUsadoRodada||0)===Number(batalhaEstado_?.rodada||1))
-        return {ok:false,msg:'O movimento gratuito desta rodada já foi usado. Gaste 1 AÇ para mover novamente.'};
+        return {ok:false,msg:'O movimento gratuito desta rodada já foi usado. Clique em Movimento (1 AÇ) para mover novamente.'};
+
     const dist=batalhaDistanciaCasas_(ox,oy,x,y);
-    return dist<=1?{ok:true,tipo:'gratis'}:{ok:false,msg:'O movimento gratuito permite 1 casa adjacente. Para mover até 2 casas, gaste 1 AÇ.'};
+    return dist<=1?{ok:true,tipo:'gratis'}:{ok:false,msg:'O movimento gratuito permite 1 casa adjacente. Para mover até 2 casas, clique em Movimento (1 AÇ).'};
 }
 function batalhaPosGridValida_(p){
     const x=Number(p?.gridX),y=Number(p?.gridY);
@@ -8229,7 +8284,10 @@ window.batalhaGridDrop_=async function(ev,x,y){
         const origemX=p.gridX,origemY=p.gridY;
         p.gridX=x;p.gridY=y;
         if(regra.tipo==='gratis')p.movimentoGratisUsadoRodada=Number(batalhaEstado_.rodada||1);
-        if(regra.tipo==='pago')p.movimentoPendente=null;
+        if(regra.tipo==='pago'){
+            p.movimentoPendente=null;
+            delete batalhaMovimentoIntentoJogador_[String(id)];
+        }
         renderizarBatalhaPosicoes_();
         await batalhaEnviarAcao_(id,'posicao',{gridX:x,gridY:y,origemX,origemY,tipoMovimento:regra.tipo});
     }
@@ -8348,7 +8406,7 @@ function renderizarBatalhaPosicoes_(){
       </div>
       ${fora.length?`<div><small style="color:#aaa;">Aguardando posicionamento:</small><div class="battle-unplaced" ondragover="event.preventDefault()" ondrop="batalhaGridRemover_(event)">${fora.map(batalhaTokenHtml_).join('')}</div></div>`:''}
       <div class="battle-grid-wrap"><div class="battle-grid">${cells}</div></div>
-      <small style="display:block;color:#777;margin-top:7px;">Movimento: diagonal, vertical e horizontal têm o mesmo custo. O mestre mantém reposicionamento livre para efeitos forçados e ajustes.</small>
+      <small style="display:block;color:#777;margin-top:7px;">Movimento: 1 casa adjacente grátis por rodada; Movimento (1 AÇ) libera até 2 casas. Diagonal, vertical e horizontal têm o mesmo custo. O mestre mantém reposicionamento livre.</small>
     </div>`;
 }
 
@@ -12699,7 +12757,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.8.1: trava de movimento imediatamente após a iniciativa individual -->
+<!-- Mesa Estelar v46.8.2: movimento atômico por drop e regra de adiar/passagem -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
