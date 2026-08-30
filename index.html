@@ -6476,6 +6476,9 @@ function batalhaSanitizarParticipante_(c){
         movimentoPendente:null,
         movimentoGratisUsadoRodada:0,
         passagensNaRodada:0,
+        primeirosSocorrosEmAndamento:c?.combate?.primeirosSocorrosEmAndamento
+            ? JSON.parse(JSON.stringify(c.combate.primeirosSocorrosEmAndamento))
+            : null,
         statusPublico:batalhaStatusPublicoDoChar_(c),
         ...(c.__npcTemporario?{
             npcBancoId:String(c.npcBancoId||''),
@@ -6846,7 +6849,12 @@ function batalhaEstadoPersistenteNPC_(combate){
     return estado;
 }
 async function batalhaPersistirCombateChar_(char,participante){
-    if(participante)batalhaSincronizarStatusPublico_(char,participante);
+    if(participante){
+        participante.primeirosSocorrosEmAndamento=char?.combate?.primeirosSocorrosEmAndamento
+            ? JSON.parse(JSON.stringify(char.combate.primeirosSocorrosEmAndamento))
+            : null;
+        batalhaSincronizarStatusPublico_(char,participante);
+    }
     if(char?.__npcTemporario){
         const estadoSessao=JSON.parse(JSON.stringify(char.combate||{}));
         if(participante){
@@ -7039,7 +7047,14 @@ function batalhaPrimeirosSocorrosPericia_(char){
       ||(periciasDB||[]).find(x=>normalizarTextoCombate_(getNome(x)||'').includes('primeiros socorros'))||null;
 }
 function batalhaPodePrimeirosSocorros_(char){return !!batalhaPrimeirosSocorrosPericia_(char)&&!batalhaEstaInconsciente_(char);}
-function batalhaTratamentoPrimeirosSocorros_(char){return char?.combate?.primeirosSocorrosEmAndamento||null;}
+function batalhaTratamentoPrimeirosSocorros_(char){
+    if(!char)return null;
+    const p=batalhaParticipante_(char.id);
+    if(p && Object.prototype.hasOwnProperty.call(p,'primeirosSocorrosEmAndamento')){
+        return p.primeirosSocorrosEmAndamento||null;
+    }
+    return char?.combate?.primeirosSocorrosEmAndamento||null;
+}
 function batalhaEstaTratandoPrimeirosSocorros_(char){return !!batalhaTratamentoPrimeirosSocorros_(char);}
 function batalhaPenalidadeTratamento_(char){return batalhaEstaTratandoPrimeirosSocorros_(char)?2:0;}
 function batalhaStatusPrimeirosSocorrosHtml_(char){
@@ -7047,8 +7062,23 @@ function batalhaStatusPrimeirosSocorrosHtml_(char){
     const msg=t.fase==='executando'
       ? `🩹 <strong>Prestando Primeiros Socorros</strong> em ${escaparHtmlInventario_(t.alvoNome)} (${escaparHtmlInventario_(t.local)}). Esta oportunidade inteira está ocupada.`
       : `🩹 <strong>Primeiros Socorros iniciados</strong> em ${escaparHtmlInventario_(t.alvoNome)} (${escaparHtmlInventario_(t.local)}). A próxima oportunidade será gasta no tratamento.`;
-    return `<div style="margin-top:9px;padding:9px 11px;border-radius:8px;background:rgba(72,202,228,.09);border:1px solid rgba(72,202,228,.35);color:#b8edf7;">${msg}<br><small>Enquanto trata, defesas sofrem +2 graus de dificuldade.</small></div>`;
+    const p=batalhaParticipante_(char?.id);
+    return `<div style="margin-top:9px;padding:9px 11px;border-radius:8px;background:rgba(72,202,228,.09);border:1px solid rgba(72,202,228,.35);color:#b8edf7;">${msg}<br><small>Enquanto trata, defesas sofrem +2 graus de dificuldade.</small>${batalhaEhMestre_()&&p?` <button class="btn-small" style="margin-left:8px;padding:3px 7px;" onclick="batalhaCancelarPrimeirosSocorros_('${p.id}')">✕ Cancelar atendimento</button>`:''}</div>`;
 }
+window.batalhaCancelarPrimeirosSocorros_=async function(id){
+    if(!batalhaEhMestre_())return;
+    const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);
+    if(!p||!c)return;
+    c.combate=c.combate||{};
+    delete c.combate.primeirosSocorrosEmAndamento;
+    p.primeirosSocorrosEmAndamento=null;
+    await batalhaPersistirCombateChar_(c,p);
+    batalhaUltimoResultado_[id]='Primeiros Socorros cancelados pelo mestre.';
+    batalhaLogPush_(batalhaEstado_,`${p.nome}: atendimento de Primeiros Socorros cancelado pelo mestre.`,'primeiros_socorros',{actorId:p.id});
+    await batalhaSalvarEstado_();
+    renderizarBatalhaCompartilhada_();
+};
+
 function batalhaKitPrimeirosSocorros_(char){
     const ok=new Set(['equipado','bolso','mochila']);
     return percorrerInventarioItens_(char).find(r=>{
@@ -7091,38 +7121,94 @@ async function batalhaIniciarPrimeirosSocorrosMestre_(id,alvoId,local){
     if(!p||!c||!ap||!alvo||String(atual?.id)!==String(id)||Number(p.acoesAtuais||0)<=0||batalhaEstaTratandoPrimeirosSocorros_(c))return false;
     if(!batalhaLocaisFeridosPrimeirosSocorros_(alvo).some(x=>x.local===local))return false;
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
-    c.combate=c.combate||{};c.combate.primeirosSocorrosEmAndamento={alvoId:String(alvoId),alvoNome:ap.nome,local,fase:'aguardando'};
+    c.combate=c.combate||{};
+    const tratamento={alvoId:String(alvoId),alvoNome:ap.nome,local,fase:'aguardando'};
+    c.combate.primeirosSocorrosEmAndamento=tratamento;
+    p.primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(tratamento));
     await batalhaPersistirCombateChar_(c,p);
     batalhaLogPush_(batalhaEstado_,`${p.nome} iniciou Primeiros Socorros em ${ap.nome} (${local}). A próxima oportunidade será ocupada pelo atendimento.`,'primeiros_socorros',{actorId:p.id,targetId:ap.id});
     batalhaUltimoResultado_[p.id]='Primeiros Socorros iniciados. Passe a vez; a próxima oportunidade será consumida pelo tratamento.';
     await batalhaSalvarEstado_();return true;
 }
 async function batalhaConcluirPrimeirosSocorrosMestre_(id){
-    const p=batalhaParticipante_(id),c=batalhaCharLocal_(id),t=batalhaTratamentoPrimeirosSocorros_(c);
-    if(!p||!c||!t||t.fase!=='executando')return false;
+    const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);
+    if(!p||!c)return false;
+
+    // O estado compartilhado da batalha é a fonte de verdade. Isso evita o mestre
+    // rejeitar a conclusão por estar com uma cópia antiga da ficha do jogador.
+    const t=p.primeirosSocorrosEmAndamento||c?.combate?.primeirosSocorrosEmAndamento||null;
+    if(!t)return false;
+
+    const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
+    if(String(atual?.id)!==String(id))return false;
+
     const ap=batalhaParticipante_(t.alvoId),alvo=batalhaCharLocal_(t.alvoId);
     if(!ap||!alvo){
+        c.combate=c.combate||{};
         delete c.combate.primeirosSocorrosEmAndamento;
+        p.primeirosSocorrosEmAndamento=null;
         await batalhaPersistirCombateChar_(c,p);
         batalhaUltimoResultado_[p.id]='Primeiros Socorros cancelados: o alvo original não está mais nesta batalha.';
-        await batalhaAvancarTurnoInterno_();await batalhaSalvarEstado_();
+        await batalhaAvancarTurnoInterno_();
+        await batalhaSalvarEstado_();
         return false;
     }
+
+    // Compatibilidade com sessões que ficaram presas em "aguardando":
+    // ao clicar Concluir no turno do tratador, promovemos para executando e concluímos.
+    if(t.fase!=='executando'){
+        t.fase='executando';
+    }
+
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
-    const max=pvMaxLocais_(alvo)[t.local],x={local:t.local,max,atual:Number(alvo.combate?.hitLocations?.[t.local]??max)};
-    const per=batalhaPrimeirosSocorrosPericia_(c),base=obterValorRegistroPericia_(c,per.id,per.__especializacao),kit=batalhaKitPrimeirosSocorros_(c);
-    const aj=aplicarDificuldadeEFadiga_(c,base,'padrao',kit?0:1),roll=Math.floor(Math.random()*100)+1,r=classificarD100_(aj.valor,roll);
+    const max=pvMaxLocais_(alvo)[t.local],
+          x={local:t.local,max,atual:Number(alvo.combate?.hitLocations?.[t.local]??max)};
+    const per=batalhaPrimeirosSocorrosPericia_(c),
+          base=obterValorRegistroPericia_(c,per.id,per.__especializacao),
+          kit=batalhaKitPrimeirosSocorros_(c);
+    const aj=aplicarDificuldadeEFadiga_(c,base,'padrao',kit?0:1),
+          roll=Math.floor(Math.random()*100)+1,
+          r=classificarD100_(aj.valor,roll);
+
     if(kit)batalhaConsumirKitPrimeirosSocorros_(c,kit);
-    somDado_();if(r.grau==='Crítico')somMagico_();else if(r.grau==='Fiasco')somFiasco_();
+    somDado_();
+    if(r.grau==='Crítico')somMagico_();
+    else if(r.grau==='Fiasco')somFiasco_();
+
     let res;
-    if(r.grau==='Fiasco'){batalhaAplicarFiascoPrimeirosSocorros_(alvo,x);res='Falha crítica: +1 de dano na localização.';}
-    else if(batalhaResultadoGradeValor_(r.grau)>=2){if(alvo.combate?.sangramentoAtivo){alvo.combate.sangramentoAtivo=false;delete alvo.combate.sangramentoOrigem;}res=batalhaAplicarSucessoPrimeirosSocorros_(alvo,x,r.grau==='Crítico');}
-    else res='Falha: nenhum benefício.';
+    if(r.grau==='Fiasco'){
+        batalhaAplicarFiascoPrimeirosSocorros_(alvo,x);
+        res='Falha crítica: +1 de dano na localização.';
+    }else if(batalhaResultadoGradeValor_(r.grau)>=2){
+        if(alvo.combate?.sangramentoAtivo){
+            alvo.combate.sangramentoAtivo=false;
+            delete alvo.combate.sangramentoOrigem;
+        }
+        res=batalhaAplicarSucessoPrimeirosSocorros_(alvo,x,r.grau==='Crítico');
+    }else{
+        res='Falha: nenhum benefício.';
+    }
+
+    c.combate=c.combate||{};
     delete c.combate.primeirosSocorrosEmAndamento;
-    await batalhaPersistirCombateChar_(alvo,ap);await batalhaPersistirCombateChar_(c,p);
-    if(!c.__npcTemporario)await setDoc(doc(db,'personagens',c.id),{inventario:c.inventario,combate:c.combate},{merge:true});
-    batalhaLogPush_(batalhaEstado_,`${p.nome} concluiu Primeiros Socorros em ${ap.nome} (${t.local}) ${roll}/${aj.valor} → ${r.grau}. ${res}${kit?` Kit: ${Number(kit.item.pvAtual??0)} PV restantes.`:' Sem kit: +1 grau.'}`,'primeiros_socorros',{actorId:p.id,targetId:ap.id});
-    batalhaUltimoResultado_[p.id]=`${r.grau}: ${res}`;await batalhaAvancarTurnoInterno_();await batalhaSalvarEstado_();return true;
+    p.primeirosSocorrosEmAndamento=null;
+
+    await batalhaPersistirCombateChar_(alvo,ap);
+    await batalhaPersistirCombateChar_(c,p);
+    if(!c.__npcTemporario&&!c.__criaturaTemporaria){
+        await setDoc(doc(db,'personagens',c.id),{inventario:c.inventario,combate:c.combate},{merge:true});
+    }
+
+    batalhaLogPush_(
+        batalhaEstado_,
+        `${p.nome} concluiu Primeiros Socorros em ${ap.nome} (${t.local}) ${roll}/${aj.valor} → ${r.grau}. ${res}${kit?` Kit: ${Number(kit.item.pvAtual??0)} PV restantes.`:' Sem kit: +1 grau.'}`,
+        'primeiros_socorros',
+        {actorId:p.id,targetId:ap.id}
+    );
+    batalhaUltimoResultado_[p.id]=`${r.grau}: ${res}`;
+    await batalhaAvancarTurnoInterno_();
+    await batalhaSalvarEstado_();
+    return true;
 }
 window.batalhaPrimeirosSocorros_=async id=>{
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id),atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
@@ -7402,7 +7488,14 @@ async function batalhaAvancarTurnoInterno_(){
             batalhaEstado_.turnoIndex=idx;
             await batalhaResetarSelecoesNovoTurno_(ps[idx]);
             const c=batalhaCharLocal_(ps[idx].id),t=batalhaTratamentoPrimeirosSocorros_(c);
-            if(t?.fase==='aguardando'){t.fase='executando';await batalhaPersistirCombateChar_(c,ps[idx]);batalhaUltimoResultado_[ps[idx].id]='O turno está ocupado com Primeiros Socorros. Conclua o atendimento.';}
+            if(t?.fase==='aguardando'){
+                const exec={...t,fase:'executando'};
+                c.combate=c.combate||{};
+                c.combate.primeirosSocorrosEmAndamento=exec;
+                ps[idx].primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(exec));
+                await batalhaPersistirCombateChar_(c,ps[idx]);
+                batalhaUltimoResultado_[ps[idx].id]='O turno está ocupado com Primeiros Socorros. Conclua o atendimento.';
+            }
             return;
         }
     }
@@ -7473,7 +7566,15 @@ window.batalhaNovaRodada_=async(confirmar=false)=>{
         p.movimentoGratisUsadoRodada=0;
         p.passagensNaRodada=0;
         delete batalhaMovimentoIntentoJogador_[String(p.id)];
-        if(c)batalhaSincronizarStatusPublico_(c,p);
+        if(c){
+            c.combate=c.combate||{};
+            if(p.primeirosSocorrosEmAndamento){
+                c.combate.primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(p.primeirosSocorrosEmAndamento));
+            }else{
+                delete c.combate.primeirosSocorrosEmAndamento;
+            }
+            await batalhaPersistirCombateChar_(c,p);
+        }
     }
     const primeiroValido=batalhaPrimeiroTurnoValido_();
     if(primeiroValido>=0)batalhaEstado_.turnoIndex=primeiroValido;
@@ -12757,7 +12858,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.8.2: movimento atômico por drop e regra de adiar/passagem -->
+<!-- Mesa Estelar v46.8.4: Primeiros Socorros com estado compartilhado e limpeza robusta -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
