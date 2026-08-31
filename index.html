@@ -6876,6 +6876,20 @@ function labPodeDerrubar_(pend){
     const limite=robusto?(critico?1.50:1.10):(critico?2.0:1.5);
     return tamD<=Math.max(1,tamA*limite);
 }
+
+function labAtaquePodeSangrar_(pend){
+    if(!pend?.item)return false;
+    const item=pend.item||{};
+    const nome=getNome(item)||item.nome||'';
+    const proxy={
+        equipamento:nome,
+        familia:`${item.familia||''} ${item.categoria||''} ${item.tipo||''} ${item.propriedades||''}`,
+        grau:pend.grauAtaque
+    };
+    // Reuse the established Mesa Estelar rule:
+    // laser/plasma/blaster/energia/vibro cauterize and cannot cause Sangrar.
+    return batalhaArmaPodeSangrar_(proxy);
+}
 function labEfeitosDisponiveis_(pend){
     if(!pend)return [];
     const critico=batalhaResultadoGradeValor_(pend.grauAtaque)>=3;
@@ -6883,11 +6897,11 @@ function labEfeitosDisponiveis_(pend){
     // In Mesa Estelar, ranged attacks may choose a hit location only on a
     // Critical. Melee attacks retain normal access when a special effect is earned.
     if(!labAtaqueEhDistancia_(pend.item)||critico)out.push({id:'escolher_localizacao',nome:'🎯 Escolher Localização'});
-    out.push({id:'sangrar',nome:'🩸 Sangrar'});
+    if(labAtaquePodeSangrar_(pend))out.push({id:'sangrar',nome:'🩸 Sangrar'});
     if(labPodeDerrubar_(pend))out.push({id:'derrubar',nome:'💥 Derrubar'});
     if(critico)out.push({id:'contornar_armadura',nome:'🛡️ Contornar Armadura'});
     const defensor=(labEstado_.tokens||[]).find(t=>String(t.id)===String(pend.defensorId)),c=labCharToken_(defensor);
-    if(c&&obterItensEquipados_(c).some(x=>itemEhArma_(x)||itemEhEscudo_(x)))out.push({id:'danificar_arma',nome:'⚔️ Danificar Arma'});
+    if(c&&obterItensEquipados_(c).some(itemEhArmaOuEscudo_))out.push({id:'danificar_arma',nome:'⚔️ Danificar Arma'});
     return out;
 }
 window.labEscolherEfeito_=function(id){
@@ -7153,9 +7167,21 @@ function labRenderActionPanel_(){
 
     if(labEstado_.danoPendenteLab){
         const p=labEstado_.danoPendenteLab,a=(labEstado_.tokens||[]).find(t=>String(t.id)===String(p.atacanteId)),d=(labEstado_.tokens||[]).find(t=>String(t.id)===String(p.defensorId));
-        const expr=labExpressaoDano_(a,p.item),rest=Math.max(0,Number(p.efeitosRestantes||0)),efs=labEfeitosDisponiveis_(p);
+        let efs=[];
+        try{efs=labEfeitosDisponiveis_(p)||[];}catch(err){
+            console.error('Combate Experimental · efeitos',err);
+            efs=[];
+        }
+        const expr=labExpressaoDano_(a,p.item),rest=Math.max(0,Number(p.efeitosRestantes||0));
         const st=labGarantirSnapshotCombate_(d),locs=Object.keys(st?.hitMax||{});
         if(rest>0){
+            if(!p.escolhendoLocalizacao&&!efs.length){
+                p.efeitosRestantes=0;
+                labSalvarLocal_();
+                setTimeout(()=>{if(labEstado_.danoPendenteLab===p)window.labRolarDano_();},220);
+                el.innerHTML='<div style="color:#9fffb0;font-weight:700;">Nenhum efeito especial aplicável. Resolvendo dano…</div>';
+                return;
+            }
             if(p.escolhendoLocalizacao){
                 el.innerHTML=`<div><strong style="color:#ffd54a;">🎯 Escolher Localização</strong><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;">${locs.map(loc=>`<button class="btn-small" onclick="labConfirmarLocalizacao_('${String(loc).replace(/'/g,"\\'")}')" style="min-height:42px;">${escaparHtmlInventario_(loc)}</button>`).join('')}</div></div>`;
             }else{
@@ -7178,11 +7204,11 @@ function labRenderActionPanel_(){
         <strong style="color:#ffd54a;">🎯 Ação de ${escaparHtmlInventario_(t.nome)}</strong><span style="font-size:.86em;color:#9fc6d8;">🔊 sons de combate ativos</span>
         <span style="color:${dist<=alc?'#9fffb0':'#ff9b93'}">${alvo?`Distância até ${escaparHtmlInventario_(alvo.nome)}: <b>${dist.toFixed(2)} m</b> · alcance <b>${alc.toFixed(1)} m</b>`:'Selecione um alvo'}</span>
       </div>
-      <div style="display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(160px,1.3fr) minmax(160px,1.2fr) auto;gap:8px;align-items:end;">
-        <label><small>Perícia</small><select onchange="labMudarAtaquePref_('periciaLab',this.value)" style="width:100%">${skills.map(p=>`<option value="${batalhaTokenPericia_(p)}" ${batalhaTokenPericia_(p)===t.periciaLab?'selected':''}>${escaparHtmlInventario_(getNome(p))} (${labValorPericiaAtaque_(c,p)}%)</option>`).join('')}</select></label>
-        <label><small>Arma / ataque</small><select onchange="labMudarAtaquePref_('equipamentoLab',this.value)" style="width:100%">${eq.map(x=>`<option value="${escaparHtmlInventario_(x.valor)}" ${x.valor===t.equipamentoLab?'selected':''}>${escaparHtmlInventario_(x.rotulo)}</option>`).join('')||'<option>—</option>'}</select></label>
-        <label><small>Alvo</small><select onchange="labSelecionarAlvo_(this.value)" style="width:100%">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(t.alvoLab)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
-        <button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:48px;min-width:150px;padding:0 18px;font-size:1em;margin:0;align-self:end;box-sizing:border-box;">🎲 Atacar (1 AÇ)</button>
+      <div style="display:grid;grid-template-columns:minmax(145px,1.15fr) minmax(160px,1.25fr) minmax(135px,.95fr) minmax(145px,.58fr);gap:8px;align-items:start;">
+        <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Perícia</small><select onchange="labMudarAtaquePref_('periciaLab',this.value)" style="width:100%;margin:0;">${skills.map(p=>`<option value="${batalhaTokenPericia_(p)}" ${batalhaTokenPericia_(p)===t.periciaLab?'selected':''}>${escaparHtmlInventario_(getNome(p))} (${labValorPericiaAtaque_(c,p)}%)</option>`).join('')}</select></label>
+        <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Arma / ataque</small><select onchange="labMudarAtaquePref_('equipamentoLab',this.value)" style="width:100%;margin:0;">${eq.map(x=>`<option value="${escaparHtmlInventario_(x.valor)}" ${x.valor===t.equipamentoLab?'selected':''}>${escaparHtmlInventario_(x.rotulo)}</option>`).join('')||'<option>—</option>'}</select></label>
+        <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Alvo</small><select onchange="labSelecionarAlvo_(this.value)" style="width:100%;margin:0;">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(t.alvoLab)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
+        <label style="margin:0;"><small style="display:block;margin-bottom:4px;visibility:hidden;">Ação</small><button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;min-width:0;padding:0 12px;font-size:1em;margin:0;box-sizing:border-box;white-space:nowrap;">🎲 Atacar (1 AÇ)</button></label>
       </div>
       ${t?labResumoPVHtml_(t,'SEUS PV'):''}
       ${alvo?labEstadoPublicoAlvoHtml_(alvo):''}
@@ -14398,7 +14424,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.19.0: persistência pós-reload, morte central, localização à distância só em crítico e recuperação de ações travadas -->
+<!-- Mesa Estelar v46.19.1: correção da Besta Ululante, Sangrar sem cauterização, alinhamento do ataque e efeitos sem travamento -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
