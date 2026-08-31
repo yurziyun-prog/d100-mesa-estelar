@@ -450,7 +450,7 @@
                         </label>
                         <label style="display:flex;align-items:center;gap:6px;">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
                     </div>
-                    <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste o token para mover. Arraste o chanfro dourado na borda para girar a frente. A sombra mostra o deslocamento disponível em metros.</div>
+                    <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste o token para mover. Arraste a seta dourada na borda para girar a frente. A sombra mostra o deslocamento disponível em metros.</div>
                     <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
                         <div id="labMetricMap" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
@@ -1390,6 +1390,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <label>Armadura natural (PA)<input id="crArmaduraNatural" type="number" min="0" value="0"></label>
         <label>AÇ máxima especial<input id="crAcoesMaxEspecial" type="number" min="0" value="0"></label>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px;">
+        <label>Mov. terrestre (m/AÇ)<input id="crMovTerra" type="number" min="0" step="0.5" value="3"></label>
+        <label>Voo (m/AÇ)<input id="crMovVoo" type="number" min="0" step="0.5" value="0"></label>
+        <label>Natação (m/AÇ)<input id="crMovNatacao" type="number" min="0" step="0.5" value="0"></label>
       </div>
       <label>Vínculo perícia → ataques<input id="crVinculos" placeholder="Combate Desarmado:Mordida,Garras|Bote/Salto:Bote e Constrição"></label>
       <label>Equipamento-base<textarea id="crEquipBase" rows="2" placeholder="Coleira de controle|Armadura"></textarea></label>
@@ -6384,6 +6389,7 @@ window.mostrarBancoAba = (abaId, btn) => {
 
 
 
+
 let labEstado_={
     tokens:[],
     pxPorMetro:48,
@@ -6415,6 +6421,11 @@ function labCarregarLocal_(){
                 if(t.acoesMaxLab==null)t.acoesMaxLab=Number(t.acoesMax||2)||2;
                 if(t.acoesAtuaisLab==null)t.acoesAtuaisLab=t.acoesMaxLab;
                 if(t.movimentoGratisDisponivel==null)t.movimentoGratisDisponivel=true;
+                if(t.movimentoTerrestre==null)t.movimentoTerrestre=3;
+                if(t.movimentoVoo==null)t.movimentoVoo=0;
+                if(t.movimentoNatacao==null)t.movimentoNatacao=0;
+                if(!t.modoMovimento)t.modoMovimento='terrestre';
+                if(t.alcanceAtaqueMax==null)t.alcanceAtaqueMax=0;
             }
         }
     }catch(_){}
@@ -6427,15 +6438,40 @@ function labTamanhoTokenM_(c){
     if(tam<=6)return .65;
     return .95;
 }
+function labHeuristicaMovimento_(p,c){
+    const nome=normalizarTextoCombate_(`${p?.nome||''} ${c?.carreira||''} ${c?.conceito||''}`);
+    let terra=Number(c?.movimentoTerrestre);
+    let voo=Number(c?.movimentoVoo);
+    let nat=Number(c?.movimentoNatacao);
+    if(!Number.isFinite(terra))terra=3;
+    if(!Number.isFinite(voo))voo=0;
+    if(!Number.isFinite(nat))nat=0;
+
+    // Compatibilidade imediata para modelos antigos ainda não reimportados.
+    if(nome.includes('cila'))terra=0;
+    if(nome.includes('besta_ululante'))terra=Math.max(terra,4);
+    if(nome.includes('dragao_trombeta_corredor'))terra=Math.max(terra,4);
+    if(nome.includes('dragao_trombeta_alado')){terra=Math.max(terra,3);voo=Math.max(voo,6);}
+    if(nome.includes('serpente_sanguessuga')){terra=2;nat=Math.max(nat,3);}
+    return {terra:Math.max(0,terra),voo:Math.max(0,voo),nat:Math.max(0,nat)};
+}
+function labAlcanceMax_(c){
+    const ataques=ataquesNaturaisChar_(c)||[];
+    return Math.max(0,...ataques.map(a=>Number(a.alcanceMetros||0)).filter(Number.isFinite));
+}
 function labTokenDeParticipante_(p,i=0){
     const c=batalhaCharLocal_(p.id);
     const max=Math.max(0,Number(p?.acoesMax||obterPAMaxCombate_(c)||2));
+    const mov=labHeuristicaMovimento_(p,c);
     return {
         id:String(p.id),nome:String(p.nome||'Participante'),imagem:String(p.imagem||c?.imagem||''),
         tipo:String(p.tipo||''),x:Math.min(labEstado_.larguraM-1,1.5+(i%8)*2.5),
         y:Math.min(labEstado_.alturaM-1,1.5+Math.floor(i/8)*2.5),
         diametroM:labTamanhoTokenM_(c),angulo:0,attrs:c?.atributos?JSON.parse(JSON.stringify(c.atributos)):{},
-        acoesMaxLab:max,acoesAtuaisLab:max,movimentoGratisDisponivel:true
+        acoesMaxLab:max,acoesAtuaisLab:max,movimentoGratisDisponivel:mov.terra>0||mov.voo>0||mov.nat>0,
+        movimentoTerrestre:mov.terra,movimentoVoo:mov.voo,movimentoNatacao:mov.nat,
+        modoMovimento:mov.terra>0?'terrestre':mov.voo>0?'voo':mov.nat>0?'natacao':'imovel',
+        alcanceAtaqueMax:labAlcanceMax_(c)
     };
 }
 window.labCarregarBatalhaAtual_=function(){
@@ -6445,17 +6481,25 @@ window.labCarregarBatalhaAtual_=function(){
     const antigos=new Map((labEstado_.tokens||[]).map(t=>[String(t.id),t]));
     labEstado_.tokens=ps.map((p,i)=>{
         const n=labTokenDeParticipante_(p,i),a=antigos.get(String(p.id));
-        return a?{...n,x:a.x,y:a.y,angulo:a.angulo,
-            acoesAtuaisLab:Number.isFinite(Number(a.acoesAtuaisLab))?Number(a.acoesAtuaisLab):n.acoesMaxLab,
-            movimentoGratisDisponivel:a.movimentoGratisDisponivel!==false}:n;
+        if(!a)return n;
+        const modoValido=(a.modoMovimento==='voo'&&n.movimentoVoo>0)||(a.modoMovimento==='natacao'&&n.movimentoNatacao>0)||(a.modoMovimento==='terrestre'&&n.movimentoTerrestre>0);
+        return {...n,x:a.x,y:a.y,angulo:a.angulo,
+            acoesAtuaisLab:Number.isFinite(Number(a.acoesAtuaisLab))?Math.min(n.acoesMaxLab,Number(a.acoesAtuaisLab)):n.acoesMaxLab,
+            movimentoGratisDisponivel:a.movimentoGratisDisponivel!==false,
+            modoMovimento:modoValido?a.modoMovimento:n.modoMovimento};
     });
     labSalvarLocal_();labRender_();
 };
 window.labAdicionarBoneco_=function(){
     if(!batalhaEhMestre_())return;
     const n=(labEstado_.tokens||[]).filter(t=>String(t.id).startsWith('dummy:')).length+1;
-    labEstado_.tokens.push({id:`dummy:${Date.now()}`,nome:`Boneco de treino ${n}`,imagem:'',tipo:'Alvo',
-        x:3+n,y:3,diametroM:.9,angulo:0,attrs:{TAM:10},acoesMaxLab:0,acoesAtuaisLab:0,movimentoGratisDisponivel:false});
+    labEstado_.tokens.push({
+        id:`dummy:${Date.now()}`,nome:`Boneco de treino ${n}`,imagem:'',tipo:'Alvo',
+        x:3+n,y:3,diametroM:.9,angulo:0,attrs:{TAM:10},
+        acoesMaxLab:0,acoesAtuaisLab:0,movimentoGratisDisponivel:false,
+        movimentoTerrestre:0,movimentoVoo:0,movimentoNatacao:0,modoMovimento:'livre',
+        alcanceAtaqueMax:0,livreMestre:true
+    });
     labSalvarLocal_();labRender_();
 };
 window.labLimpar_=function(){
@@ -6470,7 +6514,7 @@ window.labCentralizarTokens_=function(){
 window.labResetarAcoes_=function(){
     for(const t of labEstado_.tokens||[]){
         t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));
-        t.movimentoGratisDisponivel=!String(t.id).startsWith('dummy:');
+        t.movimentoGratisDisponivel=!t.livreMestre && labMovimentoPorAcao_(t)>0;
     }
     labSalvarLocal_();labRender_();
 };
@@ -6490,21 +6534,39 @@ window.labMudarTamanhoMapa_=function(v){
 };
 window.labMudarZoom_=function(v){labEstado_.pxPorMetro=Math.max(30,Math.min(90,Number(v)||48));labSalvarLocal_();labRender_();};
 window.labSelecionar_=function(id){labEstado_.selecionadoId=String(id);labSalvarLocal_();labRender_();};
-
+window.labMudarModoMovimento_=function(v){
+    const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t||t.livreMestre)return;
+    const ok=(v==='terrestre'&&Number(t.movimentoTerrestre||0)>0)||(v==='voo'&&Number(t.movimentoVoo||0)>0)||(v==='natacao'&&Number(t.movimentoNatacao||0)>0);
+    if(!ok)return;
+    t.modoMovimento=v;labSalvarLocal_();labRender_();
+};
+function labMovimentoPorAcao_(t){
+    if(!t)return 0;
+    if(t.livreMestre)return 999;
+    if(t.modoMovimento==='voo')return Math.max(0,Number(t.movimentoVoo||0));
+    if(t.modoMovimento==='natacao')return Math.max(0,Number(t.movimentoNatacao||0));
+    if(t.modoMovimento==='terrestre')return Math.max(0,Number(t.movimentoTerrestre||0));
+    return 0;
+}
 function labMovimentoMaxM_(t){
     if(!t)return 0;
+    if(t.livreMestre)return 999;
+    const porAcao=labMovimentoPorAcao_(t);
+    if(porAcao<=0)return 0;
     const ac=Math.max(0,Number(t.acoesAtuaisLab||0));
-    const pago=ac*3;
-    const gratis=t.movimentoGratisDisponivel!==false?1:0;
+    const pago=ac*porAcao;
+    const gratis=t.movimentoGratisDisponivel!==false?Math.min(1,porAcao):0;
     return Math.max(pago,gratis);
 }
 function labCustoMovimento_(t,dist){
     dist=Math.max(0,Number(dist||0));
+    if(t?.livreMestre)return {acoes:0,usaGratis:false};
     if(dist<=.001)return {acoes:0,usaGratis:false};
+    const porAcao=labMovimentoPorAcao_(t);
+    if(porAcao<=0)return {acoes:0,usaGratis:false,bloqueado:true};
     if(dist<=1.0001 && t.movimentoGratisDisponivel!==false)return {acoes:0,usaGratis:true};
-    return {acoes:Math.max(1,Math.ceil((dist-.0001)/3)),usaGratis:false};
+    return {acoes:Math.max(1,Math.ceil((dist-.0001)/porAcao)),usaGratis:false};
 }
-
 function labBackgroundImage_(){
     const c=labEstado_.corGrade||'#777777';
     const grid=labEstado_.gradeVisivel!==false
@@ -6528,38 +6590,52 @@ function labBackgroundImage_(){
 }
 function labBackgroundSize_(){
     const ppm=Number(labEstado_.pxPorMetro||48);
-    if(labEstado_.gradeVisivel!==false){
-        return `${ppm}px ${ppm}px,${ppm}px ${ppm}px,56px 56px,71px 71px,89px 89px`;
-    }
-    return `56px 56px,71px 71px,89px 89px`;
+    return labEstado_.gradeVisivel!==false
+        ? `${ppm}px ${ppm}px,${ppm}px ${ppm}px,56px 56px,71px 71px,89px 89px`
+        : `56px 56px,71px 71px,89px 89px`;
 }
-
 function labAtualizarInfo_(){
     const el=document.getElementById('labInfo');if(!el)return;
     const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));
     if(!t){
-        el.innerHTML='Clique num token para selecioná-lo. Arraste o token para mover. Arraste o chanfro dourado na borda para girar a frente.';
+        el.innerHTML='Clique num token para selecioná-lo. Arraste o centro para mover. Arraste a seta dourada na borda para girar a frente.';
         return;
     }
-    const a=t.attrs||{},mov=labMovimentoMaxM_(t);
+    const a=t.attrs||{},mov=labMovimentoMaxM_(t),porAcao=labMovimentoPorAcao_(t),alcance=Math.max(0,Number(t.alcanceAtaqueMax||0));
+    const modos=[
+        Number(t.movimentoTerrestre||0)>0?`<option value="terrestre" ${t.modoMovimento==='terrestre'?'selected':''}>Terrestre ${Number(t.movimentoTerrestre)} m/AÇ</option>`:'',
+        Number(t.movimentoVoo||0)>0?`<option value="voo" ${t.modoMovimento==='voo'?'selected':''}>Voo ${Number(t.movimentoVoo)} m/AÇ</option>`:'',
+        Number(t.movimentoNatacao||0)>0?`<option value="natacao" ${t.modoMovimento==='natacao'?'selected':''}>Natação ${Number(t.movimentoNatacao)} m/AÇ</option>`:''
+    ].join('');
     el.innerHTML=`<strong>${escaparHtmlInventario_(t.nome)}</strong> · posição <b>${Number(t.x).toFixed(2)} m, ${Number(t.y).toFixed(2)} m</b>
         · frente <b>${Math.round(Number(t.angulo||0))}°</b>
         · AÇ lab <b>${Number(t.acoesAtuaisLab||0)}/${Number(t.acoesMaxLab||0)}</b>
-        · deslocamento disponível <b>${mov.toFixed(1)} m</b>
-        ${t.movimentoGratisDisponivel!==false?' · <span style="color:#9fffb0;">1 m gratuito disponível</span>':''}
+        ${t.livreMestre?' · <b>posicionamento livre do mestre</b>':
+          porAcao>0?` · movimento <select onchange="labMudarModoMovimento_(this.value)" style="min-height:28px;">${modos}</select> · <b>${porAcao} m/AÇ</b> · disponível <b>${mov.toFixed(1)} m</b>`:
+          ' · <span style="color:#ffb0b0;"><b>imóvel</b></span>'}
+        ${!t.livreMestre&&t.movimentoGratisDisponivel!==false&&porAcao>0?' · <span style="color:#9fffb0;">1 m gratuito disponível</span>':''}
+        ${alcance>0?` · <span style="color:#ffb0b0;">alcance ofensivo máx. <b>${alcance} m</b></span>`:''}
         <span style="margin-left:10px;color:#9fdfff;">${['FOR','CON','TAM','DES'].filter(k=>a[k]!=null).map(k=>`${k} ${a[k]}`).join(' · ')}</span>
-        <span style="display:block;margin-top:4px;color:#aab8d5;">Arraste o centro para mover. Arraste o <b>chanfro dourado</b> na borda para girar diretamente na grid.</span>`;
+        <span style="display:block;margin-top:4px;color:#aab8d5;">Azul = deslocamento possível; verde = 1 m gratuito; vermelho pontilhado = alcance ofensivo. A imagem permanece sempre de pé, só a seta representa a frente.</span>`;
 }
 function labOverlayMovimentoHtml_(t,ppm){
-    if(!t||String(t.id)!==String(labEstado_.selecionadoId)||String(t.id).startsWith('dummy:'))return '';
+    if(!t||String(t.id)!==String(labEstado_.selecionadoId))return '';
+    let html='';
     const max=labMovimentoMaxM_(t);
-    if(max<=0)return '';
-    const r=max*ppm;
-    const free=t.movimentoGratisDisponivel!==false?ppm:0;
-    const left=t.x*ppm-r,top=t.y*ppm-r;
-    const outer=`<div style="position:absolute;left:${left}px;top:${top}px;width:${r*2}px;height:${r*2}px;border-radius:50%;background:rgba(70,170,255,.10);border:2px dashed rgba(90,195,255,.65);pointer-events:none;z-index:0;"></div>`;
-    const inner=free>0?`<div style="position:absolute;left:${t.x*ppm-free}px;top:${t.y*ppm-free}px;width:${free*2}px;height:${free*2}px;border-radius:50%;background:rgba(80,220,120,.12);border:1px solid rgba(110,255,145,.70);pointer-events:none;z-index:1;"></div>`:'';
-    return outer+inner;
+    if(max>0 && max<100){
+        const r=max*ppm;
+        html+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${r*2}px;height:${r*2}px;border-radius:50%;background:rgba(70,170,255,.10);border:2px dashed rgba(90,195,255,.65);pointer-events:none;z-index:0;"></div>`;
+        if(t.movimentoGratisDisponivel!==false){
+            const free=Math.min(1,labMovimentoPorAcao_(t))*ppm;
+            if(free>0)html+=`<div style="position:absolute;left:${t.x*ppm-free}px;top:${t.y*ppm-free}px;width:${free*2}px;height:${free*2}px;border-radius:50%;background:rgba(80,220,120,.12);border:1px solid rgba(110,255,145,.70);pointer-events:none;z-index:1;"></div>`;
+        }
+    }
+    const alcance=Math.max(0,Number(t.alcanceAtaqueMax||0));
+    if(alcance>0){
+        const r=alcance*ppm;
+        html+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${r*2}px;height:${r*2}px;border-radius:50%;background:rgba(255,80,80,.035);border:2px dotted rgba(255,105,105,.82);pointer-events:none;z-index:0;"></div>`;
+    }
+    return html;
 }
 function labRender_(){
     const map=document.getElementById('labMetricMap');if(!map)return;
@@ -6584,14 +6660,13 @@ function labRender_(){
         const img=t.imagem
             ? `<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none;">`
             : `<span style="font-size:${Math.max(13,d*.22)}px;pointer-events:none;">${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
-        const chamfroW=Math.max(14,Math.min(34,d*.30));
         return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}"
             style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${ativo?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:0 3px 12px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${ativo?5:3};touch-action:none;"
             onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">
             ${img}
             <div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${Number(t.angulo||0)}deg);transform-origin:50% 50%;">
-                <div class="lab-chamfro" title="Arraste para girar a frente" onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')"
-                    style="position:absolute;left:50%;top:-1px;transform:translateX(-50%);width:${chamfroW}px;height:10px;background:#ffd54a;clip-path:polygon(15% 0,85% 0,100% 100%,0 100%);border:1px solid rgba(60,40,0,.8);box-shadow:0 1px 3px rgba(0,0,0,.7);pointer-events:auto;cursor:crosshair;"></div>
+                <div class="lab-facing-arrow" title="Arraste a seta para girar a frente" onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')"
+                    style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9));pointer-events:auto;cursor:crosshair;"></div>
             </div>
             <div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none;">${escaparHtmlInventario_(t.nome)}</div>
         </div>`;
@@ -6625,19 +6700,22 @@ window.labPointerDown_=function(ev,id){
     if(!batalhaEhMestre_()||ev.button===2)return;
     ev.preventDefault();
     const map=document.getElementById('labMetricMap'),t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(id));
-    if(!map||!t||String(id).startsWith('dummy:'))return;
+    if(!map||!t)return;
     labEstado_.selecionadoId=String(id);
     const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);
     const origem={x:Number(t.x),y:Number(t.y)};
     const maxM=labMovimentoMaxM_(t);
-    if(maxM<=0){labRender_();return;}
+    if(maxM<=0&&!t.livreMestre){
+        notificar_(`${t.nome} é imóvel no modo selecionado. Seu alcance ofensivo continua visível quando houver um ataque com alcance.`,'aviso',4500);
+        labRender_();return;
+    }
     labDrag_={id:String(id),origem,maxM};
     const move=e=>{
         if(!labDrag_)return;
         let x=(e.clientX-rect.left)/ppm,y=(e.clientY-rect.top)/ppm;
         let dx=x-origem.x,dy=y-origem.y,dist=Math.hypot(dx,dy);
-        if(dist>maxM&&dist>0){
-            const f=maxM/dist;dx*=f;dy*=f;x=origem.x+dx;y=origem.y+dy;dist=maxM;
+        if(!t.livreMestre && dist>maxM&&dist>0){
+            const f=maxM/dist;dx*=f;dy*=f;x=origem.x+dx;y=origem.y+dy;
         }
         x=Math.max(0,Math.min(labEstado_.larguraM,x));
         y=Math.max(0,Math.min(labEstado_.alturaM,y));
@@ -6657,7 +6735,7 @@ window.labPointerDown_=function(ev,id){
         if(custo.acoes>0)t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-custo.acoes);
         labSalvarLocal_();labRender_();
         if(dist>.01){
-            const txt=custo.usaGratis?'movimento gratuito':`${custo.acoes} AÇ`;
+            const txt=t.livreMestre?'reposicionamento livre':custo.usaGratis?'movimento gratuito':`${custo.acoes} AÇ`;
             notificar_(`${t.nome}: ${dist.toFixed(2)} m · ${txt}.`,'info',3500);
         }
     };
@@ -6666,6 +6744,7 @@ window.labPointerDown_=function(ev,id){
     labRender_();
 };
 labCarregarLocal_();
+
 
 
 const BATALHA_DOC_REF = () => doc(db,'combatesAtivos','mesa');
@@ -6805,6 +6884,9 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
         vinculosAtaquesPericias:modelo.vinculosAtaquesPericias||'',
         acoesMaxEspecial:Number(modelo.acoesMaxEspecial||0)||0,
         armaduraNatural:Number(modelo.armaduraNatural||0)||0,
+        movimentoTerrestre:Number(modelo.movimentoTerrestre??modelo.movimentoBase??3),
+        movimentoVoo:Number(modelo.movimentoVoo||0),
+        movimentoNatacao:Number(modelo.movimentoNatacao||0),
         __npcTemporario:true
     };
 }
@@ -6878,6 +6960,9 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
         vinculosAtaquesPericias:modelo.vinculosAtaquesPericias||'',
         acoesMaxEspecial:Number(modelo.acoesMaxEspecial||0)||0,
         armaduraNatural:Number(modelo.armaduraNatural||0)||0,
+        movimentoTerrestre:Number(modelo.movimentoTerrestre??modelo.movimentoBase??3),
+        movimentoVoo:Number(modelo.movimentoVoo||0),
+        movimentoNatacao:Number(modelo.movimentoNatacao||0),
         __criaturaTemporaria:true
     };
 }
@@ -10341,6 +10426,11 @@ window.renderizarFichaModeloEntidade_=function(){
    <div><label>Armadura natural (PA)</label><input id="gmEntArmaduraNatural" type="number" min="0" value="${Number(m.armaduraNatural||0)}" style="width:100%;"><small style="color:#888;">Pele, escamas, rocha etc. Não é equipamento.</small></div>
    <div><label>AÇ máxima especial</label><input id="gmEntAcoesMaxEspecial" type="number" min="0" value="${Number(m.acoesMaxEspecial||0)}" style="width:100%;"><small style="color:#888;">0 = calcular normalmente. Cila usa 6.</small></div>
  </div>
+ <div style="display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:9px;margin-top:9px;">
+   <div><label>Mov. terrestre (m/AÇ)</label><input id="gmEntMovTerra" type="number" min="0" step="0.5" value="${Number(m.movimentoTerrestre??m.movimentoBase??3)}" style="width:100%;"></div>
+   <div><label>Voo (m/AÇ)</label><input id="gmEntMovVoo" type="number" min="0" step="0.5" value="${Number(m.movimentoVoo||0)}" style="width:100%;"></div>
+   <div><label>Natação (m/AÇ)</label><input id="gmEntMovNatacao" type="number" min="0" step="0.5" value="${Number(m.movimentoNatacao||0)}" style="width:100%;"></div>
+ </div>
  <div style="margin-top:9px;"><label>Vínculo perícia → ataques</label><input id="gmEntVinculos" value="${escaparBanco_(m.vinculosAtaquesPericias||'')}" style="width:100%;" placeholder="Combate Desarmado:Mordida,Garras|Bote/Salto:Bote e Constrição"><small style="color:#888;">Permite várias perícias, inclusive não combativas. Apenas as vinculadas a ataques aparecem como ataque.</small></div>
  <div style="margin-top:9px;"><label>Equipamento-base</label><textarea id="gmEntEquipBase" rows="2" style="width:100%;" placeholder="Pistola|Colete|Kit Médico">${escaparBanco_(m.equipamentoBaseTexto||'')}</textarea><small style="color:#888;">Equipamento é separado dos ataques. Ao gerar um indivíduo, estes itens podem ir para o inventário dele.</small></div>
  <div style="margin-top:9px;"><label>Descrição</label><textarea id="gmEntDescricao" rows="4" style="width:100%;">${escaparBanco_(m.descricao||'')}</textarea></div>
@@ -10357,6 +10447,9 @@ const p={
     habilidadesTexto:String(document.getElementById('gmEntHabilidades')?.value||'').trim(),
     armaduraNatural:Math.max(0,Number(document.getElementById('gmEntArmaduraNatural')?.value||0)),
     acoesMaxEspecial:Math.max(0,Number(document.getElementById('gmEntAcoesMaxEspecial')?.value||0)),
+    movimentoTerrestre:Math.max(0,Number(document.getElementById('gmEntMovTerra')?.value||0)),
+    movimentoVoo:Math.max(0,Number(document.getElementById('gmEntMovVoo')?.value||0)),
+    movimentoNatacao:Math.max(0,Number(document.getElementById('gmEntMovNatacao')?.value||0)),
     vinculosAtaquesPericias:String(document.getElementById('gmEntVinculos')?.value||'').trim(),
     equipamentoBaseTexto:String(document.getElementById('gmEntEquipBase')?.value||'').trim(),
     alcancesAtaques:String(document.getElementById('gmEntAlcances')?.value||'').trim(),
@@ -10416,7 +10509,9 @@ function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_(
 const rol=document.getElementById('crAtributosRolados');if(rol)rol.checked=modeloUsaAtributosRolados_(n);
 crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');
 crSet_('crAlcances',n.alcancesAtaques||'');crSet_('crHabilidades',n.habilidadesTexto||'');
-crSet_('crArmaduraNatural',Number(n.armaduraNatural||0));crSet_('crAcoesMaxEspecial',Number(n.acoesMaxEspecial||0));crSet_('crVinculos',n.vinculosAtaquesPericias||'');
+crSet_('crArmaduraNatural',Number(n.armaduraNatural||0));crSet_('crAcoesMaxEspecial',Number(n.acoesMaxEspecial||0));
+crSet_('crMovTerra',Number(n.movimentoTerrestre??n.movimentoBase??3));crSet_('crMovVoo',Number(n.movimentoVoo||0));crSet_('crMovNatacao',Number(n.movimentoNatacao||0));
+crSet_('crVinculos',n.vinculosAtaquesPericias||'');
 crSet_('crEquipBase',n.equipamentoBaseTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const sel=document.getElementById('crSelecionavel');if(sel)sel.checked=n.selecionavelCombate!==false;const arq=document.getElementById('crImagemArquivo');if(arq)arq.value='';atualizarPreviewCriaturaBanco_();const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
 
 window.atualizarPreviewCriaturaBanco_=()=>{
@@ -10465,6 +10560,7 @@ window.salvarCriaturaBanco_=async()=>{
         periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),
         armasTexto:v('crArmas'),alcancesAtaques:v('crAlcances'),habilidadesTexto:v('crHabilidades'),
         armaduraNatural:Math.max(0,Number(v('crArmaduraNatural'))||0),acoesMaxEspecial:Math.max(0,Number(v('crAcoesMaxEspecial'))||0),
+        movimentoTerrestre:Math.max(0,Number(v('crMovTerra'))||0),movimentoVoo:Math.max(0,Number(v('crMovVoo'))||0),movimentoNatacao:Math.max(0,Number(v('crMovNatacao'))||0),
         vinculosAtaquesPericias:v('crVinculos'),equipamentoBaseTexto:v('crEquipBase'),
         propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),
         selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked,
@@ -11024,6 +11120,9 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             habilidadesTexto:String(bruto.habilidadesTexto||bruto.habilidades||''),
             armaduraNatural:Math.max(0,parseNumero_(bruto.armaduraNatural,0)),
             acoesMaxEspecial:Math.max(0,parseNumero_(bruto.acoesMaxEspecial,0)),
+            movimentoTerrestre:Math.max(0,parseNumero_(bruto.movimentoTerrestre||bruto.movimentoBase,3)),
+            movimentoVoo:Math.max(0,parseNumero_(bruto.movimentoVoo,0)),
+            movimentoNatacao:Math.max(0,parseNumero_(bruto.movimentoNatacao,0)),
             vinculosAtaquesPericias:String(bruto.vinculosAtaquesPericias||bruto.vinculos||''),
             equipamentoBaseTexto:String(bruto.equipamentoBaseTexto||bruto.equipamentoBase||''),
             propriedadesAtaques:String(bruto.propriedadesAtaques||bruto.propriedades||''),
@@ -13766,7 +13865,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.11.2: chanfro de facing arrastável, texturas expandidas e primeiro movimento métrico por AÇ -->
+<!-- Mesa Estelar v46.11.3: seta de facing, bonecos móveis, movimentos por espécie e alcance ofensivo separado -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
