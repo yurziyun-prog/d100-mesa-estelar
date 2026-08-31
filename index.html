@@ -1005,7 +1005,7 @@
                         <button class="btn-import" onclick="selecionarImportacaoBanco_('importCriaturasFile',false)">📥 Importar/Atualizar CSV</button>
                         <button class="btn-template" onclick="selecionarImportacaoBanco_('importCriaturasFile',true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                         <button class="btn-template" onclick="baixarTemplate('criaturas')">📄 Baixar Template</button>
-                        <button class="btn-template" onclick="exportarBancoCSV('criaturas')">📤 Exportar CSV</button>
+                        <button class="btn-template" onclick="exportarBancoCSV('criaturas')">📤 Exportar CSV</button><small style="display:block;margin-top:7px;color:#8ea7c8;">CSV de criaturas aceita fórmulas por atributo (FOR_formula, CON_formula...), alcances, habilidades e propriedades de ataque.</small>
                       </div>
                       <div id="listaBancoCriaturas"></div>
                       <button class="btn-save" onclick="adicionarCriaturaBanco_()" style="margin-top:15px">➕ Adicionar Criatura</button>
@@ -10451,30 +10451,43 @@ function normalizarLinhaImportacao_(tipo, bruto) {
     }
 
     if(tipo==='npcs')return {...comum,tipo:String(bruto.tipo||'NPC'),raca:String(bruto.raca||'Humano'),origem:String(bruto.origem||''),idade:String(bruto.idade||''),sexo:String(bruto.sexo||''),altura:String(bruto.altura||''),tamanho:String(bruto.tamanho||''),pesoCorporal:String(bruto.pesoCorporal||''),sociedade:String(bruto.sociedade||''),carreira:String(bruto.carreira||bruto.tipo||''),conceito:String(bruto.conceito||''),classeSocial:String(bruto.classeSocial||''),recursos:String(bruto.recursos||''),FOR:parseNumero_(bruto.FOR,10),CON:parseNumero_(bruto.CON,10),TAM:parseNumero_(bruto.TAM,10),DES:parseNumero_(bruto.DES,10),INT:parseNumero_(bruto.INT,10),POD:parseNumero_(bruto.POD,10),CAR:parseNumero_(bruto.CAR,10),motivacao:String(bruto.motivacao||''),valorMotivacao:parseNumero_(bruto.valorMotivacao,0),periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),armasTexto:String(bruto.armasTexto||bruto.armas||''),inventarioTexto:String(bruto.inventarioTexto||bruto.inventario||''),selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),imagem:String(bruto.imagem||''),descricao:String(bruto.descricao||'')};
-    if(tipo==='criaturas')return {
-        ...comum,
-        tipo:String(bruto.tipo||'Criatura'),
-        especie:String(bruto.especie||bruto.raca||''),
-        habitat:String(bruto.habitat||bruto.origem||''),
-        comportamento:String(bruto.comportamento||bruto.motivacao||''),
-        altura:String(bruto.altura||''),
-        tamanho:String(bruto.tamanho||''),
-        pesoCorporal:String(bruto.pesoCorporal||''),
-        FOR:parseNumero_(bruto.FOR,10),
-        CON:parseNumero_(bruto.CON,10),
-        TAM:parseNumero_(bruto.TAM,10),
-        DES:parseNumero_(bruto.DES,10),
-        INT:parseNumero_(bruto.INT,5),
-        POD:parseNumero_(bruto.POD,10),
-        CAR:parseNumero_(bruto.CAR,5),
-        periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),
-        especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),
-        armasTexto:String(bruto.armasTexto||bruto.armas||''),
-        propriedadesAtaques:String(bruto.propriedadesAtaques||bruto.propriedades||''),
-        selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),
-        imagem:String(bruto.imagem||bruto.urlImagem||''),
-        descricao:String(bruto.descricao||'')
-    };
+    if(tipo==='criaturas'){
+        const formulas={};
+        for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR']){
+            const f=String(bruto[`${a}_formula`]||bruto[`formula_${a}`]||'').trim();
+            if(f)formulas[a]=f;
+        }
+        const atributosRolados=parseBoolean_(bruto.atributosRolados)||Object.values(formulas).some(f=>/\d*d\d+/i.test(f));
+        return {
+            ...comum,
+            tipo:String(bruto.tipo||'Criatura'),
+            especie:String(bruto.especie||bruto.raca||''),
+            habitat:String(bruto.habitat||bruto.origem||''),
+            comportamento:String(bruto.comportamento||bruto.motivacao||''),
+            altura:String(bruto.altura||''),
+            tamanho:String(bruto.tamanho||''),
+            pesoCorporal:String(bruto.pesoCorporal||''),
+            FOR:parseNumero_(bruto.FOR,10),
+            CON:parseNumero_(bruto.CON,10),
+            TAM:parseNumero_(bruto.TAM,10),
+            DES:parseNumero_(bruto.DES,10),
+            INT:parseNumero_(bruto.INT,5),
+            POD:parseNumero_(bruto.POD,10),
+            CAR:parseNumero_(bruto.CAR,5),
+            atributosRolados,
+            formulasAtributos:formulas,
+            periciasTexto:String(bruto.periciasTexto||bruto.pericias||''),
+            especializacoesTexto:String(bruto.especializacoesTexto||bruto.especializacoes||''),
+            armasTexto:String(bruto.armasTexto||bruto.armas||''),
+            alcancesAtaques:String(bruto.alcancesAtaques||bruto.alcances||''),
+            habilidadesTexto:String(bruto.habilidadesTexto||bruto.habilidades||''),
+            equipamentoBaseTexto:String(bruto.equipamentoBaseTexto||bruto.equipamentoBase||''),
+            propriedadesAtaques:String(bruto.propriedadesAtaques||bruto.propriedades||''),
+            selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),
+            imagem:String(bruto.imagem||bruto.urlImagem||''),
+            descricao:String(bruto.descricao||'')
+        };
+    }
     if (tipo === 'itens') {
         const usoBruto = bruto.uso ?? bruto.quantidade ?? '';
         return {
@@ -13208,7 +13221,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.9.6: resultado imediato do teste e mensagem explícita de defesa pendente -->
+<!-- Mesa Estelar v46.10.0: banco de criaturas expandido para fórmulas/alcances/habilidades e três novos modelos -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
