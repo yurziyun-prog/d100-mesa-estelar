@@ -419,6 +419,9 @@
                         <button class="btn-small btn-select" onclick="labCarregarBatalhaAtual_()">⚔️ Carregar batalha atual</button>
                         <button class="btn-small" onclick="labAdicionarBoneco_()">🎯 Boneco de treino</button>
                         <button class="btn-small" onclick="labCentralizarTokens_()">◎ Reorganizar</button>
+                        <button class="btn-small" id="labStartBtn" onclick="labIniciarCombate_()">⚡ Iniciar combate</button>
+                        <button class="btn-small hidden" id="labNextBtn" onclick="labEncerrarOportunidade_()">⏭ Encerrar oportunidade</button>
+                        <button class="btn-small hidden" id="labStopBtn" onclick="labVoltarPreparacao_()">🧭 Voltar à preparação</button>
                         <button class="btn-small" onclick="labResetarAcoes_()">⚡ Repor AÇ do laboratório</button>
                         <button class="btn-small" onclick="labLimpar_()">🧹 Limpar</button>
                         <label style="display:flex;align-items:center;gap:6px;">Fundo <input id="labBgColor" type="color" value="#d7d7d7" onchange="labMudarFundo_(this.value)"></label>
@@ -450,6 +453,7 @@
                         </label>
                         <label style="display:flex;align-items:center;gap:6px;">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
                     </div>
+                    <div id="labCombatStatus" style="padding:9px 11px;margin-bottom:8px;border-radius:8px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ffe29a;"></div>
                     <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste o token para mover. Arraste a seta dourada na borda para girar a frente. A sombra mostra o deslocamento disponível em metros.</div>
                     <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
                         <div id="labMetricMap" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
@@ -6390,22 +6394,14 @@ window.mostrarBancoAba = (abaId, btn) => {
 
 
 
+
 let labEstado_={
-    tokens:[],
-    pxPorMetro:48,
-    larguraM:28,
-    alturaM:14,
-    fundo:'#d7d7d7',
-    corGrade:'#777777',
-    gradeVisivel:true,
-    textura:'nenhuma',
-    selecionadoId:''
+    tokens:[],pxPorMetro:48,larguraM:28,alturaM:14,fundo:'#d7d7d7',
+    corGrade:'#777777',gradeVisivel:true,textura:'nenhuma',selecionadoId:'',
+    fase:'preparacao',rodada:0,ordemIniciativa:[],turnoIndex:0
 };
 let labDrag_=null;
-
-function labSalvarLocal_(){
-    try{localStorage.setItem('mesaEstelarLabCombate',JSON.stringify(labEstado_));}catch(_){}
-}
+function labSalvarLocal_(){try{localStorage.setItem('mesaEstelarLabCombate',JSON.stringify(labEstado_));}catch(_){}}
 function labCarregarLocal_(){
     try{
         const v=JSON.parse(localStorage.getItem('mesaEstelarLabCombate')||'null');
@@ -6413,9 +6409,8 @@ function labCarregarLocal_(){
             const eraPadraoAntigo=Number(v.larguraM||0)===24&&Number(v.alturaM||0)===14;
             labEstado_={...labEstado_,...v,tokens:Array.isArray(v.tokens)?v.tokens:[]};
             if(eraPadraoAntigo)labEstado_.larguraM=28;
-            if(!labEstado_.corGrade)labEstado_.corGrade='#777777';
-            if(labEstado_.gradeVisivel==null)labEstado_.gradeVisivel=true;
-            if(!labEstado_.textura)labEstado_.textura='nenhuma';
+            if(!labEstado_.fase)labEstado_.fase='preparacao';
+            if(!Array.isArray(labEstado_.ordemIniciativa))labEstado_.ordemIniciativa=[];
             for(const t of labEstado_.tokens){
                 if(t.angulo==null)t.angulo=0;
                 if(t.acoesMaxLab==null)t.acoesMaxLab=Number(t.acoesMax||2)||2;
@@ -6426,28 +6421,20 @@ function labCarregarLocal_(){
                 if(t.movimentoNatacao==null)t.movimentoNatacao=0;
                 if(!t.modoMovimento)t.modoMovimento='terrestre';
                 if(t.alcanceAtaqueMax==null)t.alcanceAtaqueMax=0;
+                if(t.iniciativaLab===undefined)t.iniciativaLab=null;
+                if(t.iniciativaBonus==null)t.iniciativaBonus=Math.floor((Number(t.attrs?.INT||10)+Number(t.attrs?.DES||10))/2);
             }
         }
     }catch(_){}
 }
 function labTamanhoTokenM_(c){
     const tam=Number(c?.atributos?.TAM||10);
-    if(tam>=70)return 3.2;
-    if(tam>=35)return 2.1;
-    if(tam>=20)return 1.45;
-    if(tam<=6)return .65;
-    return .95;
+    if(tam>=70)return 3.2;if(tam>=35)return 2.1;if(tam>=20)return 1.45;if(tam<=6)return .65;return .95;
 }
 function labHeuristicaMovimento_(p,c){
     const nome=normalizarTextoCombate_(`${p?.nome||''} ${c?.carreira||''} ${c?.conceito||''}`);
-    let terra=Number(c?.movimentoTerrestre);
-    let voo=Number(c?.movimentoVoo);
-    let nat=Number(c?.movimentoNatacao);
-    if(!Number.isFinite(terra))terra=3;
-    if(!Number.isFinite(voo))voo=0;
-    if(!Number.isFinite(nat))nat=0;
-
-    // Compatibilidade imediata para modelos antigos ainda não reimportados.
+    let terra=Number(c?.movimentoTerrestre),voo=Number(c?.movimentoVoo),nat=Number(c?.movimentoNatacao);
+    if(!Number.isFinite(terra))terra=3;if(!Number.isFinite(voo))voo=0;if(!Number.isFinite(nat))nat=0;
     if(nome.includes('cila'))terra=0;
     if(nome.includes('besta_ululante'))terra=Math.max(terra,4);
     if(nome.includes('dragao_trombeta_corredor'))terra=Math.max(terra,4);
@@ -6456,294 +6443,145 @@ function labHeuristicaMovimento_(p,c){
     return {terra:Math.max(0,terra),voo:Math.max(0,voo),nat:Math.max(0,nat)};
 }
 function labAlcanceMax_(c){
-    const ataques=ataquesNaturaisChar_(c)||[];
-    return Math.max(0,...ataques.map(a=>Number(a.alcanceMetros||0)).filter(Number.isFinite));
+    return Math.max(0,...(ataquesNaturaisChar_(c)||[]).map(a=>Number(a.alcanceMetros||0)).filter(Number.isFinite));
 }
 function labTokenDeParticipante_(p,i=0){
-    const c=batalhaCharLocal_(p.id);
+    const c=batalhaCharLocal_(p.id),mov=labHeuristicaMovimento_(p,c);
     const max=Math.max(0,Number(p?.acoesMax||obterPAMaxCombate_(c)||2));
-    const mov=labHeuristicaMovimento_(p,c);
-    return {
-        id:String(p.id),nome:String(p.nome||'Participante'),imagem:String(p.imagem||c?.imagem||''),
-        tipo:String(p.tipo||''),x:Math.min(labEstado_.larguraM-1,1.5+(i%8)*2.5),
-        y:Math.min(labEstado_.alturaM-1,1.5+Math.floor(i/8)*2.5),
+    return {id:String(p.id),nome:String(p.nome||'Participante'),imagem:String(p.imagem||c?.imagem||''),tipo:String(p.tipo||''),
+        x:Math.min(labEstado_.larguraM-1,1.5+(i%8)*2.5),y:Math.min(labEstado_.alturaM-1,1.5+Math.floor(i/8)*2.5),
         diametroM:labTamanhoTokenM_(c),angulo:0,attrs:c?.atributos?JSON.parse(JSON.stringify(c.atributos)):{},
         acoesMaxLab:max,acoesAtuaisLab:max,movimentoGratisDisponivel:mov.terra>0||mov.voo>0||mov.nat>0,
         movimentoTerrestre:mov.terra,movimentoVoo:mov.voo,movimentoNatacao:mov.nat,
         modoMovimento:mov.terra>0?'terrestre':mov.voo>0?'voo':mov.nat>0?'natacao':'imovel',
-        alcanceAtaqueMax:labAlcanceMax_(c)
-    };
+        alcanceAtaqueMax:labAlcanceMax_(c),iniciativaLab:null,
+        iniciativaBonus:Math.floor((Number(c?.atributos?.INT||10)+Number(c?.atributos?.DES||10))/2)};
 }
 window.labCarregarBatalhaAtual_=function(){
     if(!batalhaEhMestre_())return;
-    const ps=batalhaEstado_?.participantes||[];
-    if(!ps.length){notificar_('A batalha atual não tem participantes.','aviso');return;}
+    const ps=batalhaEstado_?.participantes||[];if(!ps.length){notificar_('A batalha atual não tem participantes.','aviso');return;}
     const antigos=new Map((labEstado_.tokens||[]).map(t=>[String(t.id),t]));
-    labEstado_.tokens=ps.map((p,i)=>{
-        const n=labTokenDeParticipante_(p,i),a=antigos.get(String(p.id));
-        if(!a)return n;
-        const modoValido=(a.modoMovimento==='voo'&&n.movimentoVoo>0)||(a.modoMovimento==='natacao'&&n.movimentoNatacao>0)||(a.modoMovimento==='terrestre'&&n.movimentoTerrestre>0);
-        return {...n,x:a.x,y:a.y,angulo:a.angulo,
-            acoesAtuaisLab:Number.isFinite(Number(a.acoesAtuaisLab))?Math.min(n.acoesMaxLab,Number(a.acoesAtuaisLab)):n.acoesMaxLab,
-            movimentoGratisDisponivel:a.movimentoGratisDisponivel!==false,
-            modoMovimento:modoValido?a.modoMovimento:n.modoMovimento};
-    });
+    labEstado_.tokens=ps.map((p,i)=>{const n=labTokenDeParticipante_(p,i),a=antigos.get(String(p.id));if(!a)return n;
+        const valido=(a.modoMovimento==='voo'&&n.movimentoVoo>0)||(a.modoMovimento==='natacao'&&n.movimentoNatacao>0)||(a.modoMovimento==='terrestre'&&n.movimentoTerrestre>0);
+        return {...n,x:a.x,y:a.y,angulo:a.angulo,acoesAtuaisLab:Number.isFinite(Number(a.acoesAtuaisLab))?Math.min(n.acoesMaxLab,Number(a.acoesAtuaisLab)):n.acoesMaxLab,
+            movimentoGratisDisponivel:a.movimentoGratisDisponivel!==false,modoMovimento:valido?a.modoMovimento:n.modoMovimento,
+            iniciativaLab:Number.isFinite(Number(a.iniciativaLab))?Number(a.iniciativaLab):null};});
     labSalvarLocal_();labRender_();
 };
 window.labAdicionarBoneco_=function(){
-    if(!batalhaEhMestre_())return;
     const n=(labEstado_.tokens||[]).filter(t=>String(t.id).startsWith('dummy:')).length+1;
-    labEstado_.tokens.push({
-        id:`dummy:${Date.now()}`,nome:`Boneco de treino ${n}`,imagem:'',tipo:'Alvo',
-        x:3+n,y:3,diametroM:.9,angulo:0,attrs:{TAM:10},
-        acoesMaxLab:0,acoesAtuaisLab:0,movimentoGratisDisponivel:false,
-        movimentoTerrestre:0,movimentoVoo:0,movimentoNatacao:0,modoMovimento:'livre',
-        alcanceAtaqueMax:0,livreMestre:true
-    });
+    labEstado_.tokens.push({id:`dummy:${Date.now()}`,nome:`Boneco de treino ${n}`,imagem:'',tipo:'Alvo',x:3+n,y:3,diametroM:.9,angulo:0,attrs:{TAM:10},
+        acoesMaxLab:0,acoesAtuaisLab:0,movimentoGratisDisponivel:false,movimentoTerrestre:0,movimentoVoo:0,movimentoNatacao:0,modoMovimento:'livre',
+        alcanceAtaqueMax:0,livreMestre:true,iniciativaLab:null,iniciativaBonus:0});
     labSalvarLocal_();labRender_();
 };
 window.labLimpar_=function(){
-    if(!batalhaEhMestre_())return;
     if(!confirm('Limpar apenas o Laboratório? A batalha real não será alterada.'))return;
-    labEstado_.tokens=[];labEstado_.selecionadoId='';labSalvarLocal_();labRender_();
+    labEstado_={...labEstado_,tokens:[],selecionadoId:'',fase:'preparacao',rodada:0,ordemIniciativa:[],turnoIndex:0};labSalvarLocal_();labRender_();
 };
 window.labCentralizarTokens_=function(){
-    (labEstado_.tokens||[]).forEach((t,i)=>{t.x=1.5+(i%8)*2.6;t.y=1.5+Math.floor(i/8)*2.6;});
-    labSalvarLocal_();labRender_();
+    if(labEstado_.fase==='combate'){notificar_('Reorganize os tokens na fase de preparação.','aviso');return;}
+    (labEstado_.tokens||[]).forEach((t,i)=>{t.x=1.5+(i%8)*2.6;t.y=1.5+Math.floor(i/8)*2.6;});labSalvarLocal_();labRender_();
 };
 window.labResetarAcoes_=function(){
-    for(const t of labEstado_.tokens||[]){
-        t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));
-        t.movimentoGratisDisponivel=!t.livreMestre && labMovimentoPorAcao_(t)>0;
-    }
+    for(const t of labEstado_.tokens||[]){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=!t.livreMestre&&labMovimentoPorAcao_(t)>0;}
     labSalvarLocal_();labRender_();
+};
+function labTokensCombatentes_(){return (labEstado_.tokens||[]).filter(t=>!String(t.id).startsWith('dummy:'));}
+function labTokenAtual_(){
+    if(labEstado_.fase!=='combate'||!labEstado_.ordemIniciativa?.length)return null;
+    const id=labEstado_.ordemIniciativa[Math.max(0,Math.min(labEstado_.ordemIniciativa.length-1,Number(labEstado_.turnoIndex||0)))];
+    return (labEstado_.tokens||[]).find(t=>String(t.id)===String(id))||null;
+}
+function labPrepararNovaRodada_(){for(const t of labTokensCombatentes_()){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=labMovimentoPorAcao_(t)>0;}}
+window.labIniciarCombate_=function(){
+    const cs=labTokensCombatentes_();if(!cs.length){notificar_('Adicione participantes antes de iniciar o combate.','aviso');return;}
+    for(const t of cs)t.iniciativaLab=1+Math.floor(Math.random()*10)+Number(t.iniciativaBonus||0);
+    cs.sort((a,b)=>Number(b.iniciativaLab||0)-Number(a.iniciativaLab||0)||Number(b.iniciativaBonus||0)-Number(a.iniciativaBonus||0)||String(a.nome).localeCompare(String(b.nome)));
+    labEstado_.ordemIniciativa=cs.map(t=>String(t.id));labEstado_.turnoIndex=0;labEstado_.rodada=1;labEstado_.fase='combate';labPrepararNovaRodada_();
+    const atual=labTokenAtual_();if(atual)labEstado_.selecionadoId=String(atual.id);labSalvarLocal_();labRender_();
+};
+window.labEncerrarOportunidade_=function(){
+    if(labEstado_.fase!=='combate')return;const ordem=labEstado_.ordemIniciativa||[];if(!ordem.length)return;
+    labEstado_.turnoIndex++;
+    if(labEstado_.turnoIndex>=ordem.length){labEstado_.turnoIndex=0;labEstado_.rodada++;labPrepararNovaRodada_();notificar_(`Rodada ${labEstado_.rodada} iniciada. AÇ e 1 m gratuito foram repostos.`,'info',4200);}
+    const atual=labTokenAtual_();if(atual)labEstado_.selecionadoId=String(atual.id);labSalvarLocal_();labRender_();
+};
+window.labVoltarPreparacao_=function(){
+    if(labEstado_.fase==='combate'&&!confirm('Voltar à preparação? As posições serão mantidas, mas rodada e iniciativa serão encerradas.'))return;
+    labEstado_.fase='preparacao';labEstado_.rodada=0;labEstado_.turnoIndex=0;labEstado_.ordemIniciativa=[];for(const t of labEstado_.tokens||[])t.iniciativaLab=null;labSalvarLocal_();labRender_();
 };
 window.labMudarFundo_=function(v){labEstado_.fundo=String(v||'#d7d7d7');labSalvarLocal_();labRender_();};
 window.labMudarCorGrade_=function(v){labEstado_.corGrade=String(v||'#777777');labSalvarLocal_();labRender_();};
 window.labAlternarGrade_=function(v){labEstado_.gradeVisivel=!!v;labSalvarLocal_();labRender_();};
 window.labMudarTextura_=function(v){labEstado_.textura=String(v||'nenhuma');labSalvarLocal_();labRender_();};
-window.labMudarTamanhoMapa_=function(v){
-    const m=String(v||'28x14').match(/^(\d+)x(\d+)$/);if(!m)return;
-    labEstado_.larguraM=Math.max(12,Math.min(80,Number(m[1])||28));
-    labEstado_.alturaM=Math.max(8,Math.min(50,Number(m[2])||14));
-    for(const t of labEstado_.tokens||[]){
-        t.x=Math.max(0,Math.min(labEstado_.larguraM,t.x));
-        t.y=Math.max(0,Math.min(labEstado_.alturaM,t.y));
-    }
-    labSalvarLocal_();labRender_();
-};
+window.labMudarTamanhoMapa_=function(v){const m=String(v||'28x14').match(/^(\d+)x(\d+)$/);if(!m)return;labEstado_.larguraM=Number(m[1]);labEstado_.alturaM=Number(m[2]);labSalvarLocal_();labRender_();};
 window.labMudarZoom_=function(v){labEstado_.pxPorMetro=Math.max(30,Math.min(90,Number(v)||48));labSalvarLocal_();labRender_();};
 window.labSelecionar_=function(id){labEstado_.selecionadoId=String(id);labSalvarLocal_();labRender_();};
 window.labMudarModoMovimento_=function(v){
     const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t||t.livreMestre)return;
-    const ok=(v==='terrestre'&&Number(t.movimentoTerrestre||0)>0)||(v==='voo'&&Number(t.movimentoVoo||0)>0)||(v==='natacao'&&Number(t.movimentoNatacao||0)>0);
-    if(!ok)return;
-    t.modoMovimento=v;labSalvarLocal_();labRender_();
+    const ok=(v==='terrestre'&&t.movimentoTerrestre>0)||(v==='voo'&&t.movimentoVoo>0)||(v==='natacao'&&t.movimentoNatacao>0);if(ok){t.modoMovimento=v;labSalvarLocal_();labRender_();}
 };
-function labMovimentoPorAcao_(t){
-    if(!t)return 0;
-    if(t.livreMestre)return 999;
-    if(t.modoMovimento==='voo')return Math.max(0,Number(t.movimentoVoo||0));
-    if(t.modoMovimento==='natacao')return Math.max(0,Number(t.movimentoNatacao||0));
-    if(t.modoMovimento==='terrestre')return Math.max(0,Number(t.movimentoTerrestre||0));
-    return 0;
-}
-function labMovimentoMaxM_(t){
-    if(!t)return 0;
-    if(t.livreMestre)return 999;
-    const porAcao=labMovimentoPorAcao_(t);
-    if(porAcao<=0)return 0;
-    const ac=Math.max(0,Number(t.acoesAtuaisLab||0));
-    const pago=ac*porAcao;
-    const gratis=t.movimentoGratisDisponivel!==false?Math.min(1,porAcao):0;
-    return Math.max(pago,gratis);
-}
-function labCustoMovimento_(t,dist){
-    dist=Math.max(0,Number(dist||0));
-    if(t?.livreMestre)return {acoes:0,usaGratis:false};
-    if(dist<=.001)return {acoes:0,usaGratis:false};
-    const porAcao=labMovimentoPorAcao_(t);
-    if(porAcao<=0)return {acoes:0,usaGratis:false,bloqueado:true};
-    if(dist<=1.0001 && t.movimentoGratisDisponivel!==false)return {acoes:0,usaGratis:true};
-    return {acoes:Math.max(1,Math.ceil((dist-.0001)/porAcao)),usaGratis:false};
-}
+function labMovimentoPorAcao_(t){if(!t)return 0;if(t.livreMestre)return 999;if(t.modoMovimento==='voo')return Number(t.movimentoVoo||0);if(t.modoMovimento==='natacao')return Number(t.movimentoNatacao||0);if(t.modoMovimento==='terrestre')return Number(t.movimentoTerrestre||0);return 0;}
+function labMovimentoMaxM_(t){if(!t)return 0;if(t.livreMestre)return 999;const p=labMovimentoPorAcao_(t);if(p<=0)return 0;return Math.max(Number(t.acoesAtuaisLab||0)*p,t.movimentoGratisDisponivel!==false?Math.min(1,p):0);}
+function labCustoMovimento_(t,dist){if(t?.livreMestre)return {acoes:0,usaGratis:false};if(dist<=.001)return {acoes:0,usaGratis:false};const p=labMovimentoPorAcao_(t);if(p<=0)return {acoes:0};if(dist<=1.0001&&t.movimentoGratisDisponivel!==false)return {acoes:0,usaGratis:true};return {acoes:Math.max(1,Math.ceil((dist-.0001)/p)),usaGratis:false};}
 function labBackgroundImage_(){
-    const c=labEstado_.corGrade||'#777777';
-    const grid=labEstado_.gradeVisivel!==false
-        ? `linear-gradient(to right,${c} 1px,transparent 1px),linear-gradient(to bottom,${c} 1px,transparent 1px)`
-        : '';
-    const tex={
-        nenhuma:'',
-        concreto:'radial-gradient(circle at 20% 30%,rgba(255,255,255,.08) 0 1px,transparent 2px),radial-gradient(circle at 70% 65%,rgba(0,0,0,.10) 0 1px,transparent 2px)',
-        areia:'radial-gradient(circle,rgba(255,248,205,.22) 0 1px,transparent 1.6px),radial-gradient(circle,rgba(91,61,20,.12) 0 1px,transparent 1.5px)',
-        terra:'radial-gradient(circle at 30% 20%,rgba(65,30,10,.22) 0 2px,transparent 3px),radial-gradient(circle at 65% 70%,rgba(255,255,255,.05) 0 1px,transparent 2px)',
-        grama:'repeating-linear-gradient(78deg,rgba(30,90,35,.18) 0 2px,transparent 2px 8px),repeating-linear-gradient(102deg,rgba(75,145,55,.12) 0 1px,transparent 1px 7px)',
-        floresta:'radial-gradient(circle at 15% 25%,rgba(18,85,35,.34) 0 7px,transparent 8px),radial-gradient(circle at 75% 70%,rgba(32,105,43,.30) 0 9px,transparent 10px),radial-gradient(circle at 45% 45%,rgba(75,55,25,.13) 0 3px,transparent 4px)',
-        rochas:'radial-gradient(ellipse at 20% 30%,rgba(70,70,75,.28) 0 7px,transparent 8px),radial-gradient(ellipse at 70% 65%,rgba(35,35,40,.20) 0 10px,transparent 11px),radial-gradient(ellipse at 45% 15%,rgba(160,160,160,.10) 0 4px,transparent 5px)',
-        neve:'radial-gradient(circle,rgba(255,255,255,.55) 0 2px,transparent 2.6px),radial-gradient(circle at 65% 30%,rgba(185,220,240,.24) 0 4px,transparent 5px)',
-        agua:'repeating-radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.10) 0 2px,transparent 3px 11px),linear-gradient(110deg,rgba(20,110,150,.18),rgba(60,185,200,.08))',
-        vulcanico:'radial-gradient(circle at 25% 35%,rgba(255,95,0,.24) 0 2px,transparent 3px),radial-gradient(circle at 75% 65%,rgba(120,20,0,.30) 0 5px,transparent 6px),repeating-linear-gradient(145deg,rgba(0,0,0,.13) 0 5px,transparent 5px 12px)',
-        metal:'repeating-linear-gradient(135deg,rgba(255,255,255,.045) 0 3px,rgba(0,0,0,.05) 3px 6px)',
-        nevoa:'radial-gradient(ellipse at 20% 35%,rgba(255,255,255,.18),transparent 35%),radial-gradient(ellipse at 75% 65%,rgba(255,255,255,.14),transparent 38%)'
-    }[labEstado_.textura||'nenhuma']||'';
-    return [grid,tex].filter(Boolean).join(',');
+    const c=labEstado_.corGrade||'#777777';const grid=labEstado_.gradeVisivel!==false?`linear-gradient(to right,${c} 1px,transparent 1px),linear-gradient(to bottom,${c} 1px,transparent 1px)`:'';
+    const tex={nenhuma:'',concreto:'radial-gradient(circle at 20% 30%,rgba(255,255,255,.08) 0 1px,transparent 2px),radial-gradient(circle at 70% 65%,rgba(0,0,0,.10) 0 1px,transparent 2px)',
+    areia:'radial-gradient(circle,rgba(255,248,205,.22) 0 1px,transparent 1.6px)',terra:'radial-gradient(circle at 30% 20%,rgba(65,30,10,.22) 0 2px,transparent 3px)',
+    grama:'repeating-linear-gradient(78deg,rgba(30,90,35,.18) 0 2px,transparent 2px 8px)',floresta:'radial-gradient(circle at 15% 25%,rgba(18,85,35,.34) 0 7px,transparent 8px),radial-gradient(circle at 75% 70%,rgba(32,105,43,.30) 0 9px,transparent 10px)',
+    rochas:'radial-gradient(ellipse at 20% 30%,rgba(70,70,75,.28) 0 7px,transparent 8px),radial-gradient(ellipse at 70% 65%,rgba(35,35,40,.20) 0 10px,transparent 11px)',
+    neve:'radial-gradient(circle,rgba(255,255,255,.55) 0 2px,transparent 2.6px)',agua:'repeating-radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.10) 0 2px,transparent 3px 11px)',
+    vulcanico:'radial-gradient(circle at 25% 35%,rgba(255,95,0,.24) 0 2px,transparent 3px)',metal:'repeating-linear-gradient(135deg,rgba(255,255,255,.045) 0 3px,rgba(0,0,0,.05) 3px 6px)',
+    nevoa:'radial-gradient(ellipse at 20% 35%,rgba(255,255,255,.18),transparent 35%)'}[labEstado_.textura||'nenhuma']||'';return [grid,tex].filter(Boolean).join(',');
 }
-function labBackgroundSize_(){
-    const ppm=Number(labEstado_.pxPorMetro||48);
-    return labEstado_.gradeVisivel!==false
-        ? `${ppm}px ${ppm}px,${ppm}px ${ppm}px,56px 56px,71px 71px,89px 89px`
-        : `56px 56px,71px 71px,89px 89px`;
+function labAtualizarStatusCombate_(){
+    const el=document.getElementById('labCombatStatus');if(!el)return;const em=labEstado_.fase==='combate';
+    document.getElementById('labStartBtn')?.classList.toggle('hidden',em);document.getElementById('labNextBtn')?.classList.toggle('hidden',!em);document.getElementById('labStopBtn')?.classList.toggle('hidden',!em);
+    if(!em){el.innerHTML='<strong>🧭 Preparação:</strong> posicione livremente todos os participantes, inclusive criaturas imóveis como Cila. Depois clique em <b>Iniciar combate</b>.';return;}
+    const a=labTokenAtual_(),ord=(labEstado_.ordemIniciativa||[]).map(id=>labEstado_.tokens.find(t=>String(t.id)===String(id))).filter(Boolean);
+    el.innerHTML=`<strong>⚔️ Rodada ${labEstado_.rodada}</strong> · oportunidade de <strong style="color:#ffd54a">${escaparHtmlInventario_(a?.nome||'—')}</strong>${a?` · AÇ ${a.acoesAtuaisLab}/${a.acoesMaxLab} · INI ${a.iniciativaLab}`:''}<div style="margin-top:5px;font-size:.9em;color:#cfc5de">Ordem: ${ord.map((t,i)=>`${i===labEstado_.turnoIndex?'<b style="color:#ffd54a">':''}${escaparHtmlInventario_(t.nome)} ${t.iniciativaLab}${i===labEstado_.turnoIndex?'</b>':''}`).join(' → ')}</div>`;
 }
 function labAtualizarInfo_(){
-    const el=document.getElementById('labInfo');if(!el)return;
-    const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));
-    if(!t){
-        el.innerHTML='Clique num token para selecioná-lo. Arraste o centro para mover. Arraste a seta dourada na borda para girar a frente.';
-        return;
-    }
-    const a=t.attrs||{},mov=labMovimentoMaxM_(t),porAcao=labMovimentoPorAcao_(t),alcance=Math.max(0,Number(t.alcanceAtaqueMax||0));
-    const modos=[
-        Number(t.movimentoTerrestre||0)>0?`<option value="terrestre" ${t.modoMovimento==='terrestre'?'selected':''}>Terrestre ${Number(t.movimentoTerrestre)} m/AÇ</option>`:'',
-        Number(t.movimentoVoo||0)>0?`<option value="voo" ${t.modoMovimento==='voo'?'selected':''}>Voo ${Number(t.movimentoVoo)} m/AÇ</option>`:'',
-        Number(t.movimentoNatacao||0)>0?`<option value="natacao" ${t.modoMovimento==='natacao'?'selected':''}>Natação ${Number(t.movimentoNatacao)} m/AÇ</option>`:''
-    ].join('');
-    el.innerHTML=`<strong>${escaparHtmlInventario_(t.nome)}</strong> · posição <b>${Number(t.x).toFixed(2)} m, ${Number(t.y).toFixed(2)} m</b>
-        · frente <b>${Math.round(Number(t.angulo||0))}°</b>
-        · AÇ lab <b>${Number(t.acoesAtuaisLab||0)}/${Number(t.acoesMaxLab||0)}</b>
-        ${t.livreMestre?' · <b>posicionamento livre do mestre</b>':
-          porAcao>0?` · movimento <select onchange="labMudarModoMovimento_(this.value)" style="min-height:28px;">${modos}</select> · <b>${porAcao} m/AÇ</b> · disponível <b>${mov.toFixed(1)} m</b>`:
-          ' · <span style="color:#ffb0b0;"><b>imóvel</b></span>'}
-        ${!t.livreMestre&&t.movimentoGratisDisponivel!==false&&porAcao>0?' · <span style="color:#9fffb0;">1 m gratuito disponível</span>':''}
-        ${alcance>0?` · <span style="color:#ffb0b0;">alcance ofensivo máx. <b>${alcance} m</b></span>`:''}
-        <span style="margin-left:10px;color:#9fdfff;">${['FOR','CON','TAM','DES'].filter(k=>a[k]!=null).map(k=>`${k} ${a[k]}`).join(' · ')}</span>
-        <span style="display:block;margin-top:4px;color:#aab8d5;">Azul = deslocamento possível; verde = 1 m gratuito; vermelho pontilhado = alcance ofensivo. A imagem permanece sempre de pé, só a seta representa a frente.</span>`;
+    const el=document.getElementById('labInfo');if(!el)return;const t=labEstado_.tokens.find(x=>String(x.id)===String(labEstado_.selecionadoId));
+    if(!t){el.innerHTML='Clique num token para selecioná-lo.';return;}
+    const a=t.attrs||{},p=labMovimentoPorAcao_(t),mov=labMovimentoMaxM_(t),alc=Number(t.alcanceAtaqueMax||0),prep=labEstado_.fase!=='combate',at=labTokenAtual_(),eh=String(at?.id)===String(t.id);
+    const modos=[t.movimentoTerrestre>0?`<option value="terrestre" ${t.modoMovimento==='terrestre'?'selected':''}>Terrestre ${t.movimentoTerrestre} m/AÇ</option>`:'',t.movimentoVoo>0?`<option value="voo" ${t.modoMovimento==='voo'?'selected':''}>Voo ${t.movimentoVoo} m/AÇ</option>`:'',t.movimentoNatacao>0?`<option value="natacao" ${t.modoMovimento==='natacao'?'selected':''}>Natação ${t.movimentoNatacao} m/AÇ</option>`:''].join('');
+    el.innerHTML=`<strong>${escaparHtmlInventario_(t.nome)}</strong> · posição <b>${t.x.toFixed(2)} m, ${t.y.toFixed(2)} m</b> · frente <b>${Math.round(t.angulo||0)}°</b> · AÇ <b>${t.acoesAtuaisLab}/${t.acoesMaxLab}</b>${Number.isFinite(Number(t.iniciativaLab))?` · INI <b>${t.iniciativaLab}</b>`:''}
+    ${prep?' · <span style="color:#9fffb0"><b>posicionamento livre</b></span>':t.livreMestre?' · <b>posicionamento livre do mestre</b>':p>0?` · <select onchange="labMudarModoMovimento_(this.value)" ${!eh?'disabled':''}>${modos}</select> · ${p} m/AÇ · disponível <b>${eh?mov.toFixed(1):'0.0'} m</b>`:' · <span style="color:#ffb0b0"><b>imóvel</b></span>'}
+    ${alc>0?` · <span style="color:#ffb0b0">alcance ofensivo <b>${alc} m</b></span>`:''}<span style="margin-left:10px;color:#9fdfff">${['FOR','CON','TAM','DES'].filter(k=>a[k]!=null).map(k=>`${k} ${a[k]}`).join(' · ')}</span>`;
 }
 function labOverlayMovimentoHtml_(t,ppm){
-    if(!t||String(t.id)!==String(labEstado_.selecionadoId))return '';
-    let html='';
-    const max=labMovimentoMaxM_(t);
-    if(max>0 && max<100){
-        const r=max*ppm;
-        html+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${r*2}px;height:${r*2}px;border-radius:50%;background:rgba(70,170,255,.10);border:2px dashed rgba(90,195,255,.65);pointer-events:none;z-index:0;"></div>`;
-        if(t.movimentoGratisDisponivel!==false){
-            const free=Math.min(1,labMovimentoPorAcao_(t))*ppm;
-            if(free>0)html+=`<div style="position:absolute;left:${t.x*ppm-free}px;top:${t.y*ppm-free}px;width:${free*2}px;height:${free*2}px;border-radius:50%;background:rgba(80,220,120,.12);border:1px solid rgba(110,255,145,.70);pointer-events:none;z-index:1;"></div>`;
-        }
-    }
-    const alcance=Math.max(0,Number(t.alcanceAtaqueMax||0));
-    if(alcance>0){
-        const r=alcance*ppm;
-        html+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${r*2}px;height:${r*2}px;border-radius:50%;background:rgba(255,80,80,.035);border:2px dotted rgba(255,105,105,.82);pointer-events:none;z-index:0;"></div>`;
-    }
-    return html;
+    if(!t)return '';let h='';const atual=labTokenAtual_(),max=labEstado_.fase==='combate'&&String(atual?.id)===String(t.id)?labMovimentoMaxM_(t):0;
+    if(max>0&&max<100){const r=max*ppm;h+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${2*r}px;height:${2*r}px;border-radius:50%;background:rgba(70,170,255,.10);border:2px dashed rgba(90,195,255,.65);pointer-events:none"></div>`;}
+    const alc=Number(t.alcanceAtaqueMax||0);if(alc>0){const r=alc*ppm;h+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${2*r}px;height:${2*r}px;border-radius:50%;border:2px dotted rgba(255,105,105,.82);pointer-events:none"></div>`;}return h;
 }
 function labRender_(){
-    const map=document.getElementById('labMetricMap');if(!map)return;
-    if(!batalhaEhMestre_()){map.innerHTML='';return;}
-    const bg=document.getElementById('labBgColor');if(bg)bg.value=labEstado_.fundo||'#d7d7d7';
-    const gc=document.getElementById('labGridColor');if(gc)gc.value=labEstado_.corGrade||'#777777';
-    const gv=document.getElementById('labGridVisible');if(gv)gv.checked=labEstado_.gradeVisivel!==false;
-    const tx=document.getElementById('labTexture');if(tx)tx.value=labEstado_.textura||'nenhuma';
-    const zm=document.getElementById('labZoom');if(zm)zm.value=String(labEstado_.pxPorMetro||48);
-    const ms=document.getElementById('labMapSize');if(ms)ms.value=`${labEstado_.larguraM}x${labEstado_.alturaM}`;
-    const ppm=Number(labEstado_.pxPorMetro||48);
-    map.style.width=`${labEstado_.larguraM*ppm}px`;
-    map.style.height=`${labEstado_.alturaM*ppm}px`;
-    map.style.backgroundColor=labEstado_.fundo||'#d7d7d7';
-    map.style.backgroundImage=labBackgroundImage_();
-    map.style.backgroundSize=labBackgroundSize_();
-    const sel=String(labEstado_.selecionadoId||'');
-    const st=(labEstado_.tokens||[]).find(t=>String(t.id)===sel);
-    const overlay=labOverlayMovimentoHtml_(st,ppm);
-    const tokens=(labEstado_.tokens||[]).map(t=>{
-        const d=Math.max(24,Number(t.diametroM||.9)*ppm),ativo=String(t.id)===sel;
-        const img=t.imagem
-            ? `<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none;">`
-            : `<span style="font-size:${Math.max(13,d*.22)}px;pointer-events:none;">${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
-        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}"
-            style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${ativo?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:0 3px 12px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${ativo?5:3};touch-action:none;"
-            onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">
-            ${img}
-            <div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${Number(t.angulo||0)}deg);transform-origin:50% 50%;">
-                <div class="lab-facing-arrow" title="Arraste a seta para girar a frente" onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')"
-                    style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9));pointer-events:auto;cursor:crosshair;"></div>
-            </div>
-            <div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none;">${escaparHtmlInventario_(t.nome)}</div>
-        </div>`;
-    }).join('');
-    map.innerHTML=overlay+tokens;
-    labAtualizarInfo_();
+    const map=document.getElementById('labMetricMap');if(!map)return;const ppm=Number(labEstado_.pxPorMetro||48);
+    map.style.width=`${labEstado_.larguraM*ppm}px`;map.style.height=`${labEstado_.alturaM*ppm}px`;map.style.backgroundColor=labEstado_.fundo;map.style.backgroundImage=labBackgroundImage_();map.style.backgroundSize=`${ppm}px ${ppm}px,${ppm}px ${ppm}px,56px 56px`;
+    const st=labEstado_.tokens.find(t=>String(t.id)===String(labEstado_.selecionadoId)),overlay=labOverlayMovimentoHtml_(st,ppm);
+    const tokens=labEstado_.tokens.map(t=>{const d=Math.max(24,t.diametroM*ppm),sel=String(t.id)===String(labEstado_.selecionadoId),turno=labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id);
+        const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
+        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}</div></div>`;}).join('');
+    map.innerHTML=overlay+tokens;labAtualizarStatusCombate_();labAtualizarInfo_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
-    if(!batalhaEhMestre_())return;
-    ev.preventDefault();ev.stopPropagation();
-    const map=document.getElementById('labMetricMap'),t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(id));
-    if(!map||!t)return;
-    labEstado_.selecionadoId=String(id);
-    const ppm=Number(labEstado_.pxPorMetro||48),rect=map.getBoundingClientRect();
-    const cx=rect.left+t.x*ppm,cy=rect.top+t.y*ppm;
-    const node=map.querySelector(`.lab-token[data-id="${CSS.escape(String(id))}"]`);
-    const move=e=>{
-        const dx=e.clientX-cx,dy=e.clientY-cy;
-        let deg=Math.atan2(dx,-dy)*180/Math.PI;
-        if(deg<0)deg+=360;
-        t.angulo=Math.round(deg);
-        const fr=node?.querySelector('.lab-facing-frame');
-        if(fr)fr.style.transform=`rotate(${t.angulo}deg)`;
-        labAtualizarInfo_();
-    };
-    const up=()=>{window.removeEventListener('pointermove',move);labSalvarLocal_();labRender_();};
-    window.addEventListener('pointermove',move);
-    window.addEventListener('pointerup',up,{once:true});
+    ev.preventDefault();ev.stopPropagation();const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);
+    const ppm=labEstado_.pxPorMetro,rect=map.getBoundingClientRect(),cx=rect.left+t.x*ppm,cy=rect.top+t.y*ppm,node=map.querySelector(`.lab-token[data-id="${CSS.escape(String(id))}"]`);
+    const move=e=>{let deg=Math.atan2(e.clientX-cx,-(e.clientY-cy))*180/Math.PI;if(deg<0)deg+=360;t.angulo=Math.round(deg);const f=node?.querySelector('.lab-facing-frame');if(f)f.style.transform=`rotate(${t.angulo}deg)`;labAtualizarInfo_();};
+    const up=()=>{window.removeEventListener('pointermove',move);labSalvarLocal_();labRender_();};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
 };
 window.labPointerDown_=function(ev,id){
-    if(!batalhaEhMestre_()||ev.button===2)return;
-    ev.preventDefault();
-    const map=document.getElementById('labMetricMap'),t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(id));
-    if(!map||!t)return;
-    labEstado_.selecionadoId=String(id);
-    const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);
-    const origem={x:Number(t.x),y:Number(t.y)};
-    const maxM=labMovimentoMaxM_(t);
-    if(maxM<=0&&!t.livreMestre){
-        notificar_(`${t.nome} é imóvel no modo selecionado. Seu alcance ofensivo continua visível quando houver um ataque com alcance.`,'aviso',4500);
-        labRender_();return;
-    }
-    labDrag_={id:String(id),origem,maxM};
-    const move=e=>{
-        if(!labDrag_)return;
-        let x=(e.clientX-rect.left)/ppm,y=(e.clientY-rect.top)/ppm;
-        let dx=x-origem.x,dy=y-origem.y,dist=Math.hypot(dx,dy);
-        if(!t.livreMestre && dist>maxM&&dist>0){
-            const f=maxM/dist;dx*=f;dy*=f;x=origem.x+dx;y=origem.y+dy;
-        }
-        x=Math.max(0,Math.min(labEstado_.larguraM,x));
-        y=Math.max(0,Math.min(labEstado_.alturaM,y));
-        t.x=Math.round(x*100)/100;t.y=Math.round(y*100)/100;
-        const node=map.querySelector(`.lab-token[data-id="${CSS.escape(String(id))}"]`);
-        if(node){
-            const d=Math.max(24,Number(t.diametroM||.9)*ppm);
-            node.style.left=`${t.x*ppm-d/2}px`;node.style.top=`${t.y*ppm-d/2}px`;
-        }
-        labAtualizarInfo_();
-    };
-    const up=()=>{
-        window.removeEventListener('pointermove',move);labDrag_=null;
-        const dist=Math.hypot(Number(t.x)-origem.x,Number(t.y)-origem.y);
-        const custo=labCustoMovimento_(t,dist);
-        if(custo.usaGratis)t.movimentoGratisDisponivel=false;
-        if(custo.acoes>0)t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-custo.acoes);
-        labSalvarLocal_();labRender_();
-        if(dist>.01){
-            const txt=t.livreMestre?'reposicionamento livre':custo.usaGratis?'movimento gratuito':`${custo.acoes} AÇ`;
-            notificar_(`${t.nome}: ${dist.toFixed(2)} m · ${txt}.`,'info',3500);
-        }
-    };
-    window.addEventListener('pointermove',move);
-    window.addEventListener('pointerup',up,{once:true});
-    labRender_();
+    if(ev.button===2)return;ev.preventDefault();const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);
+    const rect=map.getBoundingClientRect(),ppm=labEstado_.pxPorMetro,origem={x:t.x,y:t.y},prep=labEstado_.fase!=='combate',at=labTokenAtual_();
+    if(!prep&&!t.livreMestre&&String(at?.id)!==String(t.id)){notificar_(`Agora é a oportunidade de ${at?.nome||'outro participante'}.`,'aviso');labRender_();return;}
+    const maxM=(prep||t.livreMestre)?999:labMovimentoMaxM_(t);if(!prep&&maxM<=0&&!t.livreMestre){notificar_(`${t.nome} é imóvel em combate. Na preparação o mestre pode posicioná-lo livremente.`,'aviso');return;}
+    const move=e=>{let x=(e.clientX-rect.left)/ppm,y=(e.clientY-rect.top)/ppm,dx=x-origem.x,dy=y-origem.y,dist=Math.hypot(dx,dy);if(!prep&&!t.livreMestre&&dist>maxM){const f=maxM/dist;x=origem.x+dx*f;y=origem.y+dy*f;}t.x=Math.max(0,Math.min(labEstado_.larguraM,x));t.y=Math.max(0,Math.min(labEstado_.alturaM,y));labRender_();};
+    const up=()=>{window.removeEventListener('pointermove',move);const dist=Math.hypot(t.x-origem.x,t.y-origem.y),c=prep?{acoes:0}:labCustoMovimento_(t,dist);if(!prep){if(c.usaGratis)t.movimentoGratisDisponivel=false;if(c.acoes>0)t.acoesAtuaisLab=Math.max(0,t.acoesAtuaisLab-c.acoes);}labSalvarLocal_();labRender_();};
+    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
 };
 labCarregarLocal_();
+
 
 
 
@@ -13865,7 +13703,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.11.3: seta de facing, bonecos móveis, movimentos por espécie e alcance ofensivo separado -->
+<!-- Mesa Estelar v46.12.0: preparação pré-combate, iniciativa, rodadas, oportunidades e reposição automática de AÇ no Laboratório -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
