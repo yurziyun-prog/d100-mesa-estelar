@@ -454,6 +454,7 @@
                         <label style="display:flex;align-items:center;gap:6px;">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
                     </div>
                     <div id="labCombatStatus" style="padding:9px 11px;margin-bottom:8px;border-radius:8px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ffe29a;"></div>
+                    <div id="labActionPanel" style="display:none;margin-bottom:8px;padding:10px 12px;border-radius:10px;background:rgba(22,18,48,.88);border:1px solid rgba(0,212,255,.28);"></div>
                     <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste o token para mover. Arraste a seta dourada na borda para girar a frente. A sombra mostra o deslocamento disponível em metros.</div>
                     <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
                         <div id="labMetricMap" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
@@ -6398,7 +6399,7 @@ window.mostrarBancoAba = (abaId, btn) => {
 let labEstado_={
     tokens:[],pxPorMetro:48,larguraM:28,alturaM:14,fundo:'#d7d7d7',
     corGrade:'#777777',gradeVisivel:true,textura:'nenhuma',selecionadoId:'',
-    fase:'preparacao',rodada:0,ordemIniciativa:[],turnoIndex:0
+    fase:'preparacao',rodada:0,ordemIniciativa:[],turnoIndex:0,logLab:[],ultimoResultadoLab:''
 };
 let labDrag_=null;
 function labSalvarLocal_(){try{localStorage.setItem('mesaEstelarLabCombate',JSON.stringify(labEstado_));}catch(_){}}
@@ -6517,7 +6518,19 @@ window.labAlternarGrade_=function(v){labEstado_.gradeVisivel=!!v;labSalvarLocal_
 window.labMudarTextura_=function(v){labEstado_.textura=String(v||'nenhuma');labSalvarLocal_();labRender_();};
 window.labMudarTamanhoMapa_=function(v){const m=String(v||'28x14').match(/^(\d+)x(\d+)$/);if(!m)return;labEstado_.larguraM=Number(m[1]);labEstado_.alturaM=Number(m[2]);labSalvarLocal_();labRender_();};
 window.labMudarZoom_=function(v){labEstado_.pxPorMetro=Math.max(30,Math.min(90,Number(v)||48));labSalvarLocal_();labRender_();};
-window.labSelecionar_=function(id){labEstado_.selecionadoId=String(id);labSalvarLocal_();labRender_();};
+window.labSelecionar_=function(id){
+    const sid=String(id);
+    if(labEstado_.fase==='combate'){
+        const atual=labTokenAtual_();
+        if(atual && sid!==String(atual.id)){
+            atual.alvoLab=sid;
+            labEstado_.selecionadoId=String(atual.id);
+            labEstado_.ultimoResultadoLab=`Alvo selecionado: ${(labEstado_.tokens||[]).find(t=>String(t.id)===sid)?.nome||'alvo'}.`;
+            labSalvarLocal_();labRender_();return;
+        }
+    }
+    labEstado_.selecionadoId=sid;labSalvarLocal_();labRender_();
+};
 window.labMudarModoMovimento_=function(v){
     const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t||t.livreMestre)return;
     const ok=(v==='terrestre'&&t.movimentoTerrestre>0)||(v==='voo'&&t.movimentoVoo>0)||(v==='natacao'&&t.movimentoNatacao>0);if(ok){t.modoMovimento=v;labSalvarLocal_();labRender_();}
@@ -6525,6 +6538,121 @@ window.labMudarModoMovimento_=function(v){
 function labMovimentoPorAcao_(t){if(!t)return 0;if(t.livreMestre)return 999;if(t.modoMovimento==='voo')return Number(t.movimentoVoo||0);if(t.modoMovimento==='natacao')return Number(t.movimentoNatacao||0);if(t.modoMovimento==='terrestre')return Number(t.movimentoTerrestre||0);return 0;}
 function labMovimentoMaxM_(t){if(!t)return 0;if(t.livreMestre)return 999;const p=labMovimentoPorAcao_(t);if(p<=0)return 0;return Math.max(Number(t.acoesAtuaisLab||0)*p,t.movimentoGratisDisponivel!==false?Math.min(1,p):0);}
 function labCustoMovimento_(t,dist){if(t?.livreMestre)return {acoes:0,usaGratis:false};if(dist<=.001)return {acoes:0,usaGratis:false};const p=labMovimentoPorAcao_(t);if(p<=0)return {acoes:0};if(dist<=1.0001&&t.movimentoGratisDisponivel!==false)return {acoes:0,usaGratis:true};return {acoes:Math.max(1,Math.ceil((dist-.0001)/p)),usaGratis:false};}
+
+function labCharToken_(t){
+    if(!t||String(t.id).startsWith('dummy:'))return null;
+    return batalhaCharLocal_(t.id);
+}
+function labPericiasAtaque_(t){
+    const c=labCharToken_(t);if(!c)return [];
+    return (batalhaListaPericias_(c)||[]).filter(p=>periciaCriaturaPodeAtacar_(c,p)||(!c.__npcTemporario&&!c.__criaturaTemporaria&&periciaEhOfensiva_(p)));
+}
+function labPericiaPorToken_(t,token){
+    const c=labCharToken_(t);if(!c)return null;
+    let p=batalhaResolverPericia_(token);
+    if(p&&(c.__npcTemporario||c.__criaturaTemporaria)){
+        const reg=(p.__especializacao?c.especializacoes:c.pericias)?.[p.id];
+        if(reg?.nomeOriginal)p={...p,nome:reg.nomeOriginal};
+    }
+    return p;
+}
+function labGarantirPrefsAtaque_(t){
+    if(!t)return;
+    const c=labCharToken_(t),skills=labPericiasAtaque_(t);
+    if(!skills.length){t.periciaLab='';t.equipamentoLab='';return;}
+    if(!skills.some(p=>batalhaTokenPericia_(p)===t.periciaLab))t.periciaLab=batalhaTokenPericia_(skills[0]);
+    const per=labPericiaPorToken_(t,t.periciaLab);
+    const eq=batalhaEquipamentos_(c,per,t.equipamentoLab);
+    if(!eq.some(x=>x.valor===t.equipamentoLab))t.equipamentoLab=eq[0]?.valor||'';
+    const alvos=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id));
+    if(!alvos.some(x=>String(x.id)===String(t.alvoLab)))t.alvoLab=alvos[0]?.id||'';
+}
+function labItemSelecionado_(t){
+    const c=labCharToken_(t);if(!c)return null;
+    const per=labPericiaPorToken_(t,t.periciaLab);
+    const ops=batalhaEquipamentos_(c,per,t.equipamentoLab);
+    return ops.find(x=>x.valor===t.equipamentoLab)?.item||null;
+}
+function labDistanciaEntre_(a,b){
+    if(!a||!b)return Infinity;
+    return Math.hypot(Number(a.x||0)-Number(b.x||0),Number(a.y||0)-Number(b.y||0));
+}
+function labAlcanceAtaque_(t,item){
+    if(!item)return 1.5;
+    const explicito=Number(item.alcanceMetros);
+    if(Number.isFinite(explicito)&&explicito>0)return explicito;
+    const nome=normalizarTextoCombate_(item.nome||'');
+    if(nome.includes('bote_de_presa_cirurgico'))return 15;
+    if(item.natural===true){
+        if(/mordida|garra|pisot|pseudopode|punho|mandib/.test(nome))return 1.8;
+        return 2;
+    }
+    const a=Number(item.alcance||0);
+    if(a>2)return a;
+    if(String(item.municao||'').trim())return Math.max(10,a||20);
+    return 1.8;
+}
+function labValorPericiaAtaque_(c,per){
+    if(!c||!per)return 0;
+    const baseOriginal=obterValorRegistroPericia_(c,per.id,per.__especializacao);
+    const arm=valorPericiaComArmadura_(c,per,baseOriginal);
+    const ajuste=aplicarDificuldadeEFadiga_(c,arm.valor,'padrao',batalhaPenalidadeFerimento_(c,per)+batalhaPenalidadeCaido_(c)+batalhaPenalidadeInfeccao_(c));
+    return Math.max(0,Number(ajuste.valor||0));
+}
+window.labMudarAtaquePref_=function(campo,v){
+    const t=labTokenAtual_();if(!t)return;
+    t[campo]=String(v||'');
+    if(campo==='periciaLab')t.equipamentoLab='';
+    labGarantirPrefsAtaque_(t);labSalvarLocal_();labRender_();
+};
+window.labSelecionarAlvo_=function(v){
+    const t=labTokenAtual_();if(!t)return;t.alvoLab=String(v||'');labSalvarLocal_();labRender_();
+};
+window.labRolarAtaque_=function(){
+    if(labEstado_.fase!=='combate')return;
+    const t=labTokenAtual_(),c=labCharToken_(t);if(!t||!c)return;
+    if(Number(t.acoesAtuaisLab||0)<=0){notificar_('Sem AÇ restantes.','aviso');return;}
+    labGarantirPrefsAtaque_(t);
+    const per=labPericiaPorToken_(t,t.periciaLab),item=labItemSelecionado_(t);
+    const alvo=(labEstado_.tokens||[]).find(x=>String(x.id)===String(t.alvoLab));
+    if(!per||!item||!alvo){notificar_('Selecione perícia, ataque/arma e alvo.','aviso');return;}
+    const dist=labDistanciaEntre_(t,alvo),alc=labAlcanceAtaque_(t,item);
+    if(dist>alc+.001){
+        labEstado_.ultimoResultadoLab=`Fora de alcance: ${dist.toFixed(2)} m; ${getNome(item)} alcança ${alc.toFixed(1)} m.`;
+        labSalvarLocal_();labRender_();notificar_(labEstado_.ultimoResultadoLab,'aviso',4500);return;
+    }
+    const valor=labValorPericiaAtaque_(c,per),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
+    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);
+    labEstado_.ultimoResultadoLab=`${t.nome} → ${alvo.nome}: ${getNome(per)} ${roll}/${valor} → ${r.grau} · distância ${dist.toFixed(2)} m · ${getNome(item)}.`;
+    labEstado_.logLab=Array.isArray(labEstado_.logLab)?labEstado_.logLab:[];
+    labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
+    labEstado_.logLab=labEstado_.logLab.slice(0,20);
+    labSalvarLocal_();labRender_();
+};
+function labRenderActionPanel_(){
+    const el=document.getElementById('labActionPanel');if(!el)return;
+    if(labEstado_.fase!=='combate'){el.style.display='none';el.innerHTML='';return;}
+    const t=labTokenAtual_(),c=labCharToken_(t);
+    if(!t||!c){el.style.display='none';return;}
+    labGarantirPrefsAtaque_(t);
+    const skills=labPericiasAtaque_(t),per=labPericiaPorToken_(t,t.periciaLab),eq=batalhaEquipamentos_(c,per,t.equipamentoLab);
+    const alvos=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id));
+    const alvo=alvos.find(x=>String(x.id)===String(t.alvoLab)),item=labItemSelecionado_(t);
+    const dist=alvo?labDistanciaEntre_(t,alvo):Infinity,alc=item?labAlcanceAtaque_(t,item):0;
+    const valor=per?labValorPericiaAtaque_(c,per):0;
+    el.style.display='block';
+    el.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px;">
+        <strong style="color:#ffd54a;">🎯 Ação de ${escaparHtmlInventario_(t.nome)}</strong>
+        <span style="color:${dist<=alc?'#9fffb0':'#ff9b93'}">${alvo?`Distância até ${escaparHtmlInventario_(alvo.nome)}: <b>${dist.toFixed(2)} m</b> · alcance <b>${alc.toFixed(1)} m</b>`:'Selecione um alvo'}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(160px,1.3fr) minmax(160px,1.2fr) auto;gap:8px;align-items:end;">
+        <label><small>Perícia</small><select onchange="labMudarAtaquePref_('periciaLab',this.value)" style="width:100%">${skills.map(p=>`<option value="${batalhaTokenPericia_(p)}" ${batalhaTokenPericia_(p)===t.periciaLab?'selected':''}>${escaparHtmlInventario_(getNome(p))} (${labValorPericiaAtaque_(c,p)}%)</option>`).join('')}</select></label>
+        <label><small>Arma / ataque</small><select onchange="labMudarAtaquePref_('equipamentoLab',this.value)" style="width:100%">${eq.map(x=>`<option value="${escaparHtmlInventario_(x.valor)}" ${x.valor===t.equipamentoLab?'selected':''}>${escaparHtmlInventario_(x.rotulo)}</option>`).join('')||'<option>—</option>'}</select></label>
+        <label><small>Alvo</small><select onchange="labSelecionarAlvo_(this.value)" style="width:100%">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(t.alvoLab)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
+        <button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''}>🎲 Atacar (1 AÇ)</button>
+      </div>
+      ${labEstado_.ultimoResultadoLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(labEstado_.ultimoResultadoLab)}</div>`:''}`;
+}
 function labBackgroundImage_(){
     const c=labEstado_.corGrade||'#777777';const grid=labEstado_.gradeVisivel!==false?`linear-gradient(to right,${c} 1px,transparent 1px),linear-gradient(to bottom,${c} 1px,transparent 1px)`:'';
     const tex={nenhuma:'',concreto:'radial-gradient(circle at 20% 30%,rgba(255,255,255,.08) 0 1px,transparent 2px),radial-gradient(circle at 70% 65%,rgba(0,0,0,.10) 0 1px,transparent 2px)',
@@ -6562,8 +6690,9 @@ function labRender_(){
     const st=labEstado_.tokens.find(t=>String(t.id)===String(labEstado_.selecionadoId)),overlay=labOverlayMovimentoHtml_(st,ppm);
     const tokens=labEstado_.tokens.map(t=>{const d=Math.max(24,t.diametroM*ppm),sel=String(t.id)===String(labEstado_.selecionadoId),turno=labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id);
         const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
-        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}</div></div>`;}).join('');
-    map.innerHTML=overlay+tokens;labAtualizarStatusCombate_();labAtualizarInfo_();
+        const alvoAtual=labEstado_.fase==='combate'&&String(labTokenAtual_()?.alvoLab)===String(t.id);
+        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}</div></div>`;}).join('');
+    map.innerHTML=overlay+tokens;labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
     ev.preventDefault();ev.stopPropagation();const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);
@@ -6574,10 +6703,18 @@ window.labRotacaoPointerDown_=function(ev,id){
 window.labPointerDown_=function(ev,id){
     if(ev.button===2)return;ev.preventDefault();const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);
     const rect=map.getBoundingClientRect(),ppm=labEstado_.pxPorMetro,origem={x:t.x,y:t.y},prep=labEstado_.fase!=='combate',at=labTokenAtual_();
-    if(!prep&&!t.livreMestre&&String(at?.id)!==String(t.id)){notificar_(`Agora é a oportunidade de ${at?.nome||'outro participante'}.`,'aviso');labRender_();return;}
+    if(!prep&&!t.livreMestre&&String(at?.id)!==String(t.id)){
+        at.alvoLab=String(t.id);labEstado_.selecionadoId=String(at.id);labSalvarLocal_();labRender_();return;
+    }
     const maxM=(prep||t.livreMestre)?999:labMovimentoMaxM_(t);if(!prep&&maxM<=0&&!t.livreMestre){notificar_(`${t.nome} é imóvel em combate. Na preparação o mestre pode posicioná-lo livremente.`,'aviso');return;}
     const move=e=>{let x=(e.clientX-rect.left)/ppm,y=(e.clientY-rect.top)/ppm,dx=x-origem.x,dy=y-origem.y,dist=Math.hypot(dx,dy);if(!prep&&!t.livreMestre&&dist>maxM){const f=maxM/dist;x=origem.x+dx*f;y=origem.y+dy*f;}t.x=Math.max(0,Math.min(labEstado_.larguraM,x));t.y=Math.max(0,Math.min(labEstado_.alturaM,y));labRender_();};
-    const up=()=>{window.removeEventListener('pointermove',move);const dist=Math.hypot(t.x-origem.x,t.y-origem.y),c=prep?{acoes:0}:labCustoMovimento_(t,dist);if(!prep){if(c.usaGratis)t.movimentoGratisDisponivel=false;if(c.acoes>0)t.acoesAtuaisLab=Math.max(0,t.acoesAtuaisLab-c.acoes);}labSalvarLocal_();labRender_();};
+    const up=()=>{window.removeEventListener('pointermove',move);
+        const dx=t.x-origem.x,dy=t.y-origem.y,dist=Math.hypot(dx,dy),c=prep?{acoes:0}:labCustoMovimento_(t,dist);
+        if(dist>.08){
+            let deg=Math.atan2(dx,-dy)*180/Math.PI;if(deg<0)deg+=360;t.angulo=Math.round(deg);
+        }
+        if(!prep){if(c.usaGratis)t.movimentoGratisDisponivel=false;if(c.acoes>0)t.acoesAtuaisLab=Math.max(0,t.acoesAtuaisLab-c.acoes);}
+        labSalvarLocal_();labRender_();};
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
 };
 labCarregarLocal_();
@@ -13703,7 +13840,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.12.0: preparação pré-combate, iniciativa, rodadas, oportunidades e reposição automática de AÇ no Laboratório -->
+<!-- Mesa Estelar v46.13.0: seleção de alvo por token, painel de ataque métrico e facing automático ao mover -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
