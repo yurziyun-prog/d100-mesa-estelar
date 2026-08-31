@@ -392,12 +392,19 @@
             <!-- ABAS GLOBAIS -->
             <div class="tabs">
                 <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha">📋 Ficha</button>
-                <button class="tab-btn" id="batalhaTabBtn" onclick="mostrarAba('batalha', this)">⚔️ Batalha</button>
+                <button class="tab-btn" id="cenarioAtualTabBtn" onclick="mostrarAba('cenario-publico', this)">🪐 Cenário Atual</button>
                 <button class="tab-btn" id="mercadoTabBtn" onclick="mostrarAba('mercado', this)" data-i18n="tabMercado">🛒 Mercado</button>
-                <button class="tab-btn" id="configTabBtn" onclick="mostrarAba('config', this)" data-i18n="tabConfig" style="display:none;">⚙️ Config</button>
-                <button class="tab-btn hidden" id="bancoTabBtn" onclick="mostrarAba('banco', this)" data-i18n="tabBanco">📚 Banco de Dados</button>
+                <button class="tab-btn" id="batalhaTabBtn" onclick="mostrarAba('batalha', this)">⚔️ Batalha</button>
                 <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
                 <button class="tab-btn hidden" id="escudoTabBtn" onclick="mostrarAba('escudo', this)" data-i18n="tabGM">🛡️ Escudo do Mestre</button>
+            </div>
+
+            <div id="cenario-publico" class="tab-content">
+                <div class="form-section">
+                    <h2 style="margin:0 0 6px;">🪐 Cenário Atual</h2>
+                    <p style="color:#aaa;margin:0 0 16px;">Informações públicas do local e das condições atuais da campanha.</p>
+                    <div id="globalCurrentScenarioPublic"><div style="color:#888;">Nenhum cenário público carregado.</div></div>
+                </div>
             </div>
 
             <!-- ABA BATALHA COMPARTILHADA V29 -->
@@ -1040,10 +1047,38 @@
 
                     <div class="gm-subtabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:12px;">
                         <button class="btn-small btn-select gm-subtab-btn active" onclick="mostrarSubAbaMestre('campanha',this)">🌌 Campanha</button>
+                        <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('entidades',this)">👾 NPCs & Criaturas</button>
                         <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('historico',this)">📡 Histórico</button>
                         <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('cenario',this)">🪐 Cenário</button>
                         <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('anotacoes',this)">📝 Anotações</button>
                         <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('rolagem',this)">🎲 Rolagem do Mestre</button>
+                        <button class="btn-small gm-subtab-btn" onclick="abrirAdminNoEscudo_('banco',this)">📚 Banco de Dados</button>
+                        <button class="btn-small gm-subtab-btn" onclick="abrirAdminNoEscudo_('config',this)">⚙️ Configurações</button>
+                    </div>
+
+                    <div id="gm-sub-entidades" class="gm-sub-content hidden">
+                        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+                            <div><h3 style="margin:0 0 5px;color:#8feaff;">👾 Fichas de NPCs & Criaturas</h3>
+                            <p style="color:#aaa;margin:0;max-width:900px;">O banco guarda o <b>modelo</b>. Ao entrar em batalha, criaturas e NPCs genéricos podem gerar um <b>indivíduo</b> com atributos próprios. Dano e inventário do indivíduo não alteram o modelo.</p></div>
+                            <button class="btn-small" onclick="renderizarFichasEntidadesMestre_()">↻ Atualizar</button>
+                        </div>
+                        <div style="display:grid;grid-template-columns:minmax(260px,.72fr) minmax(420px,1.28fr);gap:14px;align-items:start;">
+                            <div style="padding:12px;border-radius:12px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.10);">
+                                <div style="display:flex;gap:7px;margin-bottom:9px;">
+                                    <button id="gmEntFiltroCriaturas" class="btn-small btn-select" onclick="gmEntidadesFiltro_='criatura';renderizarFichasEntidadesMestre_()">🦖 Criaturas</button>
+                                    <button id="gmEntFiltroNPCs" class="btn-small" onclick="gmEntidadesFiltro_='npc';renderizarFichasEntidadesMestre_()">👤 NPCs</button>
+                                </div>
+                                <input id="gmEntBusca" type="text" placeholder="Buscar modelo..." oninput="renderizarListaModelosEntidades_()" style="width:100%;margin-bottom:9px;">
+                                <div id="gmEntListaModelos" style="max-height:570px;overflow:auto;"></div>
+                            </div>
+                            <div>
+                                <div id="gmEntFichaModelo" style="padding:14px;border-radius:12px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.10);"><div style="color:#888;">Selecione um modelo à esquerda.</div></div>
+                                <div style="margin-top:14px;padding:14px;border-radius:12px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.10);">
+                                    <h4 style="margin:0 0 10px;color:#ffd166;">⚔️ Indivíduos atualmente em batalha</h4>
+                                    <div id="gmEntInstanciasAtivas"><div style="color:#888;">Nenhum indivíduo temporário em batalha.</div></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- CAMPANHA -->
@@ -6202,6 +6237,7 @@ window.mostrarAba = (abaId, btn) => {
         else renderizarMercado();
     }
     if (abaId === 'batalha') renderizarBatalhaCompartilhada_();
+    if (abaId === 'cenario-publico') renderizarCenarioAtualPublico_();
 };
 
 window.mostrarCharAba = (abaId, btn) => {
@@ -6312,6 +6348,25 @@ function npcPericiasParaCombate_(texto){
     });
     return out;
 }
+
+function rolarFormulaAtributo_(formula,fallback=10){
+    const txt=String(formula??'').trim().toLowerCase().replace(/\s+/g,'');
+    if(!txt)return Number(fallback||0);
+    if(/^-?\d+$/.test(txt))return Number(txt);
+    const m=txt.match(/^(\d*)d(\d+)([+-]\d+)?$/);
+    if(!m)return Number(fallback||0);
+    const qtd=Math.max(1,Math.min(50,Number(m[1]||1))),faces=Math.max(2,Math.min(1000,Number(m[2]||6))),mod=Number(m[3]||0);
+    let total=mod;for(let k=0;k<qtd;k++)total+=Math.floor(Math.random()*faces)+1;return total;
+}
+function atributoModeloOuRolado_(modelo,chave,fallback=10){
+    const f=modelo?.formulasAtributos?.[chave];
+    return modelo?.atributosRolados&&String(f||'').trim()?rolarFormulaAtributo_(f,modelo?.[chave]??fallback):Number(modelo?.[chave]??fallback);
+}
+function atributosIndividuoDoModelo_(modelo,participante=null,tipo='npc'){
+    if(participante?.atributosIndividuo&&typeof participante.atributosIndividuo==='object')return JSON.parse(JSON.stringify(participante.atributosIndividuo));
+    const d=tipo==='criatura'?{FOR:10,CON:10,TAM:10,DES:10,INT:5,POD:10,CAR:5}:{FOR:10,CON:10,TAM:10,DES:10,INT:10,POD:10,CAR:10},r={};
+    for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])r[a]=atributoModeloOuRolado_(modelo,a,d[a]);return r;
+}
 function criarNPCCombateDoBanco_(modelo,participante=null){
     if(!modelo)return null;
     const combateSalvo=participante?.npcCombate&&typeof participante.npcCombate==='object'
@@ -6327,10 +6382,7 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
         imagem:modelo.imagem||'',
         tipo:'npc',
         dono:currentUserUid,
-        atributos:{
-            FOR:Number(modelo.FOR||10),CON:Number(modelo.CON||10),TAM:Number(modelo.TAM||10),
-            DES:Number(modelo.DES||10),INT:Number(modelo.INT||10),POD:Number(modelo.POD||10),CAR:Number(modelo.CAR||10)
-        },
+        atributos:atributosIndividuoDoModelo_(modelo,participante,'npc'),
         bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
         pericias:npcPericiasParaCombate_(modelo.periciasTexto),especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
         armasNaturais:String(modelo.armasTexto||'').split('|').map(x=>x.trim()).filter(x=>ataqueNaturalPorNome_(x)).map(x=>ataqueNaturalPorNome_(x).nome),
@@ -6397,12 +6449,14 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
     return {
         id:participante?.id||`criatura:${modelo.id}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
         criaturaBancoId:modelo.id,nome:modelo.nome||'Criatura',imagem:modelo.imagem||'',tipo:'criatura',dono:currentUserUid,
-        atributos:{FOR:Number(modelo.FOR||10),CON:Number(modelo.CON||10),TAM:Number(modelo.TAM||10),DES:Number(modelo.DES||10),INT:Number(modelo.INT||5),POD:Number(modelo.POD||10),CAR:Number(modelo.CAR||5)},
+        atributos:atributosIndividuoDoModelo_(modelo,participante,'criatura'),
         bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
         pericias:npcPericiasParaCombate_(modelo.periciasTexto),
         especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
         armasNaturais:ataques,
-        inventario:{equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)},
+        inventario:participante?.criaturaInventario&&typeof participante.criaturaInventario==='object'
+            ? JSON.parse(JSON.stringify(participante.criaturaInventario))
+            : {equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)},
         combate:combateSalvo,conceito:modelo.descricao||'',carreira:modelo.tipo||'Criatura',
         habitat:modelo.habitat||'',comportamento:modelo.comportamento||'',__criaturaTemporaria:true
     };
@@ -6482,11 +6536,14 @@ function batalhaSanitizarParticipante_(c){
         statusPublico:batalhaStatusPublicoDoChar_(c),
         ...(c.__npcTemporario?{
             npcBancoId:String(c.npcBancoId||''),
+            atributosIndividuo:JSON.parse(JSON.stringify(c.atributos||{})),
             npcCombate:JSON.parse(JSON.stringify(c.combate||{})),
             npcInventario:JSON.parse(JSON.stringify(c.inventario||{}))
         }:c.__criaturaTemporaria?{
             criaturaBancoId:String(c.criaturaBancoId||''),
-            criaturaCombate:JSON.parse(JSON.stringify(c.combate||{}))
+            atributosIndividuo:JSON.parse(JSON.stringify(c.atributos||{})),
+            criaturaCombate:JSON.parse(JSON.stringify(c.combate||{})),
+            criaturaInventario:JSON.parse(JSON.stringify(c.inventario||{}))
         }:{})
     };
 }
@@ -9559,6 +9616,45 @@ window.removerCenarioBanco=async(id)=>{
 
 
 
+
+let gmEntidadesFiltro_='criatura',gmEntidadeSelecionada_={tipo:'criatura',id:''};
+function gmEntModeloAtual_(){const l=gmEntidadeSelecionada_.tipo==='npc'?(npcsDB||[]):(criaturasDB||[]);return l.find(x=>String(x.id)===String(gmEntidadeSelecionada_.id))||null;}
+function gmEntFormulaPadrao_(m,a){return String(m?.formulasAtributos?.[a]||m?.[a]||'');}
+window.renderizarFichasEntidadesMestre_=function(){
+ if(!batalhaEhMestre_())return;
+ document.getElementById('gmEntFiltroCriaturas')?.classList.toggle('btn-select',gmEntidadesFiltro_==='criatura');
+ document.getElementById('gmEntFiltroNPCs')?.classList.toggle('btn-select',gmEntidadesFiltro_==='npc');
+ renderizarListaModelosEntidades_();renderizarFichaModeloEntidade_();renderizarInstanciasEntidades_();
+};
+window.renderizarListaModelosEntidades_=function(){
+ const el=document.getElementById('gmEntListaModelos');if(!el)return;
+ const q=normalizarTextoCombate_(document.getElementById('gmEntBusca')?.value||'');
+ const l=(gmEntidadesFiltro_==='npc'?(npcsDB||[]):(criaturasDB||[])).filter(x=>!q||normalizarTextoCombate_(`${x.nome||''} ${x.tipo||''} ${x.especie||''}`).includes(q)).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+ el.innerHTML=l.length?l.map(m=>`<button type="button" onclick="selecionarModeloEntidade_('${gmEntidadesFiltro_}','${String(m.id).replace(/'/g,"\\'")}')" style="width:100%;text-align:left;margin:0 0 6px;padding:9px;border-radius:9px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.035);color:#eee;cursor:pointer;"><b>${escaparBanco_(m.nome||'Sem nome')}</b><br><small style="color:#999;">${m.atributosRolados?'🎲 Rolado':'📌 Fixo'} · ${escaparBanco_(m.tipo||gmEntidadesFiltro_)}</small></button>`).join(''):'<div style="color:#888;">Nenhum modelo.</div>';
+};
+window.selecionarModeloEntidade_=function(tipo,id){gmEntidadeSelecionada_={tipo,id};gmEntidadesFiltro_=tipo;renderizarFichasEntidadesMestre_();};
+window.renderizarFichaModeloEntidade_=function(){
+ const el=document.getElementById('gmEntFichaModelo'),m=gmEntModeloAtual_();if(!el)return;if(!m){el.innerHTML='<div style="color:#888;">Selecione um modelo à esquerda.</div>';return;}
+ const attrs=['FOR','CON','TAM','DES','INT','POD','CAR'],tipo=gmEntidadeSelecionada_.tipo;
+ el.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;">${m.imagem?`<img src="${escaparBanco_(m.imagem)}" style="width:105px;height:105px;border-radius:12px;object-fit:cover;">`:''}<div><h3 style="margin:0;">${escaparBanco_(m.nome)}</h3><div style="color:#999;">${escaparBanco_(m.especie||m.tipo||'')}</div><div style="margin-top:7px;">${m.atributosRolados?'🎲 Atributos rolados por indivíduo':'📌 Atributos fixos'}</div></div></div>
+ <div style="margin-top:13px;padding:11px;border-radius:9px;background:rgba(255,255,255,.035);"><label><input id="gmEntRolado" type="checkbox" ${m.atributosRolados?'checked':''}> <b>Gerar atributos diferentes para cada indivíduo</b></label>
+ <div style="display:grid;grid-template-columns:repeat(7,minmax(74px,1fr));gap:6px;margin-top:9px;">${attrs.map(a=>`<div><small>${a}</small><input id="gmEntFormula${a}" value="${escaparBanco_(gmEntFormulaPadrao_(m,a))}" style="width:100%;"></div>`).join('')}</div><small style="color:#888;">Aceita fórmulas como 3d6+18, 2d6 e 1d6+3.</small></div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px;"><div><label>Peso / massa</label><input id="gmEntPeso" value="${escaparBanco_(m.pesoCorporal||'')}" style="width:100%;"></div><div><label>Tipo</label><input id="gmEntTipo" value="${escaparBanco_(m.tipo||'')}" style="width:100%;"></div></div>
+ <div style="margin-top:9px;"><label>Ataques / equipamento-base</label><textarea id="gmEntArmas" rows="2" style="width:100%;">${escaparBanco_(m.armasTexto||'')}</textarea></div>
+ <div style="margin-top:9px;"><label>Descrição</label><textarea id="gmEntDescricao" rows="4" style="width:100%;">${escaparBanco_(m.descricao||'')}</textarea></div>
+ <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;"><button class="btn-save" onclick="salvarFichaModeloEntidade_()">💾 Salvar modelo</button><button class="btn-small" onclick="rolarPreviewEntidade_()">🎲 Gerar exemplo</button><button class="btn-small" onclick="${tipo==='npc'?'editarNPCBanco_':'editarCriaturaBanco_'}('${String(m.id).replace(/'/g,"\\'")}')">🛠️ Editor completo</button></div><div id="gmEntPreviewRolagem" style="margin-top:9px;"></div>`;
+};
+window.rolarPreviewEntidade_=function(){const m=gmEntModeloAtual_();if(!m)return;const a={};for(const k of ['FOR','CON','TAM','DES','INT','POD','CAR'])a[k]=rolarFormulaAtributo_(document.getElementById('gmEntFormula'+k)?.value,m[k]||10);const e=document.getElementById('gmEntPreviewRolagem');if(e)e.innerHTML=`<div style="padding:8px;border:1px solid rgba(0,212,255,.25);border-radius:8px;background:rgba(0,212,255,.07);"><b>Exemplo:</b> ${Object.entries(a).map(([k,v])=>`${k} ${v}`).join(' · ')}</div>`;};
+window.salvarFichaModeloEntidade_=async function(){const m=gmEntModeloAtual_();if(!m||!batalhaEhMestre_())return;const f={};for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])f[a]=String(document.getElementById('gmEntFormula'+a)?.value||'').trim();const p={atributosRolados:!!document.getElementById('gmEntRolado')?.checked,formulasAtributos:f,pesoCorporal:String(document.getElementById('gmEntPeso')?.value||'').trim(),tipo:String(document.getElementById('gmEntTipo')?.value||'').trim()||m.tipo||'',armasTexto:String(document.getElementById('gmEntArmas')?.value||'').trim(),descricao:String(document.getElementById('gmEntDescricao')?.value||'').trim()};await setDoc(doc(db,gmEntidadeSelecionada_.tipo==='npc'?'npcs':'criaturas',String(m.id)),p,{merge:true});Object.assign(m,p);somSalvar_();notificar_('Modelo salvo.','info');renderizarFichasEntidadesMestre_();};
+function gmEntInstanciaChar_(p){return p?.npcBancoId?criarNPCCombateDoBanco_(npcBancoPorId_(p.npcBancoId),p):p?.criaturaBancoId?criarCriaturaCombateDoBanco_(criaturaBancoPorId_(p.criaturaBancoId),p):null;}
+window.renderizarInstanciasEntidades_=function(){
+ const el=document.getElementById('gmEntInstanciasAtivas');if(!el)return;const ps=(batalhaEstado_?.participantes||[]).filter(p=>p.npcBancoId||p.criaturaBancoId);
+ if(!ps.length){el.innerHTML='<div style="color:#888;">Nenhum indivíduo temporário em batalha.</div>';return;}
+ el.innerHTML=ps.map(p=>{const c=gmEntInstanciaChar_(p),a=c?.atributos||{},inv=c?.inventario||{},eq=(inv.equipado||[]).filter(Boolean),mo=(inv.mochila||[]).filter(Boolean);return `<div style="padding:10px;margin-bottom:8px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);"><div style="display:flex;gap:8px;align-items:center;"><b style="flex:1;">${escaparBanco_(p.nome)}</b><button class="btn-small" onclick="restaurarInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">❤️ Restaurar PV</button></div><div style="margin-top:6px;font-size:.9em;">${['FOR','CON','TAM','DES','INT','POD','CAR'].map(k=>`${k} <b>${a[k]??'—'}</b>`).join(' · ')}</div><div style="color:#999;font-size:.85em;margin-top:5px;">Equipado: ${eq.length?eq.map(x=>escaparBanco_(getNome(x)||x.nome||'item')).join(', '):'—'} · Mochila: ${mo.length}/${(inv.mochila||[]).length||20}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;"><select id="gmEntItem_${p.id}" style="min-width:200px;"><option value="">Adicionar item...</option>${(itensDB||[]).map(it=>`<option value="${escaparBanco_(it.id)}">${escaparBanco_(getNome(it)||it.nome||it.id)}</option>`).join('')}</select><select id="gmEntDestino_${p.id}"><option value="equipado">Equipado</option><option value="mochila">Mochila</option><option value="bolso">Bolso</option></select><button class="btn-small" onclick="adicionarItemInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">➕ Colocar</button></div></div>`;}).join('');
+};
+window.adicionarItemInstanciaEntidade_=async function(id){const p=batalhaParticipante_(id),c=gmEntInstanciaChar_(p);if(!p||!c||!batalhaEhMestre_())return;const itemId=document.getElementById(`gmEntItem_${id}`)?.value,d=document.getElementById(`gmEntDestino_${id}`)?.value||'mochila',base=(itensDB||[]).find(x=>String(x.id)===String(itemId));if(!base)return notificar_('Escolha um item.','aviso');c.inventario=c.inventario||{};c.inventario[d]=Array.isArray(c.inventario[d])?c.inventario[d]:(d==='equipado'?Array(12).fill(null):d==='bolso'?Array(2).fill(null):Array(20).fill(null));const ix=c.inventario[d].findIndex(x=>!x);if(ix<0)return notificar_('Compartimento cheio.','aviso');const mc=cargaMaxArma_(base);c.inventario[d][ix]={...JSON.parse(JSON.stringify(base)),idBanco:String(base.id),instanciaId:`ent_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,pvAtual:Number(base.pv||1),...(mc>0?{cargaAtual:mc,cargaMax:mc}:{})};if(p.npcBancoId)p.npcInventario=JSON.parse(JSON.stringify(c.inventario));else p.criaturaInventario=JSON.parse(JSON.stringify(c.inventario));await batalhaSalvarEstado_();renderizarInstanciasEntidades_();};
+window.restaurarInstanciaEntidade_=async function(id){const p=batalhaParticipante_(id),c=gmEntInstanciaChar_(p);if(!p||!c||!batalhaEhMestre_())return;c.combate=c.combate||{};c.combate.hitLocations={};c.combate.morto=false;c.combate.incapacitado=false;c.combate.inconsciente=false;c.combate.caido=false;c.combate.sangramentoAtivo=false;c.combate.ferimentos={};if(p.npcBancoId)p.npcCombate=JSON.parse(JSON.stringify(c.combate));else p.criaturaCombate=JSON.parse(JSON.stringify(c.combate));batalhaSincronizarStatusPublico_(c,p);await batalhaSalvarEstado_();renderizarInstanciasEntidades_();renderizarBatalhaCompartilhada_();notificar_('Indivíduo restaurado.','info');};
+window.abrirAdminNoEscudo_=function(tipo,btn){if(!batalhaEhMestre_())return;document.querySelectorAll('.gm-sub-content').forEach(e=>e.classList.add('hidden'));document.querySelectorAll('.gm-subtab-btn').forEach(e=>e.classList.remove('active','btn-select'));if(btn)btn.classList.add('active','btn-select');let h=document.getElementById('gm-admin-host');if(!h){h=document.createElement('div');h.id='gm-admin-host';h.className='gm-sub-content';document.querySelector('#escudo .form-section')?.appendChild(h);}h.classList.remove('hidden');h.innerHTML='';const p=document.getElementById(tipo);if(!p)return;p.classList.add('active');h.appendChild(p);if(tipo==='banco')renderizarBancoDados();};
 function criaturaBancoPorId_(id){return (criaturasDB||[]).find(x=>String(x.id)===String(id))||null;}
 function renderizarBancoCriaturas_(){
  const e=document.getElementById('listaBancoCriaturas');if(!e)return;
@@ -9599,7 +9695,7 @@ window.handleDbCreatureImageUpload_=async(event)=>{
 window.adicionarCriaturaBanco_=()=>{crFill_();document.getElementById('dbCriaturaModal')?.classList.add('active');};
 window.editarCriaturaBanco_=id=>{const n=criaturaBancoPorId_(id);if(n){crFill_(n);document.getElementById('dbCriaturaModal')?.classList.add('active');}};
 window.fecharCriaturaBanco_=()=>document.getElementById('dbCriaturaModal')?.classList.remove('active');
-window.salvarCriaturaBanco_=async()=>{const v=id=>String(document.getElementById(id)?.value||'').trim(),orig=v('crOrig'),nome=v('crNome'),id=v('crId')||npcSlugPericia_(nome);if(!nome){notificar_('Informe o nome da criatura.','aviso');return;}const n={id,nome,tipo:v('crTipo')||'Criatura',especie:v('crEspecie'),habitat:v('crHabitat'),comportamento:v('crComportamento'),altura:v('crAltura'),tamanho:v('crTamanho'),pesoCorporal:v('crPeso'),FOR:+v('crFOR')||10,CON:+v('crCON')||10,TAM:+v('crTAM')||10,DES:+v('crDES')||10,INT:+v('crINT')||5,POD:+v('crPOD')||10,CAR:+v('crCAR')||5,periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),armasTexto:v('crArmas'),propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked};try{if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));await setDoc(doc(db,'criaturas',id),n,{merge:true});criaturasDB=criaturasDB.filter(x=>x.id!==orig&&x.id!==id);criaturasDB.push(n);fecharCriaturaBanco_();renderizarBancoCriaturas_();somSalvar_();}catch(e){console.error(e);notificar_('Não foi possível salvar a criatura. Verifique as regras do Firestore para /criaturas.','erro',7000);}};
+window.salvarCriaturaBanco_=async()=>{const v=id=>String(document.getElementById(id)?.value||'').trim(),orig=v('crOrig'),nome=v('crNome'),id=v('crId')||npcSlugPericia_(nome);if(!nome){notificar_('Informe o nome da criatura.','aviso');return;}const n={id,nome,tipo:v('crTipo')||'Criatura',especie:v('crEspecie'),habitat:v('crHabitat'),comportamento:v('crComportamento'),altura:v('crAltura'),tamanho:v('crTamanho'),pesoCorporal:v('crPeso'),FOR:+v('crFOR')||10,CON:+v('crCON')||10,TAM:+v('crTAM')||10,DES:+v('crDES')||10,INT:+v('crINT')||5,POD:+v('crPOD')||10,CAR:+v('crCAR')||5,periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),armasTexto:v('crArmas'),propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked,atributosRolados:criaturaBancoPorId_(orig||id)?.atributosRolados||false,formulasAtributos:criaturaBancoPorId_(orig||id)?.formulasAtributos||{}};try{if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));await setDoc(doc(db,'criaturas',id),n,{merge:true});criaturasDB=criaturasDB.filter(x=>x.id!==orig&&x.id!==id);criaturasDB.push(n);fecharCriaturaBanco_();renderizarBancoCriaturas_();somSalvar_();}catch(e){console.error(e);notificar_('Não foi possível salvar a criatura. Verifique as regras do Firestore para /criaturas.','erro',7000);}};
 window.removerCriaturaBanco_=async()=>{const id=String(document.getElementById('crOrig')?.value||'');if(id&&confirm('Remover criatura?')){try{await deleteDoc(doc(db,'criaturas',id));criaturasDB=criaturasDB.filter(x=>x.id!==id);fecharCriaturaBanco_();renderizarBancoCriaturas_();}catch(e){console.error(e);notificar_('Não foi possível remover a criatura.','erro');}}};
 window.duplicarCriaturaBanco_=async id=>{const o=criaturaBancoPorId_(id);if(!o)return;let k=2,base=String(o.nome).replace(/\s+\d+$/,'');while(criaturasDB.some(x=>x.nome===`${base} ${k}`))k++;const n={...JSON.parse(JSON.stringify(o)),id:npcSlugPericia_(`${base}_${k}`),nome:`${base} ${k}`};try{await setDoc(doc(db,'criaturas',n.id),n);criaturasDB.push(n);renderizarBancoCriaturas_();}catch(e){console.error(e);notificar_('Não foi possível duplicar a criatura.','erro');}};
 
@@ -10603,6 +10699,7 @@ function renderizarRegras() {
 window.mostrarSubAbaMestre = (nome,btn) => {
     if (!(userData && userData.role==='mestre')) return;
     document.querySelectorAll('.gm-sub-content').forEach(el=>el.classList.add('hidden'));
+    document.getElementById('gm-admin-host')?.classList.add('hidden');
     document.querySelectorAll('.gm-subtab-btn').forEach(el=>el.classList.remove('active','btn-select'));
     document.getElementById(`gm-sub-${nome}`)?.classList.remove('hidden');
     if (btn) btn.classList.add('active','btn-select');
@@ -10611,6 +10708,7 @@ window.mostrarSubAbaMestre = (nome,btn) => {
     if (nome==='cenario') renderizarCenarioMestre_();
     if (nome==='rolagem') renderizarRolagensCalico_();
     if (nome==='combate') renderizarCombateMestre_();
+    if (nome==='entidades') renderizarFichasEntidadesMestre_();
 };
 
 function cartaoNumeroMestre_(valor,rotulo,icone='') {
@@ -10674,12 +10772,13 @@ async function curaNatural_(c,a,b){
 
 
 function renderizarCenarioAtualPublico_(){
-    const el=document.getElementById('charCurrentScenarioPublic');if(!el)return;
+    const alvos=['globalCurrentScenarioPublic','charCurrentScenarioPublic'].map(id=>document.getElementById(id)).filter(Boolean);
+    if(!alvos.length)return;
     const p=campanhaPublica_||{};
     const img=p.imagem
         ? `<img src="${escaparHtmlInventario_(p.imagem)}" alt="${escaparHtmlInventario_(p.cenario||'Cenário')}" style="width:100%;max-height:390px;object-fit:cover;border-radius:12px;border:1px solid rgba(255,255,255,.12);">`
         : `<div style="height:190px;border-radius:12px;background:rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-size:4em;">🪐</div>`;
-    el.innerHTML=`${img}
+    const html=`${img}
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin-top:12px;">
         <div class="stat-box"><div class="stat-label">Campanha</div><div>${escaparHtmlInventario_(p.nomeCampanha||'—')}</div></div>
         <div class="stat-box"><div class="stat-label">Planeta</div><div>${escaparHtmlInventario_(p.planeta||'—')}</div></div>
@@ -10705,6 +10804,7 @@ function renderizarCenarioAtualPublico_(){
           ${x.imagem?`<img src="${escaparHtmlInventario_(x.imagem)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;">`:`<div style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.08);">👤</div>`}
           <div><strong>${escaparHtmlInventario_(x.nome)}</strong><br><small style="color:#999;">${escaparHtmlInventario_(x.tipo||'')}</small></div>
         </div>`).join('')}</div></div>`:''}`;
+    alvos.forEach(el=>el.innerHTML=html);
 }
 function iniciarCampanhaPublica_(){
     if(campanhaPublicaUnsub_){try{campanhaPublicaUnsub_();}catch(e){}}
@@ -12858,7 +12958,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.8.4: Primeiros Socorros com estado compartilhado e limpeza robusta -->
+<!-- Mesa Estelar v46.9.0: fichas compactas NPC/criatura, modelos x indivíduos e reorganização inicial -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
