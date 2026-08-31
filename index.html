@@ -3835,10 +3835,12 @@ function baseNPCPericia_(char,nome){
 }
 
 function obterValorRegistroPericia_(char, id, ehEspecializacao = false) {
-    if(char?.__npcTemporario){
+    if(char?.__npcTemporario || char?.__criaturaTemporaria){
         const fonte=ehEspecializacao ? char.especializacoes : char.pericias;
         const reg=fonte?.[id];
         if(reg){
+            // NPCs genéricos e criaturas guardam no banco somente o INVESTIMENTO.
+            // O valor final é recalculado a partir dos atributos rolados do indivíduo.
             return Math.max(0,baseNPCPericia_(char,reg.nomeOriginal||id)+Number(reg.treino||0));
         }
     }
@@ -3878,7 +3880,7 @@ function obterPericiasCombate_(char) {
     // Esquiva NÃO é uma opção de ataque. Ela é adicionada separadamente na defesa.
     const basicas = periciasDB.filter(p => p.id === 'combate_desarmado');
 
-    if(char?.__npcTemporario){
+    if(char?.__npcTemporario || char?.__criaturaTemporaria){
         const especializacoes=Object.entries(char.especializacoes||{})
           .filter(([id,d])=>Number(d?.treino||0)>0)
           .map(([id])=>{
@@ -7346,7 +7348,7 @@ function batalhaControlCard_(p,char){
     const equips=batalhaEquipamentos_(char,per,prefs.equipamento);
     const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)]?.id===p.id;
     const pend=batalhaEstado_?.pendencia;
-    const defendendo=pend?.status==='aguardando_defesa'&&pend?.defensorId===p.id;
+    const defendendo=pend?.status==='aguardando_defesa'&&String(pend?.defensorId)===String(p.id);
     const danoLiberado=batalhaEstado_?.danoPendente?.atacanteId===p.id;
     const dpAtual=batalhaEstado_?.danoPendente;
     const especiaisPendentes=danoLiberado
@@ -7355,7 +7357,10 @@ function batalhaControlCard_(p,char){
     const tratandoPS=batalhaEstaTratandoPrimeirosSocorros_(char),tratamentoExecutando=tratandoPS&&batalhaTratamentoPrimeirosSocorros_(char)?.fase==='executando';
     const ataqueBloqueado=danoLiberado||(pend?.atacanteId===p.id)||batalhaAtaqueBloqueadoFerimento_(char)||tratandoPS;
 
-    const skillOptions=skills.map(x=>`<option value="${batalhaTokenPericia_(x)}" ${batalhaTokenPericia_(x)===prefs.pericia?'selected':''}>${escaparHtmlInventario_(getNome(x))}</option>`).join('');
+    const skillOptions=skills.map(x=>{
+        const valor=obterValorRegistroPericia_(char,x.id,!!x.__especializacao);
+        return `<option value="${batalhaTokenPericia_(x)}" ${batalhaTokenPericia_(x)===prefs.pericia?'selected':''}>${escaparHtmlInventario_(getNome(x))} (${valor}%)</option>`;
+    }).join('');
     const equipOptions=equips.map(x=>`<option value="${escaparHtmlInventario_(x.valor)}" ${x.valor===prefs.equipamento?'selected':''}>${escaparHtmlInventario_(x.rotulo)}</option>`).join('');
     const targetOptions=(batalhaEstado_?.participantes||[]).filter(x=>x.id!==p.id)
         .map(x=>`<option value="${x.id}" ${x.id===prefs.alvo?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('');
@@ -7376,6 +7381,7 @@ function batalhaControlCard_(p,char){
             <div><small style="color:#888;">Alvo</small><select id="battleTarget_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','alvo',this.value)">${targetOptions||'<option value="">—</option>'}</select></div>
         </div>
 
+        ${(batalhaEhMestre_()&&(char?.__npcTemporario||char?.__criaturaTemporaria))?`<div style="margin-top:9px;padding:7px 9px;border-radius:8px;background:rgba(0,212,255,.055);border:1px solid rgba(0,212,255,.16);font-size:.86em;color:#cfefff;"><strong>Atributos:</strong> ${['FOR','CON','TAM','DES','INT','POD','CAR'].map(a=>`${a} ${Number(char?.atributos?.[a]??0)}`).join(' · ')}</div>`:''}
         ${fullPrivacy?batalhaLocaisHtml_(char):''}
         ${batalhaStatusPublicoHtml_(p)}
 
@@ -7416,7 +7422,12 @@ function batalhaDefesaHtml_(p,char,pend){
         if(b.id==='esquiva'&&a.id!=='esquiva')return 1;
         return getNome(a).localeCompare(getNome(b));
     });
-    const opts=skills.map(x=>`<option value="${batalhaTokenPericia_(x)}">${escaparHtmlInventario_(getNome(x))}</option>`).join('');
+    const opts=skills.map(x=>{
+        const bruto=obterValorRegistroPericia_(char,x.id,!!x.__especializacao);
+        const arm=valorPericiaComArmadura_(char,x,bruto).valor;
+        const efet=aplicarDificuldadeEFadiga_(char,arm,'padrao',batalhaPenalidadeCaido_(char)+batalhaPenalidadeTratamento_(char)+batalhaPenalidadeInfeccao_(char)).valor;
+        return `<option value="${batalhaTokenPericia_(x)}">${escaparHtmlInventario_(getNome(x))} (${efet}%)</option>`;
+    }).join('');
     const padrao=skills[0];
     const valorPadraoBruto=padrao?obterValorRegistroPericia_(char,padrao.id,padrao.__especializacao):0;
     const valorPadraoArm=padrao?valorPericiaComArmadura_(char,padrao,valorPadraoBruto).valor:0;
@@ -8028,7 +8039,7 @@ window.batalhaRolarIniciativa_=async(id)=>{
 
 window.batalhaResponderDefesa_=async(id,defender)=>{
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id),pend=batalhaEstado_?.pendencia;
-    if(!p||!c||!pend||pend.defensorId!==id||!batalhaPodeControlar_(p))return;
+    if(!p||!c||!pend||String(pend.defensorId)!==String(id)||!batalhaPodeControlar_(p))return;
     if(batalhaEstaInconsciente_(c)){
         if(batalhaEhMestre_())await batalhaProcessarDefesa_({personagemId:id,payload:{resposta:{defendeu:false,grau:'Falha',motivo:'inconsciente'}}});
         return;
@@ -8370,7 +8381,10 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
             }
         }else if(acao.tipo==='teste'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
-            if(atual?.id===p.id)await batalhaExecutarAtaqueMestre_(p.id,{prefs:acao.payload?.prefs});
+            if(String(atual?.id)===String(p.id)){
+                await batalhaExecutarAtaqueMestre_(p.id,{prefs:acao.payload?.prefs});
+                renderizarBatalhaCompartilhada_();
+            }
         }else if(acao.tipo==='defesa'){
             await batalhaProcessarDefesa_(acao);
         }else if(acao.tipo==='primeiros_socorros_iniciar'){
@@ -8687,6 +8701,18 @@ function renderizarBatalhaPosicoes_(){
     </div>`;
 }
 
+
+function batalhaPendenciaDefesaMestreHtml_(){
+    if(!batalhaEhMestre_())return '';
+    const pend=batalhaEstado_?.pendencia;
+    if(!pend||pend.status!=='aguardando_defesa')return '';
+    const p=batalhaParticipante_(pend.defensorId),c=batalhaCharLocal_(pend.defensorId);
+    if(!p||!c)return '';
+    return `<div style="margin:0 0 12px;padding:12px;border-radius:10px;background:rgba(231,76,60,.11);border:1px solid rgba(231,76,60,.45);">
+      <div style="font-weight:700;color:#ffaca4;">⚔️ Defesa pendente: ${escaparHtmlInventario_(p.nome)} está sendo atacado por ${escaparHtmlInventario_(pend.atacanteNome||'um atacante')}.</div>
+      <div style="margin-top:8px;">${batalhaDefesaHtml_(p,c,pend)}</div>
+    </div>`;
+}
 function renderizarBatalhaCompartilhada_(){
     const badge=document.getElementById('battleRoundBadge');
     const cards=document.getElementById('battleParticipantCards');
@@ -8718,7 +8744,13 @@ function renderizarBatalhaCompartilhada_(){
 
     if(pend){
         const pe=batalhaEstado_.pendencia;
-        pend.innerHTML=pe?`<div style="padding:10px 12px;border-radius:9px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ddd;">⏳ Aguardando reação de <strong>${escaparHtmlInventario_(pe.defensorNome||'defensor')}</strong> ao ataque de <strong>${escaparHtmlInventario_(pe.atacanteNome||'atacante')}</strong>.</div>`:'';
+        if(pe){
+            const pd=batalhaParticipante_(pe.defensorId),cd=batalhaCharLocal_(pe.defensorId);
+            const controles=(batalhaEhMestre_()&&pd&&cd)
+                ? `<div style="margin-top:9px;">${batalhaDefesaHtml_(pd,cd,pe)}</div>`
+                : '';
+            pend.innerHTML=`<div style="padding:10px 12px;border-radius:9px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ddd;">⏳ Aguardando reação de <strong>${escaparHtmlInventario_(pe.defensorNome||'defensor')}</strong> ao ataque de <strong>${escaparHtmlInventario_(pe.atacanteNome||'atacante')}</strong>.${controles}</div>`;
+        }else pend.innerHTML='';
     }
 
     if(log){
@@ -13169,7 +13201,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.9.4: cenário único, banco estável, dificuldade contextual e Primeiros Socorros em até 3 turnos -->
+<!-- Mesa Estelar v46.9.5: perícias de criaturas recalculadas, valores visíveis e defesa pendente robusta -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
