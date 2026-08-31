@@ -396,6 +396,7 @@
                 <button class="tab-btn" id="mercadoTabBtn" onclick="mostrarAba('mercado', this)" data-i18n="tabMercado">🛒 Mercado</button>
                 <button class="tab-btn" id="batalhaTabBtn" onclick="mostrarAba('batalha', this)">⚔️ Batalha</button>
                 <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
+                <button class="tab-btn hidden" id="laboratorioTabBtn" onclick="mostrarAba('laboratorio-combate', this)">🧪 Nova Batalha</button>
                 <button class="tab-btn hidden" id="escudoTabBtn" onclick="mostrarAba('escudo', this)" data-i18n="tabGM">🛡️ Escudo do Mestre</button>
             </div>
 
@@ -404,6 +405,29 @@
                     <h2 style="margin:0 0 6px;">🪐 Cenário Atual</h2>
                     <p style="color:#aaa;margin:0 0 16px;">Informações públicas do local e das condições atuais da campanha.</p>
                     <div id="globalCurrentScenarioPublic"><div style="color:#888;">Nenhum cenário público carregado.</div></div>
+                </div>
+            </div>
+
+            <div id="laboratorio-combate" class="tab-content">
+                <div class="form-section">
+                    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                        <div><h2 style="margin:0 0 5px;">🧪 Nova Batalha · Laboratório</h2>
+                        <p style="margin:0;color:#aaa;max-width:900px;">Protótipo paralelo e exclusivo do mestre. Não altera a batalha real. Coordenadas contínuas em metros, sem casas obrigatórias.</p></div>
+                        <span style="padding:5px 9px;border-radius:8px;background:rgba(255,193,7,.10);border:1px solid rgba(255,193,7,.35);color:#ffd166;">EXPERIMENTAL</span>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px;">
+                        <button class="btn-small btn-select" onclick="labCarregarBatalhaAtual_()">⚔️ Carregar batalha atual</button>
+                        <button class="btn-small" onclick="labAdicionarBoneco_()">🎯 Boneco de treino</button>
+                        <button class="btn-small" onclick="labCentralizarTokens_()">◎ Reorganizar</button>
+                        <button class="btn-small" onclick="labLimpar_()">🧹 Limpar</button>
+                        <label style="display:flex;align-items:center;gap:6px;">Fundo <input id="labBgColor" type="color" value="#d7d7d7" onchange="labMudarFundo_(this.value)"></label>
+                        <label style="display:flex;align-items:center;gap:6px;">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
+                    </div>
+                    <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste livremente. As coordenadas são medidas em metros.</div>
+                    <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
+                        <div id="labMetricMap" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
+                    </div>
+                    <div style="margin-top:8px;color:#888;font-size:.88em;">Área inicial: 24 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
                 </div>
             </div>
 
@@ -2249,6 +2273,7 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('configTabBtn')?.style && (document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none');
             document.getElementById('bancoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
             document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
+            document.getElementById('laboratorioTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
             // Configurações globais também afetam jogadores (recursos iniciais e modo de combate).
             // A aba continua escondida para jogadores; eles apenas leem os valores.
             await carregarConfiguracoes();
@@ -6257,7 +6282,7 @@ window.comprarItemMercado = async (itemId) => {
 // FUNÇÕES DE NAVEGAÇÃO
 // ============================================
 window.mostrarAba = (abaId, btn) => {
-    const abasMestre = ['config', 'banco', 'escudo'];
+    const abasMestre = ['config', 'banco', 'escudo', 'laboratorio-combate'];
     if (abasMestre.includes(abaId) && (!userData || userData.role !== 'mestre')) {
         alert('Esta área é exclusiva do mestre.');
         return;
@@ -6274,6 +6299,7 @@ window.mostrarAba = (abaId, btn) => {
         else renderizarMercado();
     }
     if (abaId === 'batalha') renderizarBatalhaCompartilhada_();
+    if (abaId === 'laboratorio-combate') labRender_();
     if (abaId === 'cenario-publico') renderizarCenarioAtualPublico_();
 };
 
@@ -6328,6 +6354,26 @@ window.mostrarBancoAba = (abaId, btn) => {
 // ============================================================
 // PAINEL ÚNICO DE BATALHA V29
 // ============================================================
+
+
+let labEstado_={tokens:[],pxPorMetro:48,larguraM:24,alturaM:14,fundo:'#d7d7d7',selecionadoId:''};
+let labDrag_=null;
+function labSalvarLocal_(){try{localStorage.setItem('mesaEstelarLabCombate',JSON.stringify(labEstado_));}catch(_){}}
+function labCarregarLocal_(){try{const v=JSON.parse(localStorage.getItem('mesaEstelarLabCombate')||'null');if(v&&typeof v==='object')labEstado_={...labEstado_,...v,tokens:Array.isArray(v.tokens)?v.tokens:[]};}catch(_){}}
+function labTamanhoTokenM_(c){const tam=Number(c?.atributos?.TAM||10);if(tam>=70)return 3.2;if(tam>=35)return 2.1;if(tam>=20)return 1.45;if(tam<=6)return .65;return .95;}
+function labTokenDeParticipante_(p,i=0){const c=batalhaCharLocal_(p.id);return {id:String(p.id),nome:String(p.nome||'Participante'),imagem:String(p.imagem||c?.imagem||''),tipo:String(p.tipo||''),x:Math.min(labEstado_.larguraM-1,1.5+(i%8)*2.5),y:Math.min(labEstado_.alturaM-1,1.5+Math.floor(i/8)*2.5),diametroM:labTamanhoTokenM_(c),angulo:0,attrs:c?.atributos?JSON.parse(JSON.stringify(c.atributos)):{}};}
+window.labCarregarBatalhaAtual_=function(){if(!batalhaEhMestre_())return;const ps=batalhaEstado_?.participantes||[];if(!ps.length){notificar_('A batalha atual não tem participantes.','aviso');return;}const antigos=new Map((labEstado_.tokens||[]).map(t=>[String(t.id),t]));labEstado_.tokens=ps.map((p,i)=>{const n=labTokenDeParticipante_(p,i),a=antigos.get(String(p.id));return a?{...n,x:a.x,y:a.y,angulo:a.angulo}:n;});labSalvarLocal_();labRender_();};
+window.labAdicionarBoneco_=function(){if(!batalhaEhMestre_())return;const n=(labEstado_.tokens||[]).filter(t=>String(t.id).startsWith('dummy:')).length+1;labEstado_.tokens.push({id:`dummy:${Date.now()}`,nome:`Boneco de treino ${n}`,imagem:'',tipo:'Alvo',x:3+n,y:3,diametroM:.9,angulo:0,attrs:{TAM:10}});labSalvarLocal_();labRender_();};
+window.labLimpar_=function(){if(!batalhaEhMestre_())return;if(!confirm('Limpar apenas o Laboratório? A batalha real não será alterada.'))return;labEstado_.tokens=[];labEstado_.selecionadoId='';labSalvarLocal_();labRender_();};
+window.labCentralizarTokens_=function(){(labEstado_.tokens||[]).forEach((t,i)=>{t.x=1.5+(i%8)*2.6;t.y=1.5+Math.floor(i/8)*2.6;});labSalvarLocal_();labRender_();};
+window.labMudarFundo_=function(v){labEstado_.fundo=String(v||'#d7d7d7');labSalvarLocal_();labRender_();};
+window.labMudarZoom_=function(v){labEstado_.pxPorMetro=Math.max(30,Math.min(90,Number(v)||48));labSalvarLocal_();labRender_();};
+window.labSelecionar_=function(id){labEstado_.selecionadoId=String(id);labSalvarLocal_();labRender_();};
+window.labGirarSelecionado_=function(delta){const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t)return;t.angulo=(Number(t.angulo||0)+Number(delta||0)+360)%360;labSalvarLocal_();labRender_();};
+function labAtualizarInfo_(){const el=document.getElementById('labInfo');if(!el)return;const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t){el.innerHTML='Clique num token para selecioná-lo. Arraste livremente. As coordenadas são medidas em metros.';return;}const a=t.attrs||{};el.innerHTML=`<strong>${escaparHtmlInventario_(t.nome)}</strong> · posição <b>${Number(t.x).toFixed(2)} m, ${Number(t.y).toFixed(2)} m</b> · diâmetro tático ≈ ${Number(t.diametroM||.9).toFixed(2)} m <span style="margin-left:10px;color:#9fdfff;">${['FOR','CON','TAM','DES'].filter(k=>a[k]!=null).map(k=>`${k} ${a[k]}`).join(' · ')}</span> <button class="btn-small" style="padding:3px 7px;margin-left:8px;" onclick="labGirarSelecionado_(-45)">↶ 45°</button> <button class="btn-small" style="padding:3px 7px;" onclick="labGirarSelecionado_(45)">↷ 45°</button>`;}
+function labRender_(){const map=document.getElementById('labMetricMap');if(!map)return;if(!batalhaEhMestre_()){map.innerHTML='';return;}const ppm=Number(labEstado_.pxPorMetro||48);map.style.width=`${labEstado_.larguraM*ppm}px`;map.style.height=`${labEstado_.alturaM*ppm}px`;map.style.backgroundColor=labEstado_.fundo||'#d7d7d7';map.style.backgroundSize=`${ppm}px ${ppm}px`;const sel=String(labEstado_.selecionadoId||'');map.innerHTML=(labEstado_.tokens||[]).map(t=>{const d=Math.max(24,Number(t.diametroM||.9)*ppm),ativo=String(t.id)===sel,img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<span style="font-size:${Math.max(13,d*.22)}px;">${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${ativo?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:0 3px 12px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${ativo?5:2};" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div style="position:absolute;left:50%;top:-9px;transform:translate(-50%,-100%) rotate(${Number(t.angulo||0)}deg);color:#111;font-size:18px;text-shadow:0 0 3px white;">▲</div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none;">${escaparHtmlInventario_(t.nome)}</div></div>`;}).join('');labAtualizarInfo_();}
+window.labPointerDown_=function(ev,id){if(!batalhaEhMestre_())return;ev.preventDefault();const map=document.getElementById('labMetricMap'),t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);labDrag_={id:String(id)};const move=e=>{if(!labDrag_)return;const x=Math.max(0,Math.min(labEstado_.larguraM,(e.clientX-rect.left)/ppm)),y=Math.max(0,Math.min(labEstado_.alturaM,(e.clientY-rect.top)/ppm));t.x=Math.round(x*100)/100;t.y=Math.round(y*100)/100;const node=map.querySelector(`.lab-token[data-id="${CSS.escape(String(id))}"]`);if(node){const d=Math.max(24,Number(t.diametroM||.9)*ppm);node.style.left=`${t.x*ppm-d/2}px`;node.style.top=`${t.y*ppm-d/2}px`;}labAtualizarInfo_();};const up=()=>{window.removeEventListener('pointermove',move);labDrag_=null;labSalvarLocal_();labRender_();};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});labRender_();};
+labCarregarLocal_();
 
 const BATALHA_DOC_REF = () => doc(db,'combatesAtivos','mesa');
 const BATALHA_ACOES_REF = () => collection(db,'combatesAtivos','mesa','acoes');
@@ -8507,25 +8553,22 @@ window.batalhaRolarDano_=async(id)=>{
     const per=batalhaResolverPericia_(prefs.pericia);
 
     let expr='',nome='Punhos',item=null;
-    if(per?.id==='combate_desarmado'){
-        item=ataqueNaturalPorValor_(c,prefs.equipamento)||ataqueNaturalPorNome_('Punhos');
-        expr=String(item?.dano||'1d3+MD');nome=getNome(item)||item.nome||'Punhos';
-        if(/MD/i.test(expr)){
-            const a=c.atributos||{},b=c.bonus||{};
-            const mod=String(calcularModDano(Number(a.FOR||0)+Number(b.FOR||0),Number(a.TAM||0)+Number(b.TAM||0))||'0').trim();
-            expr=expr.replace(/\+?MD/ig,mod&&mod!=='0'&&mod!=='+0'?(mod.startsWith('+')||mod.startsWith('-')?mod:`+${mod}`):'');
-        }
+    const equipamentoNatural=String(prefs.equipamento||'').startsWith('natural:');
+    if(equipamentoNatural || per?.id==='combate_desarmado'){
+        item=ataqueNaturalPorValor_(c,prefs.equipamento);
+        if(!item && per?.id==='combate_desarmado')item=ataqueNaturalPorNome_('Punhos');
+        if(!item){notificar_('Ataque natural não encontrado. Selecione novamente o ataque.','aviso');return;}
+        expr=String(item?.dano||'1d3+MD');nome=getNome(item)||item.nome||'Ataque natural';
     }else{
         item=encontrarEquipamentoCombateChar_(c,prefs.equipamento);
         if(!item){notificar_('Selecione uma arma.','aviso');return;}
         if(itemCombateInutilizavel_(item)){notificar_(`${getNome(item)} está inutilizável (0 PV). Troque de arma.`,'aviso');return;}
         expr=String(item.dano||'').trim();nome=getNome(item);
-        // Permite armas do banco com +MD/-MD, usando o Modificador de Dano derivado do personagem/NPC.
-        if(/MD/i.test(expr)){
-            const a=c.atributos||{},b=c.bonus||{};
-            const mod=String(calcularModDano(Number(a.FOR||0)+Number(b.FOR||0),Number(a.TAM||0)+Number(b.TAM||0))||'0').trim();
-            expr=expr.replace(/\+?MD/ig,mod&&mod!=='0'&&mod!=='+0'?(mod.startsWith('+')||mod.startsWith('-')?mod:`+${mod}`):'');
-        }
+    }
+    if(/MD/i.test(expr)){
+        const a=c.atributos||{},b=c.bonus||{};
+        const mod=String(calcularModDano(Number(a.FOR||0)+Number(b.FOR||0),Number(a.TAM||0)+Number(b.TAM||0))||'0').trim();
+        expr=expr.replace(/\+?MD/ig,mod&&mod!=='0'&&mod!=='+0'?(mod.startsWith('+')||mod.startsWith('-')?mod:`+${mod}`):'');
     }
     if(!expr){notificar_('Dano não cadastrado.','aviso');return;}
     const r=rolarExpressaoDanoCombate_(expr);
@@ -13034,6 +13077,7 @@ window.mudarIdioma = (lang) => {
         document.getElementById('configTabBtn')?.style && (document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none');
         document.getElementById('bancoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
         document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
+            document.getElementById('laboratorioTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
     }
     if (currentCharId) {
         const char = userCharacters.find(c => c.id === currentCharId);
@@ -13429,7 +13473,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.10.4: movimento pode consumir múltiplas AÇ e bloqueios pendentes ficam explícitos -->
+<!-- Mesa Estelar v46.11.0: dano natural customizado corrigido e Laboratório de Combate métrico paralelo -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
