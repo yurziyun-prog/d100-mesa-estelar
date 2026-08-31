@@ -6519,8 +6519,10 @@ window.labCarregarBatalhaAtual_=function(){
         return {...n,x:a.x,y:a.y,angulo:a.angulo,acoesAtuaisLab:Number.isFinite(Number(a.acoesAtuaisLab))?Math.min(n.acoesMaxLab,Number(a.acoesAtuaisLab)):n.acoesMaxLab,
             movimentoGratisDisponivel:a.movimentoGratisDisponivel!==false,modoMovimento:valido?a.modoMovimento:n.modoMovimento,
             iniciativaLab:(a.iniciativaLab!==null&&a.iniciativaLab!==''&&Number.isFinite(Number(a.iniciativaLab)))?Number(a.iniciativaLab):null,
-            combateLab:a.combateLab?JSON.parse(JSON.stringify(a.combateLab)):n.combateLab,
-            charLab:n.charLab||a.charLab||null};});
+            combateLab:n.combateLab,
+            charLab:n.charLab||a.charLab||null,
+            periciaLab:a.periciaLab||n.periciaLab,equipamentoLab:a.equipamentoLab||n.equipamentoLab,alvoLab:a.alvoLab||n.alvoLab,
+            ultimoResultadoProprioLab:''};});
     if(!haviaLayout && labEstado_.fase!=='combate'){
         // Primeira carga: espalha automaticamente, como no mapa antigo.
         const colocados=[];
@@ -6610,6 +6612,16 @@ function labTokenAtual_(){
 function labPrepararNovaRodada_(){for(const t of labTokensCombatentes_()){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=labMovimentoPorAcao_(t)>0;}}
 window.labIniciarCombate_=function(){
     const cs=labTokensCombatentes_();if(!cs.length){notificar_('Adicione participantes antes de iniciar o combate.','aviso');return;}
+    for(const t of labEstado_.tokens||[]){
+        if(String(t.id).startsWith('dummy:')){
+            t.combateLab={hitMax:{'PV Global':20},hit:{'PV Global':20},armor:{'PV Global':0},ferimentos:{},morto:false,inconsciente:false,derrubado:false,sangrando:false};
+        }else{
+            const c=labCharToken_(t)||t.charLab;
+            if(c)t.combateLab=labCriarSnapshotCombate_(c);
+        }
+        t.primeirosSocorrosLab=null;t.acaoAuxLab=null;t.ultimoResultadoProprioLab='';
+    }
+    labEstado_.ultimoResultadoLab='';
     for(const t of cs)t.iniciativaLab=1+Math.floor(Math.random()*10)+Number(t.iniciativaBonus||0);
     cs.sort((a,b)=>Number(b.iniciativaLab||0)-Number(a.iniciativaLab||0)||Number(b.iniciativaBonus||0)-Number(a.iniciativaBonus||0)||String(a.nome).localeCompare(String(b.nome)));
     labEstado_.ordemIniciativa=cs.map(t=>String(t.id));labEstado_.turnoIndex=0;labEstado_.rodada=1;labEstado_.fase='combate';labEstado_.pendenciaLab=null;labEstado_.danoPendenteLab=null;labPrepararNovaRodada_();
@@ -6752,8 +6764,13 @@ function labAlcanceAtaque_(t,item){
     if(Number.isFinite(explicito)&&explicito>0)return explicito;
     const nome=normalizarTextoCombate_(item.nome||'');
     if(nome.includes('bote_de_presa_cirurgico'))return 15;
+    if(nome.includes('trombeta')||nome.includes('eco_da_matilha'))return 15;
+    if(nome.includes('mordida_de_serpente'))return 3;
     if(item.natural===true){
-        if(/mordida|garra|pisot|pseudopode|punho|mandib/.test(nome))return 1.8;
+        // Humanoid bites require very close contact; large natural weapons are revised
+        // explicitly in the creature bank instead of inheriting one universal reach.
+        if(nome==='mordida')return 0.8;
+        if(/garra|pisot|pseudopode|punho|mandib/.test(nome))return 1.8;
         return 2;
     }
     const a=Number(item.alcance||0);
@@ -7069,30 +7086,61 @@ window.labPularEfeitos_=function(){
 };
 window.labResponderDefesa_=function(defender=true){
     const pend=labEstado_.pendenciaLab;if(!pend)return;
-    const defensor=(labEstado_.tokens||[]).find(t=>String(t.id)===String(pend.defensorId));
-    const atacante=(labEstado_.tokens||[]).find(t=>String(t.id)===String(pend.atacanteId));
+    const defensor=labTokenPorId_(pend.defensorId),atacante=labTokenPorId_(pend.atacanteId);
     if(!defensor||!atacante){labEstado_.pendenciaLab=null;labSalvarLocal_();labRender_();return;}
-    let dg=1,txt='Não defendeu',grauDef='Falha';
+    let dg=1,txtPublico='Não defendeu',grauDef='Falha',rollDef=null,valorDef=null,per=null;
     if(defender){
         if(Number(defensor.acoesAtuaisLab||0)<=0){notificar_(`${defensor.nome} não possui AÇ para defender.`,'aviso');return;}
         const c=labCharToken_(defensor),defs=labDefesasDisponiveis_(defensor);
         if(!defs.length){notificar_('Nenhuma defesa disponível.','aviso');return;}
         if(!defs.some(p=>batalhaTokenPericia_(p)===defensor.defesaLab))defensor.defesaLab=batalhaTokenPericia_(defs[0]);
-        const per=labPericiaPorToken_(defensor,defensor.defesaLab),valor=labValorDefesa_(c,per),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
-        labSomDefesa_();dg=batalhaResultadoGradeValor_(r.grau);grauDef=r.grau;
+        per=labPericiaPorToken_(defensor,defensor.defesaLab);
+        valorDef=labValorDefesa_(c,per);rollDef=1+Math.floor(Math.random()*100);
+        const r=classificarD100_(valorDef,rollDef);labSomDefesa_();
+        dg=batalhaResultadoGradeValor_(r.grau);grauDef=r.grau;
         defensor.acoesAtuaisLab=Math.max(0,Number(defensor.acoesAtuaisLab||0)-1);
-        txt=`${getNome(per)} ${roll}/${valor} → ${r.grau}`;
+        defensor.ultimoResultadoProprioLab=`Defesa: ${getNome(per)} ${rollDef}/${valorDef} → ${r.grau}.`;
+        txtPublico=`${getNome(per)}: ${r.grau}`;
     }
-    const ag=batalhaResultadoGradeValor_(pend.grauAtaque),acertou=ag>=2&&(!defender||ag>dg);
+
+    const ag=batalhaResultadoGradeValor_(pend.grauAtaque);
+    const nomeDef=normalizarTextoCombate_(per?.id||getNome(per)||'');
+    const ehEsquiva=defender&&nomeDef.includes('esquiva');
+    let acertou=false;
+
+    if(!defender){
+        acertou=ag>=2;
+    }else if(ehEsquiva){
+        if(ag>dg)acertou=true;
+        else if(ag<dg)acertou=false;
+        else if(ag>=2&&dg>=2){
+            // Opposed roll "blackjack": same success level -> higher successful d100 wins.
+            acertou=Number(pend.rolagemAtaque||0)>Number(rollDef||0);
+        }else{
+            acertou=ag>=2;
+        }
+    }else{
+        // Parry remains a differential defence. Equal success level does not make
+        // the attack vanish; weapon-size damage reduction is the next refinement.
+        acertou=ag>=2&&ag>=dg;
+    }
+
     if(acertou){
         const qtd=labEfeitosQuantidade_(pend.grauAtaque,grauDef,!defender);
-        labEstado_.danoPendenteLab={...pend,defesaTexto:txt,efeitosRestantes:qtd,efeitosEscolhidos:[],danoAutomatico:false};
-        labEstado_.ultimoResultadoLab=`${atacante.nome} acertou ${defensor.nome}. ${txt}.${qtd?` ${qtd} efeito(s) especial(is) disponível(is).`:' Dano liberado.'}`;
+        labEstado_.danoPendenteLab={...pend,defesaTexto:txtPublico,grauDefesa:grauDef,rolagemDefesa:rollDef,valorDefesa:valorDef,
+            defesaTipo:ehEsquiva?'esquiva':(defender?'aparar':'nenhuma'),efeitosRestantes:qtd,efeitosEscolhidos:[],danoAutomatico:false};
+        atacante.ultimoResultadoProprioLab=`${pend.pericia} ${pend.rolagemAtaque}/${pend.valorAtaque} → ${pend.grauAtaque}. ${ehEsquiva?`Esquiva adversária: ${grauDef}. `:''}Ataque atingiu o alvo.${qtd?` ${qtd} efeito(s) especial(is).`:''}`;
+        labEstado_.ultimoResultadoLab=`${atacante.nome} atingiu ${defensor.nome}.${qtd?` ${qtd} efeito(s) especial(is) disponível(is).`:''}`;
     }else{
-        labEstado_.danoPendenteLab=null;labEstado_.ultimoResultadoLab=`${defensor.nome} evitou o ataque. ${txt}.`;
+        labEstado_.danoPendenteLab=null;
+        atacante.ultimoResultadoProprioLab=`${pend.pericia} ${pend.rolagemAtaque}/${pend.valorAtaque} → ${pend.grauAtaque}. O alvo evitou o golpe.`;
+        labEstado_.ultimoResultadoLab=`${defensor.nome} evitou o ataque.`;
     }
-    labEstado_.pendenciaLab=null;labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});labEstado_.logLab=labEstado_.logLab.slice(0,20);
-    labSalvarLocal_();labRender_();if(!labEstado_.danoPendenteLab)labAutoAvancarSeSemAcoes_();
+    labEstado_.pendenciaLab=null;
+    labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
+    labEstado_.logLab=labEstado_.logLab.slice(0,20);
+    labSalvarLocal_();labRender_();
+    if(!labEstado_.danoPendenteLab)labAutoAvancarSeSemAcoes_();
 };
 function labExpressaoDano_(atacante,item){
     let expr=String(item?.dano||'').trim();
@@ -7202,6 +7250,7 @@ window.labRolarDano_=function(){
     const armTxt=ap.pa?` · PA ${ap.pa}${ap.pen?` - Pen ${ap.pen}`:''} = ${ap.paEf}`:'';
     const locTxt=ap.roll?`Localização d20 [${ap.roll}] → ${ap.local}`:ap.local;
     const publicoFerimento=stDef.morto?'💀 Morto':stDef.inconsciente?'💤 Inconsciente':ap.ferimento||'Ferido';
+    atacante.ultimoResultadoProprioLab=`${getNome(item)||item.nome||'Ataque'}: ${r.detalhes.join(' · ')} → ${r.total} bruto · ${ap.local}${ap.pa?` · PA ${ap.pa}${ap.pen?` / Pen ${ap.pen}`:''}`:''} · dano final ${ap.final}${ap.ferimento?` · ${ap.ferimento}`:''}.`;
     labEstado_.ultimoResultadoLab=`${getNome(item)||item.nome||'Ataque'} contra ${defensor.nome}: acerto em ${ap.local}${ap.final>0?` · dano aplicado`:''} · ${publicoFerimento}${stDef.sangrando?' · 🩸 Sangrando':''}${stDef.derrubado?' · 💥 Derrubado':''}.`;
     labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
     labEstado_.logLab=labEstado_.logLab.slice(0,20);
@@ -7236,6 +7285,7 @@ window.labRolarAtaque_=function(){
     labSomAtaque_(item,r.grau);
     t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);
     const base=`${t.nome} → ${alvo.nome}: ${getNome(per)} ${roll}/${valor} → ${r.grau} · ${dist.toFixed(2)} m · ${getNome(item)}.`;
+    t.ultimoResultadoProprioLab=`Ataque: ${getNome(per)} ${roll}/${valor} → ${r.grau}.`;
     let danoAutomatico=false;
     if(r.sucesso){
         const pend={id:`lab_${Date.now()}`,atacanteId:String(t.id),defensorId:String(alvo.id),grauAtaque:r.grau,
@@ -7390,12 +7440,12 @@ function labRenderActionPanel_(){
         <label style="margin:0;"><small style="display:block;margin-bottom:4px;visibility:hidden;">Ação</small><button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;min-width:0;padding:0 12px;font-size:1em;margin:0;box-sizing:border-box;white-space:nowrap;">🎲 Atacar (1 AÇ)</button></label>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;">
-        ${labGarantirSnapshotCombate_(t)?.derrubado?`<button class="btn-small" onclick="labLevantar_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:160px;font-size:.96em;">⬆️ Levantar (1 AÇ)</button>`:''}
-        ${labPodePrimeirosSocorros_(t)&&Number(t.acoesAtuaisLab||0)>0?`<button class="btn-small" onclick="labAbrirPrimeirosSocorros_()" style="height:44px;min-width:210px;font-size:.96em;">🩹 Primeiros Socorros</button>`:''}
+        <button class="btn-small" onclick="labLevantar_()" ${!labGarantirSnapshotCombate_(t)?.derrubado||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} title="${labGarantirSnapshotCombate_(t)?.derrubado?'Gasta 1 AÇ para se levantar.':'Disponível quando o personagem estiver Derrubado.'}" style="height:44px;min-width:160px;font-size:.96em;">⬆️ Levantar (1 AÇ)</button>
+        ${labPrimeirosSocorrosPericia_(t)?`<button class="btn-small" onclick="labAbrirPrimeirosSocorros_()" ${!labPodePrimeirosSocorros_(t)||Number(t.acoesAtuaisLab||0)<=0||!(labEstado_.tokens||[]).some(x=>labFeridasTrataveis_(x).length&&!labGarantirSnapshotCombate_(x)?.morto)?'disabled':''} title="Escolha paciente e localização ferida. Iniciar custa 1 AÇ e encerra a oportunidade." style="height:44px;min-width:210px;font-size:.96em;">🩹 Primeiros Socorros</button>`:''}
       </div>
       ${t?labResumoPVHtml_(t,'SEUS PV'):''}
       ${alvo?labEstadoPublicoAlvoHtml_(alvo):''}
-      ${labEstado_.ultimoResultadoLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(labEstado_.ultimoResultadoLab)}</div>`:''}`;
+      ${t?.ultimoResultadoProprioLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(t.ultimoResultadoProprioLab)}</div>`:''}`;
 }
 function labBackgroundImage_(){
     const c=labEstado_.corGrade||'#777777';const grid=labEstado_.gradeVisivel!==false?`linear-gradient(to right,${c} 1px,transparent 1px),linear-gradient(to bottom,${c} 1px,transparent 1px)`:'';
@@ -14608,7 +14658,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.20.0: levantar por 1 AÇ e Primeiros Socorros completos no Combate Experimental -->
+<!-- Mesa Estelar v46.20.1: estados limpos por combate, Esquiva oposta Mythras, resultados privados, ações visíveis e alcances naturais revisados -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
