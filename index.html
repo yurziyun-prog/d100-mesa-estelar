@@ -1065,8 +1065,8 @@
                         <div style="display:grid;grid-template-columns:minmax(260px,.72fr) minmax(420px,1.28fr);gap:14px;align-items:start;">
                             <div style="padding:12px;border-radius:12px;background:rgba(0,0,0,.16);border:1px solid rgba(255,255,255,.10);">
                                 <div style="display:flex;gap:7px;margin-bottom:9px;">
-                                    <button id="gmEntFiltroCriaturas" class="btn-small btn-select" onclick="gmEntidadesFiltro_='criatura';renderizarFichasEntidadesMestre_()">🦖 Criaturas</button>
-                                    <button id="gmEntFiltroNPCs" class="btn-small" onclick="gmEntidadesFiltro_='npc';renderizarFichasEntidadesMestre_()">👤 NPCs</button>
+                                    <button id="gmEntFiltroCriaturas" class="btn-small btn-select" onclick="selecionarFiltroEntidadesMestre_('criatura')">🦖 Criaturas</button>
+                                    <button id="gmEntFiltroNPCs" class="btn-small" onclick="selecionarFiltroEntidadesMestre_('npc')">👤 NPCs</button>
                                 </div>
                                 <input id="gmEntBusca" type="text" placeholder="Buscar modelo..." oninput="renderizarListaModelosEntidades_()" style="width:100%;margin-bottom:9px;">
                                 <div id="gmEntListaModelos" style="max-height:570px;overflow:auto;"></div>
@@ -1331,9 +1331,21 @@
       </div><h4>Atributos</h4><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px">
        <label>FOR<input id="crFOR" type="number"></label><label>CON<input id="crCON" type="number"></label><label>TAM<input id="crTAM" type="number"></label><label>DES<input id="crDES" type="number"></label><label>INT<input id="crINT" type="number"></label><label>POD<input id="crPOD" type="number"></label><label>CAR<input id="crCAR" type="number"></label>
       </div>
+      <div style="margin:10px 0;padding:10px;border-radius:9px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);">
+        <label style="display:flex;align-items:center;gap:8px;"><input id="crAtributosRolados" type="checkbox" style="width:auto;"> Gerar atributos por indivíduo</label>
+        <div style="display:grid;grid-template-columns:repeat(7,minmax(82px,1fr));gap:6px;margin-top:7px;">
+          <label>FOR fórmula<input id="crFormulaFOR" placeholder="3d6+8"></label><label>CON fórmula<input id="crFormulaCON" placeholder="3d6+4"></label>
+          <label>TAM fórmula<input id="crFormulaTAM" placeholder="2d6+6"></label><label>DES fórmula<input id="crFormulaDES" placeholder="3d6+6"></label>
+          <label>INT fórmula<input id="crFormulaINT" placeholder="2d6"></label><label>POD fórmula<input id="crFormulaPOD" placeholder="3d6"></label>
+          <label>CAR fórmula<input id="crFormulaCAR" placeholder="2d6"></label>
+        </div>
+      </div>
       <label>Perícias (investimento)<textarea id="crPericias" rows="3"></textarea></label>
       <label>Especializações (investimento)<textarea id="crEspec" rows="2"></textarea></label>
-      <label>Ataques naturais<input id="crArmas" placeholder="Mordida|Garras"></label>
+      <label>Ataques naturais<input id="crArmas" placeholder="Mordida:1d8+MD|Garras:1d6+MD"></label>
+      <label>Alcances dos ataques (m)<input id="crAlcances" placeholder="Mordida:1.5|Garras:1"></label>
+      <label>Habilidades especiais<textarea id="crHabilidades" rows="2" placeholder="Engolfar|Atropelar"></textarea></label>
+      <label>Equipamento-base<textarea id="crEquipBase" rows="2" placeholder="Coleira de controle|Armadura"></textarea></label>
       <label>Propriedades dos ataques<input id="crProps" placeholder="Mordida:infeccioso|Garras:infeccioso"></label>
       <div class="form-group">
         <label>Imagem URL</label>
@@ -1374,9 +1386,21 @@
           <label>POD<input id="dbNPCPOD" type="number" min="1"></label>
           <label>CAR<input id="dbNPCCAR" type="number" min="1"></label>
         </div>
+        <div style="margin:10px 0;padding:10px;border-radius:9px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);">
+          <label style="display:flex;align-items:center;gap:8px;"><input id="dbNPCAtributosRolados" type="checkbox" style="width:auto;"> NPC genérico: gerar atributos por indivíduo</label>
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(82px,1fr));gap:6px;margin-top:7px;">
+            <label>FOR fórmula<input id="dbNPCFormulaFOR" placeholder="3d6+8"></label><label>CON fórmula<input id="dbNPCFormulaCON" placeholder="3d6+4"></label>
+            <label>TAM fórmula<input id="dbNPCFormulaTAM" placeholder="3d6"></label><label>DES fórmula<input id="dbNPCFormulaDES" placeholder="3d6+2"></label>
+            <label>INT fórmula<input id="dbNPCFormulaINT" placeholder="3d6"></label><label>POD fórmula<input id="dbNPCFormulaPOD" placeholder="3d6"></label>
+            <label>CAR fórmula<input id="dbNPCFormulaCAR" placeholder="3d6"></label>
+          </div>
+        </div>
         <label>Perícias — pontos investidos<textarea id="dbNPCPericias" rows="3"></textarea></label>
         <label>Especializações — pontos investidos<textarea id="dbNPCEspecializacoes" rows="3"></textarea></label>
-        <label>Armas/ataques<input id="dbNPCArmas" placeholder="Lança de Choque|Pistola 9 mm"></label>
+        <label>Armas/ataques próprios<input id="dbNPCArmas" placeholder="Combate Desarmado"></label>
+        <label>Alcances dos ataques (m)<input id="dbNPCAlcances" placeholder="Punhos:1|Tentáculo:2"></label>
+        <label>Habilidades especiais<textarea id="dbNPCHabilidades" rows="2"></textarea></label>
+        <label>Equipamento-base<textarea id="dbNPCEquipBase" rows="2" placeholder="Lança de Choque|Pistola 9 mm|Colete"></textarea></label>
         <label>Inventário narrativo<input id="dbNPCInventario"></label>
         <label>Motivação<input id="dbNPCMotivacao"></label><label>Valor da motivação<input id="dbNPCValorMotivacao" type="number"></label>
         <div class="form-group">
@@ -6358,9 +6382,16 @@ function rolarFormulaAtributo_(formula,fallback=10){
     const qtd=Math.max(1,Math.min(50,Number(m[1]||1))),faces=Math.max(2,Math.min(1000,Number(m[2]||6))),mod=Number(m[3]||0);
     let total=mod;for(let k=0;k<qtd;k++)total+=Math.floor(Math.random()*faces)+1;return total;
 }
+function modeloUsaAtributosRolados_(modelo){
+    if(modelo?.atributosRolados)return true;
+    const f=modelo?.formulasAtributos||{};
+    return ['FOR','CON','TAM','DES','INT','POD','CAR'].some(a=>/\d*d\d+/i.test(String(f[a]||'')));
+}
 function atributoModeloOuRolado_(modelo,chave,fallback=10){
     const f=modelo?.formulasAtributos?.[chave];
-    return modelo?.atributosRolados&&String(f||'').trim()?rolarFormulaAtributo_(f,modelo?.[chave]??fallback):Number(modelo?.[chave]??fallback);
+    return modeloUsaAtributosRolados_(modelo)&&String(f||'').trim()
+        ? rolarFormulaAtributo_(f,modelo?.[chave]??fallback)
+        : Number(modelo?.[chave]??fallback);
 }
 function atributosIndividuoDoModelo_(modelo,participante=null,tipo='npc'){
     if(participante?.atributosIndividuo&&typeof participante.atributosIndividuo==='object')return JSON.parse(JSON.stringify(participante.atributosIndividuo));
@@ -6392,7 +6423,8 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
             }
             const inv={equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)};
             let slot=0;
-            for(const nome of String(modelo.armasTexto||'').split('|').map(x=>x.trim()).filter(Boolean)){
+            const fonteEquip=String(modelo.equipamentoBaseTexto||'').trim()||String(modelo.armasTexto||'');
+            for(const nome of fonteEquip.split('|').map(x=>x.trim()).filter(Boolean)){
                 const q=normalizarTextoCombate_(nome);
                 const b=(itensDB||[]).find(i=>{
                     const nomes=[i.nome,i.nome_en,i.nome_zh,i.id].filter(Boolean).map(normalizarTextoCombate_);
@@ -6408,6 +6440,7 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
         combate:combateSalvo,
         conceito:modelo.descricao||'',
         carreira:modelo.tipo||'NPC',
+        habilidadesTexto:modelo.habilidadesTexto||'',
         __npcTemporario:true
     };
 }
@@ -6427,6 +6460,11 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
         const nome=normalizarTextoCombate_(reg.slice(0,ix));
         props[nome]=reg.slice(ix+1).split(',').map(x=>normalizarTextoCombate_(x)).filter(Boolean);
     });
+    const alcances={};
+    String(modelo.alcancesAtaques||'').split('|').map(x=>x.trim()).filter(Boolean).forEach(reg=>{
+        const ix=reg.indexOf(':');if(ix<0)return;
+        alcances[normalizarTextoCombate_(reg.slice(0,ix))]=Number(String(reg.slice(ix+1)).replace(',','.'))||0;
+    });
     const ataques=String(modelo.armasTexto||'').split('|').map(x=>x.trim()).filter(Boolean).map(reg=>{
         const ix=reg.indexOf(':');
         const nome=(ix>=0?reg.slice(0,ix):reg).trim();
@@ -6442,7 +6480,8 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
             categoria:'Arma natural',familia:'natural',natural:true,pa:0,pv:999,
             propriedades:ps,
             infeccioso:ps.includes('infeccioso'),
-            sonoro:ps.includes('sonoro')||ps.includes('trombeta')||ps.includes('cone_sonoro')
+            sonoro:ps.includes('sonoro')||ps.includes('trombeta')||ps.includes('cone_sonoro'),
+            alcanceMetros:Number(alcances[normalizarTextoCombate_(nome)]||base?.alcanceMetros||0)
         };
     });
 
@@ -6454,11 +6493,18 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
         pericias:npcPericiasParaCombate_(modelo.periciasTexto),
         especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
         armasNaturais:ataques,
-        inventario:participante?.criaturaInventario&&typeof participante.criaturaInventario==='object'
-            ? JSON.parse(JSON.stringify(participante.criaturaInventario))
-            : {equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)},
+        inventario:(()=>{
+            if(participante?.criaturaInventario&&typeof participante.criaturaInventario==='object')return JSON.parse(JSON.stringify(participante.criaturaInventario));
+            const inv={equipado:Array(12).fill(null),bolso:Array(2).fill(null),mochila:Array(20).fill(null),veiculo:Array(50).fill(null),casa:Array(100).fill(null)};
+            let slot=0;
+            for(const nome of String(modelo.equipamentoBaseTexto||'').split('|').map(x=>x.trim()).filter(Boolean)){
+                const q=normalizarTextoCombate_(nome),b=(itensDB||[]).find(i=>[i.nome,i.nome_en,i.nome_zh,i.id].filter(Boolean).map(normalizarTextoCombate_).includes(q));
+                if(b&&slot<12){const maxCarga=cargaMaxArma_(b);inv.equipado[slot++]={...JSON.parse(JSON.stringify(b)),idBanco:String(b.id),instanciaId:`cri_${modelo.id}_${slot}`,pvAtual:Number(b.pv||1),cargaAtual:maxCarga,cargaMax:maxCarga};}
+            }
+            return inv;
+        })(),
         combate:combateSalvo,conceito:modelo.descricao||'',carreira:modelo.tipo||'Criatura',
-        habitat:modelo.habitat||'',comportamento:modelo.comportamento||'',__criaturaTemporaria:true
+        habitat:modelo.habitat||'',comportamento:modelo.comportamento||'',habilidadesTexto:modelo.habilidadesTexto||'',__criaturaTemporaria:true
     };
 }
 
@@ -7117,23 +7163,25 @@ function batalhaPenalidadeTratamento_(char){return batalhaEstaTratandoPrimeirosS
 function batalhaStatusPrimeirosSocorrosHtml_(char){
     const t=batalhaTratamentoPrimeirosSocorros_(char);if(!t)return '';
     const msg=t.fase==='executando'
-      ? `🩹 <strong>Prestando Primeiros Socorros</strong> em ${escaparHtmlInventario_(t.alvoNome)} (${escaparHtmlInventario_(t.local)}). Esta oportunidade inteira está ocupada.`
-      : `🩹 <strong>Primeiros Socorros iniciados</strong> em ${escaparHtmlInventario_(t.alvoNome)} (${escaparHtmlInventario_(t.local)}). A próxima oportunidade será gasta no tratamento.`;
+      ? `🩹 <strong>Primeiros Socorros prontos para conclusão</strong> em ${escaparHtmlInventario_(t.alvoNome)} (${escaparHtmlInventario_(t.local)}). O personagem pode concluir ou abandonar o atendimento.`
+      : `🩹 <strong>Primeiros Socorros iniciados</strong> em ${escaparHtmlInventario_(t.alvoNome)} (${escaparHtmlInventario_(t.local)}). O início encerrou o turno automaticamente.`;
     const p=batalhaParticipante_(char?.id);
-    return `<div style="margin-top:9px;padding:9px 11px;border-radius:8px;background:rgba(72,202,228,.09);border:1px solid rgba(72,202,228,.35);color:#b8edf7;">${msg}<br><small>Enquanto trata, defesas sofrem +2 graus de dificuldade.</small>${batalhaEhMestre_()&&p?` <button class="btn-small" style="margin-left:8px;padding:3px 7px;" onclick="batalhaCancelarPrimeirosSocorros_('${p.id}')">✕ Cancelar atendimento</button>`:''}</div>`;
+    const podeCancelar=p&&(batalhaEhMestre_()||batalhaPodeControlar_(p));
+    return `<div style="margin-top:9px;padding:9px 11px;border-radius:8px;background:rgba(72,202,228,.09);border:1px solid rgba(72,202,228,.35);color:#b8edf7;">${msg}<br><small>Enquanto mantém o atendimento, defesas sofrem +2 graus de dificuldade. Iniciar e continuar são escolhas voluntárias.</small>${podeCancelar?` <button class="btn-small" style="margin-left:8px;padding:3px 7px;" onclick="batalhaCancelarPrimeirosSocorros_('${p.id}')">✕ Abandonar atendimento</button>`:''}</div>`;
+}
+async function batalhaCancelarPrimeirosSocorrosMestre_(id){
+    const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);if(!p||!c)return false;
+    c.combate=c.combate||{};delete c.combate.primeirosSocorrosEmAndamento;p.primeirosSocorrosEmAndamento=null;
+    await batalhaPersistirCombateChar_(c,p);
+    batalhaUltimoResultado_[id]='Primeiros Socorros abandonados.';
+    batalhaLogPush_(batalhaEstado_,`${p.nome} abandonou o atendimento de Primeiros Socorros.`,'primeiros_socorros',{actorId:p.id});
+    await batalhaSalvarEstado_();renderizarBatalhaCompartilhada_();return true;
 }
 window.batalhaCancelarPrimeirosSocorros_=async function(id){
-    if(!batalhaEhMestre_())return;
-    const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);
-    if(!p||!c)return;
-    c.combate=c.combate||{};
-    delete c.combate.primeirosSocorrosEmAndamento;
-    p.primeirosSocorrosEmAndamento=null;
-    await batalhaPersistirCombateChar_(c,p);
-    batalhaUltimoResultado_[id]='Primeiros Socorros cancelados pelo mestre.';
-    batalhaLogPush_(batalhaEstado_,`${p.nome}: atendimento de Primeiros Socorros cancelado pelo mestre.`,'primeiros_socorros',{actorId:p.id});
-    await batalhaSalvarEstado_();
-    renderizarBatalhaCompartilhada_();
+    const p=batalhaParticipante_(id);if(!p||!batalhaPodeControlar_(p))return;
+    if(!confirm('Abandonar este atendimento de Primeiros Socorros? A AÇ já gasta não será devolvida.'))return;
+    if(batalhaEhMestre_())await batalhaCancelarPrimeirosSocorrosMestre_(id);
+    else await batalhaEnviarAcao_(id,'primeiros_socorros_cancelar',{});
 };
 
 function batalhaKitPrimeirosSocorros_(char){
@@ -7183,8 +7231,9 @@ async function batalhaIniciarPrimeirosSocorrosMestre_(id,alvoId,local){
     c.combate.primeirosSocorrosEmAndamento=tratamento;
     p.primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(tratamento));
     await batalhaPersistirCombateChar_(c,p);
-    batalhaLogPush_(batalhaEstado_,`${p.nome} iniciou Primeiros Socorros em ${ap.nome} (${local}). A próxima oportunidade será ocupada pelo atendimento.`,'primeiros_socorros',{actorId:p.id,targetId:ap.id});
-    batalhaUltimoResultado_[p.id]='Primeiros Socorros iniciados. Passe a vez; a próxima oportunidade será consumida pelo tratamento.';
+    batalhaLogPush_(batalhaEstado_,`${p.nome} iniciou voluntariamente Primeiros Socorros em ${ap.nome} (${local}). O turno foi encerrado automaticamente; a próxima oportunidade poderá concluir o atendimento.`,'primeiros_socorros',{actorId:p.id,targetId:ap.id});
+    batalhaUltimoResultado_[p.id]='Primeiros Socorros iniciados. O turno foi encerrado automaticamente.';
+    await batalhaAvancarTurnoInterno_();
     await batalhaSalvarEstado_();return true;
 }
 async function batalhaConcluirPrimeirosSocorrosMestre_(id){
@@ -7448,6 +7497,14 @@ function renderizarBatalhaCandidatos_(){
 }
 window.batalhaSelecionarCandidato_=(id,v)=>{ if(v)batalhaSelecaoMestre_.add(id);else batalhaSelecaoMestre_.delete(id); };
 
+
+function batalhaNomeUnicoInstancia_(nome,participantes=[]){
+    const base=String(nome||'Criatura').replace(/\s+\d+$/,'').trim()||'Criatura';
+    const usados=new Set((participantes||[]).map(p=>normalizarTextoCombate_(p.nome||'')));
+    if(!usados.has(normalizarTextoCombate_(base)))return base;
+    let n=2;while(usados.has(normalizarTextoCombate_(`${base} ${n}`)))n++;
+    return `${base} ${n}`;
+}
 window.batalhaAdicionarSelecionados_=async()=>{
     if(!batalhaEhMestre_())return;
     const ids=[...batalhaSelecaoMestre_];if(!ids.length){notificar_('Selecione pelo menos um personagem.','aviso');return;}
@@ -7470,6 +7527,7 @@ window.batalhaAdicionarSelecionados_=async()=>{
             reconciliarFerimentosComPVManual_(c);
             await setDoc(doc(db,'personagens',c.id),{combate:c.combate},{merge:true});
         }
+        if(c.__npcTemporario||c.__criaturaTemporaria)c.nome=batalhaNomeUnicoInstancia_(c.nome,estado.participantes);
         const participante=batalhaSanitizarParticipante_(c);
         if(estado.participantes.some(p=>String(p.id)===String(participante.id)))continue;
         const posInicial=batalhaPosicaoAleatoriaLivre_(estado);
@@ -8269,6 +8327,8 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
         }else if(acao.tipo==='primeiros_socorros_concluir'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
             if(atual?.id===p.id)await batalhaConcluirPrimeirosSocorrosMestre_(p.id);
+        }else if(acao.tipo==='primeiros_socorros_cancelar'){
+            await batalhaCancelarPrimeirosSocorrosMestre_(p.id);
         }else if(acao.tipo==='proximo'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
             if(atual?.id===p.id && !batalhaEstado_.pendencia && !batalhaEstado_.danoPendente){
@@ -9618,6 +9678,11 @@ window.removerCenarioBanco=async(id)=>{
 
 
 let gmEntidadesFiltro_='criatura',gmEntidadeSelecionada_={tipo:'criatura',id:''};
+window.selecionarFiltroEntidadesMestre_=function(tipo){
+    gmEntidadesFiltro_=tipo==='npc'?'npc':'criatura';
+    if(gmEntidadeSelecionada_.tipo!==gmEntidadesFiltro_)gmEntidadeSelecionada_={tipo:gmEntidadesFiltro_,id:''};
+    renderizarFichasEntidadesMestre_();
+};
 function gmEntModeloAtual_(){const l=gmEntidadeSelecionada_.tipo==='npc'?(npcsDB||[]):(criaturasDB||[]);return l.find(x=>String(x.id)===String(gmEntidadeSelecionada_.id))||null;}
 function gmEntFormulaPadrao_(m,a){return String(m?.formulasAtributos?.[a]||m?.[a]||'');}
 window.renderizarFichasEntidadesMestre_=function(){
@@ -9630,27 +9695,41 @@ window.renderizarListaModelosEntidades_=function(){
  const el=document.getElementById('gmEntListaModelos');if(!el)return;
  const q=normalizarTextoCombate_(document.getElementById('gmEntBusca')?.value||'');
  const l=(gmEntidadesFiltro_==='npc'?(npcsDB||[]):(criaturasDB||[])).filter(x=>!q||normalizarTextoCombate_(`${x.nome||''} ${x.tipo||''} ${x.especie||''}`).includes(q)).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
- el.innerHTML=l.length?l.map(m=>`<button type="button" onclick="selecionarModeloEntidade_('${gmEntidadesFiltro_}','${String(m.id).replace(/'/g,"\\'")}')" style="width:100%;text-align:left;margin:0 0 6px;padding:9px;border-radius:9px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.035);color:#eee;cursor:pointer;"><b>${escaparBanco_(m.nome||'Sem nome')}</b><br><small style="color:#999;">${m.atributosRolados?'🎲 Rolado':'📌 Fixo'} · ${escaparBanco_(m.tipo||gmEntidadesFiltro_)}</small></button>`).join(''):'<div style="color:#888;">Nenhum modelo.</div>';
+ el.innerHTML=l.length?l.map(m=>`<button type="button" onclick="selecionarModeloEntidade_('${gmEntidadesFiltro_}','${String(m.id).replace(/'/g,"\\'")}')" style="width:100%;text-align:left;margin:0 0 6px;padding:9px;border-radius:9px;border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.035);color:#eee;cursor:pointer;"><b>${escaparBanco_(m.nome||'Sem nome')}</b><br><small style="color:#999;">${modeloUsaAtributosRolados_(m)?'🎲 Rolado':'📌 Fixo'} · ${escaparBanco_(m.tipo||gmEntidadesFiltro_)}</small></button>`).join(''):'<div style="color:#888;">Nenhum modelo.</div>';
 };
 window.selecionarModeloEntidade_=function(tipo,id){gmEntidadeSelecionada_={tipo,id};gmEntidadesFiltro_=tipo;renderizarFichasEntidadesMestre_();};
 window.renderizarFichaModeloEntidade_=function(){
  const el=document.getElementById('gmEntFichaModelo'),m=gmEntModeloAtual_();if(!el)return;if(!m){el.innerHTML='<div style="color:#888;">Selecione um modelo à esquerda.</div>';return;}
  const attrs=['FOR','CON','TAM','DES','INT','POD','CAR'],tipo=gmEntidadeSelecionada_.tipo;
- el.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;">${m.imagem?`<img src="${escaparBanco_(m.imagem)}" style="width:105px;height:105px;border-radius:12px;object-fit:cover;">`:''}<div><h3 style="margin:0;">${escaparBanco_(m.nome)}</h3><div style="color:#999;">${escaparBanco_(m.especie||m.tipo||'')}</div><div style="margin-top:7px;">${m.atributosRolados?'🎲 Atributos rolados por indivíduo':'📌 Atributos fixos'}</div></div></div>
- <div style="margin-top:13px;padding:11px;border-radius:9px;background:rgba(255,255,255,.035);"><label><input id="gmEntRolado" type="checkbox" ${m.atributosRolados?'checked':''}> <b>Gerar atributos diferentes para cada indivíduo</b></label>
+ el.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;">${m.imagem?`<img src="${escaparBanco_(m.imagem)}" style="width:105px;height:105px;border-radius:12px;object-fit:cover;">`:''}<div><div style="font-size:.72em;color:#8feaff;font-weight:700;letter-spacing:.06em;">MODELO DO BANCO</div><h3 style="margin:2px 0 0;">${escaparBanco_(m.nome)}</h3><div style="color:#999;">${escaparBanco_(m.especie||m.tipo||'')}</div><div style="margin-top:7px;">${modeloUsaAtributosRolados_(m)?'🎲 Atributos rolados por indivíduo':'📌 Atributos fixos'}</div></div></div>
+ <div style="margin-top:13px;padding:11px;border-radius:9px;background:rgba(255,255,255,.035);"><label><input id="gmEntRolado" type="checkbox" ${modeloUsaAtributosRolados_(m)?'checked':''}> <b>Gerar atributos diferentes para cada indivíduo</b></label>
  <div style="display:grid;grid-template-columns:repeat(7,minmax(74px,1fr));gap:6px;margin-top:9px;">${attrs.map(a=>`<div><small>${a}</small><input id="gmEntFormula${a}" value="${escaparBanco_(gmEntFormulaPadrao_(m,a))}" style="width:100%;"></div>`).join('')}</div><small style="color:#888;">Aceita fórmulas como 3d6+18, 2d6 e 1d6+3.</small></div>
  <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px;"><div><label>Peso / massa</label><input id="gmEntPeso" value="${escaparBanco_(m.pesoCorporal||'')}" style="width:100%;"></div><div><label>Tipo</label><input id="gmEntTipo" value="${escaparBanco_(m.tipo||'')}" style="width:100%;"></div></div>
- <div style="margin-top:9px;"><label>Ataques / equipamento-base</label><textarea id="gmEntArmas" rows="2" style="width:100%;">${escaparBanco_(m.armasTexto||'')}</textarea></div>
+ <div style="margin-top:9px;"><label>${tipo==='criatura'?'Armas / ataques naturais':'Armas / ataques próprios'}</label><textarea id="gmEntArmas" rows="2" style="width:100%;" placeholder="${tipo==='criatura'?'Mordida:1d8+MD|Garras:1d6+MD':'Combate Desarmado'}">${escaparBanco_(m.armasTexto||'')}</textarea></div>
+ <div style="margin-top:9px;"><label>Alcance dos ataques naturais / próprios</label><input id="gmEntAlcances" value="${escaparBanco_(m.alcancesAtaques||'')}" style="width:100%;" placeholder="Mordida:1.5|Pescoço:3|Jato Ácido:12"><small style="color:#888;">Guardado em metros para o futuro mapa métrico.</small></div>
+ <div style="margin-top:9px;"><label>Habilidades especiais</label><textarea id="gmEntHabilidades" rows="3" style="width:100%;" placeholder="Engolfar|Atropelar|Eco da Matilha">${escaparBanco_(m.habilidadesTexto||'')}</textarea></div>
+ <div style="margin-top:9px;"><label>Equipamento-base</label><textarea id="gmEntEquipBase" rows="2" style="width:100%;" placeholder="Pistola|Colete|Kit Médico">${escaparBanco_(m.equipamentoBaseTexto||'')}</textarea><small style="color:#888;">Equipamento é separado dos ataques. Ao gerar um indivíduo, estes itens podem ir para o inventário dele.</small></div>
  <div style="margin-top:9px;"><label>Descrição</label><textarea id="gmEntDescricao" rows="4" style="width:100%;">${escaparBanco_(m.descricao||'')}</textarea></div>
  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;"><button class="btn-save" onclick="salvarFichaModeloEntidade_()">💾 Salvar modelo</button><button class="btn-small" onclick="rolarPreviewEntidade_()">🎲 Gerar exemplo</button><button class="btn-small" onclick="${tipo==='npc'?'editarNPCBanco_':'editarCriaturaBanco_'}('${String(m.id).replace(/'/g,"\\'")}')">🛠️ Editor completo</button></div><div id="gmEntPreviewRolagem" style="margin-top:9px;"></div>`;
 };
 window.rolarPreviewEntidade_=function(){const m=gmEntModeloAtual_();if(!m)return;const a={};for(const k of ['FOR','CON','TAM','DES','INT','POD','CAR'])a[k]=rolarFormulaAtributo_(document.getElementById('gmEntFormula'+k)?.value,m[k]||10);const e=document.getElementById('gmEntPreviewRolagem');if(e)e.innerHTML=`<div style="padding:8px;border:1px solid rgba(0,212,255,.25);border-radius:8px;background:rgba(0,212,255,.07);"><b>Exemplo:</b> ${Object.entries(a).map(([k,v])=>`${k} ${v}`).join(' · ')}</div>`;};
-window.salvarFichaModeloEntidade_=async function(){const m=gmEntModeloAtual_();if(!m||!batalhaEhMestre_())return;const f={};for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])f[a]=String(document.getElementById('gmEntFormula'+a)?.value||'').trim();const p={atributosRolados:!!document.getElementById('gmEntRolado')?.checked,formulasAtributos:f,pesoCorporal:String(document.getElementById('gmEntPeso')?.value||'').trim(),tipo:String(document.getElementById('gmEntTipo')?.value||'').trim()||m.tipo||'',armasTexto:String(document.getElementById('gmEntArmas')?.value||'').trim(),descricao:String(document.getElementById('gmEntDescricao')?.value||'').trim()};await setDoc(doc(db,gmEntidadeSelecionada_.tipo==='npc'?'npcs':'criaturas',String(m.id)),p,{merge:true});Object.assign(m,p);somSalvar_();notificar_('Modelo salvo.','info');renderizarFichasEntidadesMestre_();};
+window.salvarFichaModeloEntidade_=async function(){const m=gmEntModeloAtual_();if(!m||!batalhaEhMestre_())return;const f={};for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])f[a]=String(document.getElementById('gmEntFormula'+a)?.value||'').trim();const temFormulaDados=Object.values(f).some(x=>/\d*d\d+/i.test(String(x||'')));
+const p={
+    atributosRolados:!!document.getElementById('gmEntRolado')?.checked||temFormulaDados,
+    formulasAtributos:f,
+    pesoCorporal:String(document.getElementById('gmEntPeso')?.value||'').trim(),
+    tipo:String(document.getElementById('gmEntTipo')?.value||'').trim()||m.tipo||'',
+    armasTexto:String(document.getElementById('gmEntArmas')?.value||'').trim(),
+    habilidadesTexto:String(document.getElementById('gmEntHabilidades')?.value||'').trim(),
+    equipamentoBaseTexto:String(document.getElementById('gmEntEquipBase')?.value||'').trim(),
+    alcancesAtaques:String(document.getElementById('gmEntAlcances')?.value||'').trim(),
+    descricao:String(document.getElementById('gmEntDescricao')?.value||'').trim()
+};await setDoc(doc(db,gmEntidadeSelecionada_.tipo==='npc'?'npcs':'criaturas',String(m.id)),p,{merge:true});Object.assign(m,p);somSalvar_();notificar_('Modelo salvo.','info');renderizarFichasEntidadesMestre_();};
 function gmEntInstanciaChar_(p){return p?.npcBancoId?criarNPCCombateDoBanco_(npcBancoPorId_(p.npcBancoId),p):p?.criaturaBancoId?criarCriaturaCombateDoBanco_(criaturaBancoPorId_(p.criaturaBancoId),p):null;}
 window.renderizarInstanciasEntidades_=function(){
  const el=document.getElementById('gmEntInstanciasAtivas');if(!el)return;const ps=(batalhaEstado_?.participantes||[]).filter(p=>p.npcBancoId||p.criaturaBancoId);
  if(!ps.length){el.innerHTML='<div style="color:#888;">Nenhum indivíduo temporário em batalha.</div>';return;}
- el.innerHTML=ps.map(p=>{const c=gmEntInstanciaChar_(p),a=c?.atributos||{},inv=c?.inventario||{},eq=(inv.equipado||[]).filter(Boolean),mo=(inv.mochila||[]).filter(Boolean);return `<div style="padding:10px;margin-bottom:8px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);"><div style="display:flex;gap:8px;align-items:center;"><b style="flex:1;">${escaparBanco_(p.nome)}</b><button class="btn-small" onclick="restaurarInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">❤️ Restaurar PV</button></div><div style="margin-top:6px;font-size:.9em;">${['FOR','CON','TAM','DES','INT','POD','CAR'].map(k=>`${k} <b>${a[k]??'—'}</b>`).join(' · ')}</div><div style="color:#999;font-size:.85em;margin-top:5px;">Equipado: ${eq.length?eq.map(x=>escaparBanco_(getNome(x)||x.nome||'item')).join(', '):'—'} · Mochila: ${mo.length}/${(inv.mochila||[]).length||20}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;"><select id="gmEntItem_${p.id}" style="min-width:200px;"><option value="">Adicionar item...</option>${(itensDB||[]).map(it=>`<option value="${escaparBanco_(it.id)}">${escaparBanco_(getNome(it)||it.nome||it.id)}</option>`).join('')}</select><select id="gmEntDestino_${p.id}"><option value="equipado">Equipado</option><option value="mochila">Mochila</option><option value="bolso">Bolso</option></select><button class="btn-small" onclick="adicionarItemInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">➕ Colocar</button></div></div>`;}).join('');
+ el.innerHTML=ps.map(p=>{const c=gmEntInstanciaChar_(p),a=c?.atributos||{},inv=c?.inventario||{},eq=(inv.equipado||[]).filter(Boolean),mo=(inv.mochila||[]).filter(Boolean);return `<div style="padding:10px;margin-bottom:8px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);"><div style="display:flex;gap:8px;align-items:center;"><div style="flex:1;"><b>${escaparBanco_(p.nome)}</b><br><small style="color:#8feaff;">INDIVÍDUO EM BATALHA</small></div><button class="btn-small" onclick="restaurarInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">❤️ Restaurar PV</button></div><div style="margin-top:6px;font-size:.9em;">${['FOR','CON','TAM','DES','INT','POD','CAR'].map(k=>`${k} <b>${a[k]??'—'}</b>`).join(' · ')}</div><div style="color:#999;font-size:.85em;margin-top:5px;">Equipado: ${eq.length?eq.map(x=>escaparBanco_(getNome(x)||x.nome||'item')).join(', '):'—'} · Mochila: ${mo.length}/${(inv.mochila||[]).length||20}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;"><select id="gmEntItem_${p.id}" style="min-width:200px;"><option value="">Adicionar item...</option>${(itensDB||[]).map(it=>`<option value="${escaparBanco_(it.id)}">${escaparBanco_(getNome(it)||it.nome||it.id)}</option>`).join('')}</select><select id="gmEntDestino_${p.id}"><option value="equipado">Equipado</option><option value="mochila">Mochila</option><option value="bolso">Bolso</option></select><button class="btn-small" onclick="adicionarItemInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">➕ Colocar</button></div></div>`;}).join('');
 };
 window.adicionarItemInstanciaEntidade_=async function(id){const p=batalhaParticipante_(id),c=gmEntInstanciaChar_(p);if(!p||!c||!batalhaEhMestre_())return;const itemId=document.getElementById(`gmEntItem_${id}`)?.value,d=document.getElementById(`gmEntDestino_${id}`)?.value||'mochila',base=(itensDB||[]).find(x=>String(x.id)===String(itemId));if(!base)return notificar_('Escolha um item.','aviso');c.inventario=c.inventario||{};c.inventario[d]=Array.isArray(c.inventario[d])?c.inventario[d]:(d==='equipado'?Array(12).fill(null):d==='bolso'?Array(2).fill(null):Array(20).fill(null));const ix=c.inventario[d].findIndex(x=>!x);if(ix<0)return notificar_('Compartimento cheio.','aviso');const mc=cargaMaxArma_(base);c.inventario[d][ix]={...JSON.parse(JSON.stringify(base)),idBanco:String(base.id),instanciaId:`ent_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,pvAtual:Number(base.pv||1),...(mc>0?{cargaAtual:mc,cargaMax:mc}:{})};if(p.npcBancoId)p.npcInventario=JSON.parse(JSON.stringify(c.inventario));else p.criaturaInventario=JSON.parse(JSON.stringify(c.inventario));await batalhaSalvarEstado_();renderizarInstanciasEntidades_();};
 window.restaurarInstanciaEntidade_=async function(id){const p=batalhaParticipante_(id),c=gmEntInstanciaChar_(p);if(!p||!c||!batalhaEhMestre_())return;c.combate=c.combate||{};c.combate.hitLocations={};c.combate.morto=false;c.combate.incapacitado=false;c.combate.inconsciente=false;c.combate.caido=false;c.combate.sangramentoAtivo=false;c.combate.ferimentos={};if(p.npcBancoId)p.npcCombate=JSON.parse(JSON.stringify(c.combate));else p.criaturaCombate=JSON.parse(JSON.stringify(c.combate));batalhaSincronizarStatusPublico_(c,p);await batalhaSalvarEstado_();renderizarInstanciasEntidades_();renderizarBatalhaCompartilhada_();notificar_('Indivíduo restaurado.','info');};
@@ -9662,7 +9741,14 @@ function renderizarBancoCriaturas_(){
  e.innerHTML=l.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th style="width:76px;">Imagem</th><th>Nome</th><th>Tipo</th><th>Atributos</th><th>Ataques</th><th>Ações</th></tr></thead><tbody>${l.map(n=>`<tr><td>${n.imagem?`<img src="${escaparBanco_(n.imagem)}" style="width:58px;height:58px;object-fit:cover;border-radius:9px;">`:`<div style="width:58px;height:58px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:1.5em;">🦖</div>`}</td><td><b>${escaparBanco_(n.nome)}</b><br><small>${escaparBanco_(n.especie||'')}</small></td><td>${escaparBanco_(n.tipo||'Criatura')}<br><small>${escaparBanco_(n.habitat||'')}</small></td><td>FOR ${n.FOR||0} · CON ${n.CON||0} · TAM ${n.TAM||0} · DES ${n.DES||0}<br>INT ${n.INT||0} · POD ${n.POD||0} · CAR ${n.CAR||0}</td><td>${escaparBanco_(n.armasTexto||'—')}<br><small>${escaparBanco_(n.propriedadesAtaques||'')}</small></td><td><button class="btn-small" onclick="editarCriaturaBanco_('${n.id}')">✏️ Editar</button> <button class="btn-small" onclick="duplicarCriaturaBanco_('${n.id}')">📑 Duplicar</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Banco vazio.</p>';
 }
 function crSet_(id,v){const e=document.getElementById(id);if(e)e.value=v??'';}
-function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_('crNome',n.nome||'');crSet_('crTipo',n.tipo||'Criatura');crSet_('crEspecie',n.especie||'');crSet_('crHabitat',n.habitat||'');crSet_('crComportamento',n.comportamento||'');crSet_('crAltura',n.altura||'');crSet_('crTamanho',n.tamanho||'');crSet_('crPeso',n.pesoCorporal||'');for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])crSet_('cr'+a,n[a]??10);crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const sel=document.getElementById('crSelecionavel');if(sel)sel.checked=n.selecionavelCombate!==false;const arq=document.getElementById('crImagemArquivo');if(arq)arq.value='';atualizarPreviewCriaturaBanco_();const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
+function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_('crNome',n.nome||'');crSet_('crTipo',n.tipo||'Criatura');crSet_('crEspecie',n.especie||'');crSet_('crHabitat',n.habitat||'');crSet_('crComportamento',n.comportamento||'');crSet_('crAltura',n.altura||'');crSet_('crTamanho',n.tamanho||'');crSet_('crPeso',n.pesoCorporal||'');for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR']){
+    crSet_('cr'+a,n[a]??10);
+    crSet_('crFormula'+a,n.formulasAtributos?.[a]||'');
+}
+const rol=document.getElementById('crAtributosRolados');if(rol)rol.checked=modeloUsaAtributosRolados_(n);
+crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');
+crSet_('crAlcances',n.alcancesAtaques||'');crSet_('crHabilidades',n.habilidadesTexto||'');crSet_('crEquipBase',n.equipamentoBaseTexto||'');
+crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const sel=document.getElementById('crSelecionavel');if(sel)sel.checked=n.selecionavelCombate!==false;const arq=document.getElementById('crImagemArquivo');if(arq)arq.value='';atualizarPreviewCriaturaBanco_();const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
 
 window.atualizarPreviewCriaturaBanco_=()=>{
     const url=String(document.getElementById('crImagem')?.value||'').trim();
@@ -9695,7 +9781,30 @@ window.handleDbCreatureImageUpload_=async(event)=>{
 window.adicionarCriaturaBanco_=()=>{crFill_();document.getElementById('dbCriaturaModal')?.classList.add('active');};
 window.editarCriaturaBanco_=id=>{const n=criaturaBancoPorId_(id);if(n){crFill_(n);document.getElementById('dbCriaturaModal')?.classList.add('active');}};
 window.fecharCriaturaBanco_=()=>document.getElementById('dbCriaturaModal')?.classList.remove('active');
-window.salvarCriaturaBanco_=async()=>{const v=id=>String(document.getElementById(id)?.value||'').trim(),orig=v('crOrig'),nome=v('crNome'),id=v('crId')||npcSlugPericia_(nome);if(!nome){notificar_('Informe o nome da criatura.','aviso');return;}const n={id,nome,tipo:v('crTipo')||'Criatura',especie:v('crEspecie'),habitat:v('crHabitat'),comportamento:v('crComportamento'),altura:v('crAltura'),tamanho:v('crTamanho'),pesoCorporal:v('crPeso'),FOR:+v('crFOR')||10,CON:+v('crCON')||10,TAM:+v('crTAM')||10,DES:+v('crDES')||10,INT:+v('crINT')||5,POD:+v('crPOD')||10,CAR:+v('crCAR')||5,periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),armasTexto:v('crArmas'),propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked,atributosRolados:criaturaBancoPorId_(orig||id)?.atributosRolados||false,formulasAtributos:criaturaBancoPorId_(orig||id)?.formulasAtributos||{}};try{if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));await setDoc(doc(db,'criaturas',id),n,{merge:true});criaturasDB=criaturasDB.filter(x=>x.id!==orig&&x.id!==id);criaturasDB.push(n);fecharCriaturaBanco_();renderizarBancoCriaturas_();somSalvar_();}catch(e){console.error(e);notificar_('Não foi possível salvar a criatura. Verifique as regras do Firestore para /criaturas.','erro',7000);}};
+window.salvarCriaturaBanco_=async()=>{
+    const v=id=>String(document.getElementById(id)?.value||'').trim(),
+          orig=v('crOrig'),nome=v('crNome'),id=v('crId')||npcSlugPericia_(nome);
+    if(!nome){notificar_('Informe o nome da criatura.','aviso');return;}
+    const formulas={};for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])formulas[a]=v('crFormula'+a);
+    const temDados=Object.values(formulas).some(x=>/\d*d\d+/i.test(x));
+    const n={
+        id,nome,tipo:v('crTipo')||'Criatura',especie:v('crEspecie'),habitat:v('crHabitat'),comportamento:v('crComportamento'),
+        altura:v('crAltura'),tamanho:v('crTamanho'),pesoCorporal:v('crPeso'),
+        FOR:+v('crFOR')||10,CON:+v('crCON')||10,TAM:+v('crTAM')||10,DES:+v('crDES')||10,INT:+v('crINT')||5,POD:+v('crPOD')||10,CAR:+v('crCAR')||5,
+        atributosRolados:!!document.getElementById('crAtributosRolados')?.checked||temDados,
+        formulasAtributos:formulas,
+        periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),
+        armasTexto:v('crArmas'),alcancesAtaques:v('crAlcances'),habilidadesTexto:v('crHabilidades'),equipamentoBaseTexto:v('crEquipBase'),
+        propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),
+        selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked
+    };
+    try{
+        if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));
+        await setDoc(doc(db,'criaturas',id),n,{merge:true});
+        criaturasDB=criaturasDB.filter(x=>x.id!==orig&&x.id!==id);criaturasDB.push(n);
+        fecharCriaturaBanco_();renderizarBancoCriaturas_();renderizarFichasEntidadesMestre_();somSalvar_();
+    }catch(e){console.error(e);notificar_('Não foi possível salvar a criatura. Verifique as regras do Firestore para /criaturas.','erro',7000);}
+};
 window.removerCriaturaBanco_=async()=>{const id=String(document.getElementById('crOrig')?.value||'');if(id&&confirm('Remover criatura?')){try{await deleteDoc(doc(db,'criaturas',id));criaturasDB=criaturasDB.filter(x=>x.id!==id);fecharCriaturaBanco_();renderizarBancoCriaturas_();}catch(e){console.error(e);notificar_('Não foi possível remover a criatura.','erro');}}};
 window.duplicarCriaturaBanco_=async id=>{const o=criaturaBancoPorId_(id);if(!o)return;let k=2,base=String(o.nome).replace(/\s+\d+$/,'');while(criaturasDB.some(x=>x.nome===`${base} ${k}`))k++;const n={...JSON.parse(JSON.stringify(o)),id:npcSlugPericia_(`${base}_${k}`),nome:`${base} ${k}`};try{await setDoc(doc(db,'criaturas',n.id),n);criaturasDB.push(n);renderizarBancoCriaturas_();}catch(e){console.error(e);notificar_('Não foi possível duplicar a criatura.','erro');}};
 
@@ -9730,8 +9839,12 @@ function preencherModalNPCBanco_(n=null){
  set('dbNPCRaca',n?.raca||'');set('dbNPCSexo',n?.sexo||'');set('dbNPCIdade',n?.idade||'');set('dbNPCOrigem',n?.origem||'');
  set('dbNPCCarreira',n?.carreira||'');set('dbNPCConceito',n?.conceito||'');set('dbNPCSociedade',n?.sociedade||'');set('dbNPCClasse',n?.classeSocial||'');
  set('dbNPCRecursos',n?.recursos||'');set('dbNPCAltura',n?.altura||'');set('dbNPCTamanho',n?.tamanho||'');set('dbNPCPesoCorporal',n?.pesoCorporal||'');
- for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])set(`dbNPC${a}`,n?.[a]??10);
+ for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR']){
+    set(`dbNPC${a}`,n?.[a]??10);set(`dbNPCFormula${a}`,n?.formulasAtributos?.[a]||'');
+ }
+ const rolNPC=document.getElementById('dbNPCAtributosRolados');if(rolNPC)rolNPC.checked=modeloUsaAtributosRolados_(n||{});
  set('dbNPCPericias',n?.periciasTexto||'');set('dbNPCEspecializacoes',n?.especializacoesTexto||'');set('dbNPCArmas',n?.armasTexto||'');
+ set('dbNPCAlcances',n?.alcancesAtaques||'');set('dbNPCHabilidades',n?.habilidadesTexto||'');set('dbNPCEquipBase',n?.equipamentoBaseTexto||'');
  set('dbNPCInventario',n?.inventarioTexto||'');set('dbNPCMotivacao',n?.motivacao||'');set('dbNPCValorMotivacao',n?.valorMotivacao||'');
  set('dbNPCImagem',n?.imagem||'');set('dbNPCDescricao',n?.descricao||'');
  const arqNPC=document.getElementById('dbNPCImagemArquivo');if(arqNPC)arqNPC.value='';
@@ -9793,16 +9906,21 @@ window.salvarNPCBanco_=async()=>{
  const v=id=>document.getElementById(id)?.value?.trim()||'',orig=v('dbNPCIdOriginal');
  const id=v('dbNPCId')||normalizarTextoCombate_(v('dbNPCNome')).replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
  if(!id||!v('dbNPCNome'))return alert('Informe ID e nome.');
+ const formulas={};for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR'])formulas[a]=v('dbNPCFormula'+a);
+ const temDados=Object.values(formulas).some(x=>/\d*d\d+/i.test(x));
  const n={id,nome:v('dbNPCNome'),nome_en:'',nome_zh:'',tipo:v('dbNPCTipo')||'NPC',raca:v('dbNPCRaca'),origem:v('dbNPCOrigem'),idade:v('dbNPCIdade'),sexo:v('dbNPCSexo'),
  altura:v('dbNPCAltura'),tamanho:v('dbNPCTamanho'),pesoCorporal:v('dbNPCPesoCorporal'),sociedade:v('dbNPCSociedade'),carreira:v('dbNPCCarreira'),conceito:v('dbNPCConceito'),
  classeSocial:v('dbNPCClasse'),recursos:v('dbNPCRecursos'),FOR:Number(v('dbNPCFOR'))||10,CON:Number(v('dbNPCCON'))||10,TAM:Number(v('dbNPCTAM'))||10,
- DES:Number(v('dbNPCDES'))||10,INT:Number(v('dbNPCINT'))||10,POD:Number(v('dbNPCPOD'))||10,CAR:Number(v('dbNPCCAR'))||10,motivacao:v('dbNPCMotivacao'),
- valorMotivacao:Number(v('dbNPCValorMotivacao'))||0,periciasTexto:v('dbNPCPericias'),especializacoesTexto:v('dbNPCEspecializacoes'),armasTexto:v('dbNPCArmas'),
+ DES:Number(v('dbNPCDES'))||10,INT:Number(v('dbNPCINT'))||10,POD:Number(v('dbNPCPOD'))||10,CAR:Number(v('dbNPCCAR'))||10,
+ atributosRolados:!!document.getElementById('dbNPCAtributosRolados')?.checked||temDados,formulasAtributos:formulas,
+ motivacao:v('dbNPCMotivacao'),valorMotivacao:Number(v('dbNPCValorMotivacao'))||0,
+ periciasTexto:v('dbNPCPericias'),especializacoesTexto:v('dbNPCEspecializacoes'),armasTexto:v('dbNPCArmas'),
+ alcancesAtaques:v('dbNPCAlcances'),habilidadesTexto:v('dbNPCHabilidades'),equipamentoBaseTexto:v('dbNPCEquipBase'),
  inventarioTexto:v('dbNPCInventario'),selecionavelCombate:document.getElementById('dbNPCSelecionavel').checked,imagem:v('dbNPCImagem'),descricao:v('dbNPCDescricao')};
  const antigo=npcsDB.find(x=>x.id===orig);if(antigo?.estadoCombate)n.estadoCombate=antigo.estadoCombate;
  if(orig&&orig!==id)await deleteDoc(doc(db,'npcs',orig));await setDoc(doc(db,'npcs',id),n,{merge:false});
  const ix=npcsDB.findIndex(x=>x.id===orig||x.id===id);if(ix>=0)npcsDB[ix]=n;else npcsDB.push(n);
- npcsDB.sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));fecharNPCBancoModal_();renderizarBancoNPCs_();renderizarBatalhaCompartilhada_();somSalvar_();
+ npcsDB.sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));fecharNPCBancoModal_();renderizarBancoNPCs_();renderizarFichasEntidadesMestre_();renderizarBatalhaCompartilhada_();somSalvar_();
 };
 
 function proximoNomeDuplicadoNPC_(nome){
@@ -12958,7 +13076,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.9.1: correção de login após reorganização das abas -->
+<!-- Mesa Estelar v46.9.2: consolidação NPC/criaturas, atributos rolados, nomes únicos e Primeiros Socorros voluntários -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
