@@ -396,7 +396,7 @@
                 <button class="tab-btn" id="mercadoTabBtn" onclick="mostrarAba('mercado', this)" data-i18n="tabMercado">🛒 Mercado</button>
                 <button class="tab-btn" id="batalhaTabBtn" onclick="mostrarAba('batalha', this)">⚔️ Combate</button>
                 <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
-                <button class="tab-btn hidden" id="laboratorioTabBtn" onclick="mostrarAba('laboratorio-combate', this)">🧪 Nova Batalha</button>
+                <button class="tab-btn hidden" id="laboratorioTabBtn" onclick="mostrarAba('laboratorio-combate', this)">🧪 Combate Experimental</button>
                 <button class="tab-btn hidden" id="escudoTabBtn" onclick="mostrarAba('escudo', this)" data-i18n="tabGM">🛡️ Escudo do Mestre</button>
             </div>
 
@@ -411,12 +411,12 @@
             <div id="laboratorio-combate" class="tab-content">
                 <div class="form-section">
                     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                        <div><h2 style="margin:0 0 5px;">🧪 Novo Combate · Laboratório</h2>
-                        <p style="margin:0;color:#aaa;max-width:900px;">Protótipo paralelo e exclusivo do mestre. Não altera a batalha real. Coordenadas contínuas em metros, sem casas obrigatórias.</p></div>
+                        <div><h2 style="margin:0 0 5px;">🧪 Combate · Laboratório</h2>
+                        <p style="margin:0;color:#aaa;max-width:900px;">Protótipo paralelo e exclusivo do mestre. Não altera o combate real. Coordenadas contínuas em metros, sem casas obrigatórias.</p></div>
                         <span style="padding:5px 9px;border-radius:8px;background:rgba(255,193,7,.10);border:1px solid rgba(255,193,7,.35);color:#ffd166;">EXPERIMENTAL</span>
                     </div>
                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px;">
-                        <button class="btn-small btn-select" onclick="labCarregarBatalhaAtual_()">⚔️ Carregar batalha atual</button>
+                        <button class="btn-small btn-select" onclick="labCarregarBatalhaAtual_()">⚔️ Carregar combate atual</button>
                         <button class="btn-small" onclick="labAdicionarBoneco_()">🎯 Boneco de treino</button>
                         <button class="btn-small" onclick="labCentralizarTokens_()">◎ Reorganizar</button>
                         <button class="btn-small" onclick="labPosicoesAleatorias_()">🎲 Posições aleatórias</button>
@@ -6427,6 +6427,7 @@ function labCarregarLocal_(){
             }
         }
     }catch(_){}
+    labSanearEstado_();
 }
 function labTamanhoTokenM_(c){
     const tam=Number(c?.atributos?.TAM||10);
@@ -6473,6 +6474,30 @@ function labGarantirSnapshotCombate_(t){
     }
     return t.combateLab;
 }
+
+function labSnapshotChar_(c){
+    if(!c)return null;
+    try{
+        const inv=c.inventario||{};
+        return {
+            id:c.id,nome:c.nome,imagem:c.imagem,tipo:c.tipo,
+            __npcTemporario:!!c.__npcTemporario,__criaturaTemporaria:!!c.__criaturaTemporaria,
+            npcBancoId:c.npcBancoId,criaturaBancoId:c.criaturaBancoId,
+            atributos:JSON.parse(JSON.stringify(c.atributos||{})),
+            bonus:JSON.parse(JSON.stringify(c.bonus||{})),
+            pericias:JSON.parse(JSON.stringify(c.pericias||{})),
+            especializacoes:JSON.parse(JSON.stringify(c.especializacoes||{})),
+            armasNaturais:JSON.parse(JSON.stringify(c.armasNaturais||[])),
+            ataquesNaturais:JSON.parse(JSON.stringify(c.ataquesNaturais||[])),
+            mapaPericiaAtaques:JSON.parse(JSON.stringify(c.mapaPericiaAtaques||{})),
+            combate:JSON.parse(JSON.stringify(c.combate||{})),
+            inventario:{
+                equipado:JSON.parse(JSON.stringify(inv.equipado||[])),
+                bolso:JSON.parse(JSON.stringify(inv.bolso||[]))
+            }
+        };
+    }catch(_){return null;}
+}
 function labTokenDeParticipante_(p,i=0){
     const c=batalhaCharLocal_(p.id),mov=labHeuristicaMovimento_(p,c);
     const max=Math.max(0,Number(p?.acoesMax||obterPAMaxCombate_(c)||2));
@@ -6484,7 +6509,8 @@ function labTokenDeParticipante_(p,i=0){
         modoMovimento:mov.terra>0?'terrestre':mov.voo>0?'voo':mov.nat>0?'natacao':'imovel',
         alcanceAtaqueMax:labAlcanceMax_(c),iniciativaLab:null,
         iniciativaBonus:Math.floor((Number(c?.atributos?.INT||10)+Number(c?.atributos?.DES||10))/2),
-        combateLab:labCriarSnapshotCombate_(c)};
+        combateLab:labCriarSnapshotCombate_(c),
+        charLab:labSnapshotChar_(c)};
 }
 window.labCarregarBatalhaAtual_=function(){
     if(!batalhaEhMestre_())return;
@@ -6495,8 +6521,9 @@ window.labCarregarBatalhaAtual_=function(){
         const valido=(a.modoMovimento==='voo'&&n.movimentoVoo>0)||(a.modoMovimento==='natacao'&&n.movimentoNatacao>0)||(a.modoMovimento==='terrestre'&&n.movimentoTerrestre>0);
         return {...n,x:a.x,y:a.y,angulo:a.angulo,acoesAtuaisLab:Number.isFinite(Number(a.acoesAtuaisLab))?Math.min(n.acoesMaxLab,Number(a.acoesAtuaisLab)):n.acoesMaxLab,
             movimentoGratisDisponivel:a.movimentoGratisDisponivel!==false,modoMovimento:valido?a.modoMovimento:n.modoMovimento,
-            iniciativaLab:Number.isFinite(Number(a.iniciativaLab))?Number(a.iniciativaLab):null,
-            combateLab:a.combateLab?JSON.parse(JSON.stringify(a.combateLab)):n.combateLab};});
+            iniciativaLab:(a.iniciativaLab!==null&&a.iniciativaLab!==''&&Number.isFinite(Number(a.iniciativaLab)))?Number(a.iniciativaLab):null,
+            combateLab:a.combateLab?JSON.parse(JSON.stringify(a.combateLab)):n.combateLab,
+            charLab:n.charLab||a.charLab||null};});
     if(!haviaLayout && labEstado_.fase!=='combate'){
         // Primeira carga: espalha automaticamente, como no mapa antigo.
         const colocados=[];
@@ -6552,6 +6579,31 @@ window.labResetarAcoes_=function(){
     for(const t of labEstado_.tokens||[]){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=!t.livreMestre&&labMovimentoPorAcao_(t)>0;}
     labSalvarLocal_();labRender_();
 };
+
+function labSanearEstado_(){
+    labEstado_.tokens=Array.isArray(labEstado_.tokens)?labEstado_.tokens:[];
+    if(!Array.isArray(labEstado_.ordemIniciativa))labEstado_.ordemIniciativa=[];
+    const ids=new Set(labEstado_.tokens.map(t=>String(t.id)));
+    labEstado_.ordemIniciativa=labEstado_.ordemIniciativa.filter(id=>ids.has(String(id)));
+    if(labEstado_.fase==='combate'&&!labEstado_.ordemIniciativa.length){
+        // A page reload must not leave the UI claiming there is a combat
+        // without a usable initiative order.
+        const cs=labEstado_.tokens.filter(t=>!String(t.id).startsWith('dummy:')&&t.iniciativaLab!==null&&t.iniciativaLab!==undefined);
+        cs.sort((a,b)=>Number(b.iniciativaLab||0)-Number(a.iniciativaLab||0));
+        labEstado_.ordemIniciativa=cs.map(t=>String(t.id));
+        if(!labEstado_.ordemIniciativa.length)labEstado_.fase='preparacao';
+    }
+    if(labEstado_.turnoIndex<0||labEstado_.turnoIndex>=Math.max(1,labEstado_.ordemIniciativa.length))labEstado_.turnoIndex=0;
+
+    const pend=labEstado_.pendenciaLab;
+    if(pend&&(!ids.has(String(pend.atacanteId))||!ids.has(String(pend.defensorId))))labEstado_.pendenciaLab=null;
+    const dano=labEstado_.danoPendenteLab;
+    if(dano&&(!ids.has(String(dano.atacanteId))||!ids.has(String(dano.defensorId))))labEstado_.danoPendenteLab=null;
+
+    if(labEstado_.selecionadoId&&!ids.has(String(labEstado_.selecionadoId)))labEstado_.selecionadoId='';
+    const atual=labEstado_.fase==='combate'?labTokenAtual_():null;
+    if(atual&&!labEstado_.selecionadoId)labEstado_.selecionadoId=String(atual.id);
+}
 function labTokensCombatentes_(){return (labEstado_.tokens||[]).filter(t=>!String(t.id).startsWith('dummy:'));}
 function labTokenAtual_(){
     if(labEstado_.fase!=='combate'||!labEstado_.ordemIniciativa?.length)return null;
@@ -6650,7 +6702,15 @@ function labCustoMovimento_(t,dist){if(t?.livreMestre)return {acoes:0,usaGratis:
 
 function labCharToken_(t){
     if(!t||String(t.id).startsWith('dummy:'))return null;
-    return batalhaCharLocal_(t.id);
+    const vivo=batalhaCharLocal_(t.id);
+    if(vivo){
+        // Refresh the local snapshot opportunistically whenever the real
+        // character is available.
+        const snap=labSnapshotChar_(vivo);
+        if(snap)t.charLab=snap;
+        return vivo;
+    }
+    return t.charLab||null;
 }
 function labPericiasAtaque_(t){
     const c=labCharToken_(t);if(!c)return [];
@@ -6819,10 +6879,11 @@ function labPodeDerrubar_(pend){
 function labEfeitosDisponiveis_(pend){
     if(!pend)return [];
     const critico=batalhaResultadoGradeValor_(pend.grauAtaque)>=3;
-    const out=[
-      {id:'escolher_localizacao',nome:'🎯 Escolher Localização'},
-      {id:'sangrar',nome:'🩸 Sangrar'}
-    ];
+    const out=[];
+    // In Mesa Estelar, ranged attacks may choose a hit location only on a
+    // Critical. Melee attacks retain normal access when a special effect is earned.
+    if(!labAtaqueEhDistancia_(pend.item)||critico)out.push({id:'escolher_localizacao',nome:'🎯 Escolher Localização'});
+    out.push({id:'sangrar',nome:'🩸 Sangrar'});
     if(labPodeDerrubar_(pend))out.push({id:'derrubar',nome:'💥 Derrubar'});
     if(critico)out.push({id:'contornar_armadura',nome:'🛡️ Contornar Armadura'});
     const defensor=(labEstado_.tokens||[]).find(t=>String(t.id)===String(pend.defensorId)),c=labCharToken_(defensor);
@@ -6931,12 +6992,17 @@ function labAplicarDanoLocal_(defensor,total,item,opcoes={}){
     const max=Math.max(1,Number(st.hitMax?.[local]||1));
     let ferimento='';
     if(local==='PV Global'){
-        if(depois<=0){st.morto=true;ferimento='Incapacitado';}
+        if(depois<=0){st.morto=true;st.inconsciente=false;ferimento='Morto';}
     }else if(depois<=-max){
-        st.ferimentos[local]='Grave';ferimento='Ferimento Grave';
-        if(!/Braço|Perna/.test(local))st.inconsciente=true;
+        st.ferimentos[local]='Grave';
+        if(/Cabeça|Peito|Abdômen/.test(local)){
+            st.morto=true;st.inconsciente=false;ferimento='Morto';
+        }else{
+            ferimento='Ferimento Grave';
+        }
     }else if(depois<=0){
         st.ferimentos[local]='Sério';ferimento='Ferimento Sério';
+        if(/Cabeça|Peito|Abdômen/.test(local))st.inconsciente=true;
     }
     const todos=Object.values(st.hit||{});
     if(todos.length&&todos.every(v=>Number(v)<=0))st.morto=true;
@@ -6946,7 +7012,7 @@ function labResumoPVHtml_(t,titulo='PV DO PERSONAGEM'){
     const st=labGarantirSnapshotCombate_(t);if(!st)return '';
     const locs=Object.keys(st.hitMax||{});
     if(!locs.length)return '';
-    const estados=[st.sangrando?'🩸 Sangrando':'',st.derrubado?'💥 Derrubado':'',st.armaDanificada?'⚔️ Arma danificada':'',st.inconsciente?'💤 Inconsciente':'',st.morto?'☠️ Morto':''].filter(Boolean).join(' · ');
+    const estados=[st.sangrando?'🩸 Sangrando':'',st.derrubado?'💥 Derrubado':'',st.armaDanificada?'⚔️ Arma danificada':'',st.inconsciente?'💤 Inconsciente':'',st.morto?'💀 Morto':''].filter(Boolean).join(' · ');
     return `<div style="margin-top:8px;color:#aee8ff;font-size:.86em;font-weight:700;">${escaparHtmlInventario_(titulo)} · ${escaparHtmlInventario_(t.nome)}${estados?` · <span style="color:#ffb0b0;">${estados}</span>`:''}</div><div style="display:grid;grid-template-columns:repeat(${Math.min(locs.length,7)},minmax(78px,1fr));gap:5px;margin-top:4px;">${locs.map(loc=>{
         const at=Number(st.hit?.[loc]??0),mx=Number(st.hitMax?.[loc]??0),pa=Number(st.armor?.[loc]||0);
         const bad=at<=0;
@@ -6960,7 +7026,7 @@ function labEstadoPublicoAlvoHtml_(t){
     const graves=Object.values(st.ferimentos||{}).filter(x=>x==='Grave').length;
     const serios=Object.values(st.ferimentos||{}).filter(x=>x==='Sério').length;
     const estados=[
-        st.morto?'☠️ Morto':'',
+        st.morto?'💀 Morto':'',
         !st.morto&&st.inconsciente?'💤 Inconsciente':'',
         graves?'🔴 Gravemente ferido':'',
         !graves&&serios?'🟠 Seriamente ferido':'',
@@ -6988,7 +7054,8 @@ window.labRolarDano_=function(){
     labSomDanoAplicado_(item);
     const armTxt=ap.pa?` · PA ${ap.pa}${ap.pen?` - Pen ${ap.pen}`:''} = ${ap.paEf}`:'';
     const locTxt=ap.roll?`Localização d20 [${ap.roll}] → ${ap.local}`:ap.local;
-    labEstado_.ultimoResultadoLab=`${getNome(item)||item.nome||'Ataque'} contra ${defensor.nome}: ${r.detalhes.join(' · ')} → ${r.total} bruto · ${locTxt}${armTxt} · dano final ${ap.final} · PV ${ap.antes} → ${ap.depois}${ap.ferimento?` · ${ap.ferimento}`:''}.`;
+    const publicoFerimento=stDef.morto?'💀 Morto':stDef.inconsciente?'💤 Inconsciente':ap.ferimento||'Ferido';
+    labEstado_.ultimoResultadoLab=`${getNome(item)||item.nome||'Ataque'} contra ${defensor.nome}: acerto em ${ap.local}${ap.final>0?` · dano aplicado`:''} · ${publicoFerimento}${stDef.sangrando?' · 🩸 Sangrando':''}${stDef.derrubado?' · 💥 Derrubado':''}.`;
     labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
     labEstado_.logLab=labEstado_.logLab.slice(0,20);
     labEstado_.danoPendenteLab=null;
@@ -6996,8 +7063,17 @@ window.labRolarDano_=function(){
     labAutoAvancarSeSemAcoes_();
 };
 window.labRolarAtaque_=function(){
-    if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return;
-    const t=labTokenAtual_(),c=labCharToken_(t);if(!t||!c)return;
+    try{
+    labSanearEstado_();
+    if(labEstado_.fase!=='combate'){notificar_('O Combate Experimental não está ativo.','aviso');return;}
+    if(labEstado_.pendenciaLab||labEstado_.danoPendenteLab){
+        notificar_('Há uma resolução de ataque pendente. Resolva-a antes de iniciar outro ataque.','aviso');labRender_();return;
+    }
+    const t=labTokenAtual_(),c=labCharToken_(t);
+    if(!t){notificar_('Não foi possível localizar o participante da oportunidade atual.','erro');return;}
+    if(!c){
+        notificar_(`Os dados de ${t.nome} ainda não foram carregados. Recarregue os participantes do combate uma vez.`,'aviso',5000);return;
+    }
     if(Number(t.acoesAtuaisLab||0)<=0){notificar_('Sem AÇ restantes.','aviso');return;}
     labGarantirPrefsAtaque_(t);
     const per=labPericiaPorToken_(t,t.periciaLab),item=labItemSelecionado_(t);
@@ -7048,6 +7124,10 @@ window.labRolarAtaque_=function(){
         },420);
     }else if(!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab){
         labAutoAvancarSeSemAcoes_();
+    }
+    }catch(err){
+        console.error('Combate Experimental · ataque',err);
+        notificar_(`O ataque não pôde ser concluído: ${err?.message||err}`,'erro',5500);
     }
 };
 function labRenderActionPanel_(){
@@ -7152,13 +7232,14 @@ function labOverlayMovimentoHtml_(t,ppm){
     if(alc>0){const r=alc*ppm;h+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${2*r}px;height:${2*r}px;border-radius:50%;border:2px dotted rgba(255,105,105,.82);pointer-events:none"></div>`;}return h;
 }
 function labRender_(){
+    labSanearEstado_();
     const map=document.getElementById('labMetricMap');if(!map)return;const ppm=Number(labEstado_.pxPorMetro||48);
     map.style.width=`${labEstado_.larguraM*ppm}px`;map.style.height=`${labEstado_.alturaM*ppm}px`;map.style.backgroundColor=labEstado_.fundo;map.style.backgroundImage=labBackgroundImage_();map.style.backgroundSize=`${ppm}px ${ppm}px,${ppm}px ${ppm}px,56px 56px`;
     const st=labEstado_.tokens.find(t=>String(t.id)===String(labEstado_.selecionadoId)),overlay=labOverlayMovimentoHtml_(st,ppm);
     const tokens=labEstado_.tokens.map(t=>{const d=Math.max(24,t.diametroM*ppm),sel=String(t.id)===String(labEstado_.selecionadoId),turno=labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id);
         const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
         const alvoAtual=labEstado_.fase==='combate'&&String(labTokenAtual_()?.alvoLab)===String(t.id);
-        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}${t.combateLab?.morto?' · ☠️':t.combateLab?.inconsciente?' · 💤':''}</div></div>`;}).join('');
+        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${t.iniciativaLab!==null&&t.iniciativaLab!==''&&Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}${t.combateLab?.morto?' · 💀':t.combateLab?.inconsciente?' · 💤':''}</div></div>`;}).join('');
     map.innerHTML=overlay+tokens;labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
@@ -7192,6 +7273,9 @@ window.labPointerDown_=function(ev,id){
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
 };
 labCarregarLocal_();
+setTimeout(()=>{try{labSanearEstado_();labRender_();}catch(_){}},250);
+window.addEventListener('load',()=>setTimeout(()=>{try{labSanearEstado_();labRender_();}catch(_){}},700));
+
 
 
 
@@ -14314,7 +14398,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.18.0: Combate renomeado, PV privados, efeitos automáticos, derrubar por porte e posições aleatórias -->
+<!-- Mesa Estelar v46.19.0: persistência pós-reload, morte central, localização à distância só em crítico e recuperação de ações travadas -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
