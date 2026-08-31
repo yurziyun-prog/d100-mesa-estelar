@@ -6491,10 +6491,7 @@ function labSnapshotChar_(c){
             ataquesNaturais:JSON.parse(JSON.stringify(c.ataquesNaturais||[])),
             mapaPericiaAtaques:JSON.parse(JSON.stringify(c.mapaPericiaAtaques||{})),
             combate:JSON.parse(JSON.stringify(c.combate||{})),
-            inventario:{
-                equipado:JSON.parse(JSON.stringify(inv.equipado||[])),
-                bolso:JSON.parse(JSON.stringify(inv.bolso||[]))
-            }
+            inventario:JSON.parse(JSON.stringify(inv||{}))
         };
     }catch(_){return null;}
 }
@@ -6831,7 +6828,9 @@ function labValorDefesa_(c,per){
         bruto=obterValorRegistroPericia_(c,per.id,per.__especializacao);
     }
     const arm=valorPericiaComArmadura_(c,per,bruto);
-    const extra=batalhaPenalidadeCaido_(c)+(typeof batalhaPenalidadeTratamento_==='function'?batalhaPenalidadeTratamento_(c):0)+batalhaPenalidadeInfeccao_(c);
+    const token=(labEstado_.tokens||[]).find(t=>String(t.id)===String(c.id));
+    const penalTratamento=token?.primeirosSocorrosLab?2:0;
+    const extra=batalhaPenalidadeCaido_(c)+(typeof batalhaPenalidadeTratamento_==='function'?batalhaPenalidadeTratamento_(c):0)+penalTratamento+batalhaPenalidadeInfeccao_(c);
     return Math.max(0,Number(aplicarDificuldadeEFadiga_(c,arm.valor,'padrao',extra).valor||0));
 }
 window.labMudarDefesa_=function(v){
@@ -6840,6 +6839,140 @@ window.labMudarDefesa_=function(v){
     d.defesaLab=String(v||'');labSalvarLocal_();labRender_();
 };
 
+
+function labTokenPorId_(id){return (labEstado_.tokens||[]).find(t=>String(t.id)===String(id))||null;}
+function labFeridasTrataveis_(t){
+    const st=labGarantirSnapshotCombate_(t);if(!st||st.morto)return [];
+    return Object.keys(st.hitMax||{}).map(local=>({
+        local,max:Number(st.hitMax?.[local]||0),atual:Number(st.hit?.[local]??st.hitMax?.[local]??0)
+    })).filter(x=>x.atual<x.max);
+}
+function labPrimeirosSocorrosPericia_(t){
+    const c=labCharToken_(t);if(!c)return null;
+    return batalhaPrimeirosSocorrosPericia_(c);
+}
+function labPrimeirosSocorrosValor_(t,dificuldade='padrao'){
+    const c=labCharToken_(t),per=labPrimeirosSocorrosPericia_(t);
+    if(!c||!per)return {valor:0,nome:'Primeiros Socorros',aj:null};
+    const base=obterValorRegistroPericia_(c,per.id,!!per.__especializacao);
+    const aj=aplicarDificuldadeEFadiga_(c,base,dificuldade,0);
+    return {valor:Math.max(0,Number(aj?.valor||0)),nome:getNome(per)||'Primeiros Socorros',aj};
+}
+function labTemKitPrimeirosSocorros_(t){
+    const c=labCharToken_(t);if(!c)return false;
+    try{return !!batalhaKitPrimeirosSocorros_(c);}catch(_){return false;}
+}
+function labPodePrimeirosSocorros_(t){
+    const st=labGarantirSnapshotCombate_(t);
+    return !!t&&!String(t.id).startsWith('dummy:')&&!st?.morto&&!st?.inconsciente&&!!labPrimeirosSocorrosPericia_(t);
+}
+window.labLevantar_=function(){
+    if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return;
+    const t=labTokenAtual_(),st=labGarantirSnapshotCombate_(t);if(!t||!st?.derrubado)return;
+    if(t.primeirosSocorrosLab){notificar_('Primeiros Socorros em andamento impedem outra ação proativa.','aviso');return;}
+    if(Number(t.acoesAtuaisLab||0)<=0){notificar_('Sem AÇ para levantar.','aviso');return;}
+    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);st.derrubado=false;
+    labEstado_.ultimoResultadoLab=`${t.nome} gastou 1 AÇ e se levantou.`;
+    labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
+    labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();
+};
+window.labAbrirPrimeirosSocorros_=function(){
+    const t=labTokenAtual_();if(!labPodePrimeirosSocorros_(t))return;
+    if(t.primeirosSocorrosLab)return;
+    const alvos=(labEstado_.tokens||[]).filter(x=>labFeridasTrataveis_(x).length&&!labGarantirSnapshotCombate_(x)?.morto);
+    if(!alvos.length){notificar_('Não há ferimentos tratáveis no combate.','aviso');return;}
+    const atual=alvos.find(x=>String(x.id)===String(t.id))||alvos[0];
+    const feridas=labFeridasTrataveis_(atual);
+    t.acaoAuxLab={tipo:'primeiros_socorros',alvoId:String(atual.id),local:feridas[0]?.local||''};
+    labSalvarLocal_();labRender_();
+};
+window.labCancelarAcaoAux_=function(){
+    const t=labTokenAtual_();if(!t)return;t.acaoAuxLab=null;labSalvarLocal_();labRender_();
+};
+window.labPSSelecionarAlvo_=function(v){
+    const t=labTokenAtual_();if(!t?.acaoAuxLab)return;
+    t.acaoAuxLab.alvoId=String(v||'');
+    const alvo=labTokenPorId_(t.acaoAuxLab.alvoId),f=labFeridasTrataveis_(alvo);
+    t.acaoAuxLab.local=f[0]?.local||'';
+    labSalvarLocal_();labRender_();
+};
+window.labPSSelecionarLocal_=function(v){
+    const t=labTokenAtual_();if(!t?.acaoAuxLab)return;t.acaoAuxLab.local=String(v||'');labSalvarLocal_();labRender_();
+};
+window.labPSIniciar_=function(){
+    if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return;
+    const t=labTokenAtual_();if(!t||!labPodePrimeirosSocorros_(t)||Number(t.acoesAtuaisLab||0)<=0)return;
+    const a=t.acaoAuxLab,alvo=labTokenPorId_(a?.alvoId);
+    if(!a||!alvo||!labFeridasTrataveis_(alvo).some(x=>x.local===a.local)){
+        notificar_('Escolha um alvo e uma localização ferida.','aviso');return;
+    }
+    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);
+    t.primeirosSocorrosLab={alvoId:String(alvo.id),alvoNome:alvo.nome,local:a.local,turnosInvestidos:1};
+    t.acaoAuxLab=null;
+    labEstado_.ultimoResultadoLab=`${t.nome} iniciou Primeiros Socorros em ${alvo.nome} (${a.local}). A oportunidade termina; na próxima poderá concluir ou continuar.`;
+    labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
+    labSalvarLocal_();labRender_();
+    setTimeout(()=>{if(labTokenAtual_()===t&&!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab)window.labEncerrarOportunidade_();},320);
+};
+window.labPSContinuar_=function(){
+    const t=labTokenAtual_(),ps=t?.primeirosSocorrosLab;if(!t||!ps||Number(t.acoesAtuaisLab||0)<=0)return;
+    const n=Math.max(1,Number(ps.turnosInvestidos||1));if(n>=3)return;
+    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);ps.turnosInvestidos=n+1;
+    labEstado_.ultimoResultadoLab=`${t.nome} continuou Primeiros Socorros em ${ps.alvoNome} (${ps.local}). Tempo: ${ps.turnosInvestidos}/3 turnos.`;
+    labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
+    labSalvarLocal_();labRender_();
+    setTimeout(()=>{if(labTokenAtual_()===t)window.labEncerrarOportunidade_();},320);
+};
+function labReavaliarFerimento_(t,local){
+    const st=labGarantirSnapshotCombate_(t);if(!st)return;
+    const max=Math.max(1,Number(st.hitMax?.[local]||1)),at=Number(st.hit?.[local]??max);
+    if(at>0){delete st.ferimentos?.[local];}
+    else if(at<=-max){
+        st.ferimentos=st.ferimentos||{};st.ferimentos[local]='Grave';
+        if(/Cabeça|Peito|Abdômen/.test(local)){st.morto=true;st.inconsciente=false;}
+    }else{
+        st.ferimentos=st.ferimentos||{};st.ferimentos[local]='Sério';
+        if(/Cabeça|Peito|Abdômen/.test(local))st.inconsciente=true;
+    }
+}
+window.labPSConcluir_=function(){
+    const t=labTokenAtual_(),ps=t?.primeirosSocorrosLab;if(!t||!ps||Number(t.acoesAtuaisLab||0)<=0)return;
+    const alvo=labTokenPorId_(ps.alvoId),st=labGarantirSnapshotCombate_(alvo);
+    if(!alvo||!st||st.morto){t.primeirosSocorrosLab=null;labSalvarLocal_();labRender_();notificar_('O alvo não pode mais receber este atendimento.','aviso');return;}
+    const max=Math.max(1,Number(st.hitMax?.[ps.local]||1)),atual=Number(st.hit?.[ps.local]??max);
+    const kit=labTemKitPrimeirosSocorros_(t),turnos=Math.max(1,Math.min(3,Number(ps.turnosInvestidos||1)));
+    const dif=kit?(turnos>=3?'muito_facil':turnos===2?'facil':'padrao'):'padrao';
+    const info=labPrimeirosSocorrosValor_(t,dif),roll=1+Math.floor(Math.random()*100),r=classificarD100_(info.valor,roll);
+    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);
+    try{somDado_();if(r.grau==='Crítico')somMagico_();else if(r.grau==='Fiasco')somFiasco_();}catch(_){}
+    let res='Falha: nenhum benefício.';
+    if(r.grau==='Fiasco'){
+        st.hit[ps.local]=atual-1;labReavaliarFerimento_(alvo,ps.local);res='Fiasco: +1 de dano na localização.';
+    }else if(batalhaResultadoGradeValor_(r.grau)>=2){
+        st.sangrando=false;st.tratados=st.tratados||{};
+        if(r.grau==='Crítico'){
+            st.hit[ps.local]=max;delete st.ferimentos?.[ps.local];delete st.tratados?.[ps.local];
+            if(/Cabeça|Peito|Abdômen/.test(ps.local))st.inconsciente=false;
+            res=`Crítico: ${ps.local} restaurado totalmente.`;
+        }else if(atual>0){
+            const cura=1+Math.floor(Math.random()*3),real=Math.min(cura,max-atual);
+            st.hit[ps.local]=Math.min(max,atual+cura);res=`Recuperou ${real} PV.`;
+        }else if(atual>-max){
+            st.tratados[ps.local]=true;
+            if(/Cabeça|Peito|Abdômen/.test(ps.local))st.inconsciente=false;
+            res='Ferimento Sério estabilizado; nenhuma recuperação imediata de PV.';
+        }else{
+            st.tratados[ps.local]=true;res='Ferimento Grave estabilizado; nenhuma recuperação imediata de PV.';
+        }
+        labReavaliarFerimento_(alvo,ps.local);
+        if(st.tratados?.[ps.local]&&/Cabeça|Peito|Abdômen/.test(ps.local)&&!st.morto)st.inconsciente=false;
+    }
+    labEstado_.ultimoResultadoLab=`${t.nome}: Primeiros Socorros em ${alvo.nome} (${ps.local}) ${roll}/${info.valor} → ${r.grau}. ${res} ${kit?'Com kit':'Sem kit'} · tempo ${turnos}/3.`;
+    labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
+    t.primeirosSocorrosLab=null;
+    labSalvarLocal_();labRender_();
+    setTimeout(()=>{if(labTokenAtual_()===t)window.labEncerrarOportunidade_();},420);
+};
 function labEfeitosQuantidade_(grauAtaque,grauDefesa='Falha',semDefesa=false){
     const ag=batalhaResultadoGradeValor_(grauAtaque);
     const dg=semDefesa?1:batalhaResultadoGradeValor_(grauDefesa);
@@ -7195,6 +7328,52 @@ function labRenderActionPanel_(){
 
     const t=labTokenAtual_(),c=labCharToken_(t);
     if(!t||!c){el.style.display='none';return;}
+
+    if(t.primeirosSocorrosLab){
+        const ps=t.primeirosSocorrosLab,alvo=labTokenPorId_(ps.alvoId),st=labGarantirSnapshotCombate_(alvo);
+        if(!alvo||!st||st.morto){
+            t.primeirosSocorrosLab=null;labSalvarLocal_();
+        }else{
+            const kit=labTemKitPrimeirosSocorros_(t),n=Math.max(1,Math.min(3,Number(ps.turnosInvestidos||1)));
+            const dif=kit?(n>=3?'Muito Fácil':n===2?'Fácil':'Padrão'):'Padrão';
+            el.innerHTML=`<div style="padding:2px 0;">
+              <strong style="color:#9ee7ff;">🩹 Primeiros Socorros ${n}/3</strong> · ${escaparHtmlInventario_(t.nome)} tratando ${escaparHtmlInventario_(alvo.nome)} (${escaparHtmlInventario_(ps.local)})
+              <div style="margin-top:5px;color:#c7c7d2;">${kit?'Kit disponível':'Sem kit'} · dificuldade-base na conclusão: <b>${dif}</b>. Enquanto trata, defesas sofrem +2 graus de dificuldade.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;">
+                <button class="btn-small btn-select" onclick="labPSConcluir_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:48px;min-width:190px;font-size:1em;">🩹 Concluir (1 AÇ)</button>
+                ${n<3?`<button class="btn-small" onclick="labPSContinuar_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:48px;min-width:220px;font-size:1em;">⌛ Continuar atendimento (${n}/3)</button>`:''}
+              </div>
+              ${labResumoPVHtml_(t,'SEUS PV')}
+              ${labEstadoPublicoAlvoHtml_(alvo)}
+            </div>`;
+            return;
+        }
+    }
+
+    if(t.acaoAuxLab?.tipo==='primeiros_socorros'){
+        const alvos=(labEstado_.tokens||[]).filter(x=>labFeridasTrataveis_(x).length&&!labGarantirSnapshotCombate_(x)?.morto);
+        const alvo=labTokenPorId_(t.acaoAuxLab.alvoId),feridas=labFeridasTrataveis_(alvo);
+        if(!alvos.length){t.acaoAuxLab=null;labSalvarLocal_();}
+        else{
+            if(!alvo||!alvos.some(x=>String(x.id)===String(alvo.id))){
+                t.acaoAuxLab.alvoId=String(alvos[0].id);t.acaoAuxLab.local=labFeridasTrataveis_(alvos[0])[0]?.local||'';
+            }
+            const alvo2=labTokenPorId_(t.acaoAuxLab.alvoId),feridas2=labFeridasTrataveis_(alvo2);
+            if(!feridas2.some(x=>x.local===t.acaoAuxLab.local))t.acaoAuxLab.local=feridas2[0]?.local||'';
+            el.innerHTML=`<div><strong style="color:#9ee7ff;">🩹 Iniciar Primeiros Socorros</strong>
+              <div style="display:grid;grid-template-columns:minmax(180px,1fr) minmax(180px,1fr) auto auto;gap:8px;align-items:end;margin-top:8px;">
+                <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Paciente</small><select onchange="labPSSelecionarAlvo_(this.value)" style="width:100%;margin:0;">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(t.acaoAuxLab.alvoId)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
+                <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Localização</small><select onchange="labPSSelecionarLocal_(this.value)" style="width:100%;margin:0;">${feridas2.map(x=>`<option value="${escaparHtmlInventario_(x.local)}" ${x.local===t.acaoAuxLab.local?'selected':''}>${escaparHtmlInventario_(x.local)}</option>`).join('')}</select></label>
+                <button class="btn-small btn-select" onclick="labPSIniciar_()" style="height:48px;min-width:200px;font-size:1em;">🩹 Iniciar (1 AÇ)</button>
+                <button class="btn-small" onclick="labCancelarAcaoAux_()" style="height:48px;min-width:110px;font-size:1em;">Cancelar</button>
+              </div>
+              <div style="margin-top:7px;color:#bbb;">Iniciar o atendimento encerra automaticamente esta oportunidade. Na próxima oportunidade, escolha concluir ou continuar. Máximo 3 turnos.</div>
+              ${labResumoPVHtml_(t,'SEUS PV')}
+            </div>`;
+            return;
+        }
+    }
+
     labGarantirPrefsAtaque_(t);
     const skills=labPericiasAtaque_(t),per=labPericiaPorToken_(t,t.periciaLab),eq=batalhaEquipamentos_(c,per,t.equipamentoLab);
     const alvos=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id));
@@ -7209,6 +7388,10 @@ function labRenderActionPanel_(){
         <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Arma / ataque</small><select onchange="labMudarAtaquePref_('equipamentoLab',this.value)" style="width:100%;margin:0;">${eq.map(x=>`<option value="${escaparHtmlInventario_(x.valor)}" ${x.valor===t.equipamentoLab?'selected':''}>${escaparHtmlInventario_(x.rotulo)}</option>`).join('')||'<option>—</option>'}</select></label>
         <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Alvo</small><select onchange="labSelecionarAlvo_(this.value)" style="width:100%;margin:0;">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(t.alvoLab)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
         <label style="margin:0;"><small style="display:block;margin-bottom:4px;visibility:hidden;">Ação</small><button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;min-width:0;padding:0 12px;font-size:1em;margin:0;box-sizing:border-box;white-space:nowrap;">🎲 Atacar (1 AÇ)</button></label>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;">
+        ${labGarantirSnapshotCombate_(t)?.derrubado?`<button class="btn-small" onclick="labLevantar_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:160px;font-size:.96em;">⬆️ Levantar (1 AÇ)</button>`:''}
+        ${labPodePrimeirosSocorros_(t)&&Number(t.acoesAtuaisLab||0)>0?`<button class="btn-small" onclick="labAbrirPrimeirosSocorros_()" style="height:44px;min-width:210px;font-size:.96em;">🩹 Primeiros Socorros</button>`:''}
       </div>
       ${t?labResumoPVHtml_(t,'SEUS PV'):''}
       ${alvo?labEstadoPublicoAlvoHtml_(alvo):''}
@@ -7286,6 +7469,7 @@ window.labPointerDown_=function(ev,id){
     if(!prep&&String(at?.id)!==String(t.id)){
         at.alvoLab=String(t.id);labApontarPara_(at,t);labEstado_.selecionadoId=String(at.id);labSalvarLocal_();labRender_();return;
     }
+    if(!prep&&t.primeirosSocorrosLab){notificar_('Primeiros Socorros em andamento impedem deslocamento e outras ações proativas.','aviso');return;}
     const maxM=(prep||t.livreMestre)?999:labMovimentoMaxM_(t);if(!prep&&maxM<=0&&!t.livreMestre){notificar_(`${t.nome} é imóvel em combate. Na preparação o mestre pode posicioná-lo livremente.`,'aviso');return;}
     const move=e=>{let x=(e.clientX-rect.left)/ppm,y=(e.clientY-rect.top)/ppm,dx=x-origem.x,dy=y-origem.y,dist=Math.hypot(dx,dy);if(!prep&&!t.livreMestre&&dist>maxM){const f=maxM/dist;x=origem.x+dx*f;y=origem.y+dy*f;}t.x=Math.max(0,Math.min(labEstado_.larguraM,x));t.y=Math.max(0,Math.min(labEstado_.alturaM,y));labRender_();};
     const up=()=>{window.removeEventListener('pointermove',move);
@@ -14424,7 +14608,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.19.1: correção da Besta Ululante, Sangrar sem cauterização, alinhamento do ataque e efeitos sem travamento -->
+<!-- Mesa Estelar v46.20.0: levantar por 1 AÇ e Primeiros Socorros completos no Combate Experimental -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
