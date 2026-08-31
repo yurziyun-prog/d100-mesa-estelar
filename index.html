@@ -7942,7 +7942,7 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
                 especiaisRestantes:especiais,escolhasEspeciais:[],
                 criadoEm:new Date().toISOString()
             };
-            batalhaUltimoResultado_[id]+=' · alvo sem reação possível: dano liberado';
+            batalhaUltimoResultado_[id]+=' · Alvo sem reação possível: dano liberado.';
             batalhaLogPush_(
                 batalhaEstado_,
                 `${p.nome} atacou ${alvo?.nome||'o alvo'} → ${r.grau}; alvo sem reação possível.`,
@@ -7961,6 +7961,7 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
                 defensorId:alvoId,defensorNome:alvo?.nome||'Alvo',
                 ataque:ataqueInfo
             };
+            batalhaUltimoResultado_[id]+=` · ⏳ Aguardando defesa de ${alvo?.nome||'Alvo'}.`;
             batalhaLogPush_(
                 batalhaEstado_,
                 `${p.nome} atacou ${alvo?.nome||'o alvo'} → ${r.grau}.`,
@@ -7973,6 +7974,9 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
             );
         }
     }else{
+        if(periciaEhOfensiva_(per) && !r.sucesso){
+            batalhaUltimoResultado_[id]+=' · O ataque falhou; não há defesa a resolver.';
+        }
         batalhaLogPush_(
             batalhaEstado_,
             `${p.nome}: ${getNome(per)} → ${r.grau}.`,
@@ -8007,7 +8011,10 @@ window.batalhaRolarD100_=async(id)=>{
     }else{
         somDado_();
         await batalhaEnviarAcao_(id,'teste',{prefs});
-        batalhaUltimoResultado_[id]='Teste enviado ao painel de batalha...';
+        // Não mostrar uma mensagem que pareça uma etapa mecânica real.
+        // O resultado verdadeiro virá do mestre via estado compartilhado:
+        // Falha/Fiasco ou "Aguardando defesa..." quando houver reação.
+        batalhaUltimoResultado_[id]='Rolando teste...';
         renderizarBatalhaCompartilhada_();
     }
 };
@@ -8749,7 +8756,7 @@ function renderizarBatalhaCompartilhada_(){
             const controles=(batalhaEhMestre_()&&pd&&cd)
                 ? `<div style="margin-top:9px;">${batalhaDefesaHtml_(pd,cd,pe)}</div>`
                 : '';
-            pend.innerHTML=`<div style="padding:10px 12px;border-radius:9px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ddd;">⏳ Aguardando reação de <strong>${escaparHtmlInventario_(pe.defensorNome||'defensor')}</strong> ao ataque de <strong>${escaparHtmlInventario_(pe.atacanteNome||'atacante')}</strong>.${controles}</div>`;
+            pend.innerHTML=`<div style="padding:10px 12px;border-radius:9px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ddd;">⏳ <strong>Aguardando defesa</strong> de <strong>${escaparHtmlInventario_(pe.defensorNome||'defensor')}</strong> contra o ataque de <strong>${escaparHtmlInventario_(pe.atacanteNome||'atacante')}</strong>.${controles}</div>`;
         }else pend.innerHTML='';
     }
 
@@ -13201,7 +13208,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.9.5: perícias de criaturas recalculadas, valores visíveis e defesa pendente robusta -->
+<!-- Mesa Estelar v46.9.6: resultado imediato do teste e mensagem explícita de defesa pendente -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
