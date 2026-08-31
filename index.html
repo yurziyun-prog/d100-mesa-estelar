@@ -1333,11 +1333,11 @@
       </div>
       <div style="margin:10px 0;padding:10px;border-radius:9px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);">
         <label style="display:flex;align-items:center;gap:8px;"><input id="crAtributosRolados" type="checkbox" style="width:auto;"> Gerar atributos por indivíduo</label>
-        <div style="display:grid;grid-template-columns:repeat(7,minmax(82px,1fr));gap:6px;margin-top:7px;">
-          <label>FOR fórmula<input id="crFormulaFOR" placeholder="3d6+8"></label><label>CON fórmula<input id="crFormulaCON" placeholder="3d6+4"></label>
-          <label>TAM fórmula<input id="crFormulaTAM" placeholder="2d6+6"></label><label>DES fórmula<input id="crFormulaDES" placeholder="3d6+6"></label>
-          <label>INT fórmula<input id="crFormulaINT" placeholder="2d6"></label><label>POD fórmula<input id="crFormulaPOD" placeholder="3d6"></label>
-          <label>CAR fórmula<input id="crFormulaCAR" placeholder="2d6"></label>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-top:10px;">
+          <label style="display:flex;flex-direction:column;gap:4px;"><span>FOR fórmula</span><input id="crFormulaFOR" placeholder="3d6+8"></label><label style="display:flex;flex-direction:column;gap:4px;"><span>CON fórmula</span><input id="crFormulaCON" placeholder="3d6+4"></label>
+          <label style="display:flex;flex-direction:column;gap:4px;"><span>TAM fórmula</span><input id="crFormulaTAM" placeholder="2d6+6"></label><label style="display:flex;flex-direction:column;gap:4px;"><span>DES fórmula</span><input id="crFormulaDES" placeholder="3d6+6"></label>
+          <label style="display:flex;flex-direction:column;gap:4px;"><span>INT fórmula</span><input id="crFormulaINT" placeholder="2d6"></label><label style="display:flex;flex-direction:column;gap:4px;"><span>POD fórmula</span><input id="crFormulaPOD" placeholder="3d6"></label>
+          <label style="display:flex;flex-direction:column;gap:4px;"><span>CAR fórmula</span><input id="crFormulaCAR" placeholder="2d6"></label>
         </div>
       </div>
       <label>Perícias (investimento)<textarea id="crPericias" rows="3"></textarea></label>
@@ -1388,11 +1388,11 @@
         </div>
         <div style="margin:10px 0;padding:10px;border-radius:9px;background:rgba(0,212,255,.05);border:1px solid rgba(0,212,255,.18);">
           <label style="display:flex;align-items:center;gap:8px;"><input id="dbNPCAtributosRolados" type="checkbox" style="width:auto;"> NPC genérico: gerar atributos por indivíduo</label>
-          <div style="display:grid;grid-template-columns:repeat(7,minmax(82px,1fr));gap:6px;margin-top:7px;">
-            <label>FOR fórmula<input id="dbNPCFormulaFOR" placeholder="3d6+8"></label><label>CON fórmula<input id="dbNPCFormulaCON" placeholder="3d6+4"></label>
-            <label>TAM fórmula<input id="dbNPCFormulaTAM" placeholder="3d6"></label><label>DES fórmula<input id="dbNPCFormulaDES" placeholder="3d6+2"></label>
-            <label>INT fórmula<input id="dbNPCFormulaINT" placeholder="3d6"></label><label>POD fórmula<input id="dbNPCFormulaPOD" placeholder="3d6"></label>
-            <label>CAR fórmula<input id="dbNPCFormulaCAR" placeholder="3d6"></label>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:10px;margin-top:10px;">
+            <label style="display:flex;flex-direction:column;gap:4px;"><span>FOR fórmula</span><input id="dbNPCFormulaFOR" placeholder="3d6+8"></label><label style="display:flex;flex-direction:column;gap:4px;"><span>CON fórmula</span><input id="dbNPCFormulaCON" placeholder="3d6+4"></label>
+            <label style="display:flex;flex-direction:column;gap:4px;"><span>TAM fórmula</span><input id="dbNPCFormulaTAM" placeholder="3d6"></label><label style="display:flex;flex-direction:column;gap:4px;"><span>DES fórmula</span><input id="dbNPCFormulaDES" placeholder="3d6+2"></label>
+            <label style="display:flex;flex-direction:column;gap:4px;"><span>INT fórmula</span><input id="dbNPCFormulaINT" placeholder="3d6"></label><label style="display:flex;flex-direction:column;gap:4px;"><span>POD fórmula</span><input id="dbNPCFormulaPOD" placeholder="3d6"></label>
+            <label style="display:flex;flex-direction:column;gap:4px;"><span>CAR fórmula</span><input id="dbNPCFormulaCAR" placeholder="3d6"></label>
           </div>
         </div>
         <label>Perícias — pontos investidos<textarea id="dbNPCPericias" rows="3"></textarea></label>
@@ -6400,11 +6400,10 @@ function atributosIndividuoDoModelo_(modelo,participante=null,tipo='npc'){
 }
 function criarNPCCombateDoBanco_(modelo,participante=null){
     if(!modelo)return null;
+    // O banco é somente o MODELO. Ferimentos/PV pertencem exclusivamente ao INDIVÍDUO.
     const combateSalvo=participante?.npcCombate&&typeof participante.npcCombate==='object'
         ? JSON.parse(JSON.stringify(participante.npcCombate))
-        : (modelo?.estadoCombate&&typeof modelo.estadoCombate==='object'
-            ? batalhaEstadoPersistenteNPC_(modelo.estadoCombate)
-            : {hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[]});
+        : {hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[],ferimentos:{},inconsciente:false,incapacitado:false,morto:false,ataquesBloqueadosTurnos:0,sangramentoAtivo:false,caido:false};
     if(!participante)delete combateSalvo.primeirosSocorrosEmAndamento;
     return {
         id:participante?.id||`npc:${modelo.id}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
@@ -6446,11 +6445,10 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
 }
 function criarCriaturaCombateDoBanco_(modelo,participante=null){
     if(!modelo)return null;
+    // O banco é somente o MODELO. Cada criatura adicionada à batalha nasce como um INDIVÍDUO limpo.
     const combateSalvo=participante?.criaturaCombate&&typeof participante.criaturaCombate==='object'
         ? JSON.parse(JSON.stringify(participante.criaturaCombate))
-        : (modelo?.estadoCombate&&typeof modelo.estadoCombate==='object'
-            ? batalhaEstadoPersistenteNPC_(modelo.estadoCombate)
-            : {hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[]});
+        : {hitLocations:{},armor:{},fadiga:'Fresh',armas:[],municao:[],ferimentos:{},inconsciente:false,incapacitado:false,morto:false,ataquesBloqueadosTurnos:0,sangramentoAtivo:false,caido:false};
     if(!participante)delete combateSalvo.primeirosSocorrosEmAndamento;
 
     const props={};
@@ -6963,24 +6961,17 @@ async function batalhaPersistirCombateChar_(char,participante){
         if(participante){
             participante.npcCombate=estadoSessao;
             participante.npcInventario=JSON.parse(JSON.stringify(char.inventario||{}));
+            participante.atributosIndividuo=JSON.parse(JSON.stringify(char.atributos||{}));
         }
-        const estadoBanco=batalhaEstadoPersistenteNPC_(estadoSessao);
-        const bancoId=char.npcBancoId||participante?.npcBancoId;
-        if(bancoId&&userData?.role==='mestre'){
-            const modelo=npcBancoPorId_(bancoId);
-            if(modelo)modelo.estadoCombate=estadoBanco;
-            await setDoc(doc(db,'npcs',String(bancoId)),{estadoCombate:estadoBanco},{mergeFields:['estadoCombate']});
-        }
+        // Importante: não gravar dano/ferimentos no modelo /npcs.
     }else if(char?.__criaturaTemporaria){
         const estadoSessao=JSON.parse(JSON.stringify(char.combate||{}));
-        if(participante)participante.criaturaCombate=estadoSessao;
-        const estadoBanco=batalhaEstadoPersistenteNPC_(estadoSessao);
-        const bancoId=char.criaturaBancoId||participante?.criaturaBancoId;
-        if(bancoId&&userData?.role==='mestre'){
-            const modelo=criaturaBancoPorId_(bancoId);
-            if(modelo)modelo.estadoCombate=estadoBanco;
-            await setDoc(doc(db,'criaturas',String(bancoId)),{estadoCombate:estadoBanco},{mergeFields:['estadoCombate']});
+        if(participante){
+            participante.criaturaCombate=estadoSessao;
+            participante.criaturaInventario=JSON.parse(JSON.stringify(char.inventario||{}));
+            participante.atributosIndividuo=JSON.parse(JSON.stringify(char.atributos||{}));
         }
+        // Importante: não gravar dano/ferimentos no modelo /criaturas.
     }else if(char?.id){
         await setDoc(doc(db,'personagens',char.id),{combate:char.combate},{merge:true});
     }
@@ -7379,7 +7370,7 @@ function batalhaControlCard_(p,char){
             <span style="margin-left:auto;"></span>
             ${atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">${tratamentoExecutando?'🩹 Concluir atendimento':Number(p.passagensNaRodada||0)>0?'⏭ Passar (-1 AÇ)':'⏭ Adiar'}</button>`:''}
             <span style="width:14px;"></span>
-            ${batalhaPodePrimeirosSocorros_(char)&&!tratandoPS?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaPrimeirosSocorros_('${p.id}')">🩹 Primeiros Socorros</button>`:''}
+            ${batalhaPodePrimeirosSocorros_(char)&&!tratandoPS?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaPrimeirosSocorros_('${p.id}')" title="Ação opcional: escolha se deseja iniciar o tratamento.">🩹 Iniciar Primeiros Socorros</button>`:''}
             ${batalhaEhMestre_()?`<button class="btn-small btn-delete" onclick="batalhaRemoverParticipante_('${p.id}')">✕ Remover</button>`:''}
         </div>
         <div style="margin-top:9px;padding:9px 11px;border-radius:8px;background:rgba(0,0,0,.18);color:#bbb;">${escaparHtmlInventario_(batalhaUltimoResultado_[p.id]||'Pronto.')}</div>
@@ -7576,14 +7567,21 @@ function batalhaPrimeiroTurnoValido_(){
 }
 async function batalhaResetarSelecoesNovoTurno_(p){
     if(!p)return;
-    const defaults={pericia:'',dificuldade:'padrao',equipamento:'',alvo:''};
-    const c=batalhaCharLocal_(p.id);
-    if(batalhaEhMestre_())batalhaPrefsMestre_[p.id]={...defaults};
-    else batalhaPrefsJogador_[p.id]={...defaults};
-    if(c&&!c.__npcTemporario&&!c.__criaturaTemporaria){
+    const c=batalhaCharLocal_(p.id);if(!c)return;
+    // Perícia, equipamento e alvo permanecem como o jogador deixou.
+    // Somente a dificuldade volta para Padrão em cada nova oportunidade.
+    const atuais={...batalhaPrefsChar_(c)};
+    const novas={...atuais,dificuldade:'padrao'};
+    batalhaGarantirPrefsValidas_(c,novas);
+    novas.dificuldade='padrao';
+
+    if(batalhaEhMestre_())batalhaPrefsMestre_[p.id]={...novas};
+    else batalhaPrefsJogador_[p.id]={...novas};
+
+    if(!c.__npcTemporario&&!c.__criaturaTemporaria){
         c.combate=c.combate||{};
-        c.combate.batalhaPrefs={...defaults};
-        await setDoc(doc(db,'personagens',c.id),{'combate.batalhaPrefs':defaults},{merge:true});
+        c.combate.batalhaPrefs={...novas};
+        await setDoc(doc(db,'personagens',c.id),{'combate.batalhaPrefs':novas},{merge:true});
     }
 }
 async function batalhaAvancarTurnoInterno_(){
@@ -7609,7 +7607,7 @@ async function batalhaAvancarTurnoInterno_(){
                 c.combate.primeirosSocorrosEmAndamento=exec;
                 ps[idx].primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(exec));
                 await batalhaPersistirCombateChar_(c,ps[idx]);
-                batalhaUltimoResultado_[ps[idx].id]='O turno está ocupado com Primeiros Socorros. Conclua o atendimento.';
+                batalhaUltimoResultado_[ps[idx].id]='Primeiros Socorros em andamento: escolha Concluir atendimento ou Abandonar atendimento para agir normalmente.';
             }
             return;
         }
@@ -8386,6 +8384,8 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
                     if(permitido){
                         p.gridX=x;p.gridY=y;p.movimentoPendente=null;
                         batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa${tipo==='gratis'?' (movimento gratuito)':tipo==='pago'?' (Movimento 1 AÇ)':''}.`,'posicao',{actorId:p.id});
+                        // Movimento pago é a ação desta oportunidade, portanto passa automaticamente ao próximo.
+                        if(tipo==='pago')await batalhaAvancarTurnoInterno_();
                         await batalhaSalvarEstado_();
                     }
                 }
@@ -8491,10 +8491,12 @@ window.batalhaGridDrop_=async function(ev,x,y){
     if(ocupado){notificar_(`A casa já está ocupada por ${ocupado.nome}.`,'aviso');return;}
 
     if(batalhaEhMestre_()){
+        const eraMovimentoPago=!!p.movimentoPendente;
         p.gridX=x;p.gridY=y;
         if(p.movimentoPendente)p.movimentoPendente=null;
-        batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa.`,'posicao',{actorId:p.id});
+        batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa${eraMovimentoPago?' (Movimento 1 AÇ)':''}.`,'posicao',{actorId:p.id});
         renderizarBatalhaPosicoes_();
+        if(eraMovimentoPago)await batalhaAvancarTurnoInterno_();
         await batalhaSalvarEstado_();
     }else{
         const regra=batalhaValidarMovimentoJogador_(p,x,y);
@@ -9703,8 +9705,9 @@ window.renderizarFichaModeloEntidade_=function(){
  const attrs=['FOR','CON','TAM','DES','INT','POD','CAR'],tipo=gmEntidadeSelecionada_.tipo;
  el.innerHTML=`<div style="display:flex;gap:12px;align-items:flex-start;">${m.imagem?`<img src="${escaparBanco_(m.imagem)}" style="width:105px;height:105px;border-radius:12px;object-fit:cover;">`:''}<div><div style="font-size:.72em;color:#8feaff;font-weight:700;letter-spacing:.06em;">MODELO DO BANCO</div><h3 style="margin:2px 0 0;">${escaparBanco_(m.nome)}</h3><div style="color:#999;">${escaparBanco_(m.especie||m.tipo||'')}</div><div style="margin-top:7px;">${modeloUsaAtributosRolados_(m)?'🎲 Atributos rolados por indivíduo':'📌 Atributos fixos'}</div></div></div>
  <div style="margin-top:13px;padding:11px;border-radius:9px;background:rgba(255,255,255,.035);"><label><input id="gmEntRolado" type="checkbox" ${modeloUsaAtributosRolados_(m)?'checked':''}> <b>Gerar atributos diferentes para cada indivíduo</b></label>
- <div style="display:grid;grid-template-columns:repeat(7,minmax(74px,1fr));gap:6px;margin-top:9px;">${attrs.map(a=>`<div><small>${a}</small><input id="gmEntFormula${a}" value="${escaparBanco_(gmEntFormulaPadrao_(m,a))}" style="width:100%;"></div>`).join('')}</div><small style="color:#888;">Aceita fórmulas como 3d6+18, 2d6 e 1d6+3.</small></div>
+ <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:10px;margin-top:10px;">${attrs.map(a=>`<div><small>${a}</small><input id="gmEntFormula${a}" value="${escaparBanco_(gmEntFormulaPadrao_(m,a))}" style="width:100%;"></div>`).join('')}</div><small style="color:#888;">Aceita fórmulas como 3d6+18, 2d6 e 1d6+3.</small></div>
  <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px;"><div><label>Peso / massa</label><input id="gmEntPeso" value="${escaparBanco_(m.pesoCorporal||'')}" style="width:100%;"></div><div><label>Tipo</label><input id="gmEntTipo" value="${escaparBanco_(m.tipo||'')}" style="width:100%;"></div></div>
+ <div style="margin-top:9px;"><label>Imagem (URL)</label><input id="gmEntImagem" value="${escaparBanco_(m.imagem||'')}" style="width:100%;" placeholder="https://..."><small style="color:#888;">Ao salvar o modelo, a imagem também é atualizada no Banco de Dados e será usada em novos indivíduos.</small></div>
  <div style="margin-top:9px;"><label>${tipo==='criatura'?'Armas / ataques naturais':'Armas / ataques próprios'}</label><textarea id="gmEntArmas" rows="2" style="width:100%;" placeholder="${tipo==='criatura'?'Mordida:1d8+MD|Garras:1d6+MD':'Combate Desarmado'}">${escaparBanco_(m.armasTexto||'')}</textarea></div>
  <div style="margin-top:9px;"><label>Alcance dos ataques naturais / próprios</label><input id="gmEntAlcances" value="${escaparBanco_(m.alcancesAtaques||'')}" style="width:100%;" placeholder="Mordida:1.5|Pescoço:3|Jato Ácido:12"><small style="color:#888;">Guardado em metros para o futuro mapa métrico.</small></div>
  <div style="margin-top:9px;"><label>Habilidades especiais</label><textarea id="gmEntHabilidades" rows="3" style="width:100%;" placeholder="Engolfar|Atropelar|Eco da Matilha">${escaparBanco_(m.habilidadesTexto||'')}</textarea></div>
@@ -9723,13 +9726,14 @@ const p={
     habilidadesTexto:String(document.getElementById('gmEntHabilidades')?.value||'').trim(),
     equipamentoBaseTexto:String(document.getElementById('gmEntEquipBase')?.value||'').trim(),
     alcancesAtaques:String(document.getElementById('gmEntAlcances')?.value||'').trim(),
+    imagem:String(document.getElementById('gmEntImagem')?.value||'').trim(),
     descricao:String(document.getElementById('gmEntDescricao')?.value||'').trim()
 };await setDoc(doc(db,gmEntidadeSelecionada_.tipo==='npc'?'npcs':'criaturas',String(m.id)),p,{merge:true});Object.assign(m,p);somSalvar_();notificar_('Modelo salvo.','info');renderizarFichasEntidadesMestre_();};
 function gmEntInstanciaChar_(p){return p?.npcBancoId?criarNPCCombateDoBanco_(npcBancoPorId_(p.npcBancoId),p):p?.criaturaBancoId?criarCriaturaCombateDoBanco_(criaturaBancoPorId_(p.criaturaBancoId),p):null;}
 window.renderizarInstanciasEntidades_=function(){
  const el=document.getElementById('gmEntInstanciasAtivas');if(!el)return;const ps=(batalhaEstado_?.participantes||[]).filter(p=>p.npcBancoId||p.criaturaBancoId);
  if(!ps.length){el.innerHTML='<div style="color:#888;">Nenhum indivíduo temporário em batalha.</div>';return;}
- el.innerHTML=ps.map(p=>{const c=gmEntInstanciaChar_(p),a=c?.atributos||{},inv=c?.inventario||{},eq=(inv.equipado||[]).filter(Boolean),mo=(inv.mochila||[]).filter(Boolean);return `<div style="padding:10px;margin-bottom:8px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);"><div style="display:flex;gap:8px;align-items:center;"><div style="flex:1;"><b>${escaparBanco_(p.nome)}</b><br><small style="color:#8feaff;">INDIVÍDUO EM BATALHA</small></div><button class="btn-small" onclick="restaurarInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">❤️ Restaurar PV</button></div><div style="margin-top:6px;font-size:.9em;">${['FOR','CON','TAM','DES','INT','POD','CAR'].map(k=>`${k} <b>${a[k]??'—'}</b>`).join(' · ')}</div><div style="color:#999;font-size:.85em;margin-top:5px;">Equipado: ${eq.length?eq.map(x=>escaparBanco_(getNome(x)||x.nome||'item')).join(', '):'—'} · Mochila: ${mo.length}/${(inv.mochila||[]).length||20}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;"><select id="gmEntItem_${p.id}" style="min-width:200px;"><option value="">Adicionar item...</option>${(itensDB||[]).map(it=>`<option value="${escaparBanco_(it.id)}">${escaparBanco_(getNome(it)||it.nome||it.id)}</option>`).join('')}</select><select id="gmEntDestino_${p.id}"><option value="equipado">Equipado</option><option value="mochila">Mochila</option><option value="bolso">Bolso</option></select><button class="btn-small" onclick="adicionarItemInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">➕ Colocar</button></div></div>`;}).join('');
+ el.innerHTML=ps.map(p=>{const c=gmEntInstanciaChar_(p),a=c?.atributos||{},inv=c?.inventario||{},eq=(inv.equipado||[]).filter(Boolean),mo=(inv.mochila||[]).filter(Boolean);return `<div style="padding:10px;margin-bottom:8px;border-radius:9px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.10);"><div style="display:flex;gap:8px;align-items:center;"><div style="flex:1;"><b>${escaparBanco_(p.nome)}</b><br><small style="color:#8feaff;">INDIVÍDUO EM BATALHA</small></div><button class="btn-small" onclick="restaurarInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">❤️ Restaurar este indivíduo</button></div><div style="margin-top:6px;font-size:.9em;">${['FOR','CON','TAM','DES','INT','POD','CAR'].map(k=>`${k} <b>${a[k]??'—'}</b>`).join(' · ')}</div><div style="color:#999;font-size:.85em;margin-top:5px;">Equipado: ${eq.length?eq.map(x=>escaparBanco_(getNome(x)||x.nome||'item')).join(', '):'—'} · Mochila: ${mo.length}/${(inv.mochila||[]).length||20}</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;"><select id="gmEntItem_${p.id}" style="min-width:200px;"><option value="">Adicionar item...</option>${(itensDB||[]).map(it=>`<option value="${escaparBanco_(it.id)}">${escaparBanco_(getNome(it)||it.nome||it.id)}</option>`).join('')}</select><select id="gmEntDestino_${p.id}"><option value="equipado">Equipado</option><option value="mochila">Mochila</option><option value="bolso">Bolso</option></select><button class="btn-small" onclick="adicionarItemInstanciaEntidade_('${String(p.id).replace(/'/g,"\\'")}')">➕ Colocar</button></div></div>`;}).join('');
 };
 window.adicionarItemInstanciaEntidade_=async function(id){const p=batalhaParticipante_(id),c=gmEntInstanciaChar_(p);if(!p||!c||!batalhaEhMestre_())return;const itemId=document.getElementById(`gmEntItem_${id}`)?.value,d=document.getElementById(`gmEntDestino_${id}`)?.value||'mochila',base=(itensDB||[]).find(x=>String(x.id)===String(itemId));if(!base)return notificar_('Escolha um item.','aviso');c.inventario=c.inventario||{};c.inventario[d]=Array.isArray(c.inventario[d])?c.inventario[d]:(d==='equipado'?Array(12).fill(null):d==='bolso'?Array(2).fill(null):Array(20).fill(null));const ix=c.inventario[d].findIndex(x=>!x);if(ix<0)return notificar_('Compartimento cheio.','aviso');const mc=cargaMaxArma_(base);c.inventario[d][ix]={...JSON.parse(JSON.stringify(base)),idBanco:String(base.id),instanciaId:`ent_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,pvAtual:Number(base.pv||1),...(mc>0?{cargaAtual:mc,cargaMax:mc}:{})};if(p.npcBancoId)p.npcInventario=JSON.parse(JSON.stringify(c.inventario));else p.criaturaInventario=JSON.parse(JSON.stringify(c.inventario));await batalhaSalvarEstado_();renderizarInstanciasEntidades_();};
 window.restaurarInstanciaEntidade_=async function(id){const p=batalhaParticipante_(id),c=gmEntInstanciaChar_(p);if(!p||!c||!batalhaEhMestre_())return;c.combate=c.combate||{};c.combate.hitLocations={};c.combate.morto=false;c.combate.incapacitado=false;c.combate.inconsciente=false;c.combate.caido=false;c.combate.sangramentoAtivo=false;c.combate.ferimentos={};if(p.npcBancoId)p.npcCombate=JSON.parse(JSON.stringify(c.combate));else p.criaturaCombate=JSON.parse(JSON.stringify(c.combate));batalhaSincronizarStatusPublico_(c,p);await batalhaSalvarEstado_();renderizarInstanciasEntidades_();renderizarBatalhaCompartilhada_();notificar_('Indivíduo restaurado.','info');};
@@ -9796,7 +9800,8 @@ window.salvarCriaturaBanco_=async()=>{
         periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),
         armasTexto:v('crArmas'),alcancesAtaques:v('crAlcances'),habilidadesTexto:v('crHabilidades'),equipamentoBaseTexto:v('crEquipBase'),
         propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),
-        selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked
+        selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked,
+        estadoCombate:null
     };
     try{
         if(orig&&orig!==id)await deleteDoc(doc(db,'criaturas',orig));
@@ -9828,7 +9833,7 @@ function renderizarBancoNPCs_(){
  <td><button class="btn-small btn-select" onclick="editarNPCBanco_('${n.id}')">✏️ Editar</button>
  <button class="btn-small" onclick="duplicarNPCBanco_('${n.id}')">📑 Duplicar</button>
  <button class="btn-small" onclick="converterNPCemPM_('${n.id}')">Converter em PM</button>
- <button class="btn-small" onclick="restaurarNPCBanco_('${n.id}')">❤️ Restaurar PV</button></td></tr>`).join('')}
+ <button class="btn-small" onclick="restaurarNPCBanco_('${n.id}')">❤️ Restaurar este indivíduo</button></td></tr>`).join('')}
  </tbody></table></div>`:'<p style="color:#aaa">Nenhum NPC.</p>';
 }
 
@@ -9917,8 +9922,9 @@ window.salvarNPCBanco_=async()=>{
  periciasTexto:v('dbNPCPericias'),especializacoesTexto:v('dbNPCEspecializacoes'),armasTexto:v('dbNPCArmas'),
  alcancesAtaques:v('dbNPCAlcances'),habilidadesTexto:v('dbNPCHabilidades'),equipamentoBaseTexto:v('dbNPCEquipBase'),
  inventarioTexto:v('dbNPCInventario'),selecionavelCombate:document.getElementById('dbNPCSelecionavel').checked,imagem:v('dbNPCImagem'),descricao:v('dbNPCDescricao')};
- const antigo=npcsDB.find(x=>x.id===orig);if(antigo?.estadoCombate)n.estadoCombate=antigo.estadoCombate;
- if(orig&&orig!==id)await deleteDoc(doc(db,'npcs',orig));await setDoc(doc(db,'npcs',id),n,{merge:false});
+ if(orig&&orig!==id)await deleteDoc(doc(db,'npcs',orig));
+ // estadoCombate legado é deliberadamente descartado: o banco representa o modelo, não um indivíduo ferido.
+ await setDoc(doc(db,'npcs',id),n,{merge:false});
  const ix=npcsDB.findIndex(x=>x.id===orig||x.id===id);if(ix>=0)npcsDB[ix]=n;else npcsDB.push(n);
  npcsDB.sort((a,b)=>String(a.nome).localeCompare(String(b.nome),'pt-BR'));fecharNPCBancoModal_();renderizarBancoNPCs_();renderizarFichasEntidadesMestre_();renderizarBatalhaCompartilhada_();somSalvar_();
 };
@@ -13076,7 +13082,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.9.2: consolidação NPC/criaturas, atributos rolados, nomes únicos e Primeiros Socorros voluntários -->
+<!-- Mesa Estelar v46.9.3: instâncias limpas, seleções persistentes, movimento auto-avança e UI de entidades refinada -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
