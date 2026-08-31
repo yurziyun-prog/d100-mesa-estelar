@@ -6557,6 +6557,24 @@ function batalhaCharLocal_(id){
 }
 function batalhaParticipante_(id){ return (batalhaEstado_?.participantes||[]).find(p=>String(p.id)===String(id))||null; }
 
+function batalhaLimparPendenciasInvalidas_(estado=batalhaEstado_){
+    if(!estado)return false;
+    const ids=new Set((estado.participantes||[]).map(p=>String(p.id)));
+    let alterou=false;
+    if(estado.pendencia){
+        if(!ids.has(String(estado.pendencia.atacanteId||''))||!ids.has(String(estado.pendencia.defensorId||''))){
+            estado.pendencia=null;alterou=true;
+        }
+    }
+    if(estado.danoPendente){
+        if(!ids.has(String(estado.danoPendente.atacanteId||''))||!ids.has(String(estado.danoPendente.defensorId||''))){
+            estado.danoPendente=null;alterou=true;
+        }
+    }
+    return alterou;
+}
+
+
 function batalhaIniBase_(c){
     const a=c?.atributos||{}, b=c?.bonus||{};
     return calcularIniciativa(Number(a.INT||0)+Number(b.INT||0),Number(a.DES||0)+Number(b.DES||0));
@@ -7449,6 +7467,10 @@ window.batalhaPrimeirosSocorros_=async id=>{
     else await batalhaEnviarAcao_(id,'primeiros_socorros_iniciar',{alvoId:ap.id,local:x.local});
 };
 function batalhaControlCard_(p,char){
+    if(!batalhaEstado_?.danoPendente && /enviado|aguardando aplica/i.test(String(batalhaUltimoResultado_[p.id]||''))){
+        batalhaUltimoResultado_[p.id]='Pronto.';
+    }
+
     const prefs=batalhaGarantirPrefsValidas_(char,batalhaPrefsChar_(char));
     const skills=batalhaListaPericias_(char);
     let per=batalhaResolverPericia_(prefs.pericia);
@@ -7506,7 +7528,7 @@ function batalhaControlCard_(p,char){
             <button class="btn-small btn-select" ${Number(p.acoesAtuais||0)<=0||!batalhaIniciativasProntas_()||ataqueBloqueado?'disabled':''} onclick="batalhaRolarD100_('${p.id}')">🎲 Teste D100</button>
             ${char?.combate?.caido?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaLevantar_('${p.id}')">⬆️ Levantar (1 AÇ)</button>`:''}
             <button class="btn-small btn-delete" ${!danoLiberado||especiaisPendentes?'disabled':''} onclick="batalhaRolarDano_('${p.id}')">💥 Rolar dano</button>
-            <button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaMovimento_('${p.id}')">👣 Movimento (1 AÇ)</button>
+            <button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||tratandoPS?'disabled':''} onclick="batalhaMovimento_('${p.id}')">👣 Movimento (1 AÇ)</button>
             <button class="btn-small" ${batalhaTemIniciativa_(p)?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${batalhaTemIniciativa_(p)?'Iniciativa rolada':'Iniciativa'}</button>
             <span style="margin-left:auto;"></span>
             ${atual&&tratamentoExecutando?`
@@ -7664,9 +7686,18 @@ function batalhaNomeUnicoInstancia_(nome,participantes=[]){
 window.batalhaAdicionarSelecionados_=async()=>{
     if(!batalhaEhMestre_())return;
     const ids=[...batalhaSelecaoMestre_];if(!ids.length){notificar_('Selecione pelo menos um personagem.','aviso');return;}
+    const estavaInativa=!batalhaEstado_?.ativo;
     let estado=batalhaEstado_||{ativo:true,rodada:1,ciclo:1,turnoIndex:0,participantes:[],pendencia:null,danoPendente:null,logPublico:[]};
-    estado.ativo=true;
-    estado.participantes=Array.isArray(estado.participantes)?estado.participantes:[];
+    if(estavaInativa){
+        estado={ativo:true,rodada:1,ciclo:1,turnoIndex:0,participantes:[],pendencia:null,danoPendente:null,logPublico:[],atualizadoEm:new Date().toISOString()};
+        Object.keys(batalhaUltimoResultado_).forEach(k=>delete batalhaUltimoResultado_[k]);
+        Object.keys(batalhaPrefsMestre_).forEach(k=>delete batalhaPrefsMestre_[k]);
+        Object.keys(batalhaPrefsJogador_).forEach(k=>delete batalhaPrefsJogador_[k]);
+    }else{
+        estado.ativo=true;
+        estado.participantes=Array.isArray(estado.participantes)?estado.participantes:[];
+        batalhaLimparPendenciasInvalidas_(estado);
+    }
     for(const id of ids){
         let c=null;
         if(String(id).startsWith('npcdb:')){
@@ -7708,7 +7739,12 @@ window.batalhaRemoverParticipante_=async(id)=>{
     if(!confirm(`Remover ${p.nome} da batalha?`))return;
     batalhaEstado_.participantes=(batalhaEstado_.participantes||[]).filter(x=>x.id!==id);
     if(Number(batalhaEstado_.turnoIndex||0)>=batalhaEstado_.participantes.length)batalhaEstado_.turnoIndex=0;
-    if(batalhaEstado_.pendencia && [batalhaEstado_.pendencia.atacanteId,batalhaEstado_.pendencia.defensorId].includes(id))batalhaEstado_.pendencia=null;
+    if(batalhaEstado_.pendencia && [batalhaEstado_.pendencia.atacanteId,batalhaEstado_.pendencia.defensorId].map(String).includes(String(id)))batalhaEstado_.pendencia=null;
+    if(batalhaEstado_.danoPendente && [batalhaEstado_.danoPendente.atacanteId,batalhaEstado_.danoPendente.defensorId].map(String).includes(String(id))){
+        const atacanteId=batalhaEstado_.danoPendente.atacanteId;
+        batalhaEstado_.danoPendente=null;
+        batalhaUltimoResultado_[atacanteId]='Ataque cancelado: o alvo saiu da batalha antes da resolução do dano.';
+    }
     batalhaLogPush_(batalhaEstado_,`${p.nome} saiu da batalha.`,'saida');
     await batalhaSalvarEstado_();
 };
@@ -7871,7 +7907,13 @@ window.batalhaNovaRodada_=async(confirmar=false)=>{
 window.batalhaEncerrar_=async()=>{
     if(!batalhaEhMestre_()||!batalhaEstado_)return;
     if(!confirm('Encerrar a batalha atual?'))return;
-    await batalhaSalvarEstado_({ativo:false,rodada:1,ciclo:1,turnoIndex:0,participantes:[],pendencia:null,danoPendente:null,logPublico:[],atualizadoEm:new Date().toISOString()});
+    Object.keys(batalhaUltimoResultado_).forEach(k=>delete batalhaUltimoResultado_[k]);
+    Object.keys(batalhaPrefsMestre_).forEach(k=>delete batalhaPrefsMestre_[k]);
+    Object.keys(batalhaPrefsJogador_).forEach(k=>delete batalhaPrefsJogador_[k]);
+    const encerrada={ativo:false,rodada:1,ciclo:1,turnoIndex:0,participantes:[],pendencia:null,danoPendente:null,logPublico:[],atualizadoEm:new Date().toISOString()};
+    batalhaEstado_=encerrada;
+    renderizarBatalhaCompartilhada_();
+    await batalhaSalvarEstado_(encerrada);
 };
 
 
@@ -7880,7 +7922,19 @@ window.batalhaMovimento_=async function(id){
     if(!p||!c||!batalhaPodeControlar_(p))return;
     const atual=(batalhaEstado_?.participantes||[])[Number(batalhaEstado_?.turnoIndex||0)];
     if(String(atual?.id)!==String(id)){notificar_('Movimento só pode ser usado no turno atual.','aviso');return;}
-    if(batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente){notificar_('Resolva a ação pendente antes de se mover.','aviso');return;}
+    if(batalhaEstado_?.pendencia){
+        notificar_('Há uma defesa pendente. Resolva a defesa antes de iniciar outro movimento.','aviso',5000);return;
+    }
+    if(batalhaEstado_?.danoPendente){
+        const dp=batalhaEstado_.danoPendente;
+        const alvo=batalhaParticipante_(dp.defensorId);
+        const efeitos=Number(dp.especiaisRestantes||0);
+        notificar_(efeitos>0
+            ? `O ataque anterior ainda tem ${efeitos} efeito(s) especial(is) para resolver${alvo?.nome?` contra ${alvo.nome}`:''}. Resolva-os e o dano antes de se mover.`
+            : `O dano do ataque anterior ainda precisa ser resolvido${alvo?.nome?` contra ${alvo.nome}`:''}.`,
+            'aviso',6500);
+        return;
+    }
     if(batalhaEstaTratandoPrimeirosSocorros_(c)){notificar_('O personagem está ocupado com Primeiros Socorros.','aviso');return;}
     if(Number(p.acoesAtuais||0)<=0){notificar_('Sem AÇ para movimento.','aviso');return;}
 
@@ -8048,6 +8102,7 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
             batalhaEstado_.pendencia=null;
             const especiais=Math.max(0,batalhaResultadoGradeValor_(r.grau)-1);
             batalhaEstado_.danoPendente={
+                id:`dmg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
                 atacanteId:id,defensorId:alvoId,ataque:ataqueInfo,
                 defensorTemArma:!!batalhaArmaAtualDefensor_({defensorId:alvoId}),
                 especiaisRestantes:especiais,escolhasEspeciais:[],
@@ -8225,6 +8280,7 @@ async function batalhaProcessarDefesa_(acao){
     if(acertou){
         const especiais=Math.max(0,ag-dg);
         batalhaEstado_.danoPendente={
+            id:`dmg_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
             atacanteId:pend.atacanteId,
             defensorId:pend.defensorId,
             ataque:pend.ataque,
@@ -8259,7 +8315,13 @@ async function batalhaAplicarDanoNoAlvo_(atacanteId,total,nomeArma='Arma'){
     if(!dp||String(dp.atacanteId)!==String(atacanteId))return null;
     const defensor=batalhaParticipante_(dp.defensorId);
     const alvo=batalhaCharLocal_(dp.defensorId);
-    if(!defensor||!alvo)return null;
+    if(!defensor||!alvo){
+        batalhaEstado_.danoPendente=null;
+        batalhaUltimoResultado_[atacanteId]='Ataque cancelado: o alvo não está mais na batalha.';
+        batalhaLogPush_(batalhaEstado_,'Dano pendente cancelado porque o alvo não está mais na batalha.','sistema',{actorId:atacanteId});
+        await batalhaSalvarEstado_();
+        return null;
+    }
 
     const locRoll=batalhaLocalizacaoD20_();
     const roll=locRoll.roll;
@@ -8475,8 +8537,8 @@ window.batalhaRolarDano_=async(id)=>{
         batalhaUltimoResultado_[id]=`${nome}: ${r.detalhes.join(' · ')} → ${r.total} bruto`;
         renderizarBatalhaCompartilhada_();
     }else{
-        await batalhaEnviarAcao_(id,'dano',{total:r.total,expr,nome,detalhes:r.detalhes});
-        batalhaUltimoResultado_[id]=`${nome}: ${r.detalhes.join(' · ')} → ${r.total} (enviado)`;
+        await batalhaEnviarAcao_(id,'dano',{total:r.total,expr,nome,detalhes:r.detalhes,danoPendenteId:String(dp.id||'')});
+        batalhaUltimoResultado_[id]=`${nome}: ${r.detalhes.join(' · ')} → ${r.total} (aguardando aplicação)`;
         renderizarBatalhaCompartilhada_();
     }
 };
@@ -8536,9 +8598,14 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
                 await batalhaAplicarEscolhaEspecialMestre_(p.id,String(acao.payload?.tipo||'pular'),String(acao.payload?.local||''));
             }
         }else if(acao.tipo==='dano'){
-            if(batalhaEstado_.danoPendente?.atacanteId===p.id){
+            const dp=batalhaEstado_.danoPendente;
+            const mesmoAtacante=String(dp?.atacanteId||'')===String(p.id);
+            const mesmoDano=!acao.payload?.danoPendenteId || String(dp?.id||'')===String(acao.payload.danoPendenteId);
+            if(mesmoAtacante&&mesmoDano){
                 const total=Number(acao.payload?.total||0);
                 await batalhaAplicarDanoNoAlvo_(p.id,total,acao.payload?.nome||'Dano');
+            }else{
+                batalhaUltimoResultado_[p.id]='Rolagem de dano antiga descartada.';
             }
         }else if(acao.tipo==='posicao'){
             const gx=acao.payload?.gridX,gy=acao.payload?.gridY;
@@ -8573,9 +8640,18 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
                     if(permitido){
                         p.gridX=x;p.gridY=y;p.movimentoPendente=null;
                         batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa${tipo==='gratis'?' (movimento gratuito)':tipo==='pago'?' (Movimento 1 AÇ)':''}.`,'posicao',{actorId:p.id});
-                        // Movimento pago é a ação desta oportunidade, portanto passa automaticamente ao próximo.
-                        if(tipo==='pago')await batalhaAvancarTurnoInterno_();
+                        if(tipo==='pago'){
+                            batalhaUltimoResultado_[p.id]=`Movimento concluído. Restam ${Number(p.acoesAtuais||0)}/${Number(p.acoesMax||0)} AÇ; você pode continuar agindo.`;
+                        }else if(tipo==='gratis'){
+                            batalhaUltimoResultado_[p.id]='Movimento gratuito concluído; você ainda pode agir.';
+                        }
+                        // Movimento consome AÇ, mas não encerra a oportunidade.
+                        // O personagem pode gastar outras AÇ em novos movimentos, ataques ou outras ações.
                         await batalhaSalvarEstado_();
+                        if(tipo==='pago'&&Number(p.acoesAtuais||0)<=0&&!batalhaEstado_.pendencia&&!batalhaEstado_.danoPendente){
+                            await batalhaAvancarTurnoInterno_();
+                            await batalhaSalvarEstado_();
+                        }
                     }
                 }
             }
@@ -8684,9 +8760,14 @@ window.batalhaGridDrop_=async function(ev,x,y){
         p.gridX=x;p.gridY=y;
         if(p.movimentoPendente)p.movimentoPendente=null;
         batalhaLogPush_(batalhaEstado_,`${p.nome} mudou de posição no mapa${eraMovimentoPago?' (Movimento 1 AÇ)':''}.`,'posicao',{actorId:p.id});
+        if(eraMovimentoPago)batalhaUltimoResultado_[p.id]=`Movimento concluído. Restam ${Number(p.acoesAtuais||0)}/${Number(p.acoesMax||0)} AÇ; você pode continuar agindo.`;
         renderizarBatalhaPosicoes_();
-        if(eraMovimentoPago)await batalhaAvancarTurnoInterno_();
+        // Movimento pago só encerra a oportunidade quando consumir a última AÇ disponível.
         await batalhaSalvarEstado_();
+        if(eraMovimentoPago&&Number(p.acoesAtuais||0)<=0&&!batalhaEstado_.pendencia&&!batalhaEstado_.danoPendente){
+            await batalhaAvancarTurnoInterno_();
+            await batalhaSalvarEstado_();
+        }
     }else{
         const regra=batalhaValidarMovimentoJogador_(p,x,y);
         if(!regra.ok){notificar_(regra.msg,'aviso');return;}
@@ -8897,6 +8978,8 @@ function iniciarBatalhaCompartilhada_(){
                 delete p.posicao;
             });
         }
+        const limpou=batalhaLimparPendenciasInvalidas_(batalhaEstado_);
+        if(limpou&&batalhaEhMestre_())batalhaSalvarEstado_().catch(e=>console.warn('Limpeza de pendência inválida:',e));
         renderizarBatalhaCompartilhada_();
     },err=>{
         console.warn('Batalha compartilhada:',err);
@@ -13346,7 +13429,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.10.2: ataques naturais vinculados a perícias próprias e Dragões-Trombeta com perícia restaurada -->
+<!-- Mesa Estelar v46.10.4: movimento pode consumir múltiplas AÇ e bloqueios pendentes ficam explícitos -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
