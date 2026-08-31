@@ -421,13 +421,33 @@
                         <button class="btn-small" onclick="labCentralizarTokens_()">◎ Reorganizar</button>
                         <button class="btn-small" onclick="labLimpar_()">🧹 Limpar</button>
                         <label style="display:flex;align-items:center;gap:6px;">Fundo <input id="labBgColor" type="color" value="#d7d7d7" onchange="labMudarFundo_(this.value)"></label>
+                        <label style="display:flex;align-items:center;gap:6px;">Linhas <input id="labGridColor" type="color" value="#777777" onchange="labMudarCorGrade_(this.value)"></label>
+                        <label style="display:flex;align-items:center;gap:6px;"><input id="labGridVisible" type="checkbox" checked onchange="labAlternarGrade_(this.checked)"> Mostrar grade</label>
+                        <label style="display:flex;align-items:center;gap:6px;">Textura
+                            <select id="labTexture" onchange="labMudarTextura_(this.value)">
+                                <option value="nenhuma">Nenhuma</option>
+                                <option value="concreto">Concreto</option>
+                                <option value="areia">Areia</option>
+                                <option value="terra">Terra</option>
+                                <option value="metal">Metal</option>
+                                <option value="nevoa">Névoa</option>
+                            </select>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;">Mapa
+                            <select id="labMapSize" onchange="labMudarTamanhoMapa_(this.value)">
+                                <option value="24x14">24 × 14 m</option>
+                                <option value="28x14" selected>28 × 14 m</option>
+                                <option value="32x16">32 × 16 m</option>
+                                <option value="36x18">36 × 18 m</option>
+                            </select>
+                        </label>
                         <label style="display:flex;align-items:center;gap:6px;">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
                     </div>
                     <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste livremente. As coordenadas são medidas em metros.</div>
                     <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
                         <div id="labMetricMap" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
-                    <div style="margin-top:8px;color:#888;font-size:.88em;">Área inicial: 24 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
+                    <div style="margin-top:8px;color:#888;font-size:.88em;">Área padrão: 28 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
                 </div>
             </div>
 
@@ -6356,10 +6376,32 @@ window.mostrarBancoAba = (abaId, btn) => {
 // ============================================================
 
 
-let labEstado_={tokens:[],pxPorMetro:48,larguraM:24,alturaM:14,fundo:'#d7d7d7',selecionadoId:''};
+let labEstado_={
+    tokens:[],
+    pxPorMetro:48,
+    larguraM:28,
+    alturaM:14,
+    fundo:'#d7d7d7',
+    corGrade:'#777777',
+    gradeVisivel:true,
+    textura:'nenhuma',
+    selecionadoId:''
+};
 let labDrag_=null;
 function labSalvarLocal_(){try{localStorage.setItem('mesaEstelarLabCombate',JSON.stringify(labEstado_));}catch(_){}}
-function labCarregarLocal_(){try{const v=JSON.parse(localStorage.getItem('mesaEstelarLabCombate')||'null');if(v&&typeof v==='object')labEstado_={...labEstado_,...v,tokens:Array.isArray(v.tokens)?v.tokens:[]};}catch(_){}}
+function labCarregarLocal_(){
+    try{
+        const v=JSON.parse(localStorage.getItem('mesaEstelarLabCombate')||'null');
+        if(v&&typeof v==='object'){
+            const eraPadraoAntigo=Number(v.larguraM||0)===24&&Number(v.alturaM||0)===14;
+            labEstado_={...labEstado_,...v,tokens:Array.isArray(v.tokens)?v.tokens:[]};
+            if(eraPadraoAntigo)labEstado_.larguraM=28;
+            if(!labEstado_.corGrade)labEstado_.corGrade='#777777';
+            if(labEstado_.gradeVisivel==null)labEstado_.gradeVisivel=true;
+            if(!labEstado_.textura)labEstado_.textura='nenhuma';
+        }
+    }catch(_){}
+}
 function labTamanhoTokenM_(c){const tam=Number(c?.atributos?.TAM||10);if(tam>=70)return 3.2;if(tam>=35)return 2.1;if(tam>=20)return 1.45;if(tam<=6)return .65;return .95;}
 function labTokenDeParticipante_(p,i=0){const c=batalhaCharLocal_(p.id);return {id:String(p.id),nome:String(p.nome||'Participante'),imagem:String(p.imagem||c?.imagem||''),tipo:String(p.tipo||''),x:Math.min(labEstado_.larguraM-1,1.5+(i%8)*2.5),y:Math.min(labEstado_.alturaM-1,1.5+Math.floor(i/8)*2.5),diametroM:labTamanhoTokenM_(c),angulo:0,attrs:c?.atributos?JSON.parse(JSON.stringify(c.atributos)):{}};}
 window.labCarregarBatalhaAtual_=function(){if(!batalhaEhMestre_())return;const ps=batalhaEstado_?.participantes||[];if(!ps.length){notificar_('A batalha atual não tem participantes.','aviso');return;}const antigos=new Map((labEstado_.tokens||[]).map(t=>[String(t.id),t]));labEstado_.tokens=ps.map((p,i)=>{const n=labTokenDeParticipante_(p,i),a=antigos.get(String(p.id));return a?{...n,x:a.x,y:a.y,angulo:a.angulo}:n;});labSalvarLocal_();labRender_();};
@@ -6367,11 +6409,72 @@ window.labAdicionarBoneco_=function(){if(!batalhaEhMestre_())return;const n=(lab
 window.labLimpar_=function(){if(!batalhaEhMestre_())return;if(!confirm('Limpar apenas o Laboratório? A batalha real não será alterada.'))return;labEstado_.tokens=[];labEstado_.selecionadoId='';labSalvarLocal_();labRender_();};
 window.labCentralizarTokens_=function(){(labEstado_.tokens||[]).forEach((t,i)=>{t.x=1.5+(i%8)*2.6;t.y=1.5+Math.floor(i/8)*2.6;});labSalvarLocal_();labRender_();};
 window.labMudarFundo_=function(v){labEstado_.fundo=String(v||'#d7d7d7');labSalvarLocal_();labRender_();};
+window.labMudarCorGrade_=function(v){labEstado_.corGrade=String(v||'#777777');labSalvarLocal_();labRender_();};
+window.labAlternarGrade_=function(v){labEstado_.gradeVisivel=!!v;labSalvarLocal_();labRender_();};
+window.labMudarTextura_=function(v){labEstado_.textura=String(v||'nenhuma');labSalvarLocal_();labRender_();};
+window.labMudarTamanhoMapa_=function(v){
+    const m=String(v||'28x14').match(/^(\d+)x(\d+)$/);if(!m)return;
+    labEstado_.larguraM=Math.max(12,Math.min(80,Number(m[1])||28));
+    labEstado_.alturaM=Math.max(8,Math.min(50,Number(m[2])||14));
+    for(const t of labEstado_.tokens||[]){
+        t.x=Math.max(0,Math.min(labEstado_.larguraM,t.x));
+        t.y=Math.max(0,Math.min(labEstado_.alturaM,t.y));
+    }
+    labSalvarLocal_();labRender_();
+};
 window.labMudarZoom_=function(v){labEstado_.pxPorMetro=Math.max(30,Math.min(90,Number(v)||48));labSalvarLocal_();labRender_();};
 window.labSelecionar_=function(id){labEstado_.selecionadoId=String(id);labSalvarLocal_();labRender_();};
-window.labGirarSelecionado_=function(delta){const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t)return;t.angulo=(Number(t.angulo||0)+Number(delta||0)+360)%360;labSalvarLocal_();labRender_();};
-function labAtualizarInfo_(){const el=document.getElementById('labInfo');if(!el)return;const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t){el.innerHTML='Clique num token para selecioná-lo. Arraste livremente. As coordenadas são medidas em metros.';return;}const a=t.attrs||{};el.innerHTML=`<strong>${escaparHtmlInventario_(t.nome)}</strong> · posição <b>${Number(t.x).toFixed(2)} m, ${Number(t.y).toFixed(2)} m</b> · diâmetro tático ≈ ${Number(t.diametroM||.9).toFixed(2)} m <span style="margin-left:10px;color:#9fdfff;">${['FOR','CON','TAM','DES'].filter(k=>a[k]!=null).map(k=>`${k} ${a[k]}`).join(' · ')}</span> <button class="btn-small" style="padding:3px 7px;margin-left:8px;" onclick="labGirarSelecionado_(-45)">↶ 45°</button> <button class="btn-small" style="padding:3px 7px;" onclick="labGirarSelecionado_(45)">↷ 45°</button>`;}
-function labRender_(){const map=document.getElementById('labMetricMap');if(!map)return;if(!batalhaEhMestre_()){map.innerHTML='';return;}const ppm=Number(labEstado_.pxPorMetro||48);map.style.width=`${labEstado_.larguraM*ppm}px`;map.style.height=`${labEstado_.alturaM*ppm}px`;map.style.backgroundColor=labEstado_.fundo||'#d7d7d7';map.style.backgroundSize=`${ppm}px ${ppm}px`;const sel=String(labEstado_.selecionadoId||'');map.innerHTML=(labEstado_.tokens||[]).map(t=>{const d=Math.max(24,Number(t.diametroM||.9)*ppm),ativo=String(t.id)===sel,img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<span style="font-size:${Math.max(13,d*.22)}px;">${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${ativo?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:0 3px 12px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${ativo?5:2};" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div style="position:absolute;left:50%;top:-9px;transform:translate(-50%,-100%) rotate(${Number(t.angulo||0)}deg);color:#111;font-size:18px;text-shadow:0 0 3px white;">▲</div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none;">${escaparHtmlInventario_(t.nome)}</div></div>`;}).join('');labAtualizarInfo_();}
+window.labGirarSelecionado_=function(delta){
+    const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t)return;
+    t.angulo=(Number(t.angulo||0)+Number(delta||0)+360)%360;
+    labSalvarLocal_();labRender_();
+};
+window.labDefinirAngulo_=function(v){
+    const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t)return;
+    t.angulo=((Number(v)||0)%360+360)%360;
+    labSalvarLocal_();labRender_();
+};
+
+function labBackgroundImage_(){
+    const ppm=Number(labEstado_.pxPorMetro||48);
+    const c=labEstado_.corGrade||'#777777';
+    const grid=labEstado_.gradeVisivel!==false
+        ? `linear-gradient(to right,${c} 1px,transparent 1px),linear-gradient(to bottom,${c} 1px,transparent 1px)`
+        : '';
+    const tex={
+        nenhuma:'',
+        concreto:'radial-gradient(circle at 20% 30%,rgba(255,255,255,.07) 0 1px,transparent 2px),radial-gradient(circle at 70% 65%,rgba(0,0,0,.08) 0 1px,transparent 2px)',
+        areia:'radial-gradient(circle,rgba(255,255,255,.10) 0 1px,transparent 1.5px),radial-gradient(circle,rgba(85,55,20,.10) 0 1px,transparent 1.5px)',
+        terra:'radial-gradient(circle at 30% 20%,rgba(60,25,10,.18) 0 2px,transparent 3px),radial-gradient(circle at 65% 70%,rgba(255,255,255,.05) 0 1px,transparent 2px)',
+        metal:'repeating-linear-gradient(135deg,rgba(255,255,255,.035) 0 3px,rgba(0,0,0,.035) 3px 6px)',
+        nevoa:'radial-gradient(ellipse at 20% 35%,rgba(255,255,255,.16),transparent 35%),radial-gradient(ellipse at 75% 65%,rgba(255,255,255,.12),transparent 38%)'
+    }[labEstado_.textura||'nenhuma']||'';
+    return [grid,tex].filter(Boolean).join(',');
+}
+function labAtualizarInfo_(){const el=document.getElementById('labInfo');if(!el)return;const t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(labEstado_.selecionadoId));if(!t){el.innerHTML='Clique num token para selecioná-lo. Arraste livremente. As coordenadas são medidas em metros.';return;}const a=t.attrs||{};el.innerHTML=`<strong>${escaparHtmlInventario_(t.nome)}</strong> · posição <b>${Number(t.x).toFixed(2)} m, ${Number(t.y).toFixed(2)} m</b> · diâmetro tático ≈ ${Number(t.diametroM||.9).toFixed(2)} m
+        <span style="margin-left:10px;color:#9fdfff;">${['FOR','CON','TAM','DES'].filter(k=>a[k]!=null).map(k=>`${k} ${a[k]}`).join(' · ')}</span>
+        <span style="margin-left:12px;"><b>Frente:</b> ${Number(t.angulo||0)}°</span>
+        <button class="btn-small" style="padding:3px 7px;margin-left:8px;" onclick="labGirarSelecionado_(-45)">↶ 45°</button>
+        <button class="btn-small" style="padding:3px 7px;" onclick="labGirarSelecionado_(45)">↷ 45°</button>
+        <input type="range" min="0" max="359" step="1" value="${Number(t.angulo||0)}" oninput="labDefinirAngulo_(this.value)" style="width:150px;vertical-align:middle;margin-left:8px;" title="Ângulo da frente">`; }
+function labRender_(){const map=document.getElementById('labMetricMap');if(!map)return;if(!batalhaEhMestre_()){map.innerHTML='';return;}    const bg=document.getElementById('labBgColor');if(bg)bg.value=labEstado_.fundo||'#d7d7d7';
+    const gc=document.getElementById('labGridColor');if(gc)gc.value=labEstado_.corGrade||'#777777';
+    const gv=document.getElementById('labGridVisible');if(gv)gv.checked=labEstado_.gradeVisivel!==false;
+    const tx=document.getElementById('labTexture');if(tx)tx.value=labEstado_.textura||'nenhuma';
+    const zm=document.getElementById('labZoom');if(zm)zm.value=String(labEstado_.pxPorMetro||48);
+    const ms=document.getElementById('labMapSize');if(ms)ms.value=`${labEstado_.larguraM}x${labEstado_.alturaM}`;
+const ppm=Number(labEstado_.pxPorMetro||48);
+    map.style.width=`${labEstado_.larguraM*ppm}px`;
+    map.style.height=`${labEstado_.alturaM*ppm}px`;
+    map.style.backgroundColor=labEstado_.fundo||'#d7d7d7';
+    map.style.backgroundImage=labBackgroundImage_();
+    // Primeiro par de camadas é a grade de 1 m. Texturas usam escala visual própria.
+    map.style.backgroundSize=labEstado_.gradeVisivel!==false
+        ? `${ppm}px ${ppm}px,${ppm}px ${ppm}px,24px 24px,31px 31px`
+        : `24px 24px,31px 31px`;
+    const sel=String(labEstado_.selecionadoId||'');map.innerHTML=(labEstado_.tokens||[]).map(t=>{const d=Math.max(24,Number(t.diametroM||.9)*ppm),ativo=String(t.id)===sel,img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`:`<span style="font-size:${Math.max(13,d*.22)}px;">${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${ativo?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:0 3px 12px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${ativo?5:2};" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div style="position:absolute;inset:0;pointer-events:none;transform:rotate(${Number(t.angulo||0)}deg);transform-origin:50% 50%;">
+                <div style="position:absolute;left:50%;top:-13px;transform:translateX(-50%);width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:14px solid #ffd54a;filter:drop-shadow(0 1px 2px rgba(0,0,0,.9));"></div>
+            </div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none;">${escaparHtmlInventario_(t.nome)}</div></div>`;}).join('');labAtualizarInfo_();}
 window.labPointerDown_=function(ev,id){if(!batalhaEhMestre_())return;ev.preventDefault();const map=document.getElementById('labMetricMap'),t=(labEstado_.tokens||[]).find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);labDrag_={id:String(id)};const move=e=>{if(!labDrag_)return;const x=Math.max(0,Math.min(labEstado_.larguraM,(e.clientX-rect.left)/ppm)),y=Math.max(0,Math.min(labEstado_.alturaM,(e.clientY-rect.top)/ppm));t.x=Math.round(x*100)/100;t.y=Math.round(y*100)/100;const node=map.querySelector(`.lab-token[data-id="${CSS.escape(String(id))}"]`);if(node){const d=Math.max(24,Number(t.diametroM||.9)*ppm);node.style.left=`${t.x*ppm-d/2}px`;node.style.top=`${t.y*ppm-d/2}px`;}labAtualizarInfo_();};const up=()=>{window.removeEventListener('pointermove',move);labDrag_=null;labSalvarLocal_();labRender_();};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});labRender_();};
 labCarregarLocal_();
 
@@ -13473,7 +13576,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.11.0: dano natural customizado corrigido e Laboratório de Combate métrico paralelo -->
+<!-- Mesa Estelar v46.11.1: mapa métrico ampliado, grade configurável, texturas e rotação de facing corrigida -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
