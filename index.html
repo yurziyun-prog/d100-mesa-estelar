@@ -6446,6 +6446,33 @@ function labHeuristicaMovimento_(p,c){
 function labAlcanceMax_(c){
     return Math.max(0,...(ataquesNaturaisChar_(c)||[]).map(a=>Number(a.alcanceMetros||0)).filter(Number.isFinite));
 }
+
+function labCriarSnapshotCombate_(c){
+    if(!c)return {hitMax:{},hit:{},armor:{},ferimentos:{}};
+    const a=c.atributos||{},b=c.bonus||{};
+    const con=Number(a.CON||0)+Number(b.CON||0),tam=Number(a.TAM||0)+Number(b.TAM||0);
+    const max=calcularHitLocations_(con,tam),locs=Object.keys(max);
+    const armorEq=calcularPAEquipado_(c,locs);
+    const atual={};
+    for(const loc of locs){
+        const salvo=c?.combate?.hitLocations?.[loc];
+        atual[loc]=Number.isFinite(Number(salvo))?Number(salvo):Number(max[loc]||0);
+    }
+    return {
+        hitMax:JSON.parse(JSON.stringify(max)),
+        hit:atual,
+        armor:Object.fromEntries(locs.map(loc=>[loc,Math.max(0,Number(armorEq?.[loc]||0)+Number(c?.combate?.armor?.[loc]||0))])),
+        ferimentos:{},morto:false,inconsciente:false
+    };
+}
+function labGarantirSnapshotCombate_(t){
+    if(!t)return null;
+    if(!t.combateLab){
+        const c=labCharToken_(t);
+        t.combateLab=c?labCriarSnapshotCombate_(c):{hitMax:{'PV Global':20},hit:{'PV Global':20},armor:{'PV Global':0},ferimentos:{}};
+    }
+    return t.combateLab;
+}
 function labTokenDeParticipante_(p,i=0){
     const c=batalhaCharLocal_(p.id),mov=labHeuristicaMovimento_(p,c);
     const max=Math.max(0,Number(p?.acoesMax||obterPAMaxCombate_(c)||2));
@@ -6456,7 +6483,8 @@ function labTokenDeParticipante_(p,i=0){
         movimentoTerrestre:mov.terra,movimentoVoo:mov.voo,movimentoNatacao:mov.nat,
         modoMovimento:mov.terra>0?'terrestre':mov.voo>0?'voo':mov.nat>0?'natacao':'imovel',
         alcanceAtaqueMax:labAlcanceMax_(c),iniciativaLab:null,
-        iniciativaBonus:Math.floor((Number(c?.atributos?.INT||10)+Number(c?.atributos?.DES||10))/2)};
+        iniciativaBonus:Math.floor((Number(c?.atributos?.INT||10)+Number(c?.atributos?.DES||10))/2),
+        combateLab:labCriarSnapshotCombate_(c)};
 }
 window.labCarregarBatalhaAtual_=function(){
     if(!batalhaEhMestre_())return;
@@ -6466,14 +6494,16 @@ window.labCarregarBatalhaAtual_=function(){
         const valido=(a.modoMovimento==='voo'&&n.movimentoVoo>0)||(a.modoMovimento==='natacao'&&n.movimentoNatacao>0)||(a.modoMovimento==='terrestre'&&n.movimentoTerrestre>0);
         return {...n,x:a.x,y:a.y,angulo:a.angulo,acoesAtuaisLab:Number.isFinite(Number(a.acoesAtuaisLab))?Math.min(n.acoesMaxLab,Number(a.acoesAtuaisLab)):n.acoesMaxLab,
             movimentoGratisDisponivel:a.movimentoGratisDisponivel!==false,modoMovimento:valido?a.modoMovimento:n.modoMovimento,
-            iniciativaLab:Number.isFinite(Number(a.iniciativaLab))?Number(a.iniciativaLab):null};});
+            iniciativaLab:Number.isFinite(Number(a.iniciativaLab))?Number(a.iniciativaLab):null,
+            combateLab:a.combateLab?JSON.parse(JSON.stringify(a.combateLab)):n.combateLab};});
     labSalvarLocal_();labRender_();
 };
 window.labAdicionarBoneco_=function(){
     const n=(labEstado_.tokens||[]).filter(t=>String(t.id).startsWith('dummy:')).length+1;
     labEstado_.tokens.push({id:`dummy:${Date.now()}`,nome:`Boneco de treino ${n}`,imagem:'',tipo:'Alvo',x:3+n,y:3,diametroM:.9,angulo:0,attrs:{TAM:10},
         acoesMaxLab:0,acoesAtuaisLab:0,movimentoGratisDisponivel:false,movimentoTerrestre:0,movimentoVoo:0,movimentoNatacao:0,modoMovimento:'livre',
-        alcanceAtaqueMax:0,livreMestre:true,iniciativaLab:null,iniciativaBonus:0});
+        alcanceAtaqueMax:0,livreMestre:true,iniciativaLab:null,iniciativaBonus:0,
+        combateLab:{hitMax:{'PV Global':20},hit:{'PV Global':20},armor:{'PV Global':0},ferimentos:{},morto:false,inconsciente:false}});
     labSalvarLocal_();labRender_();
 };
 window.labLimpar_=function(){
@@ -6510,6 +6540,18 @@ window.labEncerrarOportunidade_=function(){
     if(labEstado_.turnoIndex>=ordem.length){labEstado_.turnoIndex=0;labEstado_.rodada++;labPrepararNovaRodada_();notificar_(`Rodada ${labEstado_.rodada} iniciada. AÇ e 1 m gratuito foram repostos.`,'info',4200);}
     const atual=labTokenAtual_();if(atual)labEstado_.selecionadoId=String(atual.id);labSalvarLocal_();labRender_();
 };
+
+function labAutoAvancarSeSemAcoes_(){
+    if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return false;
+    const atual=labTokenAtual_();
+    if(!atual||Number(atual.acoesAtuaisLab||0)>0)return false;
+    setTimeout(()=>{
+        if(labEstado_.fase==='combate'&&!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab&&Number(labTokenAtual_()?.acoesAtuaisLab||0)<=0){
+            window.labEncerrarOportunidade_();
+        }
+    },350);
+    return true;
+}
 window.labVoltarPreparacao_=function(){
     if(labEstado_.fase==='combate'&&!confirm('Voltar à preparação? As posições serão mantidas, mas rodada e iniciativa serão encerradas.'))return;
     labEstado_.fase='preparacao';labEstado_.rodada=0;labEstado_.turnoIndex=0;labEstado_.ordemIniciativa=[];labEstado_.pendenciaLab=null;labEstado_.danoPendenteLab=null;for(const t of labEstado_.tokens||[])t.iniciativaLab=null;labSalvarLocal_();labRender_();
@@ -6688,6 +6730,7 @@ window.labResponderDefesa_=function(defender=true){
     labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
     labEstado_.logLab=labEstado_.logLab.slice(0,20);
     labSalvarLocal_();labRender_();
+    if(!labEstado_.danoPendenteLab)labAutoAvancarSeSemAcoes_();
 };
 function labExpressaoDano_(atacante,item){
     let expr=String(item?.dano||'').trim();
@@ -6699,19 +6742,81 @@ function labExpressaoDano_(atacante,item){
     }
     return expr;
 }
+
+function labLocalizacaoD20_(){
+    const roll=1+Math.floor(Math.random()*20);
+    let local='Cabeça';
+    if(roll<=3)local='Perna Direita';
+    else if(roll<=6)local='Perna Esquerda';
+    else if(roll<=9)local='Abdômen';
+    else if(roll<=12)local='Peito';
+    else if(roll<=15)local='Braço Direito';
+    else if(roll<=18)local='Braço Esquerdo';
+    return {roll,local};
+}
+function labAplicarDanoLocal_(defensor,total,item){
+    const st=labGarantirSnapshotCombate_(defensor);
+    if(!st)return null;
+    const locs=Object.keys(st.hitMax||{});
+    let roll=null,local='';
+    if(locs.length===1&&locs[0]==='PV Global'){
+        local='PV Global';
+    }else{
+        const lr=labLocalizacaoD20_();roll=lr.roll;local=lr.local;
+        if(!Object.prototype.hasOwnProperty.call(st.hit,local))local=locs[0]||'PV Global';
+    }
+    const antes=Number(st.hit?.[local]??st.hitMax?.[local]??0);
+    const pa=Math.max(0,Number(st.armor?.[local]||0));
+    const pen=Math.max(0,Number(obterPenetracaoArma_(item)||0));
+    const paEf=Math.max(0,pa-pen);
+    const final=Math.max(0,Number(total||0)-paEf);
+    const depois=antes-final;
+    st.hit[local]=depois;
+    const max=Math.max(1,Number(st.hitMax?.[local]||1));
+    let ferimento='';
+    if(local==='PV Global'){
+        if(depois<=0){st.morto=true;ferimento='Incapacitado';}
+    }else if(depois<=-max){
+        st.ferimentos[local]='Grave';ferimento='Ferimento Grave';
+        if(!/Braço|Perna/.test(local))st.inconsciente=true;
+    }else if(depois<=0){
+        st.ferimentos[local]='Sério';ferimento='Ferimento Sério';
+    }
+    const todos=Object.values(st.hit||{});
+    if(todos.length&&todos.every(v=>Number(v)<=0))st.morto=true;
+    return {roll,local,antes,depois,pa,pen,paEf,bruto:Number(total||0),final,ferimento};
+}
+function labResumoPVHtml_(t){
+    const st=labGarantirSnapshotCombate_(t);if(!st)return '';
+    const locs=Object.keys(st.hitMax||{});
+    if(!locs.length)return '';
+    return `<div style="display:grid;grid-template-columns:repeat(${Math.min(locs.length,7)},minmax(78px,1fr));gap:5px;margin-top:8px;">${locs.map(loc=>{
+        const at=Number(st.hit?.[loc]??0),mx=Number(st.hitMax?.[loc]??0),pa=Number(st.armor?.[loc]||0);
+        const bad=at<=0;
+        const curto=loc.replace('Braço Direito','Braço D.').replace('Braço Esquerdo','Braço E.').replace('Perna Direita','Perna D.').replace('Perna Esquerda','Perna E.');
+        return `<div style="padding:5px 6px;text-align:center;border-radius:6px;background:${bad?'rgba(231,76,60,.16)':'rgba(255,255,255,.045)'};border:1px solid ${bad?'rgba(231,76,60,.4)':'rgba(255,255,255,.08)'};"><small style="display:block;color:#aaa">${escaparHtmlInventario_(curto)}</small><b style="color:${bad?'#ff9b93':'#fff'}">PV ${at}/${mx}</b><small style="display:block;color:#8fc9e8">PA ${pa}</small></div>`;
+    }).join('')}</div>`;
+}
 window.labRolarDano_=function(){
     const dp=labEstado_.danoPendenteLab;if(!dp)return;
     const atacante=(labEstado_.tokens||[]).find(t=>String(t.id)===String(dp.atacanteId));
     const defensor=(labEstado_.tokens||[]).find(t=>String(t.id)===String(dp.defensorId));
-    if(!atacante||!defensor){labEstado_.danoPendenteLab=null;labSalvarLocal_();labRender_();return;}
-    const item=dp.item||{},expr=labExpressaoDano_(atacante,item),r=rolarExpressaoDanoCombate_(expr);
+    if(!atacante||!defensor){labEstado_.danoPendenteLab=null;labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();return;}
+    const item=dp.item||{},expr=labExpressaoDano_(atacante,item);
+    const critico=String(dp.grauAtaque||'').toLowerCase().includes('crít')||String(dp.grauAtaque||'').toLowerCase().includes('crit');
+    const r=critico?maximizarExpressaoDanoCombate_(expr):rolarExpressaoDanoCombate_(expr);
     if(!r){notificar_(`Não foi possível interpretar o dano: ${expr||'sem dano'}`,'aviso');return;}
-    labEstado_.ultimoResultadoLab=`${getNome(item)||item.nome||'Ataque'}: ${r.detalhes.join(' · ')} → ${r.total} de dano bruto contra ${defensor.nome}. Aplicação em localização/armadura ainda não altera a ficha.`;
+    const ap=labAplicarDanoLocal_(defensor,r.total,item);
+    if(!ap){notificar_('Não foi possível aplicar o dano no estado de simulação.','aviso');return;}
+    const armTxt=ap.pa?` · PA ${ap.pa}${ap.pen?` - Pen ${ap.pen}`:''} = ${ap.paEf}`:'';
+    const locTxt=ap.roll?`Localização d20 [${ap.roll}] → ${ap.local}`:ap.local;
+    labEstado_.ultimoResultadoLab=`${getNome(item)||item.nome||'Ataque'}: ${r.detalhes.join(' · ')} → ${r.total} bruto · ${locTxt}${armTxt} · dano final ${ap.final} · PV ${ap.antes} → ${ap.depois}${ap.ferimento?` · ${ap.ferimento}`:''}.`;
     labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
     labEstado_.logLab=labEstado_.logLab.slice(0,20);
     labEstado_.danoPendenteLab=null;
     labSalvarLocal_();labRender_();
-}
+    labAutoAvancarSeSemAcoes_();
+};
 window.labRolarAtaque_=function(){
     if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return;
     const t=labTokenAtual_(),c=labCharToken_(t);if(!t||!c)return;
@@ -6744,6 +6849,7 @@ window.labRolarAtaque_=function(){
     labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
     labEstado_.logLab=labEstado_.logLab.slice(0,20);
     labSalvarLocal_();labRender_();
+    if(!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab)labAutoAvancarSeSemAcoes_();
 };
 function labRenderActionPanel_(){
     const el=document.getElementById('labActionPanel');if(!el)return;
@@ -6759,7 +6865,7 @@ function labRenderActionPanel_(){
           <div style="margin-top:5px;color:#ccc;">Ataque: <b>${escaparHtmlInventario_(p.grauAtaque)}</b> · ${Number(p.distancia||0).toFixed(2)} m · AÇ do defensor: <b>${Number(d?.acoesAtuaisLab||0)}/${Number(d?.acoesMaxLab||0)}</b></div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
             <select onchange="labMudarDefesa_(this.value)" style="width:auto;min-width:220px;">${defs.map(x=>`<option value="${batalhaTokenPericia_(x)}" ${batalhaTokenPericia_(x)===d?.defesaLab?'selected':''}>${escaparHtmlInventario_(getNome(x))} (${labValorDefesa_(c,x)}%)</option>`).join('')||'<option>Sem defesa disponível</option>'}</select>
-            <button class="btn-small btn-select" onclick="labResponderDefesa_(true)" ${!defs.length||Number(d?.acoesAtuaisLab||0)<=0?'disabled':''}>🎲 Defender (1 AÇ)</button>
+            <button class="btn-small btn-select" onclick="labResponderDefesa_(true)" ${!defs.length||Number(d?.acoesAtuaisLab||0)<=0?'disabled':''} style="min-height:48px;padding:0 20px;font-size:1.02em;">🎲 Defender (1 AÇ)</button>
             <button class="btn-small" onclick="labResponderDefesa_(false)">✋ Não defender</button>
           </div></div>`;
         return;
@@ -6770,8 +6876,8 @@ function labRenderActionPanel_(){
         const expr=labExpressaoDano_(a,p.item);
         el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
           <div><strong style="color:#ffd54a;">💥 Ataque acertou</strong> · ${escaparHtmlInventario_(a?.nome||'Atacante')} → ${escaparHtmlInventario_(d?.nome||'Alvo')}<br><small style="color:#bbb;">${escaparHtmlInventario_(getNome(p.item)||p.item?.nome||'Ataque')} · dano ${escaparHtmlInventario_(expr||'—')}${p.defesaTexto?` · defesa: ${escaparHtmlInventario_(p.defesaTexto)}`:''}</small></div>
-          <button class="btn-small btn-select" onclick="labRolarDano_()">💥 Rolar dano</button>
-        </div>${labEstado_.ultimoResultadoLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(labEstado_.ultimoResultadoLab)}</div>`:''}`;
+          <button class="btn-small btn-select" onclick="labRolarDano_()" style="min-height:54px;min-width:180px;padding:0 22px;font-size:1.05em;">💥 Rolar dano</button>
+        </div>${d?labResumoPVHtml_(d):''}${labEstado_.ultimoResultadoLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(labEstado_.ultimoResultadoLab)}</div>`:''}`;
         return;
     }
 
@@ -6790,8 +6896,9 @@ function labRenderActionPanel_(){
         <label><small>Perícia</small><select onchange="labMudarAtaquePref_('periciaLab',this.value)" style="width:100%">${skills.map(p=>`<option value="${batalhaTokenPericia_(p)}" ${batalhaTokenPericia_(p)===t.periciaLab?'selected':''}>${escaparHtmlInventario_(getNome(p))} (${labValorPericiaAtaque_(c,p)}%)</option>`).join('')}</select></label>
         <label><small>Arma / ataque</small><select onchange="labMudarAtaquePref_('equipamentoLab',this.value)" style="width:100%">${eq.map(x=>`<option value="${escaparHtmlInventario_(x.valor)}" ${x.valor===t.equipamentoLab?'selected':''}>${escaparHtmlInventario_(x.rotulo)}</option>`).join('')||'<option>—</option>'}</select></label>
         <label><small>Alvo</small><select onchange="labSelecionarAlvo_(this.value)" style="width:100%">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(t.alvoLab)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
-        <button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''}>🎲 Atacar (1 AÇ)</button>
+        <button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:62px;min-width:170px;padding:0 22px;font-size:1.05em;align-self:end;">🎲 Atacar (1 AÇ)</button>
       </div>
+      ${alvo?labResumoPVHtml_(alvo):''}
       ${labEstado_.ultimoResultadoLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(labEstado_.ultimoResultadoLab)}</div>`:''}`;
 }
 function labBackgroundImage_(){
@@ -6844,7 +6951,7 @@ function labRender_(){
     const tokens=labEstado_.tokens.map(t=>{const d=Math.max(24,t.diametroM*ppm),sel=String(t.id)===String(labEstado_.selecionadoId),turno=labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id);
         const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
         const alvoAtual=labEstado_.fase==='combate'&&String(labTokenAtual_()?.alvoLab)===String(t.id);
-        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}</div></div>`;}).join('');
+        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}${t.combateLab?.morto?' · ☠️':t.combateLab?.inconsciente?' · 💤':''}</div></div>`;}).join('');
     map.innerHTML=overlay+tokens;labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
@@ -6873,7 +6980,8 @@ window.labPointerDown_=function(ev,id){
             let deg=Math.atan2(dx,-dy)*180/Math.PI;if(deg<0)deg+=360;t.angulo=Math.round(deg);
         }
         if(!prep){if(c.usaGratis)t.movimentoGratisDisponivel=false;if(c.acoes>0)t.acoesAtuaisLab=Math.max(0,t.acoesAtuaisLab-c.acoes);}
-        labSalvarLocal_();labRender_();};
+        labSalvarLocal_();labRender_();
+        if(!prep)labAutoAvancarSeSemAcoes_();};
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
 };
 labCarregarLocal_();
@@ -13999,7 +14107,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.14.0: facing travado por oportunidade, alcance do ataque selecionado, defesa e dano experimental no Laboratório -->
+<!-- Mesa Estelar v46.15.0: PV/armadura locais da simulação, dano por localização, botões alinhados e fim automático de oportunidade -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
