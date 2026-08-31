@@ -513,7 +513,6 @@
                         <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)" data-i18n="charTabInventory">🎒 Inventário</button>
                         <button class="char-tab-btn" id="charOtherTraitsTabBtn" onclick="mostrarCharAba('combate', this)">🧩 Outras Características</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)" data-i18n="charTabNotes">📔 Anotações</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('cenario-atual', this)">🪐 Cenário Atual</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('rolagem', this)" data-i18n="charTabRolls">🎲 Rolagem</button>
                     </div>
 
@@ -743,14 +742,6 @@
                             <h3 style="margin-top:20px; color:#ffd700;" data-i18n="specialEventsTitle">⭐ Eventos Especiais</h3>
                             <textarea id="charEventos" rows="6" placeholder="Eventos especiais..."></textarea>
                             <button class="btn-save" onclick="salvarAnotacoes()" style="margin-top:15px;">💾 Salvar</button>
-                        </div>
-                    </div>
-
-                    <!-- CENÁRIO ATUAL -->
-                    <div id="char-cenario-atual" class="char-tab-content">
-                        <div class="form-section">
-                            <h3>🪐 Cenário Atual</h3>
-                            <div id="charCurrentScenarioPublic"><div style="color:#888;">Nenhum cenário público carregado.</div></div>
                         </div>
                     </div>
 
@@ -6540,7 +6531,7 @@ function batalhaStatusPublicoDoChar_(char){
     if(feridos.some(([,f])=>f?.grave))partes.push('🔴 Ferido gravemente');
     else if(feridos.some(([,f])=>f?.serio))partes.push('🟠 Ferido seriamente');
     const t=c.primeirosSocorrosEmAndamento;
-    if(t)partes.push(t.fase==='executando'?'🩹 Recebendo/realizando Primeiros Socorros':'🩹 Primeiros Socorros iniciados');
+    if(t)partes.push(`🩹 Primeiros Socorros ${Math.max(1,Number(t.turnosInvestidos||1))}/3${t.fase==='executando'?' · decidir concluir/continuar':''}`);
     return partes;
 }
 function batalhaSincronizarStatusPublico_(char,participante){
@@ -6574,6 +6565,7 @@ function batalhaSanitizarParticipante_(c){
         movimentoPendente:null,
         movimentoGratisUsadoRodada:0,
         passagensNaRodada:0,
+        dificuldadeMestre:null,
         primeirosSocorrosEmAndamento:c?.combate?.primeirosSocorrosEmAndamento
             ? JSON.parse(JSON.stringify(c.combate.primeirosSocorrosEmAndamento))
             : null,
@@ -7218,15 +7210,39 @@ async function batalhaIniciarPrimeirosSocorrosMestre_(id,alvoId,local){
     if(!batalhaLocaisFeridosPrimeirosSocorros_(alvo).some(x=>x.local===local))return false;
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
     c.combate=c.combate||{};
-    const tratamento={alvoId:String(alvoId),alvoNome:ap.nome,local,fase:'aguardando'};
+    const tratamento={alvoId:String(alvoId),alvoNome:ap.nome,local,fase:'aguardando',turnosInvestidos:1};
     c.combate.primeirosSocorrosEmAndamento=tratamento;
     p.primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(tratamento));
     await batalhaPersistirCombateChar_(c,p);
-    batalhaLogPush_(batalhaEstado_,`${p.nome} iniciou voluntariamente Primeiros Socorros em ${ap.nome} (${local}). O turno foi encerrado automaticamente; a próxima oportunidade poderá concluir o atendimento.`,'primeiros_socorros',{actorId:p.id,targetId:ap.id});
+    batalhaLogPush_(batalhaEstado_,`${p.nome} iniciou voluntariamente Primeiros Socorros em ${ap.nome} (${local}). O turno foi encerrado automaticamente; na próxima oportunidade poderá concluir ou investir mais um turno no atendimento.`,'primeiros_socorros',{actorId:p.id,targetId:ap.id});
     batalhaUltimoResultado_[p.id]='Primeiros Socorros iniciados. O turno foi encerrado automaticamente.';
     await batalhaAvancarTurnoInterno_();
     await batalhaSalvarEstado_();return true;
 }
+async function batalhaContinuarPrimeirosSocorrosMestre_(id){
+    const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);
+    if(!p||!c)return false;
+    const t=p.primeirosSocorrosEmAndamento||c?.combate?.primeirosSocorrosEmAndamento||null;
+    const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
+    if(!t||String(atual?.id)!==String(id)||Number(p.acoesAtuais||0)<=0)return false;
+    const n=Math.max(1,Number(t.turnosInvestidos||1));
+    if(n>=3)return false;
+    p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
+    const novo={...t,turnosInvestidos:n+1,fase:'aguardando'};
+    c.combate=c.combate||{};
+    c.combate.primeirosSocorrosEmAndamento=novo;
+    p.primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(novo));
+    await batalhaPersistirCombateChar_(c,p);
+    batalhaLogPush_(batalhaEstado_,`${p.nome} continuou o atendimento em ${novo.alvoNome} (${novo.local}). Tempo investido: ${novo.turnosInvestidos}/3 turnos.`,'primeiros_socorros',{actorId:p.id,targetId:novo.alvoId});
+    batalhaUltimoResultado_[p.id]=`Atendimento continuado: ${novo.turnosInvestidos}/3 turnos.`;
+    await batalhaAvancarTurnoInterno_();
+    await batalhaSalvarEstado_();
+    return true;
+}
+window.batalhaContinuarPrimeirosSocorros_=async id=>{
+    if(batalhaEhMestre_())await batalhaContinuarPrimeirosSocorrosMestre_(id);
+    else await batalhaEnviarAcao_(id,'primeiros_socorros_continuar',{});
+};
 async function batalhaConcluirPrimeirosSocorrosMestre_(id){
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);
     if(!p||!c)return false;
@@ -7262,8 +7278,12 @@ async function batalhaConcluirPrimeirosSocorrosMestre_(id){
           x={local:t.local,max,atual:Number(alvo.combate?.hitLocations?.[t.local]??max)};
     const per=batalhaPrimeirosSocorrosPericia_(c),
           base=obterValorRegistroPericia_(c,per.id,per.__especializacao),
-          kit=batalhaKitPrimeirosSocorros_(c);
-    const aj=aplicarDificuldadeEFadiga_(c,base,'padrao',kit?0:1),
+          kit=batalhaKitPrimeirosSocorros_(c),
+          turnos=Math.max(1,Math.min(3,Number(t.turnosInvestidos||1))),
+          dificuldadeTempo=kit?(turnos>=3?'muito_facil':turnos===2?'facil':'padrao'):'padrao';
+    // Sem kit, tempo extra não melhora além de Padrão. Fadiga e outras limitações
+    // continuam podendo tornar a dificuldade efetiva pior.
+    const aj=aplicarDificuldadeEFadiga_(c,base,dificuldadeTempo,0),
           roll=Math.floor(Math.random()*100)+1,
           r=classificarD100_(aj.valor,roll);
 
@@ -7298,7 +7318,7 @@ async function batalhaConcluirPrimeirosSocorrosMestre_(id){
 
     batalhaLogPush_(
         batalhaEstado_,
-        `${p.nome} concluiu Primeiros Socorros em ${ap.nome} (${t.local}) ${roll}/${aj.valor} → ${r.grau}. ${res}${kit?` Kit: ${Number(kit.item.pvAtual??0)} PV restantes.`:' Sem kit: +1 grau.'}`,
+        `${p.nome} concluiu Primeiros Socorros em ${ap.nome} (${t.local}) ${roll}/${aj.valor} → ${r.grau}. ${res}${kit?` Kit: ${Number(kit.item.pvAtual??0)} PV restantes.`:' Sem kit.'} Tempo: ${turnos}/3 turno(s); dificuldade-base ${aj.escolhida.nome}.`,
         'primeiros_socorros',
         {actorId:p.id,targetId:ap.id}
     );
@@ -7307,6 +7327,10 @@ async function batalhaConcluirPrimeirosSocorrosMestre_(id){
     await batalhaSalvarEstado_();
     return true;
 }
+window.batalhaConcluirPrimeirosSocorros_=async id=>{
+    if(batalhaEhMestre_())await batalhaConcluirPrimeirosSocorrosMestre_(id);
+    else await batalhaEnviarAcao_(id,'primeiros_socorros_concluir',{});
+};
 window.batalhaPrimeirosSocorros_=async id=>{
     const p=batalhaParticipante_(id),c=batalhaCharLocal_(id),atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)];
     if(!p||!c||!batalhaPodeControlar_(p)||batalhaEstaTratandoPrimeirosSocorros_(c)||String(atual?.id)!==String(id)||Number(p.acoesAtuais||0)<=0)return;
@@ -7347,7 +7371,7 @@ function batalhaControlCard_(p,char){
             <div><small style="color:#888;">PA</small><br><strong>${paResumoCombateMestre_(char)}</strong></div>
             <div><small style="color:#888;">AÇ</small><br><strong style="color:${Number(p.acoesAtuais||0)<=0?'#ff8f8f':'#8ff0a8'};">${Number(p.acoesAtuais||0)}/${Number(p.acoesMax||0)}</strong></div>
             <div><small style="color:#888;">P. Cmbt.</small><select id="battleSkill_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','pericia',this.value)">${skillOptions}</select></div>
-            <div><small style="color:#888;">Dif.</small><select id="battleDiff_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','dificuldade',this.value)">${batalhaDificuldadeOptions_(prefs.dificuldade,char)}</select></div>
+            <div><small style="color:#888;">Dif.</small><select id="battleDiff_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarDificuldade_('${p.id}',this.value)">${batalhaDificuldadeOptions_(prefs.dificuldade,char)}</select></div>
             <div><small style="color:#888;">Equipamento</small><select id="battleEquip_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','equipamento',this.value)">${equipOptions||'<option value="">—</option>'}</select></div>
             <div><small style="color:#888;">Alvo</small><select id="battleTarget_${p.id}" style="width:100%;margin-top:4px;" onchange="batalhaMudarPref_('${p.id}','alvo',this.value)">${targetOptions||'<option value="">—</option>'}</select></div>
         </div>
@@ -7368,7 +7392,10 @@ function batalhaControlCard_(p,char){
             <button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente||tratandoPS?'disabled':''} onclick="batalhaMovimento_('${p.id}')">👣 Movimento (1 AÇ)</button>
             <button class="btn-small" ${batalhaTemIniciativa_(p)?'disabled':''} onclick="batalhaRolarIniciativa_('${p.id}')">⚡ ${batalhaTemIniciativa_(p)?'Iniciativa rolada':'Iniciativa'}</button>
             <span style="margin-left:auto;"></span>
-            ${atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">${tratamentoExecutando?'🩹 Concluir atendimento':Number(p.passagensNaRodada||0)>0?'⏭ Passar (-1 AÇ)':'⏭ Adiar'}</button>`:''}
+            ${atual&&tratamentoExecutando?`
+                <button class="btn-small btn-select" onclick="batalhaConcluirPrimeirosSocorros_('${p.id}')">🩹 Concluir atendimento</button>
+                ${Math.max(1,Number(batalhaTratamentoPrimeirosSocorros_(char)?.turnosInvestidos||1))<3?`<button class="btn-small" onclick="batalhaContinuarPrimeirosSocorros_('${p.id}')">⏳ Continuar atendimento (${Math.max(1,Number(batalhaTratamentoPrimeirosSocorros_(char)?.turnosInvestidos||1))}/3)</button>`:''}
+            `:atual?`<button class="btn-small" onclick="batalhaProximo_('${p.id}')">${Number(p.passagensNaRodada||0)>0?'⏭ Passar (-1 AÇ)':'⏭ Adiar'}</button>`:''}
             <span style="width:14px;"></span>
             ${batalhaPodePrimeirosSocorros_(char)&&!tratandoPS?`<button class="btn-small" ${!atual||Number(p.acoesAtuais||0)<=0||batalhaEstado_?.pendencia||batalhaEstado_?.danoPendente?'disabled':''} onclick="batalhaPrimeirosSocorros_('${p.id}')" title="Ação opcional: escolha se deseja iniciar o tratamento.">🩹 Iniciar Primeiros Socorros</button>`:''}
             ${batalhaEhMestre_()?`<button class="btn-small btn-delete" onclick="batalhaRemoverParticipante_('${p.id}')">✕ Remover</button>`:''}
@@ -7460,6 +7487,22 @@ window.batalhaMudarPref_=async(id,campo,valor)=>{
     await batalhaSalvarPrefs_(char);
     renderizarBatalhaCompartilhada_();
 };
+window.batalhaMudarDificuldade_=async function(id,valor){
+    const p=batalhaParticipante_(id),c=batalhaCharLocal_(id);
+    if(!p||!c||!batalhaPodeControlar_(p))return;
+    const prefs=batalhaPrefsChar_(c);
+    prefs.dificuldade=valor;
+    if(batalhaEhMestre_()){
+        // A escolha manual do mestre é uma regra persistente da batalha.
+        p.dificuldadeMestre=valor;
+        batalhaPrefsMestre_[c.id]={...prefs};
+        await batalhaSalvarEstado_();
+    }else{
+        await batalhaSalvarPrefs_(c);
+    }
+    renderizarBatalhaCompartilhada_();
+};
+
 
 function renderizarBatalhaCandidatos_(){
     const box=document.getElementById('battleMasterCandidates');
@@ -7565,15 +7608,26 @@ function batalhaPrimeiroTurnoValido_(){
     const ps=batalhaEstado_?.participantes||[];
     return ps.findIndex(p=>batalhaParticipantePodeReceberTurno_(p));
 }
+function batalhaDificuldadeBaseTurno_(p,char){
+    // Se o mestre impôs uma dificuldade, ela permanece durante toda a batalha
+    // até ele mudar de novo. Caso contrário, começa no mais próximo de Padrão
+    // permitido pelas limitações atuais, especialmente Fadiga.
+    if(p?.dificuldadeMestre)return p.dificuldadeMestre;
+    const idxPadrao=Math.max(0,GRAUS_DIFICULDADE.findIndex(g=>g.id==='padrao'));
+    const idxFadiga=Math.max(0,Math.min(indiceMinimoDificuldadeFadiga_(char),GRAUS_DIFICULDADE.length-1));
+    return GRAUS_DIFICULDADE[Math.max(idxPadrao,idxFadiga)]?.id||'padrao';
+}
 async function batalhaResetarSelecoesNovoTurno_(p){
     if(!p)return;
     const c=batalhaCharLocal_(p.id);if(!c)return;
-    // Perícia, equipamento e alvo permanecem como o jogador deixou.
-    // Somente a dificuldade volta para Padrão em cada nova oportunidade.
+    // Perícia, equipamento e alvo permanecem como estavam.
+    // A dificuldade retorna ao valor mais próximo de Padrão permitido pelas
+    // penalidades atuais, exceto quando existe uma dificuldade imposta pelo mestre.
     const atuais={...batalhaPrefsChar_(c)};
-    const novas={...atuais,dificuldade:'padrao'};
+    const dificuldadeTurno=batalhaDificuldadeBaseTurno_(p,c);
+    const novas={...atuais,dificuldade:dificuldadeTurno};
     batalhaGarantirPrefsValidas_(c,novas);
-    novas.dificuldade='padrao';
+    novas.dificuldade=dificuldadeTurno;
 
     if(batalhaEhMestre_())batalhaPrefsMestre_[p.id]={...novas};
     else batalhaPrefsJogador_[p.id]={...novas};
@@ -7632,7 +7686,7 @@ window.batalhaProximo_=async(id)=>{
     if(batalhaEstado_?.danoPendente){notificar_('Resolva os efeitos especiais e o dano pendente antes de avançar.','aviso');return;}
     const cTrat=batalhaCharLocal_(id);
     if(batalhaTratamentoPrimeirosSocorros_(cTrat)?.fase==='executando'){
-        if(batalhaEhMestre_())await batalhaConcluirPrimeirosSocorrosMestre_(id);else await batalhaEnviarAcao_(id,'primeiros_socorros_concluir',{});
+        notificar_('Escolha Concluir atendimento ou Continuar atendimento.','aviso');
         return;
     }
     if(batalhaEhMestre_()){
@@ -8322,6 +8376,9 @@ async function batalhaProcessarAcaoJogador_(acao,refDoc){
         }else if(acao.tipo==='primeiros_socorros_iniciar'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
             if(atual?.id===p.id)await batalhaIniciarPrimeirosSocorrosMestre_(p.id,acao.payload?.alvoId,acao.payload?.local);
+        }else if(acao.tipo==='primeiros_socorros_continuar'){
+            const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
+            if(atual?.id===p.id)await batalhaContinuarPrimeirosSocorrosMestre_(p.id);
         }else if(acao.tipo==='primeiros_socorros_concluir'){
             const atual=batalhaEstado_.participantes?.[Number(batalhaEstado_.turnoIndex||0)];
             if(atual?.id===p.id)await batalhaConcluirPrimeirosSocorrosMestre_(p.id);
@@ -9728,7 +9785,20 @@ const p={
     alcancesAtaques:String(document.getElementById('gmEntAlcances')?.value||'').trim(),
     imagem:String(document.getElementById('gmEntImagem')?.value||'').trim(),
     descricao:String(document.getElementById('gmEntDescricao')?.value||'').trim()
-};await setDoc(doc(db,gmEntidadeSelecionada_.tipo==='npc'?'npcs':'criaturas',String(m.id)),p,{merge:true});Object.assign(m,p);somSalvar_();notificar_('Modelo salvo.','info');renderizarFichasEntidadesMestre_();};
+};
+try{
+    const colecao=gmEntidadeSelecionada_.tipo==='npc'?'npcs':'criaturas';
+    await setDoc(doc(db,colecao,String(m.id)),p,{merge:true});
+    Object.assign(m,p);
+    somSalvar_();
+    if(gmEntidadeSelecionada_.tipo==='criatura')renderizarBancoCriaturas_();
+    else renderizarBancoNPCs();
+    notificar_('Modelo salvo no Banco de Dados. Novos indivíduos usarão estes valores.','info');
+    renderizarFichasEntidadesMestre_();
+}catch(err){
+    console.error('Erro ao salvar modelo pela ficha:',err);
+    notificar_('Não foi possível salvar o modelo no Banco de Dados.','erro');
+}};
 function gmEntInstanciaChar_(p){return p?.npcBancoId?criarNPCCombateDoBanco_(npcBancoPorId_(p.npcBancoId),p):p?.criaturaBancoId?criarCriaturaCombateDoBanco_(criaturaBancoPorId_(p.criaturaBancoId),p):null;}
 window.renderizarInstanciasEntidades_=function(){
  const el=document.getElementById('gmEntInstanciasAtivas');if(!el)return;const ps=(batalhaEstado_?.participantes||[]).filter(p=>p.npcBancoId||p.criaturaBancoId);
@@ -9737,7 +9807,24 @@ window.renderizarInstanciasEntidades_=function(){
 };
 window.adicionarItemInstanciaEntidade_=async function(id){const p=batalhaParticipante_(id),c=gmEntInstanciaChar_(p);if(!p||!c||!batalhaEhMestre_())return;const itemId=document.getElementById(`gmEntItem_${id}`)?.value,d=document.getElementById(`gmEntDestino_${id}`)?.value||'mochila',base=(itensDB||[]).find(x=>String(x.id)===String(itemId));if(!base)return notificar_('Escolha um item.','aviso');c.inventario=c.inventario||{};c.inventario[d]=Array.isArray(c.inventario[d])?c.inventario[d]:(d==='equipado'?Array(12).fill(null):d==='bolso'?Array(2).fill(null):Array(20).fill(null));const ix=c.inventario[d].findIndex(x=>!x);if(ix<0)return notificar_('Compartimento cheio.','aviso');const mc=cargaMaxArma_(base);c.inventario[d][ix]={...JSON.parse(JSON.stringify(base)),idBanco:String(base.id),instanciaId:`ent_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,pvAtual:Number(base.pv||1),...(mc>0?{cargaAtual:mc,cargaMax:mc}:{})};if(p.npcBancoId)p.npcInventario=JSON.parse(JSON.stringify(c.inventario));else p.criaturaInventario=JSON.parse(JSON.stringify(c.inventario));await batalhaSalvarEstado_();renderizarInstanciasEntidades_();};
 window.restaurarInstanciaEntidade_=async function(id){const p=batalhaParticipante_(id),c=gmEntInstanciaChar_(p);if(!p||!c||!batalhaEhMestre_())return;c.combate=c.combate||{};c.combate.hitLocations={};c.combate.morto=false;c.combate.incapacitado=false;c.combate.inconsciente=false;c.combate.caido=false;c.combate.sangramentoAtivo=false;c.combate.ferimentos={};if(p.npcBancoId)p.npcCombate=JSON.parse(JSON.stringify(c.combate));else p.criaturaCombate=JSON.parse(JSON.stringify(c.combate));batalhaSincronizarStatusPublico_(c,p);await batalhaSalvarEstado_();renderizarInstanciasEntidades_();renderizarBatalhaCompartilhada_();notificar_('Indivíduo restaurado.','info');};
-window.abrirAdminNoEscudo_=function(tipo,btn){if(!batalhaEhMestre_())return;document.querySelectorAll('.gm-sub-content').forEach(e=>e.classList.add('hidden'));document.querySelectorAll('.gm-subtab-btn').forEach(e=>e.classList.remove('active','btn-select'));if(btn)btn.classList.add('active','btn-select');let h=document.getElementById('gm-admin-host');if(!h){h=document.createElement('div');h.id='gm-admin-host';h.className='gm-sub-content';document.querySelector('#escudo .form-section')?.appendChild(h);}h.classList.remove('hidden');h.innerHTML='';const p=document.getElementById(tipo);if(!p)return;p.classList.add('active');h.appendChild(p);if(tipo==='banco')renderizarBancoDados();};
+window.abrirAdminNoEscudo_=function(tipo,btn){
+    if(!batalhaEhMestre_())return;
+    document.querySelectorAll('.gm-sub-content').forEach(e=>e.classList.add('hidden'));
+    document.querySelectorAll('.gm-subtab-btn').forEach(e=>e.classList.remove('active','btn-select'));
+    if(btn)btn.classList.add('active','btn-select');
+    let h=document.getElementById('gm-admin-host');
+    if(!h){
+        h=document.createElement('div');h.id='gm-admin-host';h.className='gm-sub-content';
+        document.querySelector('#escudo .form-section')?.appendChild(h);
+    }
+    // Não apagar o painel administrativo ao alternar Banco/Configurações.
+    // h.innerHTML='' destruía o próprio Banco de Dados depois que ele era movido para cá.
+    for(const filho of [...h.children])filho.classList.remove('active');
+    const p=document.getElementById(tipo);
+    if(!p){notificar_('Painel administrativo não encontrado. Recarregue a página.','aviso');return;}
+    h.classList.remove('hidden');p.classList.add('active');h.appendChild(p);
+    if(tipo==='banco')renderizarBancoDados();
+};
 function criaturaBancoPorId_(id){return (criaturasDB||[]).find(x=>String(x.id)===String(id))||null;}
 function renderizarBancoCriaturas_(){
  const e=document.getElementById('listaBancoCriaturas');if(!e)return;
@@ -13082,7 +13169,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.9.3: instâncias limpas, seleções persistentes, movimento auto-avança e UI de entidades refinada -->
+<!-- Mesa Estelar v46.9.4: cenário único, banco estável, dificuldade contextual e Primeiros Socorros em até 3 turnos -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
