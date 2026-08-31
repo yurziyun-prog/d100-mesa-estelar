@@ -6538,7 +6538,20 @@ window.labEncerrarOportunidade_=function(){
     const ordem=labEstado_.ordemIniciativa||[];if(!ordem.length)return;
     labEstado_.turnoIndex++;
     if(labEstado_.turnoIndex>=ordem.length){labEstado_.turnoIndex=0;labEstado_.rodada++;labPrepararNovaRodada_();notificar_(`Rodada ${labEstado_.rodada} iniciada. AÇ e 1 m gratuito foram repostos.`,'info',4200);}
-    const atual=labTokenAtual_();if(atual)labEstado_.selecionadoId=String(atual.id);labSalvarLocal_();labRender_();
+    let atual=labTokenAtual_();
+    // Participantes mortos/inconscientes não recebem uma oportunidade ativa.
+    // Avança pela ordem até encontrar alguém capaz de agir.
+    let seguranca=0;
+    while(atual && seguranca<(labEstado_.ordemIniciativa||[]).length){
+        const st=labGarantirSnapshotCombate_(atual);
+        if(!st?.morto&&!st?.inconsciente)break;
+        labEstado_.turnoIndex++;
+        if(labEstado_.turnoIndex>=ordem.length){
+            labEstado_.turnoIndex=0;labEstado_.rodada++;labPrepararNovaRodada_();
+        }
+        atual=labTokenAtual_();seguranca++;
+    }
+    if(atual)labEstado_.selecionadoId=String(atual.id);labSalvarLocal_();labRender_();
 };
 
 function labAutoAvancarSeSemAcoes_(){
@@ -6682,12 +6695,33 @@ window.labSelecionarAlvo_=function(v){
     labSalvarLocal_();labRender_();
 };
 
+
+function labSomAtaque_(item,grau=''){
+    try{
+        const nome=getNome(item)||item?.nome||'';
+        if(String(grau).toLowerCase().includes('crít')||String(grau).toLowerCase().includes('crit')){
+            somCriticoArma_(item,nome);
+        }else{
+            tocarSomDano_(item,nome);
+        }
+    }catch(_){try{somDado_();}catch(__){}}
+}
+function labSomDefesa_(){try{somDado_();}catch(_){}}
+function labSomDanoAplicado_(item){
+    try{
+        const tipo=tipoSomArma_(item,getNome(item)||item?.nome||'');
+        // O ataque já toca o som da arma. No dano usamos um impacto curto,
+        // evitando repetir exatamente o mesmo disparo.
+        if(tipo==='soco'||tipo==='espada')somSoco_();
+        else somDado_();
+    }catch(_){}
+}
 function labDefesasDisponiveis_(t){
     const c=labCharToken_(t);if(!c)return [];
-    return (batalhaListaPericias_(c)||[]).filter(p=>{
-        if(c.__npcTemporario||c.__criaturaTemporaria)return periciaCriaturaPodeDefender_(c,p);
-        return p.id==='esquiva'||periciaPodeAparar_(p);
-    });
+    // A lista de defesa do motor principal já acrescenta Esquiva mesmo quando
+    // a criatura não a usa como perícia ofensiva. Isso evita monstros ágeis,
+    // como a Besta Ululante, ficarem artificialmente sem reação.
+    return batalhaListaPericiasDefesa_(c)||[];
 }
 function labValorDefesa_(c,per){
     if(!c||!per)return 0;
@@ -6713,6 +6747,7 @@ window.labResponderDefesa_=function(defender=true){
         if(!defs.length){notificar_('Nenhuma defesa disponível.','aviso');return;}
         if(!defs.some(p=>batalhaTokenPericia_(p)===defensor.defesaLab))defensor.defesaLab=batalhaTokenPericia_(defs[0]);
         const per=labPericiaPorToken_(defensor,defensor.defesaLab),valor=labValorDefesa_(c,per),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
+        labSomDefesa_();
         dg=batalhaResultadoGradeValor_(r.grau);
         defensor.acoesAtuaisLab=Math.max(0,Number(defensor.acoesAtuaisLab||0)-1);
         txt=`${getNome(per)} ${roll}/${valor} → ${r.grau}`;
@@ -6808,6 +6843,7 @@ window.labRolarDano_=function(){
     if(!r){notificar_(`Não foi possível interpretar o dano: ${expr||'sem dano'}`,'aviso');return;}
     const ap=labAplicarDanoLocal_(defensor,r.total,item);
     if(!ap){notificar_('Não foi possível aplicar o dano no estado de simulação.','aviso');return;}
+    labSomDanoAplicado_(item);
     const armTxt=ap.pa?` · PA ${ap.pa}${ap.pen?` - Pen ${ap.pen}`:''} = ${ap.paEf}`:'';
     const locTxt=ap.roll?`Localização d20 [${ap.roll}] → ${ap.local}`:ap.local;
     labEstado_.ultimoResultadoLab=`${getNome(item)||item.nome||'Ataque'}: ${r.detalhes.join(' · ')} → ${r.total} bruto · ${locTxt}${armTxt} · dano final ${ap.final} · PV ${ap.antes} → ${ap.depois}${ap.ferimento?` · ${ap.ferimento}`:''}.`;
@@ -6832,13 +6868,28 @@ window.labRolarAtaque_=function(){
         labSalvarLocal_();labRender_();notificar_(labEstado_.ultimoResultadoLab,'aviso',4500);return;
     }
     const valor=labValorPericiaAtaque_(c,per),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
+    labSomAtaque_(item,r.grau);
     t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);
     const base=`${t.nome} → ${alvo.nome}: ${getNome(per)} ${roll}/${valor} → ${r.grau} · ${dist.toFixed(2)} m · ${getNome(item)}.`;
+    let danoAutomatico=false;
     if(r.sucesso){
         const pend={id:`lab_${Date.now()}`,atacanteId:String(t.id),defensorId:String(alvo.id),grauAtaque:r.grau,
             rolagemAtaque:roll,valorAtaque:valor,pericia:getNome(per),item:JSON.parse(JSON.stringify(item)),distancia:dist,alcance:alc};
-        if(String(alvo.id).startsWith('dummy:')||Number(alvo.acoesAtuaisLab||0)<=0){
-            labEstado_.danoPendenteLab=pend;labEstado_.ultimoResultadoLab=base+' Alvo sem reação: dano liberado.';
+        const stAlvo=labGarantirSnapshotCombate_(alvo);
+        const defesasPossiveis=String(alvo.id).startsWith('dummy:')?[]:labDefesasDisponiveis_(alvo);
+        const semReacao=String(alvo.id).startsWith('dummy:')
+            || Number(alvo.acoesAtuaisLab||0)<=0
+            || !defesasPossiveis.length
+            || !!stAlvo?.morto
+            || !!stAlvo?.inconsciente;
+        if(semReacao){
+            labEstado_.danoPendenteLab=pend;
+            const motivo=stAlvo?.morto?'alvo já incapacitado/morto':
+                stAlvo?.inconsciente?'alvo inconsciente':
+                Number(alvo.acoesAtuaisLab||0)<=0?'sem AÇ para reagir':
+                !defesasPossiveis.length?'sem defesa possível':'alvo sem reação';
+            labEstado_.ultimoResultadoLab=base+` ${motivo}; dano automático.`;
+            danoAutomatico=true;
         }else{
             labEstado_.pendenciaLab=pend;labEstado_.ultimoResultadoLab=base+` Aguardando defesa de ${alvo.nome}.`;
         }
@@ -6849,7 +6900,15 @@ window.labRolarAtaque_=function(){
     labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
     labEstado_.logLab=labEstado_.logLab.slice(0,20);
     labSalvarLocal_();labRender_();
-    if(!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab)labAutoAvancarSeSemAcoes_();
+    if(danoAutomatico){
+        setTimeout(()=>{
+            if(labEstado_.danoPendenteLab?.atacanteId===String(t.id)&&labEstado_.danoPendenteLab?.defensorId===String(alvo.id)){
+                window.labRolarDano_();
+            }
+        },420);
+    }else if(!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab){
+        labAutoAvancarSeSemAcoes_();
+    }
 };
 function labRenderActionPanel_(){
     const el=document.getElementById('labActionPanel');if(!el)return;
@@ -6865,8 +6924,9 @@ function labRenderActionPanel_(){
           <div style="margin-top:5px;color:#ccc;">Ataque: <b>${escaparHtmlInventario_(p.grauAtaque)}</b> · ${Number(p.distancia||0).toFixed(2)} m · AÇ do defensor: <b>${Number(d?.acoesAtuaisLab||0)}/${Number(d?.acoesMaxLab||0)}</b></div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
             <select onchange="labMudarDefesa_(this.value)" style="width:auto;min-width:220px;">${defs.map(x=>`<option value="${batalhaTokenPericia_(x)}" ${batalhaTokenPericia_(x)===d?.defesaLab?'selected':''}>${escaparHtmlInventario_(getNome(x))} (${labValorDefesa_(c,x)}%)</option>`).join('')||'<option>Sem defesa disponível</option>'}</select>
-            <button class="btn-small btn-select" onclick="labResponderDefesa_(true)" ${!defs.length||Number(d?.acoesAtuaisLab||0)<=0?'disabled':''} style="min-height:48px;padding:0 20px;font-size:1.02em;">🎲 Defender (1 AÇ)</button>
-            <button class="btn-small" onclick="labResponderDefesa_(false)">✋ Não defender</button>
+            ${defs.length&&Number(d?.acoesAtuaisLab||0)>0
+              ? `<button class="btn-small btn-select" onclick="labResponderDefesa_(true)" style="min-height:48px;padding:0 20px;font-size:1.02em;">🎲 Defender (1 AÇ)</button><button class="btn-small" onclick="labResponderDefesa_(false)">✋ Não defender</button>`
+              : `<span style="color:#ffb0b0;font-weight:700;">Sem reação possível · dano será automático</span>`}
           </div></div>`;
         return;
     }
@@ -6889,7 +6949,7 @@ function labRenderActionPanel_(){
     const alvo=alvos.find(x=>String(x.id)===String(t.alvoLab)),item=labItemSelecionado_(t);
     const dist=alvo?labDistanciaEntre_(t,alvo):Infinity,alc=item?labAlcanceAtaque_(t,item):0;
     el.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px;">
-        <strong style="color:#ffd54a;">🎯 Ação de ${escaparHtmlInventario_(t.nome)}</strong>
+        <strong style="color:#ffd54a;">🎯 Ação de ${escaparHtmlInventario_(t.nome)}</strong><span style="font-size:.86em;color:#9fc6d8;">🔊 sons de combate ativos</span>
         <span style="color:${dist<=alc?'#9fffb0':'#ff9b93'}">${alvo?`Distância até ${escaparHtmlInventario_(alvo.nome)}: <b>${dist.toFixed(2)} m</b> · alcance <b>${alc.toFixed(1)} m</b>`:'Selecione um alvo'}</span>
       </div>
       <div style="display:grid;grid-template-columns:minmax(150px,1.2fr) minmax(160px,1.3fr) minmax(160px,1.2fr) auto;gap:8px;align-items:end;">
@@ -14107,7 +14167,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.15.0: PV/armadura locais da simulação, dano por localização, botões alinhados e fim automático de oportunidade -->
+<!-- Mesa Estelar v46.16.0: defesas de criaturas corrigidas, sons de combate, dano automático sem reação e incapacitados pulados -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
