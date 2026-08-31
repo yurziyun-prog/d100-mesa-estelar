@@ -1336,6 +1336,11 @@
       <label>Ataques naturais<input id="crArmas" placeholder="Mordida:1d8+MD|Garras:1d6+MD"></label>
       <label>Alcances dos ataques (m)<input id="crAlcances" placeholder="Mordida:1.5|Garras:1"></label>
       <label>Habilidades especiais<textarea id="crHabilidades" rows="2" placeholder="Engolfar|Atropelar"></textarea></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <label>Armadura natural (PA)<input id="crArmaduraNatural" type="number" min="0" value="0"></label>
+        <label>AÇ máxima especial<input id="crAcoesMaxEspecial" type="number" min="0" value="0"></label>
+      </div>
+      <label>Vínculo perícia → ataques<input id="crVinculos" placeholder="Combate Desarmado:Mordida,Garras|Bote/Salto:Bote e Constrição"></label>
       <label>Equipamento-base<textarea id="crEquipBase" rows="2" placeholder="Coleira de controle|Armadura"></textarea></label>
       <label>Propriedades dos ataques<input id="crProps" placeholder="Mordida:infeccioso|Garras:infeccioso"></label>
       <div class="form-group">
@@ -1618,14 +1623,14 @@ Roll 1d100 against the effective skill value.
 Circumstantial difficulty modifies the effective value. Fatigue and using an unsuitable weapon can shift difficulty further.
 
 ## Combat
-Combat uses Action Points. Each combat D100 action spends 1 Action Point. When the current pool reaches zero, a new turn begins and the pool is restored.
+Combat uses Actions. Each combat D100 action spends 1 Action Point. When the current pool reaches zero, a new turn begins and the pool is restored.
 
 Weapons should normally be used with the appropriate combat specialization. A related weapon imposes +1 difficulty step; a substantially different weapon of the same broad combat mode imposes +2 steps.
 
 Damage, armor and Hit Points are tracked by body location.
 
 ## Fatigue
-Fatigue progressively worsens tests and may reduce movement, Initiative and Action Points. Severe fatigue can prevent action entirely.
+Fatigue progressively worsens tests and may reduce movement, Initiative and Actions. Severe fatigue can prevent action entirely.
 
 ## Luck Points
 Luck Points may be spent during play. The expenditure is recorded in the character history.
@@ -1641,7 +1646,7 @@ Using powers spends Magic Points.
 Equipment is stored in Equipped, Pocket, Backpack, Vehicle/Ship or Home/Base. Weight and slot limits apply where appropriate. Purchases spend the character's Resources.
 
 ## Derived Characteristics
-Action Points, Initiative, Damage Modifier, Experience Modifier, Healing Rate, Movement, Luck Points and location HP are derived from the character's characteristics according to the system tables.
+Actions, Initiative, Damage Modifier, Experience Modifier, Healing Rate, Movement, Luck Points and location HP are derived from the character's characteristics according to the system tables.
 `;
 
 const REGRAS_PADRAO_ZH = `# D100系统规则 - 星际桌游RPG
@@ -1742,7 +1747,7 @@ gerarEstrelas();
 
 const traducoes = {
     pt: { title: 'D100 - Mesa Estelar RPG', subtitle: 'Sistema de RPG Sci-Fi d100', emailPlaceholder: 'Email', passwordPlaceholder: 'Senha (mínimo 6 caracteres)', loginBtn: 'Entrar', registerBtn: 'Criar Conta', logoutBtn: 'Sair', appTitle: 'D100 - Mesa Estelar RPG', tabFicha: ' Ficha', tabConfig: '⚙️ Config', tabBanco: '📚 Banco de Dados', tabRegras: '📖 Regras', tabMercado: '🛒 Mercado', marketTitle: '🛒 Mercado', marketIntro: 'Compre itens do banco de dados para o personagem atualmente selecionado.', resourcesLabel: 'Recursos', FOR: 'FOR', CON: 'CON', TAM: 'TAM', DES: 'DES', INT: 'INT', POD: 'POD', CAR: 'CAR', pa: 'Ações', iniciativa: 'Iniciativa', modDano: 'Mod. Dano', modExp: 'Mod. Experiência', taxaRecup: 'Taxa de Recuperação', pontosSorte: 'Pontos de Sorte', altura: 'Altura', peso: 'Peso', myCharacters: 'Meus Personagens', newChar: ' Novo Personagem', editChar: 'Editar Personagem', charName: 'Nome do Personagem:', race: 'Raça:', concept: 'Conceito:', sex: 'Sexo:', age: 'Idade:', origin: 'Origem:', career: 'Carreira:', socialClass: 'Classe Social:', bodyType: 'Tipo Corporal:', charImage: 'Imagem do Personagem:', attributes: 'Atributos', saveChar: '💾 Salvar Personagem', configTitle: '️ Configurações do Sistema (Mestre)', pointsEtapa1: 'Etapa 1 - Características:', pointsEtapa2: 'Origem:', pointsEtapa3: 'Carreira:', pointsEtapa4: 'Hobbie:', saveConfig: ' Salvar Configurações', loginError: 'Erro no login. Verifique email e senha.', registerError: 'Erro ao criar conta.', saved: 'Salvo com sucesso!', pointsExceeded: 'Total de pontos excedido! Máximo: ', confirmDelete: 'Tem certeza que deseja deletar?', deleted: 'Deletado!', mestre: '👑 Mestre', jogador: ' Jogador', selectChar: 'Selecionar', deleteChar: 'Deletar', noChars: 'Nenhum personagem criado.', uploading: 'Enviando...', uploadSuccess: 'Enviado!', uploadError: 'Erro!', etapaAtual: 'Etapa Atual:', etapaDesc: 'Distribua seus pontos de características' },
-    en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', tabMercado: '🛒 Market', marketTitle: '🛒 Market', marketIntro: 'Buy database items for the currently selected character.', resourcesLabel: 'Resources', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Action Points', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Origin:', pointsEtapa3: 'Career:', pointsEtapa4: 'Hobby:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: ' Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
+    en: { title: 'D100 - Stellar Table RPG', subtitle: 'Sci-Fi d100 RPG System', emailPlaceholder: 'Email', passwordPlaceholder: 'Password (min 6 characters)', loginBtn: 'Login', registerBtn: 'Create Account', logoutBtn: 'Logout', appTitle: 'D100 - Stellar Table RPG', tabFicha: '📋 Sheet', tabConfig: '️ Config', tabBanco: '📚 Database', tabRegras: '📖 Rules', tabMercado: '🛒 Market', marketTitle: '🛒 Market', marketIntro: 'Buy database items for the currently selected character.', resourcesLabel: 'Resources', FOR: 'STR', CON: 'CON', TAM: 'SIZ', DES: 'DEX', INT: 'INT', POD: 'POW', CAR: 'CHA', pa: 'Actions', iniciativa: 'Initiative', modDano: 'Damage Mod', modExp: 'Experience Mod', taxaRecup: 'Healing Rate', pontosSorte: 'Luck Points', altura: 'Height', peso: 'Weight', myCharacters: 'My Characters', newChar: '➕ New Character', editChar: 'Edit Character', charName: 'Character Name:', race: 'Race:', concept: 'Concept:', sex: 'Sex:', age: 'Age:', origin: 'Origin:', career: 'Career:', socialClass: 'Social Class:', bodyType: 'Body Type:', charImage: 'Character Image:', attributes: 'Attributes', saveChar: '💾 Save Character', configTitle: '⚙️ System Settings (GM)', pointsEtapa1: 'Step 1 - Characteristics:', pointsEtapa2: 'Origin:', pointsEtapa3: 'Career:', pointsEtapa4: 'Hobby:', saveConfig: '💾 Save Settings', loginError: 'Login error.', registerError: 'Error creating account.', saved: 'Saved!', pointsExceeded: 'Points exceeded! Max: ', confirmDelete: 'Delete?', deleted: 'Deleted!', mestre: '👑 GM', jogador: ' Player', selectChar: 'Select', deleteChar: 'Delete', noChars: 'No characters.', uploading: 'Uploading...', uploadSuccess: 'Uploaded!', uploadError: 'Error!', etapaAtual: 'Current Step:', etapaDesc: 'Distribute your characteristic points' },
     zh: { title: 'D100 - 星际桌游', subtitle: '科幻d100角色扮演系统', emailPlaceholder: '邮箱', passwordPlaceholder: '密码（至少6个字符）', loginBtn: '登录', registerBtn: '创建账户', logoutBtn: '退出', appTitle: 'D100 - 星际桌游', tabFicha: ' 角色卡', tabConfig: '️ 设置', tabBanco: ' 数据库', tabRegras: ' 规则', tabMercado: '🛒 市场', marketTitle: '🛒 市场', marketIntro: '为当前选择的角色购买数据库中的物品。', resourcesLabel: '资源', FOR: '力量', CON: '体质', TAM: '体型', DES: '敏捷', INT: '智力', POD: '意志', CAR: '魅力', pa: '行动点', iniciativa: '先攻', modDano: '伤害修正', modExp: '经验修正', taxaRecup: '恢复率', pontosSorte: '幸运点', altura: '身高', peso: '体重', myCharacters: '我的角色', newChar: '➕ 新建角色', editChar: '编辑角色', charName: '角色名称：', race: '种族：', concept: '概念：', sex: '性别：', age: '年龄：', origin: '起源：', career: '职业：', socialClass: '社会阶级：', bodyType: '体型：', charImage: '角色图像：', attributes: '属性', saveChar: '💾 保存角色', configTitle: '⚙️ 系统设置（主持人）', pointsEtapa1: '阶段1 - 特征：', pointsEtapa2: '起源：', pointsEtapa3: '职业：', pointsEtapa4: '爱好：', saveConfig: '💾 保存设置', loginError: '登录错误。', registerError: '创建账户错误。', saved: '保存成功！', pointsExceeded: '点数超限！最大值：', confirmDelete: '删除？', deleted: '已删除！', mestre: '👑 主持人', jogador: '👤 玩家', selectChar: '选择', deleteChar: '删除', noChars: '尚未创建角色。', uploading: '正在上传...', uploadSuccess: '上传成功！', uploadError: '错误！', etapaAtual: '当前阶段：', etapaDesc: '分配您的特征点' }
 
 };
@@ -2010,7 +2015,7 @@ Object.assign(traducoes.en, {
   fatFresh:'Fresh', fatWinded:'Winded', fatTired:'Tired', fatWearied:'Wearied', fatExhausted:'Exhausted',
   fatDebilitated:'Debilitated', fatIncapacitated:'Incapacitated', fatSemiConscious:'Semi-Conscious',
   fatComatose:'Comatose', fatDead:'Dead',
-  testsLabel:'Tests:', movementLabel:'Movement:', initiativeLabel:'Initiative:', actionPointsLabel:'Action Points:',
+  testsLabel:'Tests:', movementLabel:'Movement:', initiativeLabel:'Initiative:', actionPointsLabel:'Actions:',
   recoveryLabel:'Recovery:', noPenalty:'No penalty', noPenalties:'No penalties', noActivity:'No activity',
   noActivityPossible:'No activity possible', half:'Half', immobile:'Immobile', never:'Never',
   minutes15:'15 minutes', hours3:'3 hours', hours6:'6 hours', hours12:'12 hours', hours18:'18 hours',
@@ -2079,7 +2084,7 @@ Object.assign(traducoes.en, {
   newTurnType:'New Turn', luckType:'Luck', success:'Success', failure:'Failure', critical:'Critical',
   fumble:'Fumble', marginWord:'Margin', difficultyWord:'Difficulty', fatigueWord:'Fatigue',
   weaponCompatibility:'Weapon mismatch', spentWord:'Spent', remainingWord:'Remaining',
-  restoredAP:'Action Points restored', insufficientActivity:'no activity possible',
+  restoredAP:'Actions restored', insufficientActivity:'no activity possible',
   blockedByFatigue:'blocked by fatigue', chosenDifficulty:'Chosen difficulty',
   rulesTitle:'📖 System Rules', editRulesBtn:'✏️ Edit Rules', saveRulesBtn:'💾 Save Rules',
   cancelBtn:'❌ Cancel', physicalEffortTitle:'Physical Effort Table', effortCol:'Effort',
@@ -3504,7 +3509,8 @@ function locaisProtegidosItem_(item, todasLocalizacoes) {
 }
 
 function calcularPAEquipado_(char, localizacoes) {
-    const resultado = Object.fromEntries(localizacoes.map(l => [l, 0]));
+    const natural=Math.max(0,Number(char?.armaduraNatural||0));
+    const resultado = Object.fromEntries(localizacoes.map(l => [l, natural]));
     obterItensEquipados_(char).filter(itemEhArmadura_).forEach(item => {
         const pa = Math.max(0, Number(item.pa || 0));
         if (!pa) return;
@@ -3883,11 +3889,20 @@ function obterPericiasCombate_(char) {
     if(char?.__npcTemporario || char?.__criaturaTemporaria){
         const especializacoes=Object.entries(char.especializacoes||{})
           .filter(([id,d])=>Number(d?.treino||0)>0)
-          .map(([id])=>{
+          .map(([id,d])=>{
               const real=(especializacoesDB||[]).find(e=>e.id===id);
-              return real?{...real,__especializacao:true}:(especializacaoCombateFallback_(id)||{id,nome:id,tipo:'Combate',uso:'combate',__especializacao:true,__fallbackNPC:true});
-          });
-        return [...basicas.map(x=>({...x,__especializacao:false})),...especializacoes];
+              return real?{...real,__especializacao:true}:(especializacaoCombateFallback_(id)||{id,nome:d?.nomeOriginal||id,tipo:'Combate',uso:'combate',__especializacao:true,__fallbackNPC:true});
+          })
+          .filter(p=>periciaCriaturaPodeAtacar_(char,p));
+        const basicasCriatura=Object.entries(char.pericias||{})
+          .map(([id,d])=>{
+              const real=(periciasDB||[]).find(p=>p.id===id);
+              return real?{...real,__especializacao:false}:{id,nome:d?.nomeOriginal||id,tipo:'Perícia',__especializacao:false,__fallbackNPC:true};
+          })
+          .filter(p=>periciaCriaturaPodeAtacar_(char,p));
+        const unicas=new Map();
+        for(const p of [...basicasCriatura,...especializacoes])unicas.set(`${p.__especializacao?'e':'p'}:${p.id}`,p);
+        return [...unicas.values()];
     }
 
     const especializacoes = especializacoesDB.filter(e => {
@@ -3908,8 +3923,10 @@ function periciaPodeAparar_(p){
 }
 function batalhaListaPericiasDefesa_(char){
     const esquiva=(periciasDB||[]).find(p=>p.id==='esquiva');
-    const ofensivas=(obterPericiasCombate_(char)||[]).filter(periciaPodeAparar_);
-    return [...(esquiva?[{...esquiva,__especializacao:false}]:[]),...ofensivas];
+    const ofensivas=(obterPericiasCombate_(char)||[]).filter(p=>periciaCriaturaPodeDefender_(char,p));
+    const lista=[...(esquiva?[{...esquiva,__especializacao:false}]:[]),...ofensivas];
+    const vistos=new Set();
+    return lista.filter(p=>{const k=`${p.__especializacao?'e':'p'}:${p.id}`;if(vistos.has(k))return false;vistos.add(k);return true;});
 }
 
 
@@ -4703,6 +4720,9 @@ function resetarDificuldadeAposRolagem_(idSelect) {
 function obterPAMaxCombate_(char) {
     const regra = obterRegraFadiga_(char);
     if (regra.pa === null) return 0;
+    if(Number(char?.acoesMaxEspecial||0)>0){
+        return Math.max(0,Number(char.acoesMaxEspecial)+(regra.pa||0));
+    }
     const attrs = char?.atributos || {};
     const bonus = char?.bonus || {};
     const base = calcularPA((attrs.INT || 10) + (bonus.INT || 0), (attrs.DES || 10) + (bonus.DES || 0));
@@ -6359,9 +6379,19 @@ function npcPericiasParaCombate_(texto){
     String(texto||'').split('|').forEach(par=>{
         const pos=par.lastIndexOf(':');
         if(pos<0)return;
-        const nome=par.slice(0,pos).trim(), investimento=Number(par.slice(pos+1))||0;
+        const nome=par.slice(0,pos).trim();
+        const resto=par.slice(pos+1).trim();
+        const partes=resto.split('@').map(x=>x.trim()).filter(Boolean);
+        const investimento=Number(partes[0])||0;
+        const tags=(partes.slice(1).join(',')||'').split(',').map(normalizarTextoCombate_).filter(Boolean);
         if(!nome)return;
-        out[npcIdPericiaSistema_(nome)]={base:0,treino:investimento,nomeOriginal:nome};
+        out[npcIdPericiaSistema_(nome)]={
+            base:0,treino:investimento,nomeOriginal:nome,
+            tags,
+            ofensiva:tags.includes('ataque')||tags.includes('ofensiva'),
+            defensiva:tags.includes('defesa')||tags.includes('aparar'),
+            naoCombate:tags.includes('nao_combate')||tags.includes('utilidade')
+        };
     });
     return out;
 }
@@ -6433,6 +6463,9 @@ function criarNPCCombateDoBanco_(modelo,participante=null){
         conceito:modelo.descricao||'',
         carreira:modelo.tipo||'NPC',
         habilidadesTexto:modelo.habilidadesTexto||'',
+        vinculosAtaquesPericias:modelo.vinculosAtaquesPericias||'',
+        acoesMaxEspecial:Number(modelo.acoesMaxEspecial||0)||0,
+        armaduraNatural:Number(modelo.armaduraNatural||0)||0,
         __npcTemporario:true
     };
 }
@@ -6495,7 +6528,11 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
             return inv;
         })(),
         combate:combateSalvo,conceito:modelo.descricao||'',carreira:modelo.tipo||'Criatura',
-        habitat:modelo.habitat||'',comportamento:modelo.comportamento||'',habilidadesTexto:modelo.habilidadesTexto||'',__criaturaTemporaria:true
+        habitat:modelo.habitat||'',comportamento:modelo.comportamento||'',habilidadesTexto:modelo.habilidadesTexto||'',
+        vinculosAtaquesPericias:modelo.vinculosAtaquesPericias||'',
+        acoesMaxEspecial:Number(modelo.acoesMaxEspecial||0)||0,
+        armaduraNatural:Number(modelo.armaduraNatural||0)||0,
+        __criaturaTemporaria:true
     };
 }
 
@@ -6532,8 +6569,7 @@ function batalhaStatusPublicoDoChar_(char){
     const feridos=Object.entries(c.ferimentos||{});
     if(feridos.some(([,f])=>f?.grave))partes.push('🔴 Ferido gravemente');
     else if(feridos.some(([,f])=>f?.serio))partes.push('🟠 Ferido seriamente');
-    const t=c.primeirosSocorrosEmAndamento;
-    if(t)partes.push(`🩹 Primeiros Socorros ${Math.max(1,Number(t.turnosInvestidos||1))}/3${t.fase==='executando'?' · decidir concluir/continuar':''}`);
+    // Primeiros Socorros em andamento é estado transitório da batalha, nunca da ficha permanente.
     return partes;
 }
 function batalhaSincronizarStatusPublico_(char,participante){
@@ -6568,9 +6604,7 @@ function batalhaSanitizarParticipante_(c){
         movimentoGratisUsadoRodada:0,
         passagensNaRodada:0,
         dificuldadeMestre:null,
-        primeirosSocorrosEmAndamento:c?.combate?.primeirosSocorrosEmAndamento
-            ? JSON.parse(JSON.stringify(c.combate.primeirosSocorrosEmAndamento))
-            : null,
+        primeirosSocorrosEmAndamento:null,
         statusPublico:batalhaStatusPublicoDoChar_(c),
         ...(c.__npcTemporario?{
             npcBancoId:String(c.npcBancoId||''),
@@ -6747,6 +6781,39 @@ function batalhaArmaAtualDefensor_(dp){
     return item;
 }
 
+
+function mapaPericiaAtaques_(modeloOuChar){
+    const txt=String(modeloOuChar?.vinculosAtaquesPericias||modeloOuChar?.ataquesPorPericia||'');
+    const out={};
+    for(const bloco of txt.split('|').map(x=>x.trim()).filter(Boolean)){
+        const pos=bloco.indexOf(':');if(pos<0)continue;
+        const per=npcIdPericiaSistema_(bloco.slice(0,pos).trim());
+        const ataques=bloco.slice(pos+1).split(',').map(x=>normalizarTextoCombate_(x)).filter(Boolean);
+        out[per]=ataques;
+    }
+    return out;
+}
+function periciaCriaturaPodeAtacar_(char,per){
+    if(!char||!per)return false;
+    if(!char.__npcTemporario&&!char.__criaturaTemporaria)return periciaEhOfensiva_(per);
+    const reg=(per.__especializacao?char.especializacoes:char.pericias)?.[per.id];
+    if(reg?.naoCombate)return false;
+    if(reg?.ofensiva)return true;
+    const mapa=mapaPericiaAtaques_(char);
+    if((mapa[per.id]||[]).length)return true;
+    const nome=normalizarTextoCombate_(getNome(per));
+    return /combate|mordida|garra|bote|constr|pisot|ataque|tiro|laser|arma/.test(nome);
+}
+function periciaCriaturaPodeDefender_(char,per){
+    if(!char||!per)return false;
+    if(!char.__npcTemporario&&!char.__criaturaTemporaria)return periciaPodeAparar_(per);
+    if(per.id==='esquiva')return true;
+    const reg=(per.__especializacao?char.especializacoes:char.pericias)?.[per.id];
+    if(reg?.naoCombate)return false;
+    if(reg?.defensiva)return true;
+    // Ataques naturais não viram defesa automaticamente.
+    return false;
+}
 const ATAQUES_NATURAIS_={
   'punhos':{nome:'Punhos',dano:'1d3+MD',penetracao:0},
   'mordida':{nome:'Mordida',dano:'1d6+MD',penetracao:0},
@@ -6784,6 +6851,19 @@ function ataqueNaturalPorValor_(char,valor){
 
 function batalhaEquipamentos_(char,pericia,selecionado=''){
     if(!pericia)return [];
+    if(char?.__npcTemporario||char?.__criaturaTemporaria){
+        const naturais=ataquesNaturaisChar_(char);
+        const mapa=mapaPericiaAtaques_(char);
+        const vinculados=mapa[pericia.id];
+        if(Array.isArray(vinculados)&&vinculados.length){
+            return naturais.filter(item=>vinculados.includes(normalizarTextoCombate_(item.nome))).map(item=>({
+                valor:`natural:${item.id}`,rotulo:item.nome,item,graus:0
+            }));
+        }
+        if(pericia.id==='combate_desarmado'){
+            return naturais.map(item=>({valor:`natural:${item.id}`,rotulo:item.nome,item,graus:0}));
+        }
+    }
     if(pericia.id==='combate_desarmado'){
         return ataquesNaturaisChar_(char).map(item=>({
             valor:`natural:${item.id}`,rotulo:item.nome,item,graus:0
@@ -6967,6 +7047,8 @@ async function batalhaPersistirCombateChar_(char,participante){
         }
         // Importante: não gravar dano/ferimentos no modelo /criaturas.
     }else if(char?.id){
+        // Estado temporário de Primeiros Socorros vive somente na batalha compartilhada.
+        if(char.combate)delete char.combate.primeirosSocorrosEmAndamento;
         await setDoc(doc(db,'personagens',char.id),{combate:char.combate},{merge:true});
     }
 }
@@ -7138,10 +7220,9 @@ function batalhaPodePrimeirosSocorros_(char){return !!batalhaPrimeirosSocorrosPe
 function batalhaTratamentoPrimeirosSocorros_(char){
     if(!char)return null;
     const p=batalhaParticipante_(char.id);
-    if(p && Object.prototype.hasOwnProperty.call(p,'primeirosSocorrosEmAndamento')){
-        return p.primeirosSocorrosEmAndamento||null;
-    }
-    return char?.combate?.primeirosSocorrosEmAndamento||null;
+    if(p)return p.primeirosSocorrosEmAndamento||null;
+    // Fora de uma batalha compartilhada, não ressuscitar estados temporários antigos.
+    return null;
 }
 function batalhaEstaTratandoPrimeirosSocorros_(char){return !!batalhaTratamentoPrimeirosSocorros_(char);}
 function batalhaPenalidadeTratamento_(char){return batalhaEstaTratandoPrimeirosSocorros_(char)?2:0;}
@@ -7213,7 +7294,7 @@ async function batalhaIniciarPrimeirosSocorrosMestre_(id,alvoId,local){
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
     c.combate=c.combate||{};
     const tratamento={alvoId:String(alvoId),alvoNome:ap.nome,local,fase:'aguardando',turnosInvestidos:1};
-    c.combate.primeirosSocorrosEmAndamento=tratamento;
+    delete c.combate.primeirosSocorrosEmAndamento;
     p.primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(tratamento));
     await batalhaPersistirCombateChar_(c,p);
     batalhaLogPush_(batalhaEstado_,`${p.nome} iniciou voluntariamente Primeiros Socorros em ${ap.nome} (${local}). O turno foi encerrado automaticamente; na próxima oportunidade poderá concluir ou investir mais um turno no atendimento.`,'primeiros_socorros',{actorId:p.id,targetId:ap.id});
@@ -7232,7 +7313,7 @@ async function batalhaContinuarPrimeirosSocorrosMestre_(id){
     p.acoesAtuais=Math.max(0,Number(p.acoesAtuais||0)-1);
     const novo={...t,turnosInvestidos:n+1,fase:'aguardando'};
     c.combate=c.combate||{};
-    c.combate.primeirosSocorrosEmAndamento=novo;
+    delete c.combate.primeirosSocorrosEmAndamento;
     p.primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(novo));
     await batalhaPersistirCombateChar_(c,p);
     batalhaLogPush_(batalhaEstado_,`${p.nome} continuou o atendimento em ${novo.alvoNome} (${novo.local}). Tempo investido: ${novo.turnosInvestidos}/3 turnos.`,'primeiros_socorros',{actorId:p.id,targetId:novo.alvoId});
@@ -7746,11 +7827,7 @@ window.batalhaNovaRodada_=async(confirmar=false)=>{
         delete batalhaMovimentoIntentoJogador_[String(p.id)];
         if(c){
             c.combate=c.combate||{};
-            if(p.primeirosSocorrosEmAndamento){
-                c.combate.primeirosSocorrosEmAndamento=JSON.parse(JSON.stringify(p.primeirosSocorrosEmAndamento));
-            }else{
-                delete c.combate.primeirosSocorrosEmAndamento;
-            }
+            delete c.combate.primeirosSocorrosEmAndamento;
             await batalhaPersistirCombateChar_(c,p);
         }
     }
@@ -9807,6 +9884,11 @@ window.renderizarFichaModeloEntidade_=function(){
  <div style="margin-top:9px;"><label>${tipo==='criatura'?'Armas / ataques naturais':'Armas / ataques próprios'}</label><textarea id="gmEntArmas" rows="2" style="width:100%;" placeholder="${tipo==='criatura'?'Mordida:1d8+MD|Garras:1d6+MD':'Combate Desarmado'}">${escaparBanco_(m.armasTexto||'')}</textarea></div>
  <div style="margin-top:9px;"><label>Alcance dos ataques naturais / próprios</label><input id="gmEntAlcances" value="${escaparBanco_(m.alcancesAtaques||'')}" style="width:100%;" placeholder="Mordida:1.5|Pescoço:3|Jato Ácido:12"><small style="color:#888;">Guardado em metros para o futuro mapa métrico.</small></div>
  <div style="margin-top:9px;"><label>Habilidades especiais</label><textarea id="gmEntHabilidades" rows="3" style="width:100%;" placeholder="Engolfar|Atropelar|Eco da Matilha">${escaparBanco_(m.habilidadesTexto||'')}</textarea></div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px;">
+   <div><label>Armadura natural (PA)</label><input id="gmEntArmaduraNatural" type="number" min="0" value="${Number(m.armaduraNatural||0)}" style="width:100%;"><small style="color:#888;">Pele, escamas, rocha etc. Não é equipamento.</small></div>
+   <div><label>AÇ máxima especial</label><input id="gmEntAcoesMaxEspecial" type="number" min="0" value="${Number(m.acoesMaxEspecial||0)}" style="width:100%;"><small style="color:#888;">0 = calcular normalmente. Cila usa 6.</small></div>
+ </div>
+ <div style="margin-top:9px;"><label>Vínculo perícia → ataques</label><input id="gmEntVinculos" value="${escaparBanco_(m.vinculosAtaquesPericias||'')}" style="width:100%;" placeholder="Combate Desarmado:Mordida,Garras|Bote/Salto:Bote e Constrição"><small style="color:#888;">Permite várias perícias, inclusive não combativas. Apenas as vinculadas a ataques aparecem como ataque.</small></div>
  <div style="margin-top:9px;"><label>Equipamento-base</label><textarea id="gmEntEquipBase" rows="2" style="width:100%;" placeholder="Pistola|Colete|Kit Médico">${escaparBanco_(m.equipamentoBaseTexto||'')}</textarea><small style="color:#888;">Equipamento é separado dos ataques. Ao gerar um indivíduo, estes itens podem ir para o inventário dele.</small></div>
  <div style="margin-top:9px;"><label>Descrição</label><textarea id="gmEntDescricao" rows="4" style="width:100%;">${escaparBanco_(m.descricao||'')}</textarea></div>
  <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;"><button class="btn-save" onclick="salvarFichaModeloEntidade_()">💾 Salvar modelo</button><button class="btn-small" onclick="rolarPreviewEntidade_()">🎲 Gerar exemplo</button><button class="btn-small" onclick="${tipo==='npc'?'editarNPCBanco_':'editarCriaturaBanco_'}('${String(m.id).replace(/'/g,"\\'")}')">🛠️ Editor completo</button></div><div id="gmEntPreviewRolagem" style="margin-top:9px;"></div>`;
@@ -9820,6 +9902,9 @@ const p={
     tipo:String(document.getElementById('gmEntTipo')?.value||'').trim()||m.tipo||'',
     armasTexto:String(document.getElementById('gmEntArmas')?.value||'').trim(),
     habilidadesTexto:String(document.getElementById('gmEntHabilidades')?.value||'').trim(),
+    armaduraNatural:Math.max(0,Number(document.getElementById('gmEntArmaduraNatural')?.value||0)),
+    acoesMaxEspecial:Math.max(0,Number(document.getElementById('gmEntAcoesMaxEspecial')?.value||0)),
+    vinculosAtaquesPericias:String(document.getElementById('gmEntVinculos')?.value||'').trim(),
     equipamentoBaseTexto:String(document.getElementById('gmEntEquipBase')?.value||'').trim(),
     alcancesAtaques:String(document.getElementById('gmEntAlcances')?.value||'').trim(),
     imagem:String(document.getElementById('gmEntImagem')?.value||'').trim(),
@@ -9877,8 +9962,9 @@ function crFill_(n={}){crSet_('crOrig',n.id||'');crSet_('crId',n.id||'');crSet_(
 }
 const rol=document.getElementById('crAtributosRolados');if(rol)rol.checked=modeloUsaAtributosRolados_(n);
 crSet_('crPericias',n.periciasTexto||'');crSet_('crEspec',n.especializacoesTexto||'');crSet_('crArmas',n.armasTexto||'');
-crSet_('crAlcances',n.alcancesAtaques||'');crSet_('crHabilidades',n.habilidadesTexto||'');crSet_('crEquipBase',n.equipamentoBaseTexto||'');
-crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const sel=document.getElementById('crSelecionavel');if(sel)sel.checked=n.selecionavelCombate!==false;const arq=document.getElementById('crImagemArquivo');if(arq)arq.value='';atualizarPreviewCriaturaBanco_();const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
+crSet_('crAlcances',n.alcancesAtaques||'');crSet_('crHabilidades',n.habilidadesTexto||'');
+crSet_('crArmaduraNatural',Number(n.armaduraNatural||0));crSet_('crAcoesMaxEspecial',Number(n.acoesMaxEspecial||0));crSet_('crVinculos',n.vinculosAtaquesPericias||'');
+crSet_('crEquipBase',n.equipamentoBaseTexto||'');crSet_('crProps',n.propriedadesAtaques||'');crSet_('crImagem',n.imagem||'');crSet_('crDescricao',n.descricao||'');const sel=document.getElementById('crSelecionavel');if(sel)sel.checked=n.selecionavelCombate!==false;const arq=document.getElementById('crImagemArquivo');if(arq)arq.value='';atualizarPreviewCriaturaBanco_();const d=document.getElementById('crDelete');if(d)d.style.display=n.id?'':'none';}
 
 window.atualizarPreviewCriaturaBanco_=()=>{
     const url=String(document.getElementById('crImagem')?.value||'').trim();
@@ -9924,7 +10010,9 @@ window.salvarCriaturaBanco_=async()=>{
         atributosRolados:!!document.getElementById('crAtributosRolados')?.checked||temDados,
         formulasAtributos:formulas,
         periciasTexto:v('crPericias'),especializacoesTexto:v('crEspec'),
-        armasTexto:v('crArmas'),alcancesAtaques:v('crAlcances'),habilidadesTexto:v('crHabilidades'),equipamentoBaseTexto:v('crEquipBase'),
+        armasTexto:v('crArmas'),alcancesAtaques:v('crAlcances'),habilidadesTexto:v('crHabilidades'),
+        armaduraNatural:Math.max(0,Number(v('crArmaduraNatural'))||0),acoesMaxEspecial:Math.max(0,Number(v('crAcoesMaxEspecial'))||0),
+        vinculosAtaquesPericias:v('crVinculos'),equipamentoBaseTexto:v('crEquipBase'),
         propriedadesAtaques:v('crProps'),imagem:v('crImagem'),descricao:v('crDescricao'),
         selecionavelCombate:!!document.getElementById('crSelecionavel')?.checked,
         estadoCombate:null
@@ -10481,6 +10569,9 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             armasTexto:String(bruto.armasTexto||bruto.armas||''),
             alcancesAtaques:String(bruto.alcancesAtaques||bruto.alcances||''),
             habilidadesTexto:String(bruto.habilidadesTexto||bruto.habilidades||''),
+            armaduraNatural:Math.max(0,parseNumero_(bruto.armaduraNatural,0)),
+            acoesMaxEspecial:Math.max(0,parseNumero_(bruto.acoesMaxEspecial,0)),
+            vinculosAtaquesPericias:String(bruto.vinculosAtaquesPericias||bruto.vinculos||''),
             equipamentoBaseTexto:String(bruto.equipamentoBaseTexto||bruto.equipamentoBase||''),
             propriedadesAtaques:String(bruto.propriedadesAtaques||bruto.propriedades||''),
             selecionavelCombate:bruto.selecionavelCombate===''?true:parseBoolean_(bruto.selecionavelCombate),
@@ -10887,7 +10978,7 @@ function renderizarRegras() {
           ? {STR:'力量',CON:'体质',SIZ:'体型',DEX:'敏捷',INT:'智力',POW:'意志',CHA:'魅力'}
           : {STR:'FOR',CON:'CON',SIZ:'TAM',DEX:'DES',INT:'INT',POW:'POD',CHA:'CAR'};
         const derived = idiomaAtual === 'en' ? [
-          `<strong>Action Points:</strong> ${attr.INT}+${attr.DEX}: ≤12=1; 13–24=2; 25–36=3; +1 per 12.`,
+          `<strong>Actions:</strong> ${attr.INT}+${attr.DEX}: ≤12=1; 13–24=2; 25–36=3; +1 per 12.`,
           `<strong>Initiative:</strong> average of ${attr.INT} and ${attr.DEX}; combat roll uses 1d10 + Initiative.`,
           `<strong>Luck Points:</strong> ${attr.POW} ≤6=1; 7–12=2; 13–18=3; +1 per 6 ${attr.POW}.`,
           `<strong>Magic Points:</strong> equal to ${attr.POW} for characters able to use powers.`,
@@ -13221,7 +13312,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.10.0: banco de criaturas expandido para fórmulas/alcances/habilidades e três novos modelos -->
+<!-- Mesa Estelar v46.10.1: perícias múltiplas e vinculadas, AÇ especial, armadura natural e Primeiros Socorros sem estado fantasma -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
