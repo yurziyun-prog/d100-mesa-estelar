@@ -6509,13 +6509,20 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
         };
     });
 
+    const periciasModelo=npcPericiasParaCombate_(modelo.periciasTexto);
+    const especializacoesModelo=npcPericiasParaCombate_(modelo.especializacoesTexto);
+    const mapaLinks=mapaPericiaAtaques_(modelo);
+    if(mapaLinks.combate_desarmado?.length && !periciasModelo.combate_desarmado){
+        periciasModelo.combate_desarmado={base:0,treino:0,nomeOriginal:'Combate Desarmado',tags:['ataque'],ofensiva:true,defensiva:false,naoCombate:false};
+    }
+
     return {
         id:participante?.id||`criatura:${modelo.id}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
         criaturaBancoId:modelo.id,nome:modelo.nome||'Criatura',imagem:modelo.imagem||'',tipo:'criatura',dono:currentUserUid,
         atributos:atributosIndividuoDoModelo_(modelo,participante,'criatura'),
         bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
-        pericias:npcPericiasParaCombate_(modelo.periciasTexto),
-        especializacoes:npcPericiasParaCombate_(modelo.especializacoesTexto),
+        pericias:periciasModelo,
+        especializacoes:especializacoesModelo,
         armasNaturais:ataques,
         inventario:(()=>{
             if(participante?.criaturaInventario&&typeof participante.criaturaInventario==='object')return JSON.parse(JSON.stringify(participante.criaturaInventario));
@@ -6747,12 +6754,25 @@ function batalhaResolverPericia_(token){
     const p=(banco||[]).find(x=>x.id===id);
     if(p&&tipo==='esp')return {...p,__especializacao:true};
     if(p)return p;
-    if(tipo==='esp')return especializacaoCombateFallback_(id);
+    if(tipo==='esp'){
+        const conhecido=especializacaoCombateFallback_(id);
+        if(conhecido)return conhecido;
+        // Criaturas/NPCs podem ter perícias de combate próprias do modelo
+        // (Mordida, Pisotear, Bote de Presa Cirúrgico etc.).
+        return {id,nome:id.replace(/_/g,' '),tipo:'Combate',uso:'combate',__especializacao:true,__fallbackNPC:true};
+    }
     return null;
 }
 
 function batalhaListaPericias_(char){
-    return obterPericiasCombate_(char)||[];
+    const lista=obterPericiasCombate_(char)||[];
+    if(char?.__npcTemporario||char?.__criaturaTemporaria){
+        return lista.map(p=>{
+            const reg=(p.__especializacao?char.especializacoes:char.pericias)?.[p.id];
+            return reg?.nomeOriginal?{...p,nome:reg.nomeOriginal}:p;
+        });
+    }
+    return lista;
 }
 
 function batalhaValorEquip_(item,idx){
@@ -6854,7 +6874,9 @@ function batalhaEquipamentos_(char,pericia,selecionado=''){
     if(char?.__npcTemporario||char?.__criaturaTemporaria){
         const naturais=ataquesNaturaisChar_(char);
         const mapa=mapaPericiaAtaques_(char);
-        const vinculados=mapa[pericia.id];
+        const chaveId=npcIdPericiaSistema_(pericia.id||'');
+        const chaveNome=npcIdPericiaSistema_(getNome(pericia)||'');
+        const vinculados=mapa[chaveId]||mapa[chaveNome];
         if(Array.isArray(vinculados)&&vinculados.length){
             return naturais.filter(item=>vinculados.includes(normalizarTextoCombate_(item.nome))).map(item=>({
                 valor:`natural:${item.id}`,rotulo:item.nome,item,graus:0
@@ -6897,7 +6919,11 @@ function batalhaGarantirPrefsValidas_(char,prefs){
         prefs.dificuldade=GRAUS_DIFICULDADE[minIx]?.id||'herculeo';
     }
 
-    const per=batalhaResolverPericia_(prefs.pericia);
+    let per=batalhaResolverPericia_(prefs.pericia);
+    if(per&&(char?.__npcTemporario||char?.__criaturaTemporaria)){
+        const reg=(per.__especializacao?char.especializacoes:char.pericias)?.[per.id];
+        if(reg?.nomeOriginal)per={...per,nome:reg.nomeOriginal};
+    }
     const ops=batalhaEquipamentos_(char,per,prefs.equipamento);
 
     if(per?.id==='combate_desarmado'){
@@ -7425,7 +7451,11 @@ window.batalhaPrimeirosSocorros_=async id=>{
 function batalhaControlCard_(p,char){
     const prefs=batalhaGarantirPrefsValidas_(char,batalhaPrefsChar_(char));
     const skills=batalhaListaPericias_(char);
-    const per=batalhaResolverPericia_(prefs.pericia);
+    let per=batalhaResolverPericia_(prefs.pericia);
+    if(per&&(char?.__npcTemporario||char?.__criaturaTemporaria)){
+        const reg=(per.__especializacao?char.especializacoes:char.pericias)?.[per.id];
+        if(reg?.nomeOriginal)per={...per,nome:reg.nomeOriginal};
+    }
     const equips=batalhaEquipamentos_(char,per,prefs.equipamento);
     const atual=batalhaEstado_?.participantes?.[Number(batalhaEstado_?.turnoIndex||0)]?.id===p.id;
     const pend=batalhaEstado_?.pendencia;
@@ -7955,7 +7985,11 @@ async function batalhaExecutarAtaqueMestre_(id,requestPayload=null){
     if(batalhaAtaqueBloqueadoFerimento_(c)){batalhaUltimoResultado_[id]=batalhaDescricaoBloqueioFerimento_(c)||'Ferimentos impedem o ataque.';return;}
 
     const prefs=requestPayload?.prefs||batalhaGarantirPrefsValidas_(c,batalhaPrefsChar_(c));
-    const per=batalhaResolverPericia_(prefs.pericia);if(!per)return;
+    let per=batalhaResolverPericia_(prefs.pericia);if(!per)return;
+    if(c?.__npcTemporario||c?.__criaturaTemporaria){
+        const reg=(per.__especializacao?c.especializacoes:c.pericias)?.[per.id];
+        if(reg?.nomeOriginal)per={...per,nome:reg.nomeOriginal};
+    }
     const alvoId=prefs.alvo;
     if(periciaEhOfensiva_(per)&&!alvoId){batalhaUltimoResultado_[id]='Selecione um alvo.';return;}
 
@@ -13312,7 +13346,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.10.1: perícias múltiplas e vinculadas, AÇ especial, armadura natural e Primeiros Socorros sem estado fantasma -->
+<!-- Mesa Estelar v46.10.2: ataques naturais vinculados a perícias próprias e Dragões-Trombeta com perícia restaurada -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
