@@ -2226,8 +2226,8 @@ onAuthStateChanged(auth, async (user) => {
             userData = userDoc.data();
             const t = traducoes[idiomaAtual];
             document.getElementById('userRole').textContent = userData.role === 'mestre' ? t.mestre : t.jogador;
-            document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none';
-            document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
+            document.getElementById('configTabBtn')?.style && (document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none');
+            document.getElementById('bancoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
             document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
             // Configurações globais também afetam jogadores (recursos iniciais e modo de combate).
             // A aba continua escondida para jogadores; eles apenas leem os valores.
@@ -12560,8 +12560,8 @@ window.mudarIdioma = (lang) => {
     if (userData) {
         const roleText = userData.role === 'mestre' ? t.mestre : t.jogador;
         document.getElementById('userRole').textContent = roleText;
-        document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none';
-        document.getElementById('bancoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
+        document.getElementById('configTabBtn')?.style && (document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none');
+        document.getElementById('bancoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
         document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
     }
     if (currentCharId) {
@@ -12958,7 +12958,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.9.0: fichas compactas NPC/criatura, modelos x indivíduos e reorganização inicial -->
+<!-- Mesa Estelar v46.9.1: correção de login após reorganização das abas -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
