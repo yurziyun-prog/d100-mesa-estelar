@@ -419,6 +419,7 @@
                         <button class="btn-small btn-select" onclick="labCarregarBatalhaAtual_()">⚔️ Carregar batalha atual</button>
                         <button class="btn-small" onclick="labAdicionarBoneco_()">🎯 Boneco de treino</button>
                         <button class="btn-small" onclick="labCentralizarTokens_()">◎ Reorganizar</button>
+                        <button class="btn-small" onclick="labPosicoesAleatorias_()">🎲 Posições aleatórias</button>
                         <button class="btn-small" id="labStartBtn" onclick="labIniciarCombate_()">⚡ Iniciar combate</button>
                         <button class="btn-small hidden" id="labNextBtn" onclick="labEncerrarOportunidade_()">⏭ Encerrar oportunidade</button>
                         <button class="btn-small hidden" id="labStopBtn" onclick="labVoltarPreparacao_()">🧭 Voltar à preparação</button>
@@ -6514,6 +6515,23 @@ window.labCentralizarTokens_=function(){
     if(labEstado_.fase==='combate'){notificar_('Reorganize os tokens na fase de preparação.','aviso');return;}
     (labEstado_.tokens||[]).forEach((t,i)=>{t.x=1.5+(i%8)*2.6;t.y=1.5+Math.floor(i/8)*2.6;});labSalvarLocal_();labRender_();
 };
+
+window.labPosicoesAleatorias_=function(){
+    if(labEstado_.fase==='combate'){notificar_('As posições aleatórias só podem ser geradas durante a preparação.','aviso');return;}
+    const colocados=[];
+    for(const t of labEstado_.tokens||[]){
+        const raio=Math.max(.3,Number(t.diametroM||.9)/2);
+        let pos=null;
+        for(let k=0;k<160;k++){
+            const x=raio+.25+Math.random()*Math.max(.2,labEstado_.larguraM-2*(raio+.25));
+            const y=raio+.25+Math.random()*Math.max(.2,labEstado_.alturaM-2*(raio+.25));
+            if(colocados.every(o=>Math.hypot(x-o.x,y-o.y)>(raio+o.raio+.25))){pos={x,y};break;}
+        }
+        if(!pos)pos={x:1+Math.random()*Math.max(1,labEstado_.larguraM-2),y:1+Math.random()*Math.max(1,labEstado_.alturaM-2)};
+        t.x=Math.round(pos.x*100)/100;t.y=Math.round(pos.y*100)/100;colocados.push({x:t.x,y:t.y,raio});
+    }
+    labSalvarLocal_();labRender_();
+};
 window.labResetarAcoes_=function(){
     for(const t of labEstado_.tokens||[]){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=!t.livreMestre&&labMovimentoPorAcao_(t)>0;}
     labSalvarLocal_();labRender_();
@@ -6625,6 +6643,9 @@ function labPericiasAtaque_(t){
 function labPericiaPorToken_(t,token){
     const c=labCharToken_(t);if(!c)return null;
     let p=batalhaResolverPericia_(token);
+    if(!p && String(token||'').replace(/^per:/,'')==='esquiva'){
+        p={id:'esquiva',nome:'Esquiva',tipo:'Defesa',uso:'defesa',__especializacao:false,__labSynthetic:true};
+    }
     if(p&&(c.__npcTemporario||c.__criaturaTemporaria)){
         const reg=(p.__especializacao?c.especializacoes:c.pericias)?.[p.id];
         if(reg?.nomeOriginal)p={...p,nome:reg.nomeOriginal};
@@ -6718,14 +6739,21 @@ function labSomDanoAplicado_(item){
 }
 function labDefesasDisponiveis_(t){
     const c=labCharToken_(t);if(!c)return [];
-    // A lista de defesa do motor principal já acrescenta Esquiva mesmo quando
-    // a criatura não a usa como perícia ofensiva. Isso evita monstros ágeis,
-    // como a Besta Ululante, ficarem artificialmente sem reação.
-    return batalhaListaPericiasDefesa_(c)||[];
+    let lista=batalhaListaPericiasDefesa_(c)||[];
+    if(!lista.some(p=>normalizarTextoCombate_(p.id||getNome(p))==='esquiva')){
+        lista=[{id:'esquiva',nome:'Esquiva',tipo:'Defesa',uso:'defesa',__especializacao:false,__labSynthetic:true},...lista];
+    }
+    const vistos=new Set();
+    return lista.filter(p=>{const k=`${p.__especializacao?'e':'p'}:${p.id}`;if(vistos.has(k))return false;vistos.add(k);return true;});
 }
 function labValorDefesa_(c,per){
     if(!c||!per)return 0;
-    const bruto=obterValorRegistroPericia_(c,per.id,per.__especializacao);
+    let bruto;
+    if(per.__labSynthetic&&per.id==='esquiva'){
+        bruto=Number(c?.atributos?.DES||10)*2+Number(c?.pericias?.esquiva?.treino||0);
+    }else{
+        bruto=obterValorRegistroPericia_(c,per.id,per.__especializacao);
+    }
     const arm=valorPericiaComArmadura_(c,per,bruto);
     const extra=batalhaPenalidadeCaido_(c)+(typeof batalhaPenalidadeTratamento_==='function'?batalhaPenalidadeTratamento_(c):0)+batalhaPenalidadeInfeccao_(c);
     return Math.max(0,Number(aplicarDificuldadeEFadiga_(c,arm.valor,'padrao',extra).valor||0));
@@ -6735,37 +6763,71 @@ window.labMudarDefesa_=function(v){
     const d=(labEstado_.tokens||[]).find(t=>String(t.id)===String(pend.defensorId));if(!d)return;
     d.defesaLab=String(v||'');labSalvarLocal_();labRender_();
 };
+
+function labEfeitosQuantidade_(grauAtaque,grauDefesa='Falha',semDefesa=false){
+    const ag=batalhaResultadoGradeValor_(grauAtaque);
+    const dg=semDefesa?1:batalhaResultadoGradeValor_(grauDefesa);
+    return ag>=2?Math.max(0,ag-dg):0;
+}
+function labEfeitosDisponiveis_(pend){
+    if(!pend)return [];
+    const critico=batalhaResultadoGradeValor_(pend.grauAtaque)>=3;
+    const out=[
+      {id:'escolher_localizacao',nome:'🎯 Escolher Localização'},
+      {id:'sangrar',nome:'🩸 Sangrar'},
+      {id:'derrubar',nome:'💥 Derrubar'}
+    ];
+    if(critico)out.push({id:'contornar_armadura',nome:'🛡️ Contornar Armadura'});
+    const defensor=(labEstado_.tokens||[]).find(t=>String(t.id)===String(pend.defensorId)),c=labCharToken_(defensor);
+    if(c&&obterItensEquipados_(c).some(x=>itemEhArma_(x)||itemEhEscudo_(x)))out.push({id:'danificar_arma',nome:'⚔️ Danificar Arma'});
+    return out;
+}
+window.labEscolherEfeito_=function(id){
+    const dp=labEstado_.danoPendenteLab;if(!dp||Number(dp.efeitosRestantes||0)<=0)return;
+    const efeito=String(id||'');
+    if(efeito==='escolher_localizacao'){dp.escolhendoLocalizacao=true;labSalvarLocal_();labRender_();return;}
+    dp.efeitosEscolhidos=Array.isArray(dp.efeitosEscolhidos)?dp.efeitosEscolhidos:[];
+    if(efeito==='contornar_armadura')dp.ignorarArmadura=true;
+    if(efeito==='sangrar')dp.aplicarSangrar=true;
+    if(efeito==='derrubar')dp.aplicarDerrubar=true;
+    if(efeito==='danificar_arma')dp.danificarArma=true;
+    dp.efeitosEscolhidos.push(efeito);dp.efeitosRestantes=Math.max(0,Number(dp.efeitosRestantes||0)-1);
+    labSalvarLocal_();labRender_();
+};
+window.labConfirmarLocalizacao_=function(loc){
+    const dp=labEstado_.danoPendenteLab;if(!dp||!dp.escolhendoLocalizacao)return;
+    dp.localForcada=String(loc||'');dp.escolhendoLocalizacao=false;
+    dp.efeitosEscolhidos=Array.isArray(dp.efeitosEscolhidos)?dp.efeitosEscolhidos:[];
+    dp.efeitosEscolhidos.push('escolher_localizacao');dp.efeitosRestantes=Math.max(0,Number(dp.efeitosRestantes||0)-1);
+    labSalvarLocal_();labRender_();
+};
+window.labPularEfeitos_=function(){const dp=labEstado_.danoPendenteLab;if(!dp)return;dp.efeitosRestantes=0;dp.escolhendoLocalizacao=false;labSalvarLocal_();labRender_();};
 window.labResponderDefesa_=function(defender=true){
     const pend=labEstado_.pendenciaLab;if(!pend)return;
     const defensor=(labEstado_.tokens||[]).find(t=>String(t.id)===String(pend.defensorId));
     const atacante=(labEstado_.tokens||[]).find(t=>String(t.id)===String(pend.atacanteId));
     if(!defensor||!atacante){labEstado_.pendenciaLab=null;labSalvarLocal_();labRender_();return;}
-    let dg=1,txt='Não defendeu';
+    let dg=1,txt='Não defendeu',grauDef='Falha';
     if(defender){
         if(Number(defensor.acoesAtuaisLab||0)<=0){notificar_(`${defensor.nome} não possui AÇ para defender.`,'aviso');return;}
         const c=labCharToken_(defensor),defs=labDefesasDisponiveis_(defensor);
         if(!defs.length){notificar_('Nenhuma defesa disponível.','aviso');return;}
         if(!defs.some(p=>batalhaTokenPericia_(p)===defensor.defesaLab))defensor.defesaLab=batalhaTokenPericia_(defs[0]);
         const per=labPericiaPorToken_(defensor,defensor.defesaLab),valor=labValorDefesa_(c,per),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
-        labSomDefesa_();
-        dg=batalhaResultadoGradeValor_(r.grau);
+        labSomDefesa_();dg=batalhaResultadoGradeValor_(r.grau);grauDef=r.grau;
         defensor.acoesAtuaisLab=Math.max(0,Number(defensor.acoesAtuaisLab||0)-1);
         txt=`${getNome(per)} ${roll}/${valor} → ${r.grau}`;
     }
-    const ag=batalhaResultadoGradeValor_(pend.grauAtaque);
-    const acertou=ag>=2&&(!defender||ag>dg);
+    const ag=batalhaResultadoGradeValor_(pend.grauAtaque),acertou=ag>=2&&(!defender||ag>dg);
     if(acertou){
-        labEstado_.danoPendenteLab={...pend,defesaTexto:txt};
-        labEstado_.ultimoResultadoLab=`${atacante.nome} acertou ${defensor.nome}. ${txt}. Dano liberado.`;
+        const qtd=labEfeitosQuantidade_(pend.grauAtaque,grauDef,!defender);
+        labEstado_.danoPendenteLab={...pend,defesaTexto:txt,efeitosRestantes:qtd,efeitosEscolhidos:[],danoAutomatico:false};
+        labEstado_.ultimoResultadoLab=`${atacante.nome} acertou ${defensor.nome}. ${txt}.${qtd?` ${qtd} efeito(s) especial(is) disponível(is).`:' Dano liberado.'}`;
     }else{
-        labEstado_.danoPendenteLab=null;
-        labEstado_.ultimoResultadoLab=`${defensor.nome} evitou o ataque. ${txt}.`;
+        labEstado_.danoPendenteLab=null;labEstado_.ultimoResultadoLab=`${defensor.nome} evitou o ataque. ${txt}.`;
     }
-    labEstado_.pendenciaLab=null;
-    labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
-    labEstado_.logLab=labEstado_.logLab.slice(0,20);
-    labSalvarLocal_();labRender_();
-    if(!labEstado_.danoPendenteLab)labAutoAvancarSeSemAcoes_();
+    labEstado_.pendenciaLab=null;labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});labEstado_.logLab=labEstado_.logLab.slice(0,20);
+    labSalvarLocal_();labRender_();if(!labEstado_.danoPendenteLab)labAutoAvancarSeSemAcoes_();
 };
 function labExpressaoDano_(atacante,item){
     let expr=String(item?.dano||'').trim();
@@ -6789,13 +6851,15 @@ function labLocalizacaoD20_(){
     else if(roll<=18)local='Braço Esquerdo';
     return {roll,local};
 }
-function labAplicarDanoLocal_(defensor,total,item){
+function labAplicarDanoLocal_(defensor,total,item,opcoes={}){
     const st=labGarantirSnapshotCombate_(defensor);
     if(!st)return null;
     const locs=Object.keys(st.hitMax||{});
     let roll=null,local='';
     if(locs.length===1&&locs[0]==='PV Global'){
         local='PV Global';
+    }else if(opcoes.localForcada&&Object.prototype.hasOwnProperty.call(st.hit,opcoes.localForcada)){
+        local=opcoes.localForcada;
     }else{
         const lr=labLocalizacaoD20_();roll=lr.roll;local=lr.local;
         if(!Object.prototype.hasOwnProperty.call(st.hit,local))local=locs[0]||'PV Global';
@@ -6803,7 +6867,7 @@ function labAplicarDanoLocal_(defensor,total,item){
     const antes=Number(st.hit?.[local]??st.hitMax?.[local]??0);
     const pa=Math.max(0,Number(st.armor?.[local]||0));
     const pen=Math.max(0,Number(obterPenetracaoArma_(item)||0));
-    const paEf=Math.max(0,pa-pen);
+    const paEf=opcoes.ignorarArmadura?0:Math.max(0,pa-pen);
     const final=Math.max(0,Number(total||0)-paEf);
     const depois=antes-final;
     st.hit[local]=depois;
@@ -6825,7 +6889,8 @@ function labResumoPVHtml_(t){
     const st=labGarantirSnapshotCombate_(t);if(!st)return '';
     const locs=Object.keys(st.hitMax||{});
     if(!locs.length)return '';
-    return `<div style="display:grid;grid-template-columns:repeat(${Math.min(locs.length,7)},minmax(78px,1fr));gap:5px;margin-top:8px;">${locs.map(loc=>{
+    const estados=[st.sangrando?'🩸 Sangrando':'',st.derrubado?'💥 Derrubado':'',st.armaDanificada?'⚔️ Arma danificada':'',st.inconsciente?'💤 Inconsciente':'',st.morto?'☠️ Morto':''].filter(Boolean).join(' · ');
+    return `<div style="margin-top:8px;color:#aee8ff;font-size:.86em;font-weight:700;">PV DO ALVO · ${escaparHtmlInventario_(t.nome)}${estados?` · <span style="color:#ffb0b0;">${estados}</span>`:''}</div><div style="display:grid;grid-template-columns:repeat(${Math.min(locs.length,7)},minmax(78px,1fr));gap:5px;margin-top:4px;">${locs.map(loc=>{
         const at=Number(st.hit?.[loc]??0),mx=Number(st.hitMax?.[loc]??0),pa=Number(st.armor?.[loc]||0);
         const bad=at<=0;
         const curto=loc.replace('Braço Direito','Braço D.').replace('Braço Esquerdo','Braço E.').replace('Perna Direita','Perna D.').replace('Perna Esquerda','Perna E.');
@@ -6841,8 +6906,12 @@ window.labRolarDano_=function(){
     const critico=String(dp.grauAtaque||'').toLowerCase().includes('crít')||String(dp.grauAtaque||'').toLowerCase().includes('crit');
     const r=critico?maximizarExpressaoDanoCombate_(expr):rolarExpressaoDanoCombate_(expr);
     if(!r){notificar_(`Não foi possível interpretar o dano: ${expr||'sem dano'}`,'aviso');return;}
-    const ap=labAplicarDanoLocal_(defensor,r.total,item);
+    const ap=labAplicarDanoLocal_(defensor,r.total,item,{localForcada:dp.localForcada||'',ignorarArmadura:!!dp.ignorarArmadura});
     if(!ap){notificar_('Não foi possível aplicar o dano no estado de simulação.','aviso');return;}
+    const stDef=labGarantirSnapshotCombate_(defensor);
+    if(dp.aplicarSangrar&&ap.final>0)stDef.sangrando=true;
+    if(dp.aplicarDerrubar)stDef.derrubado=true;
+    if(dp.danificarArma)stDef.armaDanificada=true;
     labSomDanoAplicado_(item);
     const armTxt=ap.pa?` · PA ${ap.pa}${ap.pen?` - Pen ${ap.pen}`:''} = ${ap.paEf}`:'';
     const locTxt=ap.roll?`Localização d20 [${ap.roll}] → ${ap.local}`:ap.local;
@@ -6883,13 +6952,11 @@ window.labRolarAtaque_=function(){
             || !!stAlvo?.morto
             || !!stAlvo?.inconsciente;
         if(semReacao){
-            labEstado_.danoPendenteLab=pend;
-            const motivo=stAlvo?.morto?'alvo já incapacitado/morto':
-                stAlvo?.inconsciente?'alvo inconsciente':
-                Number(alvo.acoesAtuaisLab||0)<=0?'sem AÇ para reagir':
-                !defesasPossiveis.length?'sem defesa possível':'alvo sem reação';
-            labEstado_.ultimoResultadoLab=base+` ${motivo}; dano automático.`;
-            danoAutomatico=true;
+            const qtd=labEfeitosQuantidade_(r.grau,'Falha',true);
+            labEstado_.danoPendenteLab={...pend,efeitosRestantes:qtd,efeitosEscolhidos:[],danoAutomatico:true};
+            const motivo=stAlvo?.morto?'alvo já incapacitado/morto':stAlvo?.inconsciente?'alvo inconsciente':Number(alvo.acoesAtuaisLab||0)<=0?'sem AÇ para reagir':!defesasPossiveis.length?'sem defesa possível':'alvo sem reação';
+            labEstado_.ultimoResultadoLab=base+` ${motivo}; ${qtd?`${qtd} efeito(s) especial(is) antes do dano automático.`:'dano automático.'}`;
+            danoAutomatico=qtd===0;
         }else{
             labEstado_.pendenciaLab=pend;labEstado_.ultimoResultadoLab=base+` Aguardando defesa de ${alvo.nome}.`;
         }
@@ -6925,7 +6992,7 @@ function labRenderActionPanel_(){
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;">
             <select onchange="labMudarDefesa_(this.value)" style="width:auto;min-width:220px;">${defs.map(x=>`<option value="${batalhaTokenPericia_(x)}" ${batalhaTokenPericia_(x)===d?.defesaLab?'selected':''}>${escaparHtmlInventario_(getNome(x))} (${labValorDefesa_(c,x)}%)</option>`).join('')||'<option>Sem defesa disponível</option>'}</select>
             ${defs.length&&Number(d?.acoesAtuaisLab||0)>0
-              ? `<button class="btn-small btn-select" onclick="labResponderDefesa_(true)" style="min-height:48px;padding:0 20px;font-size:1.02em;">🎲 Defender (1 AÇ)</button><button class="btn-small" onclick="labResponderDefesa_(false)">✋ Não defender</button>`
+              ? `<button class="btn-small btn-select" onclick="labResponderDefesa_(true)" style="min-height:48px;padding:0 20px;font-size:1.02em;">🎲 Defender (1 AÇ)</button><button class="btn-small" onclick="labResponderDefesa_(false)" style="height:48px;min-width:180px;padding:0 20px;font-size:1.02em;">✋ Não defender</button>`
               : `<span style="color:#ffb0b0;font-weight:700;">Sem reação possível · dano será automático</span>`}
           </div></div>`;
         return;
@@ -6933,11 +7000,18 @@ function labRenderActionPanel_(){
 
     if(labEstado_.danoPendenteLab){
         const p=labEstado_.danoPendenteLab,a=(labEstado_.tokens||[]).find(t=>String(t.id)===String(p.atacanteId)),d=(labEstado_.tokens||[]).find(t=>String(t.id)===String(p.defensorId));
-        const expr=labExpressaoDano_(a,p.item);
-        el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-          <div><strong style="color:#ffd54a;">💥 Ataque acertou</strong> · ${escaparHtmlInventario_(a?.nome||'Atacante')} → ${escaparHtmlInventario_(d?.nome||'Alvo')}<br><small style="color:#bbb;">${escaparHtmlInventario_(getNome(p.item)||p.item?.nome||'Ataque')} · dano ${escaparHtmlInventario_(expr||'—')}${p.defesaTexto?` · defesa: ${escaparHtmlInventario_(p.defesaTexto)}`:''}</small></div>
-          <button class="btn-small btn-select" onclick="labRolarDano_()" style="min-height:54px;min-width:180px;padding:0 22px;font-size:1.05em;">💥 Rolar dano</button>
-        </div>${d?labResumoPVHtml_(d):''}${labEstado_.ultimoResultadoLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(labEstado_.ultimoResultadoLab)}</div>`:''}`;
+        const expr=labExpressaoDano_(a,p.item),rest=Math.max(0,Number(p.efeitosRestantes||0)),efs=labEfeitosDisponiveis_(p);
+        const st=labGarantirSnapshotCombate_(d),locs=Object.keys(st?.hitMax||{});
+        if(rest>0){
+            if(p.escolhendoLocalizacao){
+                el.innerHTML=`<div><strong style="color:#ffd54a;">🎯 Escolher Localização</strong><div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;">${locs.map(loc=>`<button class="btn-small" onclick="labConfirmarLocalizacao_('${String(loc).replace(/'/g,"\\'")}')" style="min-height:42px;">${escaparHtmlInventario_(loc)}</button>`).join('')}</div></div>`;
+            }else{
+                el.innerHTML=`<div><strong style="color:#ffd54a;">✨ ${rest} efeito(s) especial(is) disponível(is)</strong> · ${escaparHtmlInventario_(a?.nome||'Atacante')} → ${escaparHtmlInventario_(d?.nome||'Alvo')}<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;">${efs.map(e=>`<button class="btn-small btn-select" onclick="labEscolherEfeito_('${e.id}')" style="min-height:44px;">${e.nome}</button>`).join('')}<button class="btn-small" onclick="labPularEfeitos_()" style="min-height:44px;">Ignorar efeitos</button></div>${d?labResumoPVHtml_(d):''}</div>`;
+            }
+            return;
+        }
+        el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><div><strong style="color:#ffd54a;">💥 Ataque acertou</strong> · ${escaparHtmlInventario_(a?.nome||'Atacante')} → ${escaparHtmlInventario_(d?.nome||'Alvo')}<br><small style="color:#bbb;">${escaparHtmlInventario_(getNome(p.item)||p.item?.nome||'Ataque')} · dano ${escaparHtmlInventario_(expr||'—')}</small></div>${p.danoAutomatico?'<span style="color:#9fffb0;font-weight:700;">Dano automático…</span>':`<button class="btn-small btn-select" onclick="labRolarDano_()" style="height:48px;min-width:170px;padding:0 20px;font-size:1em;">💥 Rolar dano</button>`}</div>${d?labResumoPVHtml_(d):''}`;
+        if(p.danoAutomatico)setTimeout(()=>{if(labEstado_.danoPendenteLab===p&&Number(p.efeitosRestantes||0)<=0)window.labRolarDano_();},350);
         return;
     }
 
@@ -6956,7 +7030,7 @@ function labRenderActionPanel_(){
         <label><small>Perícia</small><select onchange="labMudarAtaquePref_('periciaLab',this.value)" style="width:100%">${skills.map(p=>`<option value="${batalhaTokenPericia_(p)}" ${batalhaTokenPericia_(p)===t.periciaLab?'selected':''}>${escaparHtmlInventario_(getNome(p))} (${labValorPericiaAtaque_(c,p)}%)</option>`).join('')}</select></label>
         <label><small>Arma / ataque</small><select onchange="labMudarAtaquePref_('equipamentoLab',this.value)" style="width:100%">${eq.map(x=>`<option value="${escaparHtmlInventario_(x.valor)}" ${x.valor===t.equipamentoLab?'selected':''}>${escaparHtmlInventario_(x.rotulo)}</option>`).join('')||'<option>—</option>'}</select></label>
         <label><small>Alvo</small><select onchange="labSelecionarAlvo_(this.value)" style="width:100%">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(t.alvoLab)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
-        <button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:62px;min-width:170px;padding:0 22px;font-size:1.05em;align-self:end;">🎲 Atacar (1 AÇ)</button>
+        <button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:48px;min-width:150px;padding:0 18px;font-size:1em;align-self:end;">🎲 Atacar (1 AÇ)</button>
       </div>
       ${alvo?labResumoPVHtml_(alvo):''}
       ${labEstado_.ultimoResultadoLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(labEstado_.ultimoResultadoLab)}</div>`:''}`;
@@ -7029,7 +7103,7 @@ window.labRotacaoPointerDown_=function(ev,id){
 window.labPointerDown_=function(ev,id){
     if(ev.button===2)return;ev.preventDefault();const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);
     const rect=map.getBoundingClientRect(),ppm=labEstado_.pxPorMetro,origem={x:t.x,y:t.y},prep=labEstado_.fase!=='combate',at=labTokenAtual_();
-    if(!prep&&!t.livreMestre&&String(at?.id)!==String(t.id)){
+    if(!prep&&String(at?.id)!==String(t.id)){
         at.alvoLab=String(t.id);labApontarPara_(at,t);labEstado_.selecionadoId=String(at.id);labSalvarLocal_();labRender_();return;
     }
     const maxM=(prep||t.livreMestre)?999:labMovimentoMaxM_(t);if(!prep&&maxM<=0&&!t.livreMestre){notificar_(`${t.nome} é imóvel em combate. Na preparação o mestre pode posicioná-lo livremente.`,'aviso');return;}
@@ -14167,7 +14241,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.16.0: defesas de criaturas corrigidas, sons de combate, dano automático sem reação e incapacitados pulados -->
+<!-- Mesa Estelar v46.17.0: Esquiva robusta, posições aleatórias, boneco-alvo, efeitos especiais e mini-ficha do alvo identificada -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
