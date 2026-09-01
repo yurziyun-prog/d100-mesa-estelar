@@ -460,6 +460,7 @@
                           </select>
                         </label>
                         <label style="display:flex;align-items:center;gap:5px;">Cor <input id="labDrawColor" type="color" value="#ffcf4d" onchange="labDesenhoCor_(this.value)" style="width:32px;height:27px;padding:1px;"></label>
+                        <label style="display:flex;align-items:center;gap:5px;" title="Digite RGB como 93/93/93, 93,93,93 ou 93 93 93">RGB <input id="labDrawRgb" type="text" inputmode="numeric" value="255/207/77" placeholder="93/93/93" oninput="labDesenhoCorRGB_(this.value)" style="width:92px;margin:0;padding:6px 8px;font-size:.88em;"></label>
                         <span style="display:flex;gap:3px;align-items:center;" title="Cores rápidas">
                           <button onclick="labDesenhoCor_('#ffffff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffffff"></button>
                           <button onclick="labDesenhoCor_('#111111')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#111111"></button>
@@ -8288,7 +8289,27 @@ function labDesenhoConfig_(){
 }
 window.labDesenhoAlternar_=function(){const c=labDesenhoConfig_();if(c.ferramenta==='borracha')c.ferramenta='traco';c.ativo=!c.ativo;labSalvarLocal_();labRender_();};
 window.labDesenhoFerramenta_=function(v){const c=labDesenhoConfig_();c.ferramenta=String(v||'traco');c.ativo=true;labSalvarLocal_();labRender_();};
+function labCorHexParaRgb_(hex){
+    const h=String(hex||'').trim().replace('#','');
+    if(!/^[0-9a-fA-F]{6}$/.test(h))return null;
+    return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
+}
+function labCorRgbParaHex_(r,g,b){
+    const c=n=>Math.max(0,Math.min(255,Math.round(Number(n)||0))).toString(16).padStart(2,'0');
+    return `#${c(r)}${c(g)}${c(b)}`;
+}
 window.labDesenhoCor_=function(v){labDesenhoConfig_().cor=String(v||'#ffcf4d');labSalvarLocal_();labRender_();};
+window.labDesenhoCorRGB_=function(v){
+    const partes=String(v||'').trim().split(/[\s,;\/]+/).filter(Boolean);
+    if(partes.length!==3)return;
+    const nums=partes.map(Number);
+    if(nums.some(n=>!Number.isFinite(n)||n<0||n>255))return;
+    const cor=labCorRgbParaHex_(nums[0],nums[1],nums[2]);
+    labDesenhoConfig_().cor=cor;
+    const picker=document.getElementById('labDrawColor');if(picker)picker.value=cor;
+    labSalvarLocal_();
+    labDesenhoRender_();
+};
 window.labDesenhoTamanho_=function(v){labDesenhoConfig_().tamanho=Math.max(2,Math.min(34,Number(v)||7));labSalvarLocal_();};
 window.labDesenhoLimpar_=function(){
     if(!batalhaEhMestre_())return;
@@ -8357,11 +8378,11 @@ function labRender_(){
     const st=labEstado_.tokens.find(t=>String(t.id)===String(labEstado_.selecionadoId)),overlay=labOverlayMovimentoHtml_(st,ppm);
     const drawCfg=labDesenhoConfig_();
     const cursorDesenho=!drawCfg.ativo?'default':drawCfg.ferramenta==='borracha'?'cell':'crosshair';
-    const drawCanvas=`<canvas id="labDrawCanvas" onpointerdown="labDesenhoPointerDown_(event)" style="position:absolute;inset:0;z-index:${drawCfg.ativo?30:1};pointer-events:${drawCfg.ativo?'auto':'none'};cursor:${cursorDesenho};"></canvas>`;
+    const drawCanvas=`<canvas id="labDrawCanvas" onpointerdown="labDesenhoPointerDown_(event)" style="position:absolute;inset:0;z-index:2;pointer-events:${drawCfg.ativo?'auto':'none'};cursor:${cursorDesenho};"></canvas>`;
     const tokens=labEstado_.tokens.map(t=>{const d=Math.max(24,t.diametroM*ppm),sel=String(t.id)===String(labEstado_.selecionadoId),turno=labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id);
         const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
         const alvoAtual=labEstado_.fase==='combate'&&String(labTokenAtual_()?.alvoLab)===String(t.id);
-        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onmouseenter="labHoverShow_(event,this.dataset.id)" onmousemove="labHoverMove_(event)" onmouseleave="labHoverHide_()" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${t.iniciativaLab!==null&&t.iniciativaLab!==''&&Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}${t.combateLab?.morto?' · 💀':t.combateLab?.inconsciente?' · 💤':''}</div></div>`;}).join('');
+        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?27:sel?25:23};touch-action:none" onmouseenter="labHoverShow_(event,this.dataset.id)" onmousemove="labHoverMove_(event)" onmouseleave="labHoverHide_()" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${t.iniciativaLab!==null&&t.iniciativaLab!==''&&Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}${t.combateLab?.morto?' · 💀':t.combateLab?.inconsciente?' · 💤':''}</div></div>`;}).join('');
     let microToken=null;
     if(labEstado_.pendenciaLab)microToken=labTokenPorId_(labEstado_.pendenciaLab.defensorId);
     else if(labEstado_.danoPendenteLab)microToken=labTokenPorId_(labEstado_.danoPendenteLab.defensorId);
@@ -8371,11 +8392,11 @@ function labRender_(){
     const floats=(labEstado_.floatsLab||[]).map(f=>labFloatHtml_(f,ppm)).join('');
     map.innerHTML=drawCanvas+overlay+tokens+micro+floats;
     labDesenhoRender_();
-    const cfg=labDesenhoConfig_(),tg=document.getElementById('labDrawToggle'),eb=document.getElementById('labEraserBtn'),ft=document.getElementById('labDrawTool'),cc=document.getElementById('labDrawColor'),sz=document.getElementById('labDrawSize'),ub=document.getElementById('labUndoBtn'),rb=document.getElementById('labRedoBtn');
+    const cfg=labDesenhoConfig_(),tg=document.getElementById('labDrawToggle'),eb=document.getElementById('labEraserBtn'),ft=document.getElementById('labDrawTool'),cc=document.getElementById('labDrawColor'),rgb=document.getElementById('labDrawRgb'),sz=document.getElementById('labDrawSize'),ub=document.getElementById('labUndoBtn'),rb=document.getElementById('labRedoBtn');
     if(tg){tg.textContent=cfg.ativo&&cfg.ferramenta!=='borracha'?'✅ Desenhando':'✏️ Desenhar';tg.classList.toggle('btn-select',cfg.ativo&&cfg.ferramenta!=='borracha');}
     if(eb)eb.classList.toggle('btn-select',cfg.ativo&&cfg.ferramenta==='borracha');
     if(ub)ub.disabled=!labDesenhoUndo_.length;if(rb)rb.disabled=!labDesenhoRedo_.length;
-    if(ft)ft.value=cfg.ferramenta;if(cc)cc.value=cfg.cor;if(sz)sz.value=cfg.tamanho;
+    if(ft)ft.value=cfg.ferramenta;if(cc)cc.value=cfg.cor;if(rgb){const v=labCorHexParaRgb_(cfg.cor);if(v&&document.activeElement!==rgb)rgb.value=v.join('/');}if(sz)sz.value=cfg.tamanho;
     labAtualizarSelectMapas_();
     const bg=document.getElementById('labBgColor'),gc=document.getElementById('labGridColor'),gv=document.getElementById('labGridVisible'),tx=document.getElementById('labTexture'),ms=document.getElementById('labMapSize'),zm=document.getElementById('labZoom');
     if(bg)bg.value=labEstado_.fundo||'#d7d7d7';if(gc)gc.value=labEstado_.corGrade||'#777777';if(gv)gv.checked=labEstado_.gradeVisivel!==false;if(tx)tx.value=labEstado_.textura||'nenhuma';
@@ -15547,5 +15568,6 @@ document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 <!-- Mesa Estelar v46.28.0: banco administrativo de mapas no Escudo do Mestre, com abrir, renomear, duplicar e excluir -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
+<!-- Mesa Estelar v46.30.0: entrada RGB direta para pintura e tokens sempre acima do desenho -->
 </body>
 </html>
