@@ -394,9 +394,9 @@
                 <button class="tab-btn active" onclick="mostrarAba('ficha', this)" data-i18n="tabFicha">📋 Ficha</button>
                 <button class="tab-btn" id="cenarioAtualTabBtn" onclick="mostrarAba('cenario-publico', this)">🪐 Cenário Atual</button>
                 <button class="tab-btn" id="mercadoTabBtn" onclick="mostrarAba('mercado', this)" data-i18n="tabMercado">🛒 Mercado</button>
-                <button class="tab-btn" id="batalhaTabBtn" onclick="mostrarAba('batalha', this)">⚔️ Combate</button>
+                <button class="tab-btn hidden" id="batalhaTabBtn" onclick="mostrarAba('batalha', this)">⚔️ Combate antigo</button>
                 <button class="tab-btn" id="regrasTabBtn" onclick="mostrarAba('regras', this)" data-i18n="tabRegras">📖 Regras</button>
-                <button class="tab-btn hidden" id="laboratorioTabBtn" onclick="mostrarAba('laboratorio-combate', this)">🧪 Combate Experimental</button>
+                <button class="tab-btn" id="laboratorioTabBtn" onclick="mostrarAba('laboratorio-combate', this)">🗺️ Mapa da Mesa</button>
                 <button class="tab-btn hidden" id="escudoTabBtn" onclick="mostrarAba('escudo', this)" data-i18n="tabGM">🛡️ Escudo do Mestre</button>
             </div>
 
@@ -410,114 +410,65 @@
 
             <div id="laboratorio-combate" class="tab-content">
                 <div class="form-section">
-                    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-                        <div><h2 style="margin:0 0 5px;">🧪 Combate · Laboratório</h2>
-                        <p style="margin:0;color:#aaa;max-width:900px;">Protótipo paralelo e exclusivo do mestre. Não altera o combate real. Coordenadas contínuas em metros, sem casas obrigatórias.</p></div>
-                        <span style="padding:5px 9px;border-radius:8px;background:rgba(255,193,7,.10);border:1px solid rgba(255,193,7,.35);color:#ffd166;">EXPERIMENTAL</span>
+                    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;">
+                        <div><h2 style="margin:0 0 5px;">🗺️ Mapa da Mesa</h2>
+                        <p style="margin:0;color:#aaa;max-width:900px;">Mesa oficial para posicionamento, exploração e combate em coordenadas contínuas. O mestre prepara o mapa e os jogadores acompanham a mesa compartilhada.</p></div>
+                        <span id="labLiveBadge" style="padding:5px 9px;border-radius:8px;background:rgba(86,240,138,.08);border:1px solid rgba(86,240,138,.28);color:#9fffc0;">● MESA COMPARTILHADA</span>
                     </div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px;">
-                        <button class="btn-small btn-select" onclick="labCarregarBatalhaAtual_()">⚔️ Carregar combate atual</button>
-                        <button class="btn-small" onclick="labAdicionarBoneco_()">🎯 Boneco de treino</button>
-                        <button class="btn-small" onclick="labCentralizarTokens_()">◎ Reorganizar</button>
-                        <button class="btn-small" onclick="labPosicoesAleatorias_()">🎲 Posições aleatórias</button>
-                        <button class="btn-small" id="labStartBtn" onclick="labIniciarCombate_()">⚡ Iniciar combate</button>
-                        <button class="btn-small hidden" id="labNextBtn" onclick="labEncerrarOportunidade_()">⏭ Encerrar oportunidade</button>
-                        <button class="btn-small hidden" id="labStopBtn" onclick="labVoltarPreparacao_()">🧭 Voltar à preparação</button>
-                        <span title="Neste laboratório, PV, PP, munição e estados são cópias locais. Nada é gravado na ficha real." style="padding:7px 10px;border:1px solid rgba(126,231,255,.35);border-radius:8px;color:#9ee7ff;font-weight:700;">🧪 SIMULADO · fichas protegidas</span>
-                        <button class="btn-small" onclick="labLimpar_()">🧹 Limpar</button>
-                        <label style="display:flex;align-items:center;gap:6px;">Fundo <input id="labBgColor" type="color" value="#d7d7d7" onchange="labMudarFundo_(this.value)"></label>
-                        <label style="display:flex;align-items:center;gap:6px;">Linhas <input id="labGridColor" type="color" value="#777777" onchange="labMudarCorGrade_(this.value)"></label>
-                        <label style="display:flex;align-items:center;gap:6px;"><input id="labGridVisible" type="checkbox" checked onchange="labAlternarGrade_(this.checked)"> Mostrar grade</label>
-                        <label style="display:flex;align-items:center;gap:6px;">Textura
-                            <select id="labTexture" onchange="labMudarTextura_(this.value)">
-                                <option value="nenhuma">Nenhuma</option>
-                                <option value="concreto">Concreto</option>
-                                <option value="areia">Areia</option>
-                                <option value="terra">Terra</option>
-                                <option value="grama">Grama</option>
-                                <option value="floresta">Floresta</option>
-                                <option value="rochas">Rochas</option>
-                                <option value="neve">Neve</option>
-                                <option value="agua">Água</option>
-                                <option value="vulcanico">Vulcânico</option>
-                                <option value="metal">Metal / nave</option>
-                                <option value="ruinas">Ruínas</option>
-                                <option value="alien">Biomassa alienígena</option>
-                                <option value="metal">Metal</option>
-                                <option value="nevoa">Névoa</option>
-                            </select>
-                        </label>
-                        <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
-                        <button class="btn-small" id="labDrawToggle" onclick="labDesenhoAlternar_()" title="Ativa/desativa desenho sobre o mapa">✏️ Desenhar</button>
-                        <button class="btn-small" id="labEraserBtn" onclick="labDesenhoBorracha_()" title="Borracha de verdade: apaga apenas onde você passar">🧽 Borracha</button>
-                        <button class="btn-small" id="labUndoBtn" onclick="labDesenhoDesfazer_()" title="Desfazer última alteração no desenho">↶</button>
-                        <button class="btn-small" id="labRedoBtn" onclick="labDesenhoRefazer_()" title="Refazer alteração desfeita">↷</button>
-                        <label style="display:flex;align-items:center;gap:5px;">Ferramenta
-                          <select id="labDrawTool" onchange="labDesenhoFerramenta_(this.value)" style="width:auto;margin:0;">
-                            <option value="traco">Traço</option>
-                            <option value="textura">Textura</option>
-                            <option value="borracha">Borracha</option>
-                          </select>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:5px;">Cor <input id="labDrawColor" type="color" value="#ffcf4d" onchange="labDesenhoCor_(this.value)" style="width:32px;height:27px;padding:1px;"></label>
-                        <label style="display:flex;align-items:center;gap:5px;" title="Digite RGB como 93/93/93, 93,93,93 ou 93 93 93">RGB <input id="labDrawRgb" type="text" inputmode="numeric" value="255/207/77" placeholder="93/93/93" oninput="labDesenhoCorRGB_(this.value)" style="width:92px;margin:0;padding:6px 8px;font-size:.88em;"></label>
-                        <span style="display:flex;gap:3px;align-items:center;" title="Cores rápidas">
-                          <button onclick="labDesenhoCor_('#ffffff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffffff"></button>
-                          <button onclick="labDesenhoCor_('#111111')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#111111"></button>
-                          <button onclick="labDesenhoCor_('#ff5252')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ff5252"></button>
-                          <button onclick="labDesenhoCor_('#ffcf4d')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffcf4d"></button>
-                          <button onclick="labDesenhoCor_('#56f08a')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#56f08a"></button>
-                          <button onclick="labDesenhoCor_('#45b7ff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#45b7ff"></button>
-                          <button onclick="labDesenhoCor_('#b56cff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#b56cff"></button>
-                        </span>
-                        <label style="display:flex;align-items:center;gap:5px;">Tamanho <input id="labDrawSize" type="range" min="2" max="48" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:82px;"></label>
-                        <label style="display:flex;align-items:center;gap:5px;">Opacidade <input id="labDrawOpacity" type="range" min="5" max="100" step="5" value="100" oninput="labDesenhoOpacidade_(this.value)" style="width:82px;"><span id="labDrawOpacityValue" style="min-width:34px;color:#bbb;font-size:.82em;">100%</span></label>
-                        <label style="display:flex;align-items:center;gap:5px;">Pincel
-                          <select id="labDrawBrush" onchange="labDesenhoPincel_(this.value)" style="width:auto;margin:0;">
-                            <option value="redondo">Redondo</option>
-                            <option value="quadrado">Quadrado</option>
-                            <option value="spray">Spray</option>
-                            <option value="irregular">Irregular</option>
-                            <option value="caligrafico">Caligráfico</option>
-                          </select>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:5px;">Textura do traço
-                          <select id="labDrawStrokeTexture" onchange="labDesenhoTexturaTraco_(this.value)" style="width:auto;margin:0;">
-                            <option value="solida">Sólida</option>
-                            <option value="pontilhada">Pontilhada</option>
-                            <option value="giz">Giz</option>
-                            <option value="ranhura">Ranhura</option>
-                            <option value="areia">Areia</option>
-                            <option value="cascalho">Cascalho</option>
-                            <option value="grama">Grama</option>
-                            <option value="folhas">Folhas</option>
-                            <option value="neve">Neve</option>
-                            <option value="fumaca">Fumaça</option>
-                          </select>
-                        </label>
-                        <button class="btn-small" onclick="labDesenhoLimpar_()" title="Apaga todos os desenhos. Pode ser desfeito com ↶.">🗑️ Limpar tudo</button>
-                        <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
-                        <label style="display:flex;align-items:center;gap:5px;">Objeto
-                          <select id="labObjetoModeloSelect" style="width:165px;margin:0;"><option value="">— objeto —</option></select>
-                        </label>
-                        <button class="btn-small btn-select" onclick="labAdicionarObjetoSelecionado_()">➕ Colocar</button>
-                        <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
-                        <label style="display:flex;align-items:center;gap:5px;">Mapas salvos
-                          <select id="labMapaSalvoSelect" onchange="labSelecionarMapaSalvo_(this.value)" style="width:190px;margin:0;"><option value="">— nenhum —</option></select>
-                        </label>
-                        <button class="btn-small" onclick="labSalvarMapaBanco_()" title="Salva alterações no mapa atualmente selecionado. Se nenhum mapa estiver selecionado, cria um novo.">💾 Salvar alterações</button>
-                        <button class="btn-small btn-select" onclick="labSalvarMapaComoNovo_()" title="Cria um novo mapa a partir do cenário que está atualmente na mesa, sem substituir o mapa selecionado.">➕ Salvar como novo</button>
-                        <button class="btn-small" onclick="labCarregarMapaBanco_()" title="Carrega o mapa selecionado sem carregar personagens">📂 Carregar</button>
-                        <button class="btn-small" onclick="labExcluirMapaBanco_()" title="Exclui o mapa selecionado do banco">🗑️ Excluir mapa</button>
-                        <label style="display:flex;align-items:center;gap:6px;">Mapa
-                            <select id="labMapSize" onchange="labMudarTamanhoMapa_(this.value)">
-                                <option value="24x14">24 × 14 m</option>
-                                <option value="28x14" selected>28 × 14 m</option>
-                                <option value="32x16">32 × 16 m</option>
-                                <option value="36x18">36 × 18 m</option>
-                            </select>
-                        </label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px;align-items:center;">
+                        <div id="labMasterGameControls" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                            <label style="display:flex;align-items:center;gap:5px;">Adicionar
+                              <select id="labParticipanteSelect" style="width:220px;margin:0;"><option value="">— personagem / NPC / criatura —</option></select>
+                            </label>
+                            <button class="btn-small btn-select" onclick="labAdicionarParticipanteSelecionado_()">➕ Colocar na mesa</button>
+                            <button class="btn-small" onclick="labAdicionarBoneco_()">🎯 Boneco de treino</button>
+                            <button class="btn-small" onclick="labCentralizarTokens_()">◎ Reorganizar</button>
+                            <button class="btn-small" onclick="labPosicoesAleatorias_()">🎲 Posições aleatórias</button>
+                            <button class="btn-small" id="labStartBtn" onclick="labIniciarCombate_()">⚡ Iniciar combate</button>
+                            <button class="btn-small hidden" id="labNextBtn" onclick="labEncerrarOportunidade_()">⏭ Encerrar oportunidade</button>
+                            <button class="btn-small hidden" id="labStopBtn" onclick="labVoltarPreparacao_()">🧭 Voltar à preparação</button>
+                            <button class="btn-small" onclick="labLimpar_()">🧹 Limpar mesa</button>
+                        </div>
+                        <div id="labMasterMapLoader" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                            <label style="display:flex;align-items:center;gap:5px;">Mapas salvos
+                              <select id="labMapaSalvoSelect" onchange="labSelecionarMapaSalvo_(this.value)" style="width:190px;margin:0;"><option value="">— nenhum —</option></select>
+                            </label>
+                            <button class="btn-small" onclick="labCarregarMapaBanco_()" title="Carrega o mapa selecionado sem alterar os participantes">📂 Carregar</button>
+                        </div>
                         <label style="display:flex;align-items:center;gap:6px;">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
+                        <label id="labEditMapToggleWrap" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid rgba(86,240,138,.35);border-radius:8px;background:rgba(86,240,138,.07);" title="Mostra ou esconde as ferramentas de criação do mapa"><input id="labModoCriarMapa" type="checkbox" onchange="labAlternarModoCriacaoMapa_(this.checked)"> 🛠️ Editar mapa</label>
+                        <div id="labMapCreationControls" style="display:none;flex-basis:100%;gap:8px;flex-wrap:wrap;align-items:center;padding:9px 10px;border:1px solid rgba(86,240,138,.22);border-radius:10px;background:rgba(86,240,138,.035);">
+                            <label style="display:flex;align-items:center;gap:6px;">Fundo <input id="labBgColor" type="color" value="#d7d7d7" onchange="labMudarFundo_(this.value)"></label>
+                            <label style="display:flex;align-items:center;gap:6px;">Linhas <input id="labGridColor" type="color" value="#777777" onchange="labMudarCorGrade_(this.value)"></label>
+                            <label style="display:flex;align-items:center;gap:6px;"><input id="labGridVisible" type="checkbox" checked onchange="labAlternarGrade_(this.checked)"> Mostrar grade</label>
+                            <label style="display:flex;align-items:center;gap:6px;">Textura
+                                <select id="labTexture" onchange="labMudarTextura_(this.value)">
+                                    <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option><option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option><option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option><option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
+                                </select>
+                            </label>
+                            <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
+                            <button class="btn-small" id="labDrawToggle" onclick="labDesenhoAlternar_()" title="Ativa/desativa desenho sobre o mapa">✏️ Desenhar</button>
+                            <button class="btn-small" id="labEraserBtn" onclick="labDesenhoBorracha_()" title="Apaga apenas onde você passar">🧽 Borracha</button>
+                            <button class="btn-small" id="labUndoBtn" onclick="labDesenhoDesfazer_()">↶</button>
+                            <button class="btn-small" id="labRedoBtn" onclick="labDesenhoRefazer_()">↷</button>
+                            <label style="display:flex;align-items:center;gap:5px;">Ferramenta <select id="labDrawTool" onchange="labDesenhoFerramenta_(this.value)" style="width:auto;margin:0;"><option value="traco">Traço</option><option value="textura">Textura</option><option value="borracha">Borracha</option></select></label>
+                            <label style="display:flex;align-items:center;gap:5px;">Cor <input id="labDrawColor" type="color" value="#ffcf4d" onchange="labDesenhoCor_(this.value)" style="width:32px;height:27px;padding:1px;"></label>
+                            <label style="display:flex;align-items:center;gap:5px;" title="Digite RGB como 93/93/93, 93,93,93 ou 93 93 93">RGB <input id="labDrawRgb" type="text" inputmode="numeric" value="255/207/77" placeholder="93/93/93" oninput="labDesenhoCorRGB_(this.value)" style="width:92px;margin:0;padding:6px 8px;font-size:.88em;"></label>
+                            <span style="display:flex;gap:3px;align-items:center;" title="Cores rápidas"><button onclick="labDesenhoCor_('#ffffff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffffff"></button><button onclick="labDesenhoCor_('#111111')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#111111"></button><button onclick="labDesenhoCor_('#ff5252')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ff5252"></button><button onclick="labDesenhoCor_('#ffcf4d')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffcf4d"></button><button onclick="labDesenhoCor_('#56f08a')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#56f08a"></button><button onclick="labDesenhoCor_('#45b7ff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#45b7ff"></button><button onclick="labDesenhoCor_('#b56cff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#b56cff"></button></span>
+                            <label style="display:flex;align-items:center;gap:5px;">Tamanho <input id="labDrawSize" type="range" min="2" max="48" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:82px;"></label>
+                            <label style="display:flex;align-items:center;gap:5px;">Opacidade <input id="labDrawOpacity" type="range" min="5" max="100" step="5" value="100" oninput="labDesenhoOpacidade_(this.value)" style="width:82px;"><span id="labDrawOpacityValue" style="min-width:34px;color:#bbb;font-size:.82em;">100%</span></label>
+                            <label style="display:flex;align-items:center;gap:5px;">Pincel <select id="labDrawBrush" onchange="labDesenhoPincel_(this.value)" style="width:auto;margin:0;"><option value="redondo">Redondo</option><option value="quadrado">Quadrado</option><option value="spray">Spray</option><option value="irregular">Irregular</option><option value="caligrafico">Caligráfico</option></select></label>
+                            <label style="display:flex;align-items:center;gap:5px;">Textura do traço <select id="labDrawStrokeTexture" onchange="labDesenhoTexturaTraco_(this.value)" style="width:auto;margin:0;"><option value="solida">Sólida</option><option value="pontilhada">Pontilhada</option><option value="giz">Giz</option><option value="ranhura">Ranhura</option><option value="areia">Areia</option><option value="cascalho">Cascalho</option><option value="grama">Grama</option><option value="folhas">Folhas</option><option value="neve">Neve</option><option value="fumaca">Fumaça</option></select></label>
+                            <button class="btn-small" onclick="labDesenhoLimpar_()" title="Apaga todos os desenhos. Pode ser desfeito com ↶.">🗑️ Limpar pintura</button>
+                            <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
+                            <label style="display:flex;align-items:center;gap:5px;">Objeto <select id="labObjetoModeloSelect" style="width:165px;margin:0;"><option value="">— objeto —</option></select></label>
+                            <button class="btn-small btn-select" onclick="labAdicionarObjetoSelecionado_()">➕ Colocar objeto</button>
+                            <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
+                            <button class="btn-small" onclick="labSalvarMapaBanco_()">💾 Salvar alterações</button>
+                            <button class="btn-small btn-select" onclick="labSalvarMapaComoNovo_()">➕ Salvar como novo</button>
+                            <button class="btn-small" onclick="labExcluirMapaBanco_()">🗑️ Excluir mapa</button>
+                            <label style="display:flex;align-items:center;gap:6px;">Tamanho do mapa <select id="labMapSize" onchange="labMudarTamanhoMapa_(this.value)"><option value="24x14">24 × 14 m</option><option value="28x14" selected>28 × 14 m</option><option value="32x16">32 × 16 m</option><option value="36x18">36 × 18 m</option></select></label>
+                        </div>
                     </div>
                     <div id="labCombatStatus" style="padding:9px 11px;margin-bottom:8px;border-radius:8px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ffe29a;"></div>
                     <div id="labActionPanel" style="display:none;margin-bottom:7px;padding:7px 9px;border-radius:9px;font-size:.88em;background:rgba(22,18,48,.88);border:1px solid rgba(0,212,255,.28);"></div>
@@ -1142,6 +1093,30 @@
                             <button class="btn-small btn-select" onclick="novoObjetoMapaBanco_()">➕ Novo objeto</button>
                             <button class="btn-small" onclick="restaurarObjetosMapaPadrao_()">🌱 Restaurar modelos básicos</button>
                         </div>
+                        <div id="editorObjetoMapaBanco" style="display:none;margin:0 0 16px;padding:14px;border:1px solid rgba(0,212,255,.25);border-radius:10px;background:rgba(0,212,255,.04);">
+                          <h4 id="editorObjetoMapaTitulo" style="margin:0 0 12px;color:#9ee7ff;">Novo objeto</h4>
+                          <input type="hidden" id="objMapaEditId">
+                          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;align-items:end;">
+                            <label>Nome<input id="objMapaNome" type="text" placeholder="Ex.: Pinheiro grande"></label>
+                            <label>Largura (m)<input id="objMapaLargura" type="number" min="0.1" step="0.1" value="1"></label>
+                            <label>Altura (m)<input id="objMapaAltura" type="number" min="0.1" step="0.1" value="1"></label>
+                            <label>PV<input id="objMapaPV" type="number" min="0" step="1" value="10"></label>
+                            <label>Dureza<input id="objMapaDureza" type="number" min="0" step="1" value="2"></label>
+                          </div>
+                          <div style="display:flex;gap:14px;flex-wrap:wrap;margin:10px 0;">
+                            <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaDestrutivel" type="checkbox" checked> Destrutível</label>
+                            <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaInflamavel" type="checkbox"> Inflamável</label>
+                            <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaBloqueiaMov" type="checkbox" checked> Bloqueia movimento</label>
+                            <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaBloqueiaVisao" type="checkbox"> Bloqueia visão</label>
+                          </div>
+                          <div style="display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr) 120px;gap:10px;align-items:end;">
+                            <label>Imagem por URL<input id="objMapaImagemUrl" type="url" placeholder="https://..." oninput="objMapaPreviewUrl_(this.value)"></label>
+                            <label>Ou enviar PNG/WebP/JPG<input id="objMapaImagemFile" type="file" accept="image/*" onchange="objMapaLerImagem_(event)"></label>
+                            <div style="text-align:center"><img id="objMapaImagemPreview" alt="Prévia" style="width:96px;height:96px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)"></div>
+                          </div>
+                          <small style="display:block;color:#8ea7c8;margin-top:7px;">PNG/WebP com transparência e vista de cima costuma dar o melhor resultado. A imagem enviada é reduzida automaticamente antes de ser salva.</small>
+                          <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button class="btn-save" onclick="salvarObjetoMapaEditor_()">💾 Salvar objeto</button><button class="btn-small" onclick="fecharEditorObjetoMapa_()">Cancelar</button></div>
+                        </div>
                         <div id="listaBancoObjetosMapa"></div>
                     </div>
 
@@ -1189,6 +1164,7 @@
                         <button class="btn-small gm-subtab-btn" onclick="mostrarSubAbaMestre('rolagem',this)">🎲 Rolagem do Mestre</button>
                         <button class="btn-small gm-subtab-btn" onclick="abrirAdminNoEscudo_('banco',this)">📚 Banco de Dados</button>
                         <button class="btn-small gm-subtab-btn" onclick="abrirAdminNoEscudo_('config',this)">⚙️ Configurações</button>
+                        <button class="btn-small gm-subtab-btn" onclick="mostrarAba('batalha',document.getElementById('batalhaTabBtn'))" title="Painel antigo mantido temporariamente como referência">⚔️ Combate antigo (reserva)</button>
                     </div>
 
                     <div id="gm-sub-entidades" class="gm-sub-content hidden">
@@ -2414,7 +2390,8 @@ onAuthStateChanged(auth, async (user) => {
             document.getElementById('configTabBtn')?.style && (document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none');
             document.getElementById('bancoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
             document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
-            document.getElementById('laboratorioTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
+            document.getElementById('laboratorioTabBtn')?.classList.remove('hidden');
+            document.getElementById('batalhaTabBtn')?.classList.add('hidden');
             // Configurações globais também afetam jogadores (recursos iniciais e modo de combate).
             // A aba continua escondida para jogadores; eles apenas leem os valores.
             await carregarConfiguracoes();
@@ -2428,9 +2405,11 @@ onAuthStateChanged(auth, async (user) => {
         iniciarMercadoLocal_();
         iniciarCampanhaPublica_();
         iniciarBatalhaCompartilhada_();
+        iniciarMapaMesaCompartilhado_();
     } else {
         if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
         if(campanhaPublicaUnsub_){campanhaPublicaUnsub_();campanhaPublicaUnsub_=null;}
+        if(labMapaMesaUnsub_){labMapaMesaUnsub_();labMapaMesaUnsub_=null;}
         currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
         document.getElementById('loginScreen').classList.remove('hidden');
         document.getElementById('appScreen').classList.add('hidden');
@@ -6439,7 +6418,7 @@ window.comprarItemMercado = async (itemId) => {
 // FUNÇÕES DE NAVEGAÇÃO
 // ============================================
 window.mostrarAba = (abaId, btn) => {
-    const abasMestre = ['config', 'banco', 'escudo', 'laboratorio-combate'];
+    const abasMestre = ['config', 'banco', 'escudo', 'batalha'];
     if (abasMestre.includes(abaId) && (!userData || userData.role !== 'mestre')) {
         alert('Esta área é exclusiva do mestre.');
         return;
@@ -6650,7 +6629,27 @@ let labEstado_={
     fase:'preparacao',rodada:0,ordemIniciativa:[],turnoIndex:0,logLab:[],ultimoResultadoLab:'',pendenciaLab:null,danoPendenteLab:null
 };
 let labDrag_=null;
-function labSalvarLocal_(){try{localStorage.setItem('mesaEstelarLabCombate',JSON.stringify(labEstado_));}catch(_){}}
+let labMapaMesaUnsub_=null,labSyncTimer_=null,labAplicandoRemoto_=false;
+const LAB_MAPA_MESA_REF_=()=>doc(db,'combatesAtivos','mapaMesa');
+function labEstadoPublico_(){
+    const clone=JSON.parse(JSON.stringify(labEstado_||{}));
+    clone.tokens=(clone.tokens||[]).map(t=>{const x={...t};delete x.charLab;delete x.municaoLab;delete x.attrs;delete x.psiSelecaoLab;delete x.psSelecaoLab;return x;});
+    clone.objetoSelecionadoId='';clone.selecionadoId='';clone.modoCriacaoMapa=false;return clone;
+}
+function labAgendarSyncRemoto_(){
+    if(!batalhaEhMestre_()||labAplicandoRemoto_)return;clearTimeout(labSyncTimer_);labSyncTimer_=setTimeout(async()=>{try{await setDoc(LAB_MAPA_MESA_REF_(),{estado:labEstadoPublico_(),atualizadoEm:new Date().toISOString()},{merge:false});}catch(e){console.warn('Sincronização da Mapa da Mesa:',e);}},320);
+}
+function labSalvarLocal_(){try{localStorage.setItem('mesaEstelarLabCombate',JSON.stringify(labEstado_));}catch(_){}labAgendarSyncRemoto_();}
+window.iniciarMapaMesaCompartilhado_=function(){
+    if(labMapaMesaUnsub_){labMapaMesaUnsub_();labMapaMesaUnsub_=null;}
+    if(!currentUserUid)return;
+    labMapaMesaUnsub_=onSnapshot(LAB_MAPA_MESA_REF_(),snap=>{
+        if(batalhaEhMestre_()){if(!snap.exists())labAgendarSyncRemoto_();return;}
+        if(!snap.exists())return;const remoto=snap.data()?.estado;if(!remoto||typeof remoto!=='object')return;
+        labAplicandoRemoto_=true;labEstado_={...labEstado_,...remoto,tokens:Array.isArray(remoto.tokens)?remoto.tokens:[],objetosLab:Array.isArray(remoto.objetosLab)?remoto.objetosLab:[]};labAplicandoRemoto_=false;
+        if(document.getElementById('laboratorio-combate')?.classList.contains('active'))labRender_();
+    },e=>console.warn('Mapa da Mesa compartilhado indisponível:',e));
+};
 function labCarregarLocal_(){
     try{
         const v=JSON.parse(localStorage.getItem('mesaEstelarLabCombate')||'null');
@@ -6805,7 +6804,7 @@ window.labAdicionarBoneco_=function(){
     labSalvarLocal_();labRender_();
 };
 window.labLimpar_=function(){
-    if(!confirm('Limpar apenas o Laboratório? A batalha real não será alterada.'))return;
+    if(!confirm('Limpar os participantes e o estado de combate desta mesa? O mapa desenhado permanece.'))return;
     labEstado_={...labEstado_,tokens:[],selecionadoId:'',fase:'preparacao',rodada:0,ordemIniciativa:[],turnoIndex:0,pendenciaLab:null,danoPendenteLab:null,ultimoResultadoLab:''};labSalvarLocal_();labRender_();
 };
 window.labCentralizarTokens_=function(){
@@ -7764,7 +7763,7 @@ window.labRolarAtaque_=function(){
     try{
     labSanearEstado_();
     const atualModo=labTokenAtual_();if(atualModo)atualModo.microModoLab='ataque';
-    if(labEstado_.fase!=='combate'){notificar_('O Combate Experimental não está ativo.','aviso');return;}
+    if(labEstado_.fase!=='combate'){notificar_('O Mapa da Mesa não está ativo.','aviso');return;}
     if(labEstado_.pendenciaLab||labEstado_.danoPendenteLab){
         notificar_('Há uma resolução de ataque pendente. Resolva-a antes de iniciar outro ataque.','aviso');labRender_();return;
     }
@@ -7828,7 +7827,7 @@ window.labRolarAtaque_=function(){
         labAutoAvancarSeSemAcoes_();
     }
     }catch(err){
-        console.error('Combate Experimental · ataque',err);
+        console.error('Mapa da Mesa · ataque',err);
         notificar_(`O ataque não pôde ser concluído: ${err?.message||err}`,'erro',5500);
     }
 };
@@ -7857,7 +7856,7 @@ function labRenderActionPanel_(){
         const p=labEstado_.danoPendenteLab,a=(labEstado_.tokens||[]).find(t=>String(t.id)===String(p.atacanteId)),d=(labEstado_.tokens||[]).find(t=>String(t.id)===String(p.defensorId));
         let efs=[];
         try{efs=labEfeitosDisponiveis_(p)||[];}catch(err){
-            console.error('Combate Experimental · efeitos',err);
+            console.error('Mapa da Mesa · efeitos',err);
             efs=[];
         }
         const expr=labExpressaoDano_(a,p.item),rest=Math.max(0,Number(p.efeitosRestantes||0));
@@ -8603,8 +8602,57 @@ function labFloatHtml_(f,ppm){
     return `<div data-lab-float="${f.id}" style="position:absolute;left:${t.x*ppm}px;top:${t.y*ppm-8}px;transform:translate(-50%,-50%);z-index:40;pointer-events:none;font-size:25px;font-weight:900;color:${cura?'#56f08a':'#ff5252'};text-shadow:0 2px 5px #000;animation:labFloatUp 1.4s ease-out forwards;">${txt}</div>`;
 }
 if(!document.getElementById('labFloatStyle')){const st=document.createElement('style');st.id='labFloatStyle';st.textContent='@keyframes labFloatUp{0%{opacity:0;transform:translate(-50%,-20%) scale(.8)}15%{opacity:1;transform:translate(-50%,-55%) scale(1.12)}100%{opacity:0;transform:translate(-50%,-155%) scale(.95)}}';document.head.appendChild(st);}
+window.labAlternarModoCriacaoMapa_=function(ativo){
+    if(!batalhaEhMestre_())return;
+    labEstado_.modoCriacaoMapa=!!ativo;
+    if(!ativo){const cfg=labDesenhoConfig_();if(cfg.ativo)cfg.ativo=false;}
+    labSalvarLocal_();labAtualizarModoCriacaoMapa_();labRender_();
+};
+function labAtualizarModoCriacaoMapa_(){
+    const mestre=batalhaEhMestre_(),on=mestre&&!!labEstado_.modoCriacaoMapa;
+    const box=document.getElementById('labMapCreationControls'),ck=document.getElementById('labModoCriarMapa');
+    const wrap=document.getElementById('labEditMapToggleWrap'),game=document.getElementById('labMasterGameControls'),loader=document.getElementById('labMasterMapLoader');
+    if(box)box.style.display=on?'flex':'none';if(ck)ck.checked=on;
+    if(wrap)wrap.style.display=mestre?'flex':'none';if(game)game.style.display=mestre?'flex':'none';if(loader)loader.style.display=mestre?'flex':'none';
+}
+let labParticipanteSelectSig_='';
+function labAtualizarParticipantesSelect_(){
+    const sel=document.getElementById('labParticipanteSelect');if(!sel||!batalhaEhMestre_())return;
+    const atual=sel.value,emMesa=new Set((labEstado_.tokens||[]).map(t=>String(t.origemId||t.id)));
+    const pcs=(userCharacters||[]).filter(c=>!emMesa.has(String(c.id))).map(c=>({v:`pc:${c.id}`,n:c.nome||'Sem nome',g:'Personagens'}));
+    const ns=(npcsDB||[]).filter(n=>n.selecionavelCombate!==false).map(n=>({v:`npc:${n.id}`,n:n.nome||'NPC',g:'NPCs'}));
+    const cs=(criaturasDB||[]).filter(c=>c.selecionavelCombate!==false).map(c=>({v:`criatura:${c.id}`,n:c.nome||'Criatura',g:'Criaturas'}));
+    const grupos=[['Personagens',pcs],['NPCs',ns],['Criaturas',cs]];
+    const sig=JSON.stringify(grupos.map(([g,l])=>[g,l.map(x=>x.v)]));if(sig===labParticipanteSelectSig_)return;labParticipanteSelectSig_=sig;
+    sel.innerHTML='<option value="">— personagem / NPC / criatura —</option>'+grupos.filter(x=>x[1].length).map(([g,l])=>`<optgroup label="${escaparHtmlInventario_(g)}">${l.map(x=>`<option value="${escaparHtmlInventario_(x.v)}">${escaparHtmlInventario_(x.n)}</option>`).join('')}</optgroup>`).join('');
+    if([...sel.options].some(o=>o.value===atual))sel.value=atual;
+}
+function labTokenDeCharDireto_(c,origemId,i=0){
+    const p={id:String(c.id||origemId),nome:String(c.nome||'Participante'),imagem:String(c.imagem||''),tipo:String(c.tipo||''),donoUid:String(c.donoUid||c.dono||'')};
+    const mov=labHeuristicaMovimento_(p,c),max=Math.max(0,Number(obterPAMaxCombate_(c)||2));
+    return {id:String(c.id||`lab:${Date.now()}:${Math.random().toString(36).slice(2,7)}`),origemId:String(origemId||c.id||''),nome:p.nome,imagem:p.imagem,tipo:p.tipo,donoUid:p.donoUid,
+        x:Math.min(labEstado_.larguraM-1,1.5+(i%8)*2.5),y:Math.min(labEstado_.alturaM-1,1.5+Math.floor(i/8)*2.5),diametroM:labTamanhoTokenM_(c),angulo:0,attrs:c?.atributos?JSON.parse(JSON.stringify(c.atributos)):{},
+        acoesMaxLab:max,acoesAtuaisLab:max,movimentoGratisDisponivel:mov.terra>0||mov.voo>0||mov.nat>0,movimentoTerrestre:mov.terra,movimentoVoo:mov.voo,movimentoNatacao:mov.nat,
+        modoMovimento:mov.terra>0?'terrestre':mov.voo>0?'voo':mov.nat>0?'natacao':'imovel',alcanceAtaqueMax:labAlcanceMax_(c),iniciativaLab:null,
+        iniciativaBonus:Math.floor((Number(c?.atributos?.INT||10)+Number(c?.atributos?.DES||10))/2),combateLab:labCriarSnapshotCombate_(c),charLab:labSnapshotChar_(c),psiGastosLab:Math.max(0,Math.floor(Number(c?.pontosMagiaGastos||0)))};
+}
+window.labAdicionarParticipanteSelecionado_=function(){
+    if(!batalhaEhMestre_())return;const v=String(document.getElementById('labParticipanteSelect')?.value||'');if(!v){notificar_('Escolha um personagem, NPC ou criatura.','aviso');return;}
+    const [tipo,id]=v.split(':',2);let c=null;
+    if(tipo==='pc')c=(userCharacters||[]).find(x=>String(x.id)===String(id));
+    else if(tipo==='npc'){const m=npcBancoPorId_(id);if(m)c=criarNPCCombateDoBanco_(m);}
+    else if(tipo==='criatura'){const m=criaturaBancoPorId_(id);if(m)c=criarCriaturaCombateDoBanco_(m);}
+    if(!c){notificar_('Não foi possível carregar esse participante.','erro');return;}
+    if(c.__npcTemporario||c.__criaturaTemporaria)c.nome=batalhaNomeUnicoInstancia_(c.nome,(labEstado_.tokens||[]));
+    let t=labTokenDeCharDireto_(c,id,(labEstado_.tokens||[]).length);
+    if((labEstado_.tokens||[]).some(x=>String(x.id)===String(t.id)))t.id=`${t.id}:lab:${Date.now()}`;
+    labEstado_.tokens.push(t);labEstado_.selecionadoId=t.id;labSalvarLocal_();labRender_();
+};
+
 function labRender_(){
     labSanearEstado_();
+    labAtualizarModoCriacaoMapa_();
+    labAtualizarParticipantesSelect_();
     const map=document.getElementById('labMetricMap');if(!map)return;const ppm=Number(labEstado_.pxPorMetro||48);
     map.style.width=`${labEstado_.larguraM*ppm}px`;map.style.height=`${labEstado_.alturaM*ppm}px`;map.style.backgroundColor=labEstado_.fundo;map.style.backgroundImage=labBackgroundImage_();map.style.backgroundSize=`${ppm}px ${ppm}px,${ppm}px ${ppm}px,56px 56px`;
     const st=labEstado_.tokens.find(t=>String(t.id)===String(labEstado_.selecionadoId)),overlay=labOverlayMovimentoHtml_(st,ppm);
@@ -8637,10 +8685,10 @@ function labRender_(){
     if(bg)bg.value=labEstado_.fundo||'#d7d7d7';if(gc)gc.value=labEstado_.corGrade||'#777777';if(gv)gv.checked=labEstado_.gradeVisivel!==false;if(tx)tx.value=labEstado_.textura||'nenhuma';
     if(ms){const v=`${labEstado_.larguraM}x${labEstado_.alturaM}`;if([...ms.options].some(o=>o.value===v))ms.value=v;}
     if(zm)zm.value=String(labEstado_.pxPorMetro||48);
-    labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();labAutoAvancarSeSemAcoes_();
+    labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();if(!batalhaEhMestre_()){const ap=document.getElementById('labActionPanel');if(ap)ap.style.display='none';const op=document.getElementById('labObjetoPainel');if(op)op.style.display='none';}else labAutoAvancarSeSemAcoes_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
-    ev.preventDefault();ev.stopPropagation();
+    ev.preventDefault();ev.stopPropagation();if(!batalhaEhMestre_())return;
     const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;
     const atual=labTokenAtual_();
     if(labEstado_.fase!=='combate'||String(atual?.id)!==String(t.id)){
@@ -8652,7 +8700,7 @@ window.labRotacaoPointerDown_=function(ev,id){
     const up=()=>{window.removeEventListener('pointermove',move);labSalvarLocal_();labRender_();};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
 };
 window.labPointerDown_=function(ev,id){
-    if(ev.button===2)return;ev.preventDefault();const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);
+    if(ev.button===2)return;ev.preventDefault();if(!batalhaEhMestre_()){labEstado_.selecionadoId=String(id);labRender_();return;}const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);
     const rect=map.getBoundingClientRect(),ppm=labEstado_.pxPorMetro,origem={x:t.x,y:t.y},prep=labEstado_.fase!=='combate',at=labTokenAtual_();
     if(!prep&&String(at?.id)!==String(t.id)){
         at.alvoLab=String(t.id);labApontarPara_(at,t);labEstado_.selecionadoId=String(t.id);labSalvarLocal_();labRender_();return;
@@ -15404,7 +15452,8 @@ window.mudarIdioma = (lang) => {
         document.getElementById('configTabBtn')?.style && (document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none');
         document.getElementById('bancoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
         document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
-            document.getElementById('laboratorioTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
+            document.getElementById('laboratorioTabBtn')?.classList.remove('hidden');
+            document.getElementById('batalhaTabBtn')?.classList.add('hidden');
     }
     if (currentCharId) {
         const char = userCharacters.find(c => c.id === currentCharId);
@@ -15806,12 +15855,11 @@ document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 // ============================================================
 function objetoSvgData_(tipo){
     const svgs={
-      arvore:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><radialGradient id="g"><stop stop-color="#7fce62"/><stop offset="1" stop-color="#276b35"/></radialGradient></defs><circle cx="100" cy="100" r="83" fill="url(#g)" stroke="#173f24" stroke-width="8"/><circle cx="72" cy="78" r="38" fill="#4b9c43"/><circle cx="125" cy="70" r="42" fill="#3d8c3f"/><circle cx="118" cy="123" r="46" fill="#347c38"/><circle cx="74" cy="128" r="35" fill="#4a9842"/><circle cx="100" cy="102" r="18" fill="#76502e"/></svg>`,
-      rocha:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path d="M30 122 44 66 82 31 137 40 171 83 158 140 119 169 62 158Z" fill="#83878a" stroke="#4d5154" stroke-width="9"/><path d="m59 77 31-28 38 11 19 30-34-9-22 31Z" fill="#a8abad" opacity=".8"/><path d="m70 139 28-20 43 8-25 25Z" fill="#62676a"/></svg>`,
-      caixa:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect x="25" y="25" width="150" height="150" rx="8" fill="#9b6334" stroke="#55351e" stroke-width="9"/><path d="M32 60h136M32 140h136M60 32v136M140 32v136M38 38l124 124M162 38 38 162" stroke="#c58b51" stroke-width="9" opacity=".8"/></svg>`
+      arvore:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs><radialGradient id="a" cx="38%" cy="31%"><stop stop-color="#9bd36b"/><stop offset=".45" stop-color="#4f963f"/><stop offset="1" stop-color="#214f2c"/></radialGradient><filter id="s"><feDropShadow dx="3" dy="5" stdDeviation="5" flood-opacity=".42"/></filter></defs><g filter="url(#s)"><path d="M126 17c22 3 31 17 41 30 23-5 43 6 48 26 20 9 29 28 21 49 13 20 6 45-15 56-1 25-22 43-48 42-15 20-43 24-63 10-24 12-51 3-61-20-25-4-39-27-33-50-16-17-14-43 4-58-7-25 8-48 34-53 9-24 35-36 58-26 5-5 9-7 14-6Z" fill="url(#a)" stroke="#183b21" stroke-width="5"/><path d="M80 76c17-19 42-28 63-17M57 130c26-16 49-14 69-2M116 194c24-5 41-18 54-38M170 89c17 16 21 37 14 58" fill="none" stroke="#b8df83" stroke-opacity=".34" stroke-width="8" stroke-linecap="round"/><circle cx="129" cy="129" r="15" fill="#68472b"/><path d="M128 128 93 94m35 34 43-38m-43 38-32 46m32-46 45 36" stroke="#765033" stroke-width="7" stroke-linecap="round" opacity=".8"/></g></svg>`,
+      rocha:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs><linearGradient id="r" x1=".15" y1=".1" x2=".85" y2=".9"><stop stop-color="#c4c2bb"/><stop offset=".46" stop-color="#858781"/><stop offset="1" stop-color="#50534f"/></linearGradient><filter id="rs"><feDropShadow dx="5" dy="7" stdDeviation="6" flood-opacity=".45"/></filter></defs><g filter="url(#rs)"><path d="M31 151 43 86 83 39 143 27 202 58 229 115 205 184 151 222 81 211 38 184Z" fill="url(#r)" stroke="#454943" stroke-width="6"/><path d="M55 106 89 56l51-13 38 24-49 18-31 43Z" fill="#dedbd2" opacity=".47"/><path d="m99 128 35-43 48-17 28 52-40 10-26 42Z" fill="#6c706b" opacity=".54"/><path d="m62 167 43-24 39 29-27 27-43-5Z" fill="#4d514d" opacity=".58"/><path d="M92 64 78 102m70-51-9 32m46 16-40 32m-26 30-18 31" stroke="#454844" stroke-width="4" stroke-linecap="round" opacity=".65"/></g></svg>`,
+      caixa:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><defs><linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c58a4a"/><stop offset="1" stop-color="#74451f"/></linearGradient><filter id="cs"><feDropShadow dx="4" dy="6" stdDeviation="5" flood-opacity=".4"/></filter></defs><g filter="url(#cs)"><rect x="31" y="31" width="194" height="194" rx="7" fill="url(#c)" stroke="#4f2f18" stroke-width="8"/><path d="M39 70h178M39 186h178M71 39v178M185 39v178" stroke="#e1ad6b" stroke-opacity=".72" stroke-width="10"/><path d="M48 48 208 208M208 48 48 208" stroke="#59361d" stroke-width="9" opacity=".72"/><path d="M83 86h90v84H83z" fill="none" stroke="#d3a05f" stroke-width="5" opacity=".48"/></g></svg>`
     };
-    const svg=svgs[tipo]||svgs.caixa;
-    return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+    const svg=svgs[tipo]||svgs.caixa;return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
 }
 function objetosMapaPadrao_(){return [
  {id:'arvore_media',nome:'Árvore média',tipoVisual:'arvore',imagem:objetoSvgData_('arvore'),larguraM:2.2,alturaM:2.2,pvMax:30,dureza:5,destrutivel:true,inflamavel:true,bloqueiaMovimento:true,bloqueiaVisao:true},
@@ -15820,8 +15868,12 @@ function objetosMapaPadrao_(){return [
 ];}
 function garantirObjetosMapaPadrao_(){
     objetosMapaDB=Array.isArray(objetosMapaDB)?objetosMapaDB:[];
-    const ids=new Set(objetosMapaDB.map(o=>String(o.id)));
-    for(const o of objetosMapaPadrao_())if(!ids.has(o.id))objetosMapaDB.push(o);
+    const defs=objetosMapaPadrao_();
+    for(const d of defs){
+        const existente=objetosMapaDB.find(o=>String(o.id)===String(d.id));
+        if(!existente)objetosMapaDB.push(d);
+        else if(String(existente.tipoVisual||'')===String(d.tipoVisual||''))existente.imagem=d.imagem;
+    }
 }
 window.garantirObjetosMapaPadrao_=garantirObjetosMapaPadrao_;
 async function salvarObjetosMapaDB_(){
@@ -15840,27 +15892,38 @@ window.renderizarBancoObjetosMapa_=function(){
     <td><button class="btn-small" onclick="editarObjetoMapaBanco_('${String(o.id).replace(/'/g,"\\'")}')">✏️ Editar</button> <button class="btn-small btn-delete" onclick="excluirObjetoMapaBanco_('${String(o.id).replace(/'/g,"\\'")}')">🗑️ Excluir</button></td></tr>`).join('')}</tbody></table></div>`;
     labAtualizarSelectObjetosMapa_();
 };
-window.novoObjetoMapaBanco_=async function(){
-    const nome=prompt('Nome do novo objeto:','Novo objeto');if(nome==null||!String(nome).trim())return;
-    let id=labMapaSlug_(nome),b=id,n=2;while(objetosMapaDB.some(o=>String(o.id)===id))id=`${b}_${n++}`;
-    const o={id,nome:String(nome).trim(),tipoVisual:'caixa',imagem:objetoSvgData_('caixa'),larguraM:1,alturaM:1,pvMax:10,dureza:2,destrutivel:true,inflamavel:false,bloqueiaMovimento:true,bloqueiaVisao:false};
-    objetosMapaDB.push(o);await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();
+window.fecharEditorObjetoMapa_=function(){const e=document.getElementById('editorObjetoMapaBanco');if(e)e.style.display='none';};
+function preencherEditorObjetoMapa_(o){
+    const e=document.getElementById('editorObjetoMapaBanco');if(!e)return;e.style.display='block';
+    document.getElementById('editorObjetoMapaTitulo').textContent=o?.id?'Editar objeto':'Novo objeto';document.getElementById('objMapaEditId').value=o?.id||'';
+    document.getElementById('objMapaNome').value=o?.nome||'';document.getElementById('objMapaLargura').value=o?.larguraM||1;document.getElementById('objMapaAltura').value=o?.alturaM||1;
+    document.getElementById('objMapaPV').value=o?.pvMax??10;document.getElementById('objMapaDureza').value=o?.dureza??2;document.getElementById('objMapaDestrutivel').checked=o?.destrutivel!==false;
+    document.getElementById('objMapaInflamavel').checked=!!o?.inflamavel;document.getElementById('objMapaBloqueiaMov').checked=o?.bloqueiaMovimento!==false;document.getElementById('objMapaBloqueiaVisao').checked=!!o?.bloqueiaVisao;
+    const url=document.getElementById('objMapaImagemUrl'),prev=document.getElementById('objMapaImagemPreview'),file=document.getElementById('objMapaImagemFile');url.value=(o?.imagem&&/^https?:/i.test(o.imagem))?o.imagem:'';
+    const img=o?.imagem||objetoSvgData_('caixa');prev.src=img;prev.dataset.imagem=img;if(file)file.value='';e.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+window.novoObjetoMapaBanco_=function(){preencherEditorObjetoMapa_(null);};
+window.editarObjetoMapaBanco_=function(id){const o=objetosMapaDB.find(x=>String(x.id)===String(id));if(o)preencherEditorObjetoMapa_(o);};
+window.objMapaPreviewUrl_=function(v){const p=document.getElementById('objMapaImagemPreview');if(!p)return;const x=String(v||'').trim();if(x){p.src=x;p.dataset.imagem=x;}};
+window.objMapaLerImagem_=function(ev){
+    const f=ev?.target?.files?.[0];if(!f||!f.type.startsWith('image/'))return;const rd=new FileReader();
+    rd.onload=()=>{const im=new Image();im.onload=()=>{let max=320,scale=Math.min(1,max/Math.max(im.width,im.height)),data='';
+        for(let tentativa=0;tentativa<4;tentativa++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(im.width*scale));c.height=Math.max(1,Math.round(im.height*scale));const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(im,0,0,c.width,c.height);try{data=c.toDataURL('image/webp',Math.max(.55,.82-tentativa*.09));}catch(_){data=c.toDataURL('image/png');}if(data.length<95000)break;scale*=.78;}
+        const p=document.getElementById('objMapaImagemPreview');p.src=data;p.dataset.imagem=data;document.getElementById('objMapaImagemUrl').value='';
+    };im.src=rd.result;};rd.readAsDataURL(f);
 };
-window.editarObjetoMapaBanco_=async function(id){
-    const o=objetosMapaDB.find(x=>String(x.id)===String(id));if(!o)return;
-    const nome=prompt('Nome:',o.nome||'');if(nome==null)return;
-    const tam=prompt('Tamanho largura/altura em metros. Ex.: 2.2/2.2',`${o.larguraM||1}/${o.alturaM||1}`);if(tam==null)return;
-    const [w,h]=String(tam).split(/[xX\/;, ]+/).map(Number);
-    const pv=prompt('PV máximos:',String(o.pvMax||0));if(pv==null)return;
-    const dur=prompt('Dureza (reduz dano recebido):',String(o.dureza||0));if(dur==null)return;
-    Object.assign(o,{nome:String(nome).trim()||o.nome,larguraM:objetoNumero_(w,o.larguraM||1,.1),alturaM:objetoNumero_(h,o.alturaM||1,.1),pvMax:objetoNumero_(pv,o.pvMax||0,0),dureza:objetoNumero_(dur,o.dureza||0,0)});
-    await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();
+window.salvarObjetoMapaEditor_=async function(){
+    garantirObjetosMapaPadrao_();const editId=String(document.getElementById('objMapaEditId')?.value||''),nome=String(document.getElementById('objMapaNome')?.value||'').trim();if(!nome){notificar_('Dê um nome ao objeto.','aviso');return;}
+    let o=editId?objetosMapaDB.find(x=>String(x.id)===editId):null;if(!o){let id=labMapaSlug_(nome)||`objeto_${Date.now()}`,b=id,n=2;while(objetosMapaDB.some(x=>String(x.id)===id))id=`${b}_${n++}`;o={id};objetosMapaDB.push(o);}
+    const prev=document.getElementById('objMapaImagemPreview'),img=String(prev?.dataset?.imagem||prev?.src||'').trim()||objetoSvgData_('caixa');
+    Object.assign(o,{nome,imagem:img,tipoVisual:o.tipoVisual||'personalizado',larguraM:objetoNumero_(document.getElementById('objMapaLargura')?.value,1,.1),alturaM:objetoNumero_(document.getElementById('objMapaAltura')?.value,1,.1),pvMax:objetoNumero_(document.getElementById('objMapaPV')?.value,10,0),dureza:objetoNumero_(document.getElementById('objMapaDureza')?.value,2,0),destrutivel:!!document.getElementById('objMapaDestrutivel')?.checked,inflamavel:!!document.getElementById('objMapaInflamavel')?.checked,bloqueiaMovimento:!!document.getElementById('objMapaBloqueiaMov')?.checked,bloqueiaVisao:!!document.getElementById('objMapaBloqueiaVisao')?.checked});
+    await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();fecharEditorObjetoMapa_();notificar_(`Objeto “${nome}” salvo.`,'sucesso',2800);
 };
 window.excluirObjetoMapaBanco_=async function(id){
     const o=objetosMapaDB.find(x=>String(x.id)===String(id));if(!o||!confirm(`Excluir o modelo “${o.nome}”? Objetos já colocados nos mapas não serão removidos.`))return;
     objetosMapaDB=objetosMapaDB.filter(x=>String(x.id)!==String(id));await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();
 };
-window.restaurarObjetosMapaPadrao_=async function(){garantirObjetosMapaPadrao_();await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();notificar_('Modelos básicos disponíveis.','sucesso',2500);};
+window.restaurarObjetosMapaPadrao_=async function(){const defs=objetosMapaPadrao_(),ids=new Set(defs.map(x=>x.id));objetosMapaDB=(objetosMapaDB||[]).filter(x=>!ids.has(String(x.id)));objetosMapaDB.push(...defs);await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();notificar_('Modelos básicos restaurados com os visuais atuais.','sucesso',2500);};
 window.labAtualizarSelectObjetosMapa_=function(){
     garantirObjetosMapaPadrao_();const s=document.getElementById('labObjetoModeloSelect');if(!s)return;const v=s.value;
     s.innerHTML='<option value="">— objeto —</option>'+objetosMapaDB.map(o=>`<option value="${escaparHtmlInventario_(o.id)}">${escaparHtmlInventario_(o.nome||o.id)}</option>`).join('');
@@ -15910,5 +15973,6 @@ setTimeout(()=>{try{labAtualizarSelectObjetosMapa_();renderizarBancoObjetosMapa_
 <!-- Mesa Estelar v46.30.0: entrada RGB direta para pintura e tokens sempre acima do desenho -->
 
 
+<!-- Mesa Estelar v46.34.0: Mapa da Mesa oficial, modo de edição recolhível, participantes diretos, objetos personalizados e sincronização pública de visualização -->
 </body>
 </html>
