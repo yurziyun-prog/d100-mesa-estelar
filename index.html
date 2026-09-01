@@ -376,6 +376,28 @@
         }
 
 </style>
+
+<style id="lab-ui-polish-v46360">
+/* Mapa da Mesa v46.36.0 — controles alinhados e selects legíveis */
+#laboratorio-combate .lab-toolbar-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+#laboratorio-combate .lab-control{display:inline-flex;align-items:center;gap:6px;margin:0;min-height:40px;white-space:nowrap;}
+#laboratorio-combate .lab-control select,
+#laboratorio-combate .lab-control input[type="text"],
+#laboratorio-combate .lab-control input[type="number"]{height:40px;box-sizing:border-box;margin:0;}
+#laboratorio-combate .btn-small{min-height:40px;box-sizing:border-box;}
+#labParticipanteSelect{width:300px !important;min-width:300px;}
+#labMapaSalvoSelect{width:240px !important;min-width:240px;}
+#labZoom{width:142px !important;min-width:142px;}
+#labDrawTool{width:145px !important;min-width:145px;}
+#labTexture{width:185px !important;min-width:185px;}
+#labDrawBrush{width:155px !important;min-width:155px;}
+#labDrawStrokeTexture{width:180px !important;min-width:180px;}
+#labObjetoModeloSelect{width:210px !important;min-width:210px;}
+#labMapSize{width:155px !important;min-width:155px;}
+#labMasterMapLoader{align-items:center !important;}
+#labMasterMapLoader .btn-small{height:40px;}
+@media (max-width:900px){#labParticipanteSelect,#labMapaSalvoSelect{width:min(72vw,300px)!important;min-width:180px;}}
+</style>
 </head>
 <body>
     <div class="galaxy-bg"></div>
@@ -442,10 +464,10 @@
                         <p style="margin:0;color:#aaa;max-width:900px;">Mesa oficial para posicionamento, exploração e combate em coordenadas contínuas. O mestre prepara o mapa e os jogadores acompanham a mesa compartilhada.</p></div>
                         <span id="labLiveBadge" style="padding:5px 9px;border-radius:8px;background:rgba(86,240,138,.08);border:1px solid rgba(86,240,138,.28);color:#9fffc0;">● MESA COMPARTILHADA</span>
                     </div>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px;align-items:center;">
+                    <div class="lab-toolbar-row" style="margin:14px 0 10px;">
                         <div id="labMasterGameControls" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                            <label style="display:flex;align-items:center;gap:5px;">Adicionar
-                              <select id="labParticipanteSelect" style="width:220px;margin:0;"><option value="">— personagem / NPC / criatura —</option></select>
+                            <label class="lab-control">Adicionar
+                              <select id="labParticipanteSelect"><option value="">— personagem / NPC / criatura —</option></select>
                             </label>
                             <button class="btn-small btn-select" onclick="labAdicionarParticipanteSelecionado_()">➕ Colocar na mesa</button>
                             <button class="btn-small" onclick="labAdicionarBoneco_()">🎯 Boneco de treino</button>
@@ -457,18 +479,18 @@
                             <button class="btn-small" onclick="labLimpar_()">🧹 Limpar mesa</button>
                         </div>
                         <div id="labMasterMapLoader" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-                            <label style="display:flex;align-items:center;gap:5px;">Mapas salvos
-                              <select id="labMapaSalvoSelect" onchange="labSelecionarMapaSalvo_(this.value)" style="width:190px;margin:0;"><option value="">— nenhum —</option></select>
+                            <label class="lab-control">Mapas salvos
+                              <select id="labMapaSalvoSelect" onchange="labSelecionarMapaSalvo_(this.value)"><option value="">— nenhum —</option></select>
                             </label>
                             <button class="btn-small" onclick="labCarregarMapaBanco_()" title="Carrega o mapa selecionado sem alterar os participantes">📂 Carregar</button>
                         </div>
-                        <label style="display:flex;align-items:center;gap:6px;">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
+                        <label class="lab-control">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
                         <label id="labEditMapToggleWrap" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid rgba(86,240,138,.35);border-radius:8px;background:rgba(86,240,138,.07);" title="Mostra ou esconde as ferramentas de criação do mapa"><input id="labModoCriarMapa" type="checkbox" onchange="labAlternarModoCriacaoMapa_(this.checked)"> 🛠️ Editar mapa</label>
                         <div id="labMapCreationControls" style="display:none;flex-basis:100%;gap:8px;flex-wrap:wrap;align-items:center;padding:9px 10px;border:1px solid rgba(86,240,138,.22);border-radius:10px;background:rgba(86,240,138,.035);">
                             <label style="display:flex;align-items:center;gap:6px;">Fundo <input id="labBgColor" type="color" value="#d7d7d7" onchange="labMudarFundo_(this.value)"></label>
                             <label style="display:flex;align-items:center;gap:6px;">Linhas <input id="labGridColor" type="color" value="#777777" onchange="labMudarCorGrade_(this.value)"></label>
                             <label style="display:flex;align-items:center;gap:6px;"><input id="labGridVisible" type="checkbox" checked onchange="labAlternarGrade_(this.checked)"> Mostrar grade</label>
-                            <label style="display:flex;align-items:center;gap:6px;">Textura
+                            <label class="lab-control">Textura
                                 <select id="labTexture" onchange="labMudarTextura_(this.value)">
                                     <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option><option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option><option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option><option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
                                 </select>
@@ -478,14 +500,14 @@
                             <button class="btn-small" id="labEraserBtn" onclick="labDesenhoBorracha_()" title="Apaga apenas onde você passar">🧽 Borracha</button>
                             <button class="btn-small" id="labUndoBtn" onclick="labDesenhoDesfazer_()">↶</button>
                             <button class="btn-small" id="labRedoBtn" onclick="labDesenhoRefazer_()">↷</button>
-                            <label style="display:flex;align-items:center;gap:5px;">Ferramenta <select id="labDrawTool" onchange="labDesenhoFerramenta_(this.value)" style="width:auto;margin:0;"><option value="traco">Traço</option><option value="textura">Textura</option><option value="borracha">Borracha</option></select></label>
+                            <label class="lab-control">Ferramenta <select id="labDrawTool" onchange="labDesenhoFerramenta_(this.value)"><option value="traco">Traço</option><option value="textura">Textura</option><option value="borracha">Borracha</option></select></label>
                             <label style="display:flex;align-items:center;gap:5px;">Cor <input id="labDrawColor" type="color" value="#ffcf4d" onchange="labDesenhoCor_(this.value)" style="width:32px;height:27px;padding:1px;"></label>
                             <label style="display:flex;align-items:center;gap:5px;" title="Digite RGB como 93/93/93, 93,93,93 ou 93 93 93">RGB <input id="labDrawRgb" type="text" inputmode="numeric" value="255/207/77" placeholder="93/93/93" oninput="labDesenhoCorRGB_(this.value)" style="width:92px;margin:0;padding:6px 8px;font-size:.88em;"></label>
                             <span style="display:flex;gap:3px;align-items:center;" title="Cores rápidas"><button onclick="labDesenhoCor_('#ffffff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffffff"></button><button onclick="labDesenhoCor_('#111111')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#111111"></button><button onclick="labDesenhoCor_('#ff5252')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ff5252"></button><button onclick="labDesenhoCor_('#ffcf4d')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffcf4d"></button><button onclick="labDesenhoCor_('#56f08a')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#56f08a"></button><button onclick="labDesenhoCor_('#45b7ff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#45b7ff"></button><button onclick="labDesenhoCor_('#b56cff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#b56cff"></button></span>
                             <label style="display:flex;align-items:center;gap:5px;">Tamanho <input id="labDrawSize" type="range" min="2" max="48" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:82px;"></label>
                             <label style="display:flex;align-items:center;gap:5px;">Opacidade <input id="labDrawOpacity" type="range" min="5" max="100" step="5" value="100" oninput="labDesenhoOpacidade_(this.value)" style="width:82px;"><span id="labDrawOpacityValue" style="min-width:34px;color:#bbb;font-size:.82em;">100%</span></label>
-                            <label style="display:flex;align-items:center;gap:5px;">Pincel <select id="labDrawBrush" onchange="labDesenhoPincel_(this.value)" style="width:auto;margin:0;"><option value="redondo">Redondo</option><option value="quadrado">Quadrado</option><option value="spray">Spray</option><option value="irregular">Irregular</option><option value="caligrafico">Caligráfico</option></select></label>
-                            <label style="display:flex;align-items:center;gap:5px;">Textura do traço <select id="labDrawStrokeTexture" onchange="labDesenhoTexturaTraco_(this.value)" style="width:auto;margin:0;"><option value="solida">Sólida</option><option value="pontilhada">Pontilhada</option><option value="giz">Giz</option><option value="ranhura">Ranhura</option><option value="areia">Areia</option><option value="cascalho">Cascalho</option><option value="grama">Grama</option><option value="folhas">Folhas</option><option value="neve">Neve</option><option value="fumaca">Fumaça</option></select></label>
+                            <label class="lab-control">Pincel <select id="labDrawBrush" onchange="labDesenhoPincel_(this.value)"><option value="redondo">Redondo</option><option value="quadrado">Quadrado</option><option value="spray">Spray</option><option value="irregular">Irregular</option><option value="caligrafico">Caligráfico</option></select></label>
+                            <label class="lab-control">Textura do traço <select id="labDrawStrokeTexture" onchange="labDesenhoTexturaTraco_(this.value)"><option value="solida">Sólida</option><option value="pontilhada">Pontilhada</option><option value="giz">Giz</option><option value="ranhura">Ranhura</option><option value="areia">Areia</option><option value="cascalho">Cascalho</option><option value="grama">Grama</option><option value="folhas">Folhas</option><option value="neve">Neve</option><option value="fumaca">Fumaça</option></select></label>
                             <button class="btn-small" onclick="labDesenhoLimpar_()" title="Apaga todos os desenhos. Pode ser desfeito com ↶.">🗑️ Limpar pintura</button>
                             <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
                             <label style="display:flex;align-items:center;gap:5px;">Objeto <select id="labObjetoModeloSelect" style="width:165px;margin:0;"><option value="">— objeto —</option></select></label>
@@ -494,7 +516,7 @@
                             <button class="btn-small" onclick="labSalvarMapaBanco_()">💾 Salvar alterações</button>
                             <button class="btn-small btn-select" onclick="labSalvarMapaComoNovo_()">➕ Salvar como novo</button>
                             <button class="btn-small" onclick="labExcluirMapaBanco_()">🗑️ Excluir mapa</button>
-                            <label style="display:flex;align-items:center;gap:6px;">Tamanho do mapa <select id="labMapSize" onchange="labMudarTamanhoMapa_(this.value)"><option value="24x14">24 × 14 m</option><option value="28x14" selected>28 × 14 m</option><option value="32x16">32 × 16 m</option><option value="36x18">36 × 18 m</option></select></label>
+                            <label class="lab-control">Tamanho do mapa <select id="labMapSize" onchange="labMudarTamanhoMapa_(this.value)"><option value="24x14">24 × 14 m</option><option value="28x14" selected>28 × 14 m</option><option value="32x16">32 × 16 m</option><option value="36x18">36 × 18 m</option></select></label>
                         </div>
                     </div>
                     <div id="labCombatStatus" style="padding:9px 11px;margin-bottom:8px;border-radius:8px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ffe29a;"></div>
@@ -6662,7 +6684,65 @@ let labEstado_={
 };
 let labDrag_=null;
 let labMapaMesaUnsub_=null,labSyncTimer_=null,labAplicandoRemoto_=false;
+let labMapaAcoesUnsub_=null;
+const labMapaComandosEmProcessamento_=new Set();
 const LAB_MAPA_MESA_REF_=()=>doc(db,'combatesAtivos','mapaMesa');
+const LAB_MAPA_ACOES_REF_=()=>collection(db,'combatesAtivos','mapaMesa','acoes');
+async function labEnviarComandoJogador_(tipo,payload={},ator=null){
+    if(batalhaEhMestre_())return false;
+    const t=ator||labTokenAtual_();
+    if(!t||!labPodeControlarToken_(t)){notificar_('Você só pode comandar seu próprio personagem.','aviso',3500);return false;}
+    const id=String(t.id||'');
+    try{
+        await setDoc(doc(db,'combatesAtivos','mapaMesa','acoes',id),{
+            personagemId:id,donoUid:String(currentUserUid||currentUser?.uid||''),tipo:String(tipo||''),
+            payload:JSON.parse(JSON.stringify(payload||{})),nonce:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+            status:'novo',criadoEm:new Date().toISOString()
+        },{merge:false});
+        return true;
+    }catch(e){console.error('Comando do jogador no Mapa da Mesa',e);notificar_('Não foi possível enviar sua ação ao mestre.','erro',5000);return false;}
+}
+async function labProcessarComandoJogador_(personagemId,acao){
+    const chave=`${personagemId}:${acao?.nonce||''}`;if(labMapaComandosEmProcessamento_.has(chave))return;labMapaComandosEmProcessamento_.add(chave);
+    try{
+        const t=labTokenPorId_(personagemId);
+        if(!t||String(t.donoUid||'')!==String(acao?.donoUid||''))return;
+        if(acao.tipo==='movimento'){
+            const prep=labEstado_.fase!=='combate',at=labTokenAtual_();
+            if(!prep&&String(at?.id)!==String(t.id))return;
+            if(!prep&&t.primeirosSocorrosLab)return;
+            const origem={x:Number(t.x||0),y:Number(t.y||0)};let x=Number(acao?.payload?.x),y=Number(acao?.payload?.y);
+            if(!Number.isFinite(x)||!Number.isFinite(y))return;
+            const maxM=prep?999:labMovimentoMaxM_(t),dx=x-origem.x,dy=y-origem.y,dist0=Math.hypot(dx,dy);
+            if(!prep&&maxM<=0)return;
+            if(!prep&&dist0>maxM&&dist0>0){const f=maxM/dist0;x=origem.x+dx*f;y=origem.y+dy*f;}
+            t.x=Math.max(0,Math.min(labEstado_.larguraM,x));t.y=Math.max(0,Math.min(labEstado_.alturaM,y));
+            const dist=Math.hypot(t.x-origem.x,t.y-origem.y),c=prep?{acoes:0}:labCustoMovimento_(t,dist);
+            if(!prep&&dist>.08){let deg=Math.atan2(t.x-origem.x,-(t.y-origem.y))*180/Math.PI;if(deg<0)deg+=360;t.angulo=Math.round(deg);}
+            if(!prep){if(c.usaBonus>0)t.movimentoBonusLab=Math.max(0,Number(t.movimentoBonusLab||0)-Number(c.usaBonus||0));if(c.usaGratis)t.movimentoGratisDisponivel=false;if(c.acoes>0)t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-c.acoes);}
+            labEstado_.selecionadoId=String(t.id);labSalvarLocal_();labRender_();if(!prep)labAutoAvancarSeSemAcoes_();
+        }else if(acao.tipo==='ataque'){
+            if(labEstado_.fase!=='combate'||String(labTokenAtual_()?.id)!==String(t.id))return;
+            t.periciaLab=String(acao?.payload?.periciaLab||t.periciaLab||'');
+            t.equipamentoLab=String(acao?.payload?.equipamentoLab||t.equipamentoLab||'');
+            t.alvoLab=String(acao?.payload?.alvoId||t.alvoLab||'');t.microModoLab='ataque';
+            labEstado_.selecionadoId=t.alvoLab||String(t.id);
+            window.labRolarAtaque_();
+        }
+    }catch(e){console.error('Processar comando do jogador',e);}finally{
+        try{await deleteDoc(doc(db,'combatesAtivos','mapaMesa','acoes',String(personagemId)));}catch(_){}
+        labMapaComandosEmProcessamento_.delete(chave);
+        if(batalhaEhMestre_())labAgendarSyncRemoto_();
+    }
+}
+function labIniciarEscutaComandosJogadores_(){
+    if(labMapaAcoesUnsub_){labMapaAcoesUnsub_();labMapaAcoesUnsub_=null;}
+    if(!batalhaEhMestre_()||!currentUserUid)return;
+    labMapaAcoesUnsub_=onSnapshot(LAB_MAPA_ACOES_REF_(),snap=>{
+        for(const ch of snap.docChanges()){if(ch.type!=='added'&&ch.type!=='modified')continue;const a=ch.doc.data();if(a?.status!=='novo')continue;labProcessarComandoJogador_(ch.doc.id,a);}
+    },e=>console.warn('Fila de ações do Mapa da Mesa indisponível:',e));
+}
+
 function labEstadoPublico_(){
     const clone=JSON.parse(JSON.stringify(labEstado_||{}));
     clone.tokens=(clone.tokens||[]).map(t=>{const x={...t};delete x.charLab;delete x.municaoLab;delete x.attrs;delete x.psiSelecaoLab;delete x.psSelecaoLab;return x;});
@@ -6688,7 +6768,9 @@ function labSalvarLocal_(){
 window.addEventListener('beforeunload',()=>{if(labLocalSavePendente_)labPersistirLocalAgora_();});
 window.iniciarMapaMesaCompartilhado_=function(){
     if(labMapaMesaUnsub_){labMapaMesaUnsub_();labMapaMesaUnsub_=null;}
+    if(labMapaAcoesUnsub_){labMapaAcoesUnsub_();labMapaAcoesUnsub_=null;}
     if(!currentUserUid)return;
+    labIniciarEscutaComandosJogadores_();
     labMapaMesaUnsub_=onSnapshot(LAB_MAPA_MESA_REF_(),snap=>{
         if(batalhaEhMestre_()){if(!snap.exists())labAgendarSyncRemoto_();return;}
         if(!snap.exists())return;const remoto=snap.data()?.estado;if(!remoto||typeof remoto!=='object')return;
@@ -7204,14 +7286,14 @@ window.labMudarAtaquePref_=function(campo,v){
     const t=labTokenAtual_();if(!t)return;
     t.microModoLab='ataque';t[campo]=String(v||'');
     if(campo==='periciaLab')t.equipamentoLab='';
-    labGarantirPrefsAtaque_(t);labSalvarLocal_();labRender_();
+    labGarantirPrefsAtaque_(t);if(batalhaEhMestre_())labSalvarLocal_();labRender_();
 };
 window.labSelecionarAlvo_=function(v){
     const t=labTokenAtual_();if(!t)return;
     t.alvoLab=String(v||'');
     const alvo=(labEstado_.tokens||[]).find(x=>String(x.id)===String(t.alvoLab));
     labApontarPara_(t,alvo);
-    labSalvarLocal_();labRender_();
+    if(batalhaEhMestre_())labSalvarLocal_();labRender_();
 };
 
 
@@ -7830,6 +7912,10 @@ window.labRolarAtaque_=function(){
         labSalvarLocal_();labRender_();notificar_(labEstado_.ultimoResultadoLab,'aviso',4500);return;
     }
     if(labEhArmaMuniciada_(item)&&labMunicaoAtual_(t,item)<=0){notificar_(`${getNome(item)} está sem munição. Recarregue antes de atacar.`,'aviso');labRender_();return;}
+    if(!batalhaEhMestre_()){
+        labEnviarComandoJogador_('ataque',{periciaLab:t.periciaLab,equipamentoLab:t.equipamentoLab,alvoId:String(alvo.id)},t).then(ok=>{if(ok)notificar_(`Ataque contra ${alvo.nome} enviado ao mestre.`,'info',2200);});
+        return;
+    }
     const valor=labValorPericiaAtaque_(c,per,alvo,item),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
     labConsumirMunicao_(t,item,1);
     labSomAtaque_(item,r.grau);
@@ -7880,6 +7966,11 @@ window.labRolarAtaque_=function(){
 function labRenderActionPanel_(){
     const el=document.getElementById('labActionPanel');if(!el)return;
     if(labEstado_.fase!=='combate'){el.style.display='none';el.innerHTML='';return;}
+    if(!batalhaEhMestre_()){
+        const at=labTokenAtual_(),pend=labEstado_.pendenciaLab,dp=labEstado_.danoPendenteLab;
+        const autorizado=(at&&labPodeControlarToken_(at))||(pend&&labPodeControlarToken_(labTokenPorId_(pend.defensorId)))||(dp&&labPodeControlarToken_(labTokenPorId_(dp.atacanteId)));
+        if(!autorizado){el.style.display='none';el.innerHTML='';return;}
+    }
     el.style.display='block';
 
     if(labEstado_.pendenciaLab){
@@ -8456,19 +8547,23 @@ function labDesenhoAplicarTextura_(ctx,texture,pts,inicio,size,color,ppm,brush='
     if(texture==='solida')return false;
     const spread=brush==='spray'?1.15:brush==='irregular' ? .95 : brush==='caligrafico' ? .48 : brush==='quadrado' ? .70 : .72;
     const passo=Math.max(1,Math.round(Math.max(1,size*.20)));
+    // Mantém a mesma fase da textura tanto no desenho incremental quanto na recomposição final.
+    // Antes, cada frame recomeçava o espaçamento em `inicio`, então durante o arraste apareciam
+    // muitos tufos/folhas; ao soltar, a renderização completa usava outra fase e quase tudo sumia.
+    const inicioAlinhado=(stride)=>{stride=Math.max(1,Math.floor(stride||1));return a+((stride-(a%stride))%stride);};
     const jitter=(j,k,esc=1)=>({
         x:(labDesenhoRand_(j*83+k*29)-.5)*size*spread*esc,
         y:(labDesenhoRand_(j*131+k*17)-.5)*size*spread*esc
     });
     if(texture==='pontilhada'){
-        for(let j=a;j<pts.length;j+=Math.max(1,passo)){const p=pts[j];ctx.beginPath();ctx.arc(p.x*ppm,p.y*ppm,Math.max(1.2,size*.24),0,Math.PI*2);ctx.fill();}
+        for(let j=inicioAlinhado(Math.max(1,passo));j<pts.length;j+=Math.max(1,passo)){const p=pts[j];ctx.beginPath();ctx.arc(p.x*ppm,p.y*ppm,Math.max(1.2,size*.24),0,Math.PI*2);ctx.fill();}
         return true;
     }
     if(texture==='giz'){
         // núcleo fosco + pó seco nas bordas: visualmente bem diferente de um traço sólido
         ctx.save();ctx.globalAlpha*=.34;ctx.lineWidth=Math.max(1,size*.72);ctx.lineCap='round';
         const p0=pts[Math.max(0,a-1)]||pts[0];ctx.beginPath();ctx.moveTo(p0.x*ppm,p0.y*ppm);for(let j=a;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);ctx.stroke();ctx.restore();
-        for(let j=a;j<pts.length;j+=Math.max(1,passo)){
+        for(let j=inicioAlinhado(Math.max(1,passo));j<pts.length;j+=Math.max(1,passo)){
             const p=pts[j],n=Math.max(5,Math.round(size*.75));
             for(let k=0;k<n;k++){const q=jitter(j,k,1.25),r=Math.max(.55,size*(.025+.045*labDesenhoRand_(j*47+k*31)));ctx.save();ctx.globalAlpha*=.35+.5*labDesenhoRand_(j*61+k*7);ctx.beginPath();ctx.arc(p.x*ppm+q.x,p.y*ppm+q.y,r,0,Math.PI*2);ctx.fill();ctx.restore();}
         }
@@ -8476,31 +8571,31 @@ function labDesenhoAplicarTextura_(ctx,texture,pts,inicio,size,color,ppm,brush='
     }
     if(texture==='ranhura'){
         ctx.save();ctx.globalAlpha*=.55;ctx.lineWidth=Math.max(1,size*.16);ctx.lineCap='butt';
-        for(let j=Math.max(1,a);j<pts.length;j+=Math.max(1,passo)){
+        for(let j=Math.max(1,inicioAlinhado(Math.max(1,passo)));j<pts.length;j+=Math.max(1,passo)){
             const p=pts[j],q=pts[j-1],ang=Math.atan2((p.y-q.y)*ppm,(p.x-q.x)*ppm)+Math.PI/2,cx=p.x*ppm,cy=p.y*ppm,len=size*(.70+spread*.35);
             ctx.beginPath();ctx.moveTo(cx-Math.cos(ang)*len/2,cy-Math.sin(ang)*len/2);ctx.lineTo(cx+Math.cos(ang)*len/2,cy+Math.sin(ang)*len/2);ctx.stroke();
         }
         ctx.restore();return true;
     }
     if(texture==='areia'){
-        for(let j=a;j<pts.length;j+=Math.max(1,passo)){const p=pts[j],n=Math.max(6,Math.round(size*.9));for(let k=0;k<n;k++){const q=jitter(j,k,1.25),r=Math.max(.45,size*.035);ctx.beginPath();ctx.arc(p.x*ppm+q.x,p.y*ppm+q.y,r,0,Math.PI*2);ctx.fill();}}return true;
+        for(let j=inicioAlinhado(Math.max(1,passo));j<pts.length;j+=Math.max(1,passo)){const p=pts[j],n=Math.max(6,Math.round(size*.9));for(let k=0;k<n;k++){const q=jitter(j,k,1.25),r=Math.max(.45,size*.035);ctx.beginPath();ctx.arc(p.x*ppm+q.x,p.y*ppm+q.y,r,0,Math.PI*2);ctx.fill();}}return true;
     }
     if(texture==='cascalho'){
-        for(let j=a;j<pts.length;j+=Math.max(1,passo*2)){const p=pts[j],n=Math.max(3,Math.round(size*.28));for(let k=0;k<n;k++){const q=jitter(j,k,1.05),rr=Math.max(1.1,size*(.07+.08*labDesenhoRand_(j*89+k*41)));ctx.save();ctx.rotate(0);ctx.beginPath();ctx.ellipse(p.x*ppm+q.x,p.y*ppm+q.y,rr,rr*(.55+.35*labDesenhoRand_(j+k+5)),0,0,Math.PI*2);ctx.stroke();ctx.restore();}}return true;
+        for(let j=inicioAlinhado(Math.max(1,passo*2));j<pts.length;j+=Math.max(1,passo*2)){const p=pts[j],n=Math.max(3,Math.round(size*.28));for(let k=0;k<n;k++){const q=jitter(j,k,1.05),rr=Math.max(1.1,size*(.07+.08*labDesenhoRand_(j*89+k*41)));ctx.save();ctx.rotate(0);ctx.beginPath();ctx.ellipse(p.x*ppm+q.x,p.y*ppm+q.y,rr,rr*(.55+.35*labDesenhoRand_(j+k+5)),0,0,Math.PI*2);ctx.stroke();ctx.restore();}}return true;
     }
     if(texture==='grama'){
         ctx.save();ctx.lineWidth=Math.max(.8,size*.075);ctx.lineCap='round';
-        for(let j=a;j<pts.length;j+=Math.max(1,passo*2)){const p=pts[j],n=Math.max(2,Math.round(size*.22));for(let k=0;k<n;k++){const q=jitter(j,k,.9),cx=p.x*ppm+q.x,cy=p.y*ppm+q.y,len=Math.max(2,size*(.35+.25*labDesenhoRand_(j*97+k*17))),lean=(labDesenhoRand_(j*79+k*31)-.5)*.9;for(const off of [-.20,0,.20]){const ang=-Math.PI/2+lean+off;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(ang)*len,cy+Math.sin(ang)*len);ctx.stroke();}}}
+        for(let j=inicioAlinhado(Math.max(1,passo*2));j<pts.length;j+=Math.max(1,passo*2)){const p=pts[j],n=Math.max(2,Math.round(size*.22));for(let k=0;k<n;k++){const q=jitter(j,k,.9),cx=p.x*ppm+q.x,cy=p.y*ppm+q.y,len=Math.max(2,size*(.35+.25*labDesenhoRand_(j*97+k*17))),lean=(labDesenhoRand_(j*79+k*31)-.5)*.9;for(const off of [-.20,0,.20]){const ang=-Math.PI/2+lean+off;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(ang)*len,cy+Math.sin(ang)*len);ctx.stroke();}}}
         ctx.restore();return true;
     }
     if(texture==='folhas'){
-        for(let j=a;j<pts.length;j+=Math.max(1,passo*2)){const p=pts[j],n=Math.max(3,Math.round(size*.30));for(let k=0;k<n;k++){const q=jitter(j,k,1.0),rx=Math.max(1.8,size*.16),ry=Math.max(1,size*.075),ang=labDesenhoRand_(j*53+k*29)*Math.PI;ctx.save();ctx.translate(p.x*ppm+q.x,p.y*ppm+q.y);ctx.rotate(ang);ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha*=.55;ctx.lineWidth=Math.max(.45,size*.035);ctx.beginPath();ctx.moveTo(-rx*.65,0);ctx.lineTo(rx*.65,0);ctx.stroke();ctx.restore();}}return true;
+        for(let j=inicioAlinhado(Math.max(1,passo*2));j<pts.length;j+=Math.max(1,passo*2)){const p=pts[j],n=Math.max(3,Math.round(size*.30));for(let k=0;k<n;k++){const q=jitter(j,k,1.0),rx=Math.max(1.8,size*.16),ry=Math.max(1,size*.075),ang=labDesenhoRand_(j*53+k*29)*Math.PI;ctx.save();ctx.translate(p.x*ppm+q.x,p.y*ppm+q.y);ctx.rotate(ang);ctx.beginPath();ctx.ellipse(0,0,rx,ry,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha*=.55;ctx.lineWidth=Math.max(.45,size*.035);ctx.beginPath();ctx.moveTo(-rx*.65,0);ctx.lineTo(rx*.65,0);ctx.stroke();ctx.restore();}}return true;
     }
     if(texture==='neve'){
-        for(let j=a;j<pts.length;j+=Math.max(1,passo*2)){const p=pts[j],n=Math.max(4,Math.round(size*.42));for(let k=0;k<n;k++){const q=jitter(j,k,1.05),rr=Math.max(1.2,size*(.075+.07*labDesenhoRand_(j*109+k*13)));ctx.save();ctx.globalAlpha*=.55+.35*labDesenhoRand_(j+k+9);ctx.beginPath();ctx.arc(p.x*ppm+q.x,p.y*ppm+q.y,rr,0,Math.PI*2);ctx.fill();ctx.restore();}}return true;
+        for(let j=inicioAlinhado(Math.max(1,passo*2));j<pts.length;j+=Math.max(1,passo*2)){const p=pts[j],n=Math.max(4,Math.round(size*.42));for(let k=0;k<n;k++){const q=jitter(j,k,1.05),rr=Math.max(1.2,size*(.075+.07*labDesenhoRand_(j*109+k*13)));ctx.save();ctx.globalAlpha*=.55+.35*labDesenhoRand_(j+k+9);ctx.beginPath();ctx.arc(p.x*ppm+q.x,p.y*ppm+q.y,rr,0,Math.PI*2);ctx.fill();ctx.restore();}}return true;
     }
     if(texture==='fumaca'){
-        for(let j=a;j<pts.length;j+=Math.max(1,passo*3)){const p=pts[j],n=Math.max(2,Math.round(size*.16));for(let k=0;k<n;k++){const q=jitter(j,k,.9),rr=Math.max(3,size*(.28+.20*labDesenhoRand_(j*41+k*31)));ctx.save();ctx.globalAlpha*=.10+.18*labDesenhoRand_(j*97+k*7);ctx.beginPath();ctx.arc(p.x*ppm+q.x,p.y*ppm+q.y,rr,0,Math.PI*2);ctx.fill();ctx.restore();}}return true;
+        for(let j=inicioAlinhado(Math.max(1,passo*3));j<pts.length;j+=Math.max(1,passo*3)){const p=pts[j],n=Math.max(2,Math.round(size*.16));for(let k=0;k<n;k++){const q=jitter(j,k,.9),rr=Math.max(3,size*(.28+.20*labDesenhoRand_(j*41+k*31)));ctx.save();ctx.globalAlpha*=.10+.18*labDesenhoRand_(j*97+k*7);ctx.beginPath();ctx.arc(p.x*ppm+q.x,p.y*ppm+q.y,rr,0,Math.PI*2);ctx.fill();ctx.restore();}}return true;
     }
     return false;
 }
@@ -8731,7 +8826,14 @@ function labRender_(){
     if(bg)bg.value=labEstado_.fundo||'#d7d7d7';if(gc)gc.value=labEstado_.corGrade||'#777777';if(gv)gv.checked=labEstado_.gradeVisivel!==false;if(tx)tx.value=labEstado_.textura||'nenhuma';
     if(ms){const v=`${labEstado_.larguraM}x${labEstado_.alturaM}`;if([...ms.options].some(o=>o.value===v))ms.value=v;}
     if(zm)zm.value=String(labEstado_.pxPorMetro||48);
-    labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();if(!batalhaEhMestre_()){const ap=document.getElementById('labActionPanel');if(ap)ap.style.display='none';const op=document.getElementById('labObjetoPainel');if(op)op.style.display='none';}else labAutoAvancarSeSemAcoes_();
+    labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();if(!batalhaEhMestre_()){
+        const op=document.getElementById('labObjetoPainel');if(op)op.style.display='none';
+        const ap=document.getElementById('labActionPanel'),at=labTokenAtual_(),pend=labEstado_.pendenciaLab,dp=labEstado_.danoPendenteLab;
+        const podeAgir=at&&labPodeControlarToken_(at);
+        const podeDefender=pend&&labPodeControlarToken_(labTokenPorId_(pend.defensorId));
+        const podeResolverDano=dp&&labPodeControlarToken_(labTokenPorId_(dp.atacanteId));
+        if(ap&&!podeAgir&&!podeDefender&&!podeResolverDano)ap.style.display='none';
+    }else labAutoAvancarSeSemAcoes_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
     ev.preventDefault();ev.stopPropagation();if(!batalhaEhMestre_())return;
@@ -8748,30 +8850,44 @@ window.labRotacaoPointerDown_=function(ev,id){
 window.labPointerDown_=function(ev,id){
     if(ev.button===2)return;
     ev.preventDefault();
-    if(!batalhaEhMestre_()){labEstado_.selecionadoId=String(id);labRender_();return;}
     const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;
+    const mestre=batalhaEhMestre_(),prep=labEstado_.fase!=='combate',at=labTokenAtual_(),controla=labPodeControlarToken_(t);
+
+    // Jogador clicando em outro token durante sua oportunidade: escolhe o alvo.
+    if(!mestre&&!controla){
+        if(!prep&&at&&labPodeControlarToken_(at)&&String(at.id)!==String(t.id)){
+            at.alvoLab=String(t.id);labEstado_.selecionadoId=String(t.id);labApontarPara_(at,t);labRender_();return;
+        }
+        labEstado_.selecionadoId=String(id);labRender_();return;
+    }
+    // Fora de sua oportunidade, o jogador pode inspecionar o próprio token, mas não movê-lo.
+    if(!mestre&&!prep&&String(at?.id)!==String(t.id)){labEstado_.selecionadoId=String(id);labRender_();return;}
+
     labEstado_.selecionadoId=String(id);labEstado_.objetoSelecionadoId='';labRenderObjetoPainel_();labHoverHide_();
-    const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48),origem={x:t.x,y:t.y},prep=labEstado_.fase!=='combate',at=labTokenAtual_();
-    if(!prep&&String(at?.id)!==String(t.id)){
+    const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48),origem={x:t.x,y:t.y};
+    if(mestre&&!prep&&String(at?.id)!==String(t.id)){
         at.alvoLab=String(t.id);labApontarPara_(at,t);labEstado_.selecionadoId=String(t.id);labSalvarLocal_();labRender_();return;
     }
     if(!prep&&t.primeirosSocorrosLab){notificar_('Primeiros Socorros em andamento impedem deslocamento e outras ações proativas.','aviso');return;}
-    const maxM=(prep||t.livreMestre)?999:labMovimentoMaxM_(t);if(!prep&&maxM<=0&&!t.livreMestre){notificar_(`${t.nome} é imóvel em combate. Na preparação o mestre pode posicioná-lo livremente.`,'aviso');return;}
+    const maxM=(prep||(mestre&&t.livreMestre))?999:labMovimentoMaxM_(t);if(!prep&&maxM<=0&&!(mestre&&t.livreMestre)){notificar_(`${t.nome} não possui movimento disponível nesta oportunidade.`,'aviso');return;}
     const node=map.querySelector(`.lab-token[data-id="${CSS.escape(String(id))}"]`),d=node?node.offsetWidth:Math.max(24,Number(t.diametroM||.9)*ppm);
     if(node){node.style.cursor='grabbing';node.style.zIndex='31';}
     let raf=0,pendente=null;
     const aplicar=()=>{
-        raf=0;if(!pendente)return;
-        let {clientX,clientY}=pendente;pendente=null;
+        raf=0;if(!pendente)return;let {clientX,clientY}=pendente;pendente=null;
         let x=(clientX-rect.left)/ppm,y=(clientY-rect.top)/ppm,dx=x-origem.x,dy=y-origem.y,dist=Math.hypot(dx,dy);
-        if(!prep&&!t.livreMestre&&dist>maxM){const f=maxM/dist;x=origem.x+dx*f;y=origem.y+dy*f;}
+        if(!prep&&!(mestre&&t.livreMestre)&&dist>maxM&&dist>0){const f=maxM/dist;x=origem.x+dx*f;y=origem.y+dy*f;}
         t.x=Math.max(0,Math.min(labEstado_.larguraM,x));t.y=Math.max(0,Math.min(labEstado_.alturaM,y));
         if(node){node.style.left=`${t.x*ppm-d/2}px`;node.style.top=`${t.y*ppm-d/2}px`;}
     };
     const move=e=>{pendente={clientX:e.clientX,clientY:e.clientY};if(!raf)raf=requestAnimationFrame(aplicar);};
-    const up=e=>{
-        window.removeEventListener('pointermove',move);
-        if(pendente){if(raf){cancelAnimationFrame(raf);raf=0;}aplicar();}
+    const up=()=>{
+        window.removeEventListener('pointermove',move);if(pendente){if(raf){cancelAnimationFrame(raf);raf=0;}aplicar();}
+        if(!mestre){
+            const destino={x:Number(t.x),y:Number(t.y)};
+            labEnviarComandoJogador_('movimento',destino,t).then(ok=>{if(!ok){t.x=origem.x;t.y=origem.y;labRender_();}});
+            return;
+        }
         const dx=t.x-origem.x,dy=t.y-origem.y,dist=Math.hypot(dx,dy),c=prep?{acoes:0}:labCustoMovimento_(t,dist);
         if(!prep&&dist>.08){let deg=Math.atan2(dx,-dy)*180/Math.PI;if(deg<0)deg+=360;t.angulo=Math.round(deg);}
         if(!prep){if(c.usaBonus>0)t.movimentoBonusLab=Math.max(0,Number(t.movimentoBonusLab||0)-Number(c.usaBonus||0));if(c.usaGratis)t.movimentoGratisDisponivel=false;if(c.acoes>0)t.acoesAtuaisLab=Math.max(0,t.acoesAtuaisLab-c.acoes);}
@@ -16059,7 +16175,7 @@ garantirObjetosMapaPadrao_();
 setTimeout(()=>{try{labAtualizarSelectObjetosMapa_();renderizarBancoObjetosMapa_();}catch(_){}},500);
 
 </script>
-<!-- Mesa Estelar v46.28.0: banco administrativo de mapas no Escudo do Mestre, com abrir, renomear, duplicar e excluir -->
+<!-- Mesa Estelar v46.36.0: painel alinhado; objetos persistem nos mapas; jogadores podem escolher perícia/alvo, mover o próprio token e enviar ataques ao mestre -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 <!-- Mesa Estelar v46.30.0: entrada RGB direta para pintura e tokens sempre acima do desenho -->
@@ -16067,6 +16183,6 @@ setTimeout(()=>{try{labAtualizarSelectObjetosMapa_();renderizarBancoObjetosMapa_
 
 <!-- Mesa Estelar v46.34.1: Mapa da Mesa oficial, modo de edição recolhível, participantes diretos, objetos personalizados e sincronização pública de visualização -->
 <!-- Mesa Estelar v46.34.2: salvamento incremental de objetos de mapa -->
-<!-- Mesa Estelar v46.35.0: drag rápido sem rerender por frame, texturas corrigidas, seleção de objetos discreta e controles padronizados -->
+<!-- Mesa Estelar v46.35.1: drag rápido sem rerender por frame, texturas corrigidas, seleção de objetos discreta e controles padronizados -->
 </body>
 </html>
