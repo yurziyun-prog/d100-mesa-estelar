@@ -7093,9 +7093,10 @@ function labPodeDerrubar_(pend){
     const a=labCharToken_(atacante),d=labCharToken_(defensor);
     const tamA=Number(a?.atributos?.TAM||atacante?.attrs?.TAM||10);
     const tamD=Number(d?.atributos?.TAM||defensor?.attrs?.TAM||10);
-    const nomeD=normalizarTextoCombate_(`${defensor.nome||''} ${d?.especie||''} ${d?.tipo||''}`);
-    if(nomeD.includes('cila'))return false;
-    const robusto=/besta_ululante|dragao|quadrup|colossal|titan/.test(nomeD);
+    const modeloD=defensor?.criaturaBancoId?criaturaBancoPorId_(defensor.criaturaBancoId):null;
+    const nomeD=normalizarTextoCombate_(`${defensor.nome||''} ${d?.especie||''} ${d?.tipo||''} ${modeloD?.habilidadesTexto||d?.habilidadesTexto||''}`);
+    if(/imune_derrubar|sessil|cila/.test(nomeD))return false;
+    const robusto=/besta_ululante|dragao|quadrup|muito_grande|enorme|colossal|titan|robusto/.test(nomeD);
     const critico=batalhaResultadoGradeValor_(pend.grauAtaque)>=3;
     const limite=robusto?(critico?1.50:1.10):(critico?2.0:1.5);
     return tamD<=Math.max(1,tamA*limite);
@@ -12302,7 +12303,7 @@ function dadosExportacaoBanco_(tipo) {
             })
         },
         npcs:{dados:npcsDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','raca','origem','idade','sexo','altura','tamanho','pesoCorporal','sociedade','carreira','conceito','classeSocial','recursos','FOR','CON','TAM','DES','INT','POD','CAR','motivacao','valorMotivacao','periciasTexto','especializacoesTexto','armasTexto','inventarioTexto','selecionavelCombate','imagem','descricao'],map:n=>n},
-        criaturas:{dados:criaturasDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','especie','habitat','comportamento','altura','tamanho','pesoCorporal','FOR','CON','TAM','DES','INT','POD','CAR','periciasTexto','especializacoesTexto','armasTexto','propriedadesAtaques','selecionavelCombate','imagem','descricao'],map:n=>n},
+        criaturas:{dados:criaturasDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','especie','habitat','comportamento','altura','tamanho','pesoCorporal','FOR','CON','TAM','DES','INT','POD','CAR','periciasTexto','especializacoesTexto','armasTexto','propriedadesAtaques','alcancesAtaques','habilidadesTexto','vinculosAtaquesPericias','acoesMaxEspecial','armaduraNatural','movimentoTerrestre','movimentoVoo','movimentoNatacao','selecionavelCombate','imagem','descricao'],map:n=>n},
         itens: {
             dados: itensDB,
             cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','penetracao','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','imagem','descricao','descricao_en','descricao_zh'],
@@ -14791,7 +14792,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.21.0: desempate por margem, testes de perícia, Psiquismo inicial e hover detalhado dos tokens -->
+<!-- Mesa Estelar v46.21.1: revisão do banco de criaturas, alcances/movimentos/anatomia explícitos e Derrubar por propriedades -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
