@@ -634,6 +634,15 @@
             <div id="ficha" class="tab-content active">
                 <div class="char-manager">
                     <h3 data-i18n="myCharacters">Meus Personagens</h3>
+                    <div id="masterCharacterFilterBar" class="hidden" style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 12px;">
+                        <label style="display:flex;align-items:center;gap:7px;margin:0;font-weight:700;">Mostrar
+                            <select id="masterCharacterFilter" onchange="filtroPersonagensMestre_=this.value;renderizarListaPersonagens()" style="width:180px;margin:0;">
+                                <option value="pm">PM — meus personagens</option>
+                                <option value="pj">PJ — jogadores</option>
+                                <option value="todos">Todos</option>
+                            </select>
+                        </label>
+                    </div>
                     <div class="char-list" id="charList"></div>
                     <button class="btn-new" onclick="novoPersonagem()" data-i18n="newChar">➕ Novo Personagem</button>
                 </div>
@@ -698,7 +707,7 @@
                             <div class="form-group" id="creationNameGroup"><label data-i18n="nameLabel">Nome:</label><input type="text" id="editName"></div>
                             <div class="form-group"><label data-i18n="race">Raça:</label><input type="text" id="editRace" value="Humano"></div>
                             <div class="form-group"><label data-i18n="genderLabel">Gênero:</label><select id="editSex"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Hermafrodita">Hermafrodita</option><option value="Andrógeno">Andrógeno</option><option value="Neutro">Neutro</option></select></div>
-                            <div class="form-group"><label data-i18n="charImageUrl">Imagem do Personagem (URL):</label><input type="url" id="editCharImage" placeholder="https://..." oninput="previewImagemPersonagem()"></div>
+                            <div class="form-group"><label data-i18n="charImageUrl">Imagem do Personagem (URL):</label><input type="url" id="editCharImage" placeholder="https://..." oninput="previewImagemPersonagem()" onchange="salvarImagemPersonagemAtual_()"></div>
                             <div class="form-group"><label data-i18n="orUpload">Ou fazer upload:</label><input type="file" id="editCharImageFile" accept="image/*" onchange="handleCharacterImageUpload(event)"><small id="charImageUploadStatus" style="display:block; opacity:.75; margin-top:6px;"></small></div>
                             <div class="form-group"><div class="avatar" id="editCharImagePreview" style="width:120px;height:120px;"><span>👤</span></div></div>
                             <div class="form-group" id="creationOriginGroup"><label data-i18n="origin">Origem:</label><select id="editOrigin"></select></div>
@@ -1179,6 +1188,11 @@
                             <div style="text-align:center"><img id="objMapaImagemPreview" alt="Prévia" style="width:96px;height:96px;object-fit:contain;border-radius:8px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)"></div>
                           </div>
                           <small style="display:block;color:#8ea7c8;margin-top:7px;">PNG/WebP com transparência e vista de cima costuma dar o melhor resultado. A imagem enviada é reduzida automaticamente antes de ser salva.</small>
+                          <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:9px;padding:9px 10px;border-radius:9px;background:rgba(0,0,0,.12);">
+                            <button class="btn-small" type="button" onclick="objMapaRemoverFundoSimples_()">✂️ Remover fundo simples</button>
+                            <label style="display:flex;align-items:center;gap:7px;margin:0;">Tolerância <input id="objMapaBgTol" type="range" min="8" max="90" value="38" style="width:130px;margin:0;"></label>
+                            <small style="color:#8ea7c8;">Opcional e local: remove fundos parecidos com as bordas da imagem; não usa IA.</small>
+                          </div>
                           <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button class="btn-save" onclick="salvarObjetoMapaEditor_()">💾 Salvar objeto</button><button class="btn-small" onclick="fecharEditorObjetoMapa_()">Cancelar</button></div>
                         </div>
                         <div id="listaBancoObjetosMapa"></div>
@@ -1311,11 +1325,11 @@
                             <div style="margin-top:14px;padding:14px;border-radius:12px;background:rgba(155,89,182,.075);border:1px solid rgba(155,89,182,.25);">
                                 <h4 style="margin:0 0 12px;color:#d8b4ff;">⭐ Conceder XP direcionado</h4>
                                 <div style="display:grid;grid-template-columns:minmax(220px,1fr) 120px minmax(330px,1.8fr);gap:10px;align-items:end;">
-                                    <div class="form-group" style="margin:0;"><label>Personagem</label><select id="gmXpAlvo"><option value="">Escolher personagem...</option></select></div>
+                                    <div class="form-group" style="margin:0;"><label>Personagem</label><select id="gmXpAlvo" onchange="popularXpPermitidosMestre_()"><option value="">Escolher personagem...</option></select></div>
                                     <div class="form-group" style="margin:0;"><label>Pontos de XP</label><input id="gmXpPontos" type="number" min="1" step="1" value="1"></div>
-                                    <div class="form-group" style="margin:0;"><label>Perícias/especializações permitidas</label><select id="gmXpPermitidos" multiple size="6"></select></div>
+                                    <div class="form-group" style="margin:0;"><label>Perícias/especializações permitidas</label><select id="gmXpPermitidos" multiple size="6"></select><label style="display:flex;align-items:center;gap:7px;margin:7px 0 0;font-weight:500;"><input id="gmXpMostrarTodas" type="checkbox" onchange="popularXpPermitidosMestre_()"> Mostrar todas (permitir aprender algo novo)</label></div>
                                 </div>
-                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;"><button class="btn-small" onclick="concederXpDirecionado_()">⭐ Conceder XP</button><small style="color:#bcaad0;">O aviso permanece na conta do jogador até ele gastar todos os pontos concedidos.</small></div>
+                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;"><button class="btn-small" onclick="concederXpDirecionado_()">⭐ Conceder XP</button><small style="color:#bcaad0;">Por padrão aparecem as perícias básicas e as já treinadas. Se você autorizar várias opções, o jogador escolhe onde distribuir a quantidade concedida.</small></div>
                             </div>
 
                             <div class="form-group"><label>Resumo atual:</label><textarea id="gmCampanhaResumo" rows="4" placeholder="Situação geral, missão em andamento, acontecimentos importantes..."></textarea></div>
@@ -2707,9 +2721,9 @@ async function carregarEscudo() {
 
 function popularSelects() {
     const selectOrigem = document.getElementById('editOrigin');
-    selectOrigem.innerHTML = origensDB.map(o => `<option value="${o.id}">${getNome(o)}</option>`).join('');
+    selectOrigem.innerHTML = '<option value="">— escolha uma origem —</option>' + origensDB.map(o => `<option value="${o.id}">${getNome(o)}</option>`).join('');
     const selectCarreira = document.getElementById('editCareer');
-    selectCarreira.innerHTML = carreirasDB.map(c => `<option value="${c.id}">${getNome(c)}</option>`).join('');
+    selectCarreira.innerHTML = '<option value="">— escolha uma profissão —</option>' + carreirasDB.map(c => `<option value="${c.id}">${getNome(c)}</option>`).join('');
 }
 
 function renderizarBancoDados() {
@@ -2765,20 +2779,31 @@ async function carregarPersonagens() {
     }
 }
 
+let filtroPersonagensMestre_='pm';
+function ordemCriacaoPersonagem_(c){
+    const d=Date.parse(c?.criadoEm||c?.createdAt||'');if(Number.isFinite(d))return d;
+    const m=String(c?.id||'').match(/char_(\d{10,})/);return m?Number(m[1]):Number.MAX_SAFE_INTEGER;
+}
 function renderizarListaPersonagens() {
     const container = document.getElementById('charList');
     const t = traducoes[idiomaAtual];
     const isMaster = userData && userData.role === 'mestre';
     const titulo = document.querySelector('.char-manager h3');
-    if (titulo) titulo.textContent = isMaster ? tr_('allCharacters') : t.myCharacters;
+    const filtroBar=document.getElementById('masterCharacterFilterBar');
+    if(filtroBar)filtroBar.classList.toggle('hidden',!isMaster);
+    const filtroSel=document.getElementById('masterCharacterFilter');if(filtroSel)filtroSel.value=filtroPersonagensMestre_;
+    if (titulo) titulo.textContent = isMaster ? (filtroPersonagensMestre_==='pj'?'Personagens dos jogadores':filtroPersonagensMestre_==='todos'?'Todos os Personagens':'PM — Meus Personagens') : t.myCharacters;
+    let listaVisivel=[...userCharacters];
+    if(isMaster){if(filtroPersonagensMestre_==='pm')listaVisivel=listaVisivel.filter(c=>c.dono===currentUserUid);else if(filtroPersonagensMestre_==='pj')listaVisivel=listaVisivel.filter(c=>c.dono!==currentUserUid&&String(c.tipo||'pc').toLowerCase()==='pc');}
+    listaVisivel.sort((a,b)=>ordemCriacaoPersonagem_(a)-ordemCriacaoPersonagem_(b)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
 
-    if (userCharacters.length === 0) {
+    if (listaVisivel.length === 0) {
         container.innerHTML = `<p style="text-align:center;color:#aaa;padding:20px;">${isMaster ? tr_('noCharactersMaster') : t.noChars}</p>`;
         document.getElementById('characterSection').classList.add('hidden');
         return;
     }
 
-    container.innerHTML = userCharacters.map(char => {
+    container.innerHTML = listaVisivel.map(char => {
         const isActive = char.id === currentCharId;
         const meu = char.dono === currentUserUid;
         const tipo = String(char.tipo || 'pc').toLowerCase();
@@ -2870,7 +2895,7 @@ window.novoPersonagem = async () => {
 
     const recursosIniciaisNovo = Math.max(0, Math.floor(Number(configuracoes.recursosIniciais ?? 1000) || 0));
     const charId = `char_${Date.now()}`;
-    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: origensDB[0]?.id || 'urbano', carreira: carreirasDB[0]?.id || 'militar', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: recursosIniciaisNovo, pontosSorte: null, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, anotacoes: '', eventos: '' };
+    const newChar = { nome: 'Novo Personagem', raca: 'Humano', conceito: '', sexo: 'Masculino', idade: 25, origem: '', carreira: '', classeSocial: 'Pessoa Livre', tipoCorporal: 'Médio', imagem: null, recursos: recursosIniciaisNovo, pontosSorte: null, pontosMagiaGastos: 0, atributos: { FOR: 10, CON: 10, TAM: 10, DES: 10, INT: 10, POD: 10, CAR: 10 }, bonus: { FOR: 0, CON: 0, TAM: 0, DES: 0, INT: 0, POD: 0, CAR: 0 }, pericias: {}, especializacoes: {}, inventario: { equipado: Array(12).fill(null), bolso: Array(2).fill(null), mochila: Array(20).fill(null), veiculo: Array(50).fill(null), casa: Array(100).fill(null) }, combate: { hitLocations: {}, armor: {}, fadiga: 'Fresh', armas: [], municao: [] }, dono: currentUserUid, tipo: 'pc', etapaCriacao: 1, criadoEm:new Date().toISOString(), anotacoes: '', eventos: '' };
     await setDoc(doc(db, "personagens", charId), newChar);
     currentCharId = charId;
     await setDoc(doc(db, "usuarios", currentUserUid), { personagemAtivo: charId }, { merge: true });
@@ -2884,7 +2909,7 @@ window.novoPersonagem = async () => {
     }
     const recursosInput = document.getElementById('editRecursos');
     if (recursosInput) recursosInput.value = recursosIniciaisNovo;
-    if(userData?.role!=='mestre')setTimeout(()=>iniciarTutorialCriacao_(),700);
+    if(userData?.role!=='mestre')setTimeout(()=>iniciarTutorialCriacao_(),500);
 };
 
 function personagemAtualEhNPC_() {
@@ -3203,8 +3228,8 @@ function preencherFormulario(data) {
     document.getElementById('editSex').value = data.sexo || 'Masculino';
     document.getElementById('editCharImage').value = data.imagem || '';
     previewImagemPersonagem();
-    document.getElementById('editOrigin').value = data.origem || 'urbano';
-    document.getElementById('editCareer').value = data.carreira || 'militar';
+    document.getElementById('editOrigin').value = data.origem || '';
+    document.getElementById('editCareer').value = data.carreira || '';
     document.getElementById('editBodyType').value = data.tipoCorporal || 'Médio';
     
     const attrs = data.atributos || {};
@@ -3221,6 +3246,10 @@ window.salvarPersonagem = async () => {
     if(existente && personagemCriacaoConcluida_(existente) && userData?.role!=='mestre'){notificar_('A criação deste personagem já foi concluída. Alterações estruturais exigem intervenção do mestre.','aviso',5000);return;}
     const nome = document.getElementById('editName').value.trim();
     if (!nome) { alert('Preencha o nome'); return; }
+    if(userData?.role!=='mestre'&&!personagemAtualEhNPC_()){
+        if(!document.getElementById('editOrigin').value){notificar_('Escolha uma Origem antes de salvar.','aviso',4500);tutorialCriacaoIdx_=1;tutorialMostrarPasso_();return;}
+        if(!document.getElementById('editCareer').value){notificar_('Escolha uma Profissão/Carreira antes de salvar.','aviso',4500);tutorialCriacaoIdx_=2;tutorialMostrarPasso_();return;}
+    }
     
     const atributos = {};
     ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(attr => {
@@ -5510,6 +5539,14 @@ window.handleCharacterImageUpload = async (event) => {
         if (status) status.textContent = 'Erro ao enviar imagem.';
         alert('Erro ao fazer upload da imagem do personagem.');
     }
+};
+
+window.salvarImagemPersonagemAtual_=async function(){
+    const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(!c)return;
+    if(userData?.role!=='mestre'&&c.dono!==currentUserUid)return;
+    const imagem=String(document.getElementById('editCharImage')?.value||'').trim()||null;
+    try{await setDoc(doc(db,'personagens',c.id),{imagem},{merge:true});c.imagem=imagem;renderizarListaPersonagens();}
+    catch(e){console.error(e);notificar_('Não foi possível salvar a imagem do personagem.','erro',4500);}
 };
 
 window.handleItemImageUpload = async (event) => {
@@ -16148,6 +16185,22 @@ window.objMapaLerImagem_=function(ev){
         const p=document.getElementById('objMapaImagemPreview');p.src=data;p.dataset.imagem=data;document.getElementById('objMapaImagemUrl').value='';
     };im.src=rd.result;};rd.readAsDataURL(f);
 };
+window.objMapaRemoverFundoSimples_=function(){
+    const p=document.getElementById('objMapaImagemPreview');if(!p||!p.dataset.imagem){notificar_('Carregue uma imagem primeiro.','aviso');return;}
+    const im=new Image();im.onload=()=>{
+        const c=document.createElement('canvas');c.width=im.naturalWidth||im.width;c.height=im.naturalHeight||im.height;
+        const ctx=c.getContext('2d',{willReadFrequently:true});ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(im,0,0,c.width,c.height);
+        const img=ctx.getImageData(0,0,c.width,c.height),d=img.data,w=c.width,h=c.height,tol=Math.max(1,Number(document.getElementById('objMapaBgTol')?.value||38));
+        const refs=[];for(const [x,y] of [[0,0],[w-1,0],[0,h-1],[w-1,h-1],[Math.floor(w/2),0],[Math.floor(w/2),h-1],[0,Math.floor(h/2)],[w-1,Math.floor(h/2)]]){const i=(y*w+x)*4;if(d[i+3]>0)refs.push([d[i],d[i+1],d[i+2]]);}
+        if(!refs.length)return;
+        const seen=new Uint8Array(w*h),q=new Int32Array(w*h),qx=new Int32Array(w*h);let head=0,tail=0;
+        const perto=(i)=>refs.some(r=>Math.hypot(d[i]-r[0],d[i+1]-r[1],d[i+2]-r[2])<=tol);
+        const add=(x,y)=>{if(x<0||y<0||x>=w||y>=h)return;const n=y*w+x;if(seen[n])return;const i=n*4;if(!perto(i))return;seen[n]=1;q[tail]=x;qx[tail]=y;tail++;};
+        for(let x=0;x<w;x++){add(x,0);add(x,h-1);}for(let y=0;y<h;y++){add(0,y);add(w-1,y);}
+        while(head<tail){const x=q[head],y=qx[head++],i=(y*w+x)*4;d[i+3]=0;add(x+1,y);add(x-1,y);add(x,y+1);add(x,y-1);}
+        ctx.putImageData(img,0,0);const data=c.toDataURL('image/png');p.src=data;p.dataset.imagem=data;document.getElementById('objMapaImagemUrl').value='';notificar_('Fundo simples removido. Confira a prévia antes de salvar.','sucesso',3000);
+    };im.onerror=()=>notificar_('Não foi possível processar esta imagem.','erro',4000);im.src=p.dataset.imagem;
+};
 window.salvarObjetoMapaEditor_=async function(){
     garantirObjetosMapaPadrao_();
     const editId=String(document.getElementById('objMapaEditId')?.value||''),nome=String(document.getElementById('objMapaNome')?.value||'').trim();
@@ -16200,7 +16253,7 @@ function labObjetoHtml_(o,ppm){
     return `<div class="lab-map-object" data-id="${escaparHtmlInventario_(o.id)}" title="${escaparHtmlInventario_(o.nome||'Objeto')} · PV ${Number((o.pvAtual??o.pvMax)||0)}/${Number(o.pvMax||0)} · Dureza ${Number(o.dureza||0)}" style="position:absolute;left:${o.x*ppm-w/2}px;top:${o.y*ppm-h/2}px;width:${w}px;height:${h}px;transform:rotate(${Number(o.angulo||0)}deg);transform-origin:center;z-index:${sel?14:10};display:flex;align-items:center;justify-content:center;cursor:grab;opacity:${dead ? .42 : 1};filter:${dead?'grayscale(.8)':''};outline:${sel?'3px solid #56f08a':'none'};outline-offset:2px;touch-action:none" onpointerdown="labObjetoPointerDown_(event,'${String(o.id).replace(/'/g,"\\'")}')" onclick="labSelecionarObjeto_('${String(o.id).replace(/'/g,"\\'")}')">${img}${dead?'<span style="position:absolute;font-size:26px">💥</span>':''}</div>`;
 }
 window.labObjetoHtml_=labObjetoHtml_;
-window.labSelecionarObjeto_=function(id){labEstado_.objetoSelecionadoId=String(id||'');labEstado_.selecionadoId='';labSalvarLocal_();labRenderObjetoPainel_();};
+window.labSelecionarObjeto_=function(id){if(!batalhaEhMestre_())return;labEstado_.objetoSelecionadoId=String(id||'');labEstado_.selecionadoId='';labSalvarLocal_();labRenderObjetoPainel_();};
 window.labObjetoPointerDown_=function(ev,id){
     if(!batalhaEhMestre_())return;ev.preventDefault();ev.stopPropagation();const o=labObjetoPorId_(id),map=document.getElementById('labMetricMap');if(!o||!map)return;
     labEstado_.objetoSelecionadoId=String(id);labEstado_.selecionadoId='';const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);
@@ -16209,16 +16262,17 @@ window.labObjetoPointerDown_=function(ev,id){
     const move=e=>{p={x:e.clientX,y:e.clientY};if(!raf)raf=requestAnimationFrame(aplicar);};
     const up=()=>{window.removeEventListener('pointermove',move);if(p){if(raf){cancelAnimationFrame(raf);raf=0;}aplicar();}labSalvarLocal_();labRender_();};window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
 };
-window.labObjetoGirar_=function(delta){const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;o.angulo=(Number(o.angulo||0)+Number(delta||0)+360)%360;labSalvarLocal_();labRender_();};
+window.labObjetoGirar_=function(delta){if(!batalhaEhMestre_())return;const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;o.angulo=(Number(o.angulo||0)+Number(delta||0)+360)%360;labSalvarLocal_();labRender_();};
 window.labObjetoAplicarDano_=function(){
+    if(!batalhaEhMestre_())return;
     const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o||o.destrutivel===false)return;const inp=document.getElementById('labObjetoDanoInput'),bruto=Math.max(0,Number(inp?.value||0));
     const efetivo=Math.max(0,bruto-Number(o.dureza||0));o.pvAtual=Math.max(0,Number((o.pvAtual??o.pvMax)||0)-efetivo);if(o.pvAtual<=0)o.destruido=true;
     labSalvarLocal_();labRender_();notificar_(`${o.nome}: dano ${bruto}, dureza ${Number(o.dureza||0)}, perdeu ${efetivo} PV.`,'info',3500);
 };
-window.labObjetoRestaurar_=function(){const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;o.pvAtual=Number(o.pvMax||0);o.destruido=false;labSalvarLocal_();labRender_();};
-window.labObjetoExcluir_=function(){const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;if(!confirm(`Remover “${o.nome}” deste mapa?`))return;labEstado_.objetosLab=labEstado_.objetosLab.filter(x=>String(x.id)!==String(o.id));labEstado_.objetoSelecionadoId='';labSalvarLocal_();labRender_();};
+window.labObjetoRestaurar_=function(){if(!batalhaEhMestre_())return;const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;o.pvAtual=Number(o.pvMax||0);o.destruido=false;labSalvarLocal_();labRender_();};
+window.labObjetoExcluir_=function(){if(!batalhaEhMestre_())return;const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;if(!confirm(`Remover “${o.nome}” deste mapa?`))return;labEstado_.objetosLab=labEstado_.objetosLab.filter(x=>String(x.id)!==String(o.id));labEstado_.objetoSelecionadoId='';labSalvarLocal_();labRender_();};
 window.labRenderObjetoPainel_=function(){
-    const e=document.getElementById('labObjetoPainel');if(!e)return;const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o){e.style.display='none';e.innerHTML='';return;}
+    const e=document.getElementById('labObjetoPainel');if(!e)return;if(!batalhaEhMestre_()){e.style.display='none';e.innerHTML='';return;}const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o){e.style.display='none';e.innerHTML='';return;}
     e.style.display='flex';e.style.alignItems='center';e.style.gap='8px';e.style.flexWrap='wrap';
     e.innerHTML=`<b>🌳 ${escaparHtmlInventario_(o.nome||'Objeto')}</b><span>PV <b>${Number((o.pvAtual??o.pvMax)||0)}/${Number(o.pvMax||0)}</b></span><span>Dureza <b>${Number(o.dureza||0)}</b></span>${o.destruido?'<span style="color:#ff8d8d">💥 destruído</span>':''}<button class="btn-small" onclick="labObjetoGirar_(-15)">↶ 15°</button><button class="btn-small" onclick="labObjetoGirar_(15)">↷ 15°</button><label style="display:flex;align-items:center;gap:5px;margin:0">Dano <input id="labObjetoDanoInput" type="number" min="0" value="5" style="width:70px;margin:0;padding:6px"></label><button class="btn-small" onclick="labObjetoAplicarDano_()" ${o.destrutivel===false?'disabled':''}>💥 Aplicar</button><button class="btn-small" onclick="labObjetoRestaurar_()">🛠️ Restaurar</button><button class="btn-small btn-delete" onclick="labObjetoExcluir_()">🗑️ Remover</button>`;
 };
@@ -16254,7 +16308,9 @@ async function verificarEConcluirCriacao_(char){
 }
 function aplicarBloqueioCriacao_(char){
     const lock=personagemCriacaoConcluida_(char)&&userData?.role!=='mestre';
-    const ids=['editName','editRace','editSex','editCharImage','editCharImageFile','editOrigin','editCareer','editBodyType','editFOR','editCON','editTAM','editDES','editINT','editPOD','editCAR'];
+    // A imagem permanece editável mesmo depois da conclusão; ela não altera a construção mecânica da ficha.
+    const ids=['editName','editRace','editSex','editOrigin','editCareer','editBodyType','editFOR','editCON','editTAM','editDES','editINT','editPOD','editCAR'];
+    for(const id of ['editCharImage','editCharImageFile']){const e=document.getElementById(id);if(e)e.disabled=false;}
     ids.forEach(id=>{const e=document.getElementById(id);if(e){e.disabled=lock;e.dataset.creationField='1';}});
     const b=document.getElementById('saveCharacterBtn');if(b){b.disabled=lock;b.title=lock?'Ficha concluída; alterações estruturais exigem o mestre.':'';}
     const bar=document.getElementById('charCreationGuideBar');if(bar)bar.classList.toggle('hidden',lock||userData?.role==='mestre');
@@ -16292,11 +16348,26 @@ window.investirXpPendente_=async function(grantId){
     limparRascunhoPericias_(char.id);renderizarPericias(char);renderizarAvisosProgressao_(char);somSalvar_();notificar_(`⭐ ${total} ponto(s) de XP investidos.`,'sucesso',3500);
 };
 
+function xpItemTemInvestimento_(char,tipo,id){
+    const d=(tipo==='especializacao'?char?.especializacoes?.[id]:char?.pericias?.[id])||{};
+    const inv=obterInvestimentosPericia_(d);return (inv.origem+inv.carreira+inv.hobbie+inv.xp)>0;
+}
+window.popularXpPermitidosMestre_=function(){
+    if(userData?.role!=='mestre')return;const sel=document.getElementById('gmXpPermitidos');if(!sel)return;
+    const cid=document.getElementById('gmXpAlvo')?.value||'',char=(userCharacters||[]).find(c=>c.id===cid),todas=!!document.getElementById('gmXpMostrarTodas')?.checked;
+    if(!char){sel.innerHTML='<option disabled>Escolha um personagem acima</option>';return;}
+    const itens=[];
+    for(const p of periciasDB||[]){const basica=String(p.tipo||'').toLowerCase().includes('básica')||String(p.tipo||'').toLowerCase().includes('basica');if(todas||basica||xpItemTemInvestimento_(char,'pericia',p.id))itens.push({tipo:'pericia',id:p.id,nome:getNome(p),basica});}
+    for(const e of especializacoesDB||[]){if(todas||xpItemTemInvestimento_(char,'especializacao',e.id))itens.push({tipo:'especializacao',id:e.id,nome:getNome(e),basica:false});}
+    itens.sort((a,b)=>(a.tipo==='pericia'?0:1)-(b.tipo==='pericia'?0:1)||String(a.nome).localeCompare(String(b.nome),'pt-BR'));
+    sel.innerHTML=itens.map(x=>`<option value="${x.tipo}:${escaparHtmlInventario_(x.id)}">${x.tipo==='especializacao'?'⚔️':'📚'} ${escaparHtmlInventario_(x.nome)}${x.basica?' · básica':''}</option>`).join('')||'<option disabled>Nenhuma opção disponível</option>';
+};
 function popularControlesProgressaoMestre_(){
     if(userData?.role!=='mestre')return;const pcs=(userCharacters||[]).filter(c=>String(c.tipo||'pc').toLowerCase()==='pc');
     for(const id of ['gmAjusteAlvo','gmXpAlvo']){const s=document.getElementById(id);if(!s)continue;const v=s.value;s.innerHTML='<option value="">Escolher personagem...</option>'+pcs.map(c=>`<option value="${escaparHtmlInventario_(c.id)}">${escaparHtmlInventario_(c.nome||'Sem nome')}</option>`).join('');if(pcs.some(c=>c.id===v))s.value=v;}
-    const ps=document.getElementById('gmXpPermitidos');if(ps&&!ps.options.length){const itens=[...(periciasDB||[]).map(p=>({tipo:'pericia',id:p.id,nome:getNome(p)})),...(especializacoesDB||[]).map(e=>({tipo:'especializacao',id:e.id,nome:getNome(e)}))].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));ps.innerHTML=itens.map(x=>`<option value="${x.tipo}:${escaparHtmlInventario_(x.id)}">${x.tipo==='especializacao'?'⚔️':'📚'} ${escaparHtmlInventario_(x.nome)}</option>`).join('');}
+    popularXpPermitidosMestre_();
 }
+
 async function aplicarAjusteUm_(c,tipo,valor,local){
     c.combate=c.combate||{};
     if(tipo==='pv_total'){if(modoCombateAtual_()==='simplificado'){c.combate.pvGlobalAtual=calcularPVGlobalMax_(c);}else{const ms=pvMaxLocais_(c);c.combate.hitLocations={...ms};}return {combate:c.combate};}
@@ -16312,10 +16383,16 @@ async function aplicarAjusteUm_(c,tipo,valor,local){
     if(tipo==='dificuldade'){c.modDificuldadeMestre=Math.max(-3,Math.min(3,Math.floor(valor||0)));return {modDificuldadeMestre:c.modDificuldadeMestre};}
     return {};
 }
+function sincronizarAjusteCampanhaNaMesa_(c,tipo){
+    if(!c)return;const ts=(labEstado_?.tokens||[]).filter(t=>String(t.origemId||t.id)===String(c.id));
+    for(const t of ts){t.charLab={...(t.charLab||{}),...labSnapshotChar_(c)};if(tipo==='magia'||tipo==='magia_total')t.psiGastosLab=Math.max(0,Number(c.pontosMagiaGastos||0));if(tipo==='pv'||tipo==='pv_total')t.combateLab=JSON.parse(JSON.stringify(c.combate||t.combateLab||{}));}
+    const bp=(batalhaEstado_?.participantes||[]).find(p=>String(p.id)===String(c.id)||String(p.origemId||'')===String(c.id));if(bp&&(tipo==='magia'||tipo==='magia_total'))bp.psiGastos=Math.max(0,Number(c.pontosMagiaGastos||0));
+}
 window.aplicarAjusteCampanha_=async function(todos=false){
     if(userData?.role!=='mestre')return;const tipo=document.getElementById('gmAjusteTipo')?.value||'pv',valor=Math.floor(Number(document.getElementById('gmAjusteValor')?.value)||0),local=document.getElementById('gmAjusteLocal')?.value||'PV Global';
     let alvos=(userCharacters||[]).filter(c=>String(c.tipo||'pc').toLowerCase()==='pc');if(!todos){const id=document.getElementById('gmAjusteAlvo')?.value;alvos=alvos.filter(c=>c.id===id);}if(!alvos.length){notificar_('Escolha um personagem.','aviso');return;}
-    for(const c of alvos){const patch=await aplicarAjusteUm_(c,tipo,valor,local);await setDoc(doc(db,'personagens',c.id),patch,{merge:true});}
+    for(const c of alvos){const patch=await aplicarAjusteUm_(c,tipo,valor,local);await setDoc(doc(db,'personagens',c.id),patch,{merge:true});sincronizarAjusteCampanhaNaMesa_(c,tipo);}
+    if(batalhaEhMestre_()){labSalvarLocal_();labAgendarSyncRemoto_();}
     const atual=obterPersonagemAtual_();if(atual){atualizarVisualizacao(atual);renderizarCombate(atual);}renderizarBatalhaCompartilhada_();notificar_(`Ajuste aplicado a ${alvos.length} personagem(ns).`,'sucesso',3200);
 };
 window.concederXpDirecionado_=async function(){
@@ -16340,15 +16417,33 @@ function tutorialMostrarPasso_(){
     fecharTutorialCriacao_();const st=TUTORIAL_CRIACAO_[tutorialCriacaoIdx_];if(!st)return;
     const tabBtn=st.tab==='pericias'?document.getElementById('charSkillsTabBtn'):document.querySelector('.char-tab-btn[onclick*="personagem"]');if(tabBtn&&!document.getElementById(`char-${st.tab}`)?.classList.contains('active'))mostrarCharAba(st.tab,tabBtn);
     if(st.visao){const se=document.getElementById('periciasEtapa');if(se){se.value=st.visao;const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(c)renderizarPericias(c);}}
-    setTimeout(()=>{const t=document.getElementById(st.target);if(!t)return;t.classList.add('creation-guide-highlight');t.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{const r=t.getBoundingClientRect(),b=document.createElement('div');b.id='creationGuideBubble';b.innerHTML=`<div><b>Passo ${tutorialCriacaoIdx_+1}/${TUTORIAL_CRIACAO_.length}</b></div><div style="margin-top:6px;">${st.texto}</div><div class="guide-actions"><button class="btn-small" onclick="fecharTutorialCriacao_()">Fechar</button>${tutorialCriacaoIdx_>0?'<button class="btn-small" onclick="tutorialCriacaoAnterior_()">← Voltar</button>':''}<button class="btn-small btn-select" onclick="tutorialCriacaoProximo_()">${tutorialCriacaoIdx_===TUTORIAL_CRIACAO_.length-1?'Concluir guia':'Próximo →'}</button></div>`;document.body.appendChild(b);const br=b.getBoundingClientRect();let left=Math.max(10,Math.min(window.innerWidth-br.width-10,r.left)),top=r.bottom+10;if(top+br.height>window.innerHeight-10)top=Math.max(10,r.top-br.height-10);b.style.left=`${left}px`;b.style.top=`${top}px`;},320);},80);
+    setTimeout(()=>{const t=document.getElementById(st.target);if(!t)return;t.classList.add('creation-guide-highlight');t.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{const r=t.getBoundingClientRect(),b=document.createElement('div');b.id='creationGuideBubble';b.innerHTML='<div style="font-size:28px;line-height:1;margin-bottom:4px">⬇️</div>'+`<div><b>Passo ${tutorialCriacaoIdx_+1}/${TUTORIAL_CRIACAO_.length}</b></div><div style="margin-top:6px;">${st.texto}</div><div class="guide-actions"><button class="btn-small" onclick="fecharTutorialCriacao_()">Fechar</button>${tutorialCriacaoIdx_>0?'<button class="btn-small" onclick="tutorialCriacaoAnterior_()">← Voltar</button>':''}<button class="btn-small btn-select" onclick="tutorialCriacaoProximo_()">${tutorialCriacaoIdx_===TUTORIAL_CRIACAO_.length-1?'Concluir guia':'Próximo →'}</button></div>`;document.body.appendChild(b);const br=b.getBoundingClientRect();let left=Math.max(10,Math.min(window.innerWidth-br.width-10,r.left)),top=r.bottom+10;if(top+br.height>window.innerHeight-10)top=Math.max(10,r.top-br.height-10);b.style.left=`${left}px`;b.style.top=`${top}px`;},320);},80);
 }
+function tutorialSincronizarRascunhoFicha_(c){
+    if(!c)return;c.nome=String(document.getElementById('editName')?.value||c.nome||'');c.origem=String(document.getElementById('editOrigin')?.value||c.origem||'');c.carreira=String(document.getElementById('editCareer')?.value||c.carreira||'');c.atributos=c.atributos||{};
+    for(const a of ['FOR','CON','TAM','DES','INT','POD','CAR']){const e=document.getElementById(`edit${a}`);if(e)c.atributos[a]=Number(e.value)||10;}
+}
+function tutorialAvancarAte_(idx){const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(!c||personagemCriacaoConcluida_(c)||userData?.role==='mestre')return;tutorialSincronizarRascunhoFicha_(c);tutorialCriacaoIdx_=Math.max(0,Math.min(TUTORIAL_CRIACAO_.length-1,idx));tutorialMostrarPasso_();}
+document.addEventListener('change',ev=>{
+    const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(!c||personagemCriacaoConcluida_(c)||userData?.role==='mestre')return;
+    tutorialSincronizarRascunhoFicha_(c);
+    if(ev.target?.id==='editName'&&String(ev.target.value||'').trim())tutorialAvancarAte_(1);
+    else if(ev.target?.id==='editOrigin'&&ev.target.value)tutorialAvancarAte_(2);
+    else if(ev.target?.id==='editCareer'&&ev.target.value)tutorialAvancarAte_(3);
+});
+document.addEventListener('input',ev=>{
+    if(!/^edit(FOR|CON|TAM|DES|INT|POD|CAR)$/.test(String(ev.target?.id||'')))return;
+    const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(!c||personagemCriacaoConcluida_(c)||userData?.role==='mestre')return;tutorialSincronizarRascunhoFicha_(c);
+    const total=['FOR','CON','TAM','DES','INT','POD','CAR'].reduce((n,a)=>n+(Number(document.getElementById(`edit${a}`)?.value)||0),0),lim=Number(configuracoes.etapa1??80);
+    if(total===lim&&document.getElementById('editOrigin')?.value&&document.getElementById('editCareer')?.value)setTimeout(()=>tutorialAvancarAte_(4),180);
+});
 window.iniciarTutorialCriacao_=function(){const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(!c||personagemCriacaoConcluida_(c))return;tutorialCriacaoIdx_=0;tutorialMostrarPasso_();};
 window.tutorialCriacaoProximo_=function(){if(tutorialCriacaoIdx_>=TUTORIAL_CRIACAO_.length-1){fecharTutorialCriacao_();return;}tutorialCriacaoIdx_++;tutorialMostrarPasso_();};
 window.tutorialCriacaoAnterior_=function(){tutorialCriacaoIdx_=Math.max(0,tutorialCriacaoIdx_-1);tutorialMostrarPasso_();};
 window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 
 </script>
-<!-- Mesa Estelar v46.37.0: ferramentas de campanha, XP direcionado, conclusão/bloqueio de criação e guia passo a passo -->
+<!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 <!-- Mesa Estelar v46.30.0: entrada RGB direta para pintura e tokens sempre acima do desenho -->
