@@ -8422,6 +8422,56 @@ function labDesenhoRender_(){
         ctx.restore();
     }
 }
+// v46.32.1 — pintura otimizada: durante um traço, desenhamos apenas o trecho novo.
+// O mapa completo só é recomposto ao finalizar o traço ou quando realmente necessário.
+let labDesenhoRaf_=0;
+function labDesenhoRenderTrecho_(st,inicio){
+    const cv=document.getElementById('labDrawCanvas');if(!cv)return;
+    const ctx=cv.getContext('2d'),ppm=Number(labEstado_.pxPorMetro||48),pts=Array.isArray(st?.pts)?st.pts:[];
+    if(!pts.length)return;
+    const tool=st.tool||'traco',size=Math.max(1,Number(st.size||6)),color=st.color||'#ffcf4d';
+    const opacity=Math.max(.02,Math.min(1,Number(st.opacity??st.opacidade??(tool==='textura'?.38:1))));
+    const brush=['redondo','spray','irregular'].includes(st.brush||st.pincel)?(st.brush||st.pincel):(tool==='textura'?'spray':'redondo');
+    const texture=(st.texture||st.texturaTraco)==='pontilhada'?'pontilhada':'solida';
+    const a=Math.max(0,Math.min(pts.length-1,Number(inicio)||0));
+    ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+    if(tool==='borracha'){
+        ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.strokeStyle='rgba(0,0,0,1)';ctx.lineWidth=size;
+        const p0=pts[Math.max(0,a-1)];ctx.beginPath();ctx.moveTo(p0.x*ppm,p0.y*ppm);
+        for(let j=a;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
+        if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);ctx.stroke();ctx.restore();return;
+    }
+    ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.strokeStyle=color;
+    if(brush==='spray'){
+        for(let j=a;j<pts.length;j++){
+            const p=pts[j],cx=p.x*ppm,cy=p.y*ppm,dots=Math.max(4,Math.round(size*.8));
+            for(let k=0;k<dots;k++){
+                const ang=labDesenhoRand_(j*97+k*13)*Math.PI*2,r=Math.sqrt(labDesenhoRand_(j*193+k*29))*size*.8;
+                const rr=Math.max(.7,size*(.045+.08*labDesenhoRand_(j*71+k*41)));
+                ctx.beginPath();ctx.arc(cx+Math.cos(ang)*r,cy+Math.sin(ang)*r,rr,0,Math.PI*2);ctx.fill();
+            }
+        }
+    }else if(brush==='irregular'){
+        ctx.lineWidth=size;
+        const j0=Math.max(0,a-1),p0=pts[j0],wob=size*.22;
+        const ox0=(labDesenhoRand_(j0*151+3)-.5)*wob,oy0=(labDesenhoRand_(j0*211+9)-.5)*wob;
+        ctx.beginPath();ctx.moveTo(p0.x*ppm+ox0,p0.y*ppm+oy0);
+        for(let j=Math.max(a,1);j<pts.length;j++){
+            const ox=(labDesenhoRand_(j*151+3)-.5)*wob,oy=(labDesenhoRand_(j*211+9)-.5)*wob;
+            ctx.lineTo(pts[j].x*ppm+ox,pts[j].y*ppm+oy);
+        }
+        if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);ctx.stroke();
+        for(let j=a;j<pts.length;j+=2){const rr=Math.max(1,size*(.18+.2*labDesenhoRand_(j+17)));ctx.beginPath();ctx.arc(pts[j].x*ppm+(labDesenhoRand_(j+31)-.5)*size*.65,pts[j].y*ppm+(labDesenhoRand_(j+47)-.5)*size*.65,rr,0,Math.PI*2);ctx.fill();}
+    }else if(texture==='pontilhada'){
+        const step=Math.max(2,size*.7),salto=Math.max(1,Math.round(step/3));
+        for(let j=a;j<pts.length;j++){if(j%salto!==0)continue;ctx.beginPath();ctx.arc(pts[j].x*ppm,pts[j].y*ppm,Math.max(1,size*.22),0,Math.PI*2);ctx.fill();}
+    }else{
+        ctx.lineWidth=size;const p0=pts[Math.max(0,a-1)];ctx.beginPath();ctx.moveTo(p0.x*ppm,p0.y*ppm);
+        for(let j=a;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
+        if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);ctx.stroke();
+    }
+    ctx.restore();
+}
 window.labDesenhoPointerDown_=function(ev){
     const cfg=labDesenhoConfig_();if(!cfg.ativo||!batalhaEhMestre_())return;
     ev.preventDefault();ev.stopPropagation();
@@ -8430,9 +8480,27 @@ window.labDesenhoPointerDown_=function(ev){
     labDesenhoRegistrarHistorico_();
     const stroke={tool:cfg.ferramenta,color:cfg.cor,size:cfg.tamanho,opacity:cfg.opacidade,brush:cfg.pincel,texture:cfg.texturaTraco,pts:[ponto(ev)]};
     labEstado_.desenhosLab.push(stroke);
-    const move=e=>{stroke.pts.push(ponto(e));labDesenhoRender_();};
-    const up=()=>{window.removeEventListener('pointermove',move);labSalvarLocal_();labRender_();};
-    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+    let renderizadoAte=0;
+    const agendar=()=>{
+        if(labDesenhoRaf_)return;
+        labDesenhoRaf_=requestAnimationFrame(()=>{labDesenhoRaf_=0;const ini=renderizadoAte;renderizadoAte=stroke.pts.length;labDesenhoRenderTrecho_(stroke,ini);});
+    };
+    agendar();
+    const move=e=>{
+        const p=ponto(e),ant=stroke.pts[stroke.pts.length-1];
+        const dx=(p.x-ant.x)*ppm,dy=(p.y-ant.y)*ppm;
+        // Descarta micro-movimentos: reduz drasticamente pontos sem alterar visualmente o traço.
+        const minPx=Math.max(1.5,Math.min(4,Number(cfg.tamanho||7)*.12));
+        if(dx*dx+dy*dy<minPx*minPx)return;
+        stroke.pts.push(p);agendar();
+    };
+    const up=()=>{
+        window.removeEventListener('pointermove',move);
+        if(labDesenhoRaf_){cancelAnimationFrame(labDesenhoRaf_);labDesenhoRaf_=0;}
+        if(renderizadoAte<stroke.pts.length)labDesenhoRenderTrecho_(stroke,renderizadoAte);
+        labSalvarLocal_();labRender_();
+    };
+    window.addEventListener('pointermove',move,{passive:false});window.addEventListener('pointerup',up,{once:true});
 };
 
 function labAdicionarFloat_(t,valor,tipo='dano'){
