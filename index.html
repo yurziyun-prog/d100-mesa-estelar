@@ -457,7 +457,8 @@
                     <div id="labActionPanel" style="display:none;margin-bottom:8px;padding:10px 12px;border-radius:10px;background:rgba(22,18,48,.88);border:1px solid rgba(0,212,255,.28);"></div>
                     <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste o token para mover. Arraste a seta dourada na borda para girar a frente. A sombra mostra o deslocamento disponível em metros.</div>
                     <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
-                        <div id="labMetricMap" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
+                        <div id="labHoverCard" style="display:none;position:fixed;z-index:99999;pointer-events:none;width:300px;max-height:520px;overflow:hidden;border:1px solid rgba(0,212,255,.55);border-radius:12px;background:rgba(12,14,33,.97);box-shadow:0 12px 34px rgba(0,0,0,.55);padding:10px;"></div>
+                    <div id="labMetricMap" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
                     <div style="margin-top:8px;color:#888;font-size:.88em;">Área padrão: 28 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
                 </div>
@@ -6491,7 +6492,8 @@ function labSnapshotChar_(c){
             ataquesNaturais:JSON.parse(JSON.stringify(c.ataquesNaturais||[])),
             mapaPericiaAtaques:JSON.parse(JSON.stringify(c.mapaPericiaAtaques||{})),
             combate:JSON.parse(JSON.stringify(c.combate||{})),
-            inventario:JSON.parse(JSON.stringify(inv||{}))
+            inventario:JSON.parse(JSON.stringify(inv||{})),
+            pontosMagiaGastos:Math.max(0,Math.floor(Number(c.pontosMagiaGastos||0)))
         };
     }catch(_){return null;}
 }
@@ -6507,7 +6509,8 @@ function labTokenDeParticipante_(p,i=0){
         alcanceAtaqueMax:labAlcanceMax_(c),iniciativaLab:null,
         iniciativaBonus:Math.floor((Number(c?.atributos?.INT||10)+Number(c?.atributos?.DES||10))/2),
         combateLab:labCriarSnapshotCombate_(c),
-        charLab:labSnapshotChar_(c)};
+        charLab:labSnapshotChar_(c),
+        psiGastosLab:Math.max(0,Math.floor(Number(c?.pontosMagiaGastos||0)))};
 }
 window.labCarregarBatalhaAtual_=function(){
     if(!batalhaEhMestre_())return;
@@ -6522,7 +6525,8 @@ window.labCarregarBatalhaAtual_=function(){
             combateLab:n.combateLab,
             charLab:n.charLab||a.charLab||null,
             periciaLab:a.periciaLab||n.periciaLab,equipamentoLab:a.equipamentoLab||n.equipamentoLab,alvoLab:a.alvoLab||n.alvoLab,
-            ultimoResultadoProprioLab:''};});
+            ultimoResultadoProprioLab:'',
+            psiGastosLab:Number.isFinite(Number(a.psiGastosLab))?Number(a.psiGastosLab):n.psiGastosLab};});
     if(!haviaLayout && labEstado_.fase!=='combate'){
         // Primeira carga: espalha automaticamente, como no mapa antigo.
         const colocados=[];
@@ -6620,6 +6624,8 @@ window.labIniciarCombate_=function(){
             if(c)t.combateLab=labCriarSnapshotCombate_(c);
         }
         t.primeirosSocorrosLab=null;t.acaoAuxLab=null;t.ultimoResultadoProprioLab='';
+        const psiChar=labCharToken_(t)||t.charLab;
+        t.psiGastosLab=Math.max(0,Math.floor(Number(psiChar?.pontosMagiaGastos||0)));
     }
     labEstado_.ultimoResultadoLab='';
     for(const t of cs)t.iniciativaLab=1+Math.floor(Math.random()*10)+Number(t.iniciativaBonus||0);
@@ -6857,6 +6863,74 @@ window.labMudarDefesa_=function(v){
 };
 
 
+
+function labPericiasTeste_(t){
+    const c=labCharToken_(t);if(!c)return [];
+    const base=batalhaListaPericias_(c)||[];
+    const espec=(especializacoesDB||[]).filter(p=>c?.especializacoes?.[p.id]).map(p=>({...p,__especializacao:true}));
+    const vistos=new Set();
+    return [...base,...espec].filter(p=>{const k=`${p.__especializacao?'e':'p'}:${p.id}`;if(vistos.has(k))return false;vistos.add(k);return true;})
+        .sort((a,b)=>getNome(a).localeCompare(getNome(b)));
+}
+function labValorTeste_(t,per){
+    const c=labCharToken_(t);if(!c||!per)return 0;
+    const bruto=obterValorRegistroPericia_(c,per.id,!!per.__especializacao),arm=valorPericiaComArmadura_(c,per,bruto);
+    const extra=batalhaPenalidadeFerimento_(c,per)+batalhaPenalidadeCaido_(c)+batalhaPenalidadeInfeccao_(c);
+    return Math.max(0,Number(aplicarDificuldadeEFadiga_(c,arm.valor,'padrao',extra).valor||0));
+}
+window.labAbrirTeste_=function(){const t=labTokenAtual_();if(!t||t.primeirosSocorrosLab)return;const ps=labPericiasTeste_(t);if(!ps.length)return;t.acaoAuxLab={tipo:'teste_pericia',periciaToken:batalhaTokenPericia_(ps[0])};labSalvarLocal_();labRender_();};
+window.labTesteSelecionar_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.periciaToken=String(v||'');labSalvarLocal_();labRender_();};
+window.labExecutarTeste_=function(){
+    const t=labTokenAtual_(),a=t?.acaoAuxLab;if(!t||a?.tipo!=='teste_pericia'||Number(t.acoesAtuaisLab||0)<=0)return;
+    const per=labPericiasTeste_(t).find(p=>batalhaTokenPericia_(p)===a.periciaToken);if(!per)return;
+    const valor=labValorTeste_(t,per),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
+    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);t.acaoAuxLab=null;t.ultimoResultadoProprioLab=`Teste: ${getNome(per)} ${roll}/${valor} → ${r.grau}.`;
+    try{somDado_();if(r.grau==='Crítico')somCritico_();else if(r.grau==='Fiasco')somFiasco_();}catch(_){}
+    labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();
+};
+function labPsiMax_(t){const c=labCharToken_(t)||t?.charLab;return c?Math.max(0,pontosMagiaMax_(c)):0;}
+function labPsiRestantes_(t){return Math.max(0,labPsiMax_(t)-Math.max(0,Number(t?.psiGastosLab||0)));}
+function labPsiPoderes_(t){
+    const c=labCharToken_(t)||t?.charLab;if(!c)return [];
+    return (poderesPsiDB||[]).filter(p=>{const treino=treinoPsiEsfera_(c,p.esfera),arco=arcoPsiPorTreino_(treino);return treino>0&&Number(p.arco||1)<=arco;})
+      .sort((a,b)=>String(a.esfera).localeCompare(String(b.esfera))||Number(a.arco||1)-Number(b.arco||1)||getNome(a).localeCompare(getNome(b)));
+}
+function labPsiValor_(t,poder){
+    const c=labCharToken_(t)||t?.charLab;if(!c||!poder)return 0;const ach=encontrarEspecializacaoPsi_(c,poder.esfera);if(!ach)return 0;
+    const esp=(especializacoesDB||[]).find(e=>e.id===ach.id)||{id:ach.id,nome:`Psiquismo (${poder.esfera})`,__especializacao:true};
+    const bruto=obterValorRegistroPericia_(c,ach.id,true),arm=valorPericiaComArmadura_(c,esp,bruto);
+    const extra=batalhaPenalidadeFerimento_(c,esp)+batalhaPenalidadeCaido_(c)+batalhaPenalidadeInfeccao_(c);
+    return Math.max(0,Number(aplicarDificuldadeEFadiga_(c,arm.valor,'padrao',extra).valor||0));
+}
+window.labAbrirPsi_=function(){
+    const t=labTokenAtual_();if(!t||t.primeirosSocorrosLab)return;const poderes=labPsiPoderes_(t);if(!poderes.length){notificar_('Este personagem não possui poderes psíquicos disponíveis.','aviso');return;}
+    const p=poderes[0],alvos=[t,...(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id))];
+    t.acaoAuxLab={tipo:'psiquismo',poderId:p.id,alvoId:String(alvos[0]?.id||t.id),custo:Math.max(0,Number(p.custo||0)),local:''};labSalvarLocal_();labRender_();
+};
+window.labPsiSelecionarPoder_=function(v){const t=labTokenAtual_();if(!t?.acaoAuxLab)return;const p=labPsiPoderes_(t).find(x=>x.id===String(v||''));if(!p)return;t.acaoAuxLab.poderId=p.id;t.acaoAuxLab.custo=Math.max(0,Number(p.custo||0));t.acaoAuxLab.local='';labSalvarLocal_();labRender_();};
+window.labPsiSelecionarAlvo_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.alvoId=String(v||'');labSalvarLocal_();labRender_();};
+window.labPsiSelecionarLocal_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.local=String(v||'');labSalvarLocal_();labRender_();};
+window.labPsiCusto_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.custo=Math.max(0,Math.floor(Number(v)||0));labSalvarLocal_();labRender_();};
+function labPsiEmpurrar_(origem,alvo,metros=5){let dx=Number(alvo.x||0)-Number(origem.x||0),dy=Number(alvo.y||0)-Number(origem.y||0),d=Math.hypot(dx,dy);if(d<.01){dx=0;dy=1;d=1;}alvo.x=Math.max(0,Math.min(labEstado_.larguraM,Number(alvo.x||0)+dx/d*metros));alvo.y=Math.max(0,Math.min(labEstado_.alturaM,Number(alvo.y||0)+dy/d*metros));}
+window.labUsarPsi_=function(){
+    const t=labTokenAtual_(),a=t?.acaoAuxLab;if(!t||a?.tipo!=='psiquismo'||Number(t.acoesAtuaisLab||0)<=0)return;
+    const p=labPsiPoderes_(t).find(x=>x.id===a.poderId),alvo=labTokenPorId_(a.alvoId)||t;if(!p||!alvo)return;
+    const minimo=Math.max(0,Number(p.custo||0)),gasto=Math.max(minimo,Math.floor(Number(a.custo||0)));if(gasto>labPsiRestantes_(t)){notificar_(`PP insuficientes. Disponíveis: ${labPsiRestantes_(t)}.`,'aviso');return;}
+    const valor=labPsiValor_(t,p),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
+    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);t.psiGastosLab=Math.max(0,Number(t.psiGastosLab||0))+gasto;
+    let efeito='O poder não produziu efeito.';
+    if(batalhaResultadoGradeValor_(r.grau)>=2){
+        if(p.id==='cura_psi'){
+            const st=labGarantirSnapshotCombate_(alvo),feridas=labFeridasTrataveis_(alvo);let loc=a.local&&feridas.some(x=>x.local===a.local)?a.local:feridas[0]?.local;
+            if(loc){const antes=Number(st.hit?.[loc]||0),max=Number(st.hitMax?.[loc]||0),cura=Math.min(gasto,Math.max(0,max-antes));st.hit[loc]=Math.min(max,antes+cura);labReavaliarFerimento_(alvo,loc);efeito=`Cura psíquica restaurou ${cura} PV em ${loc}.`;}else efeito='O alvo não possui ferimento tratável.';
+        }else if(p.id==='impulso'){labPsiEmpurrar_(t,alvo,5);efeito=`${alvo.nome} foi impulsionado aproximadamente 5 m.`;}
+        else if(p.id==='atordoar_psi'||p.id==='grito_psiquico'){labGarantirSnapshotCombate_(alvo).atordoado=true;efeito=`${alvo.nome} ficou Atordoado (duração provisória).`;}
+        else if(p.id==='salto')efeito='Salto psíquico ativado; deslocamento especial será refinado na próxima etapa.';
+        else efeito=`${getNome(p)} ativado. Efeito específico ainda narrativo nesta etapa.`;
+    }
+    t.ultimoResultadoProprioLab=`Psiquismo: ${getNome(p)} · ${p.esfera} ${roll}/${valor} → ${r.grau} · gasto ${gasto} PP. ${efeito}`;t.acaoAuxLab=null;try{somMagico_();}catch(_){}
+    labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();
+};
 function labTokenPorId_(id){return (labEstado_.tokens||[]).find(t=>String(t.id)===String(id))||null;}
 function labFeridasTrataveis_(t){
     const st=labGarantirSnapshotCombate_(t);if(!st||st.morto)return [];
@@ -7114,8 +7188,13 @@ window.labResponderDefesa_=function(defender=true){
         if(ag>dg)acertou=true;
         else if(ag<dg)acertou=false;
         else if(ag>=2&&dg>=2){
-            // Opposed roll "blackjack": same success level -> higher successful d100 wins.
-            acertou=Number(pend.rolagemAtaque||0)>Number(rollDef||0);
+            // Mesa Estelar house rule: same success level -> larger success margin wins.
+            // Exact margin tie -> higher skill value wins; exact tie again favours defender.
+            const margemAtaque=Number(pend.valorAtaque||0)-Number(pend.rolagemAtaque||0);
+            const margemDefesa=Number(valorDef||0)-Number(rollDef||0);
+            if(margemAtaque!==margemDefesa)acertou=margemAtaque>margemDefesa;
+            else if(Number(pend.valorAtaque||0)!==Number(valorDef||0))acertou=Number(pend.valorAtaque||0)>Number(valorDef||0);
+            else acertou=false;
         }else{
             acertou=ag>=2;
         }
@@ -7227,7 +7306,8 @@ function labEstadoPublicoAlvoHtml_(t){
         !graves&&serios?'🟠 Seriamente ferido':'',
         st.sangrando?'🩸 Sangrando':'',
         st.derrubado?'💥 Derrubado':'',
-        st.armaDanificada?'⚔️ Arma/equipamento danificado':''
+        st.armaDanificada?'⚔️ Arma/equipamento danificado':'',
+        st.atordoado?'✨ Atordoado':''
     ].filter(Boolean);
     return `<div style="margin-top:8px;padding:7px 9px;border-radius:7px;background:rgba(255,255,255,.04);color:#d9d9e8;"><strong>Estado visível de ${escaparHtmlInventario_(t.nome)}:</strong> ${estados.length?estados.join(' · '):'sem condição evidente'}</div>`;
 }
@@ -7379,6 +7459,29 @@ function labRenderActionPanel_(){
     const t=labTokenAtual_(),c=labCharToken_(t);
     if(!t||!c){el.style.display='none';return;}
 
+
+    if(t.acaoAuxLab?.tipo==='teste_pericia'){
+        const ps=labPericiasTeste_(t),per=ps.find(p=>batalhaTokenPericia_(p)===t.acaoAuxLab.periciaToken)||ps[0];if(per)t.acaoAuxLab.periciaToken=batalhaTokenPericia_(per);
+        el.innerHTML=`<div><strong style="color:#9ee7ff;">🎲 Teste de Perícia</strong><div style="display:grid;grid-template-columns:minmax(260px,1fr) auto auto;gap:8px;align-items:end;margin-top:8px;">
+          <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Perícia</small><select onchange="labTesteSelecionar_(this.value)" style="width:100%;margin:0;">${ps.map(x=>`<option value="${batalhaTokenPericia_(x)}" ${batalhaTokenPericia_(x)===t.acaoAuxLab.periciaToken?'selected':''}>${escaparHtmlInventario_(getNome(x))} (${labValorTeste_(t,x)}%)</option>`).join('')}</select></label>
+          <button class="btn-small btn-select" onclick="labExecutarTeste_()" style="height:48px;min-width:180px;">🎲 Testar (1 AÇ)</button><button class="btn-small" onclick="labCancelarAcaoAux_()" style="height:48px;min-width:110px;">Cancelar</button></div>${labResumoPVHtml_(t,'SEUS PV')}</div>`;return;
+    }
+
+    if(t.acaoAuxLab?.tipo==='psiquismo'){
+        const poderes=labPsiPoderes_(t),p=poderes.find(x=>x.id===t.acaoAuxLab.poderId)||poderes[0];if(!p){t.acaoAuxLab=null;labSalvarLocal_();labRender_();return;}
+        t.acaoAuxLab.poderId=p.id;const alvos=[t,...(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id))],alvo=labTokenPorId_(t.acaoAuxLab.alvoId)||t,feridas=labFeridasTrataveis_(alvo);
+        if(p.id==='cura_psi'&&!feridas.some(x=>x.local===t.acaoAuxLab.local))t.acaoAuxLab.local=feridas[0]?.local||'';
+        const min=Math.max(0,Number(p.custo||0)),rest=labPsiRestantes_(t),valor=labPsiValor_(t,p);
+        el.innerHTML=`<div><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;"><strong style="color:#d8b4ff;">🔮 Psiquismo</strong><span style="color:#e6d4ff;font-weight:700;">PP ${rest}/${labPsiMax_(t)}</span></div>
+          <div style="display:grid;grid-template-columns:minmax(210px,1.25fr) minmax(150px,.9fr) 100px ${p.id==='cura_psi'?'minmax(150px,.9fr) ':''}auto auto;gap:8px;align-items:end;margin-top:8px;">
+          <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Poder</small><select onchange="labPsiSelecionarPoder_(this.value)" style="width:100%;margin:0;">${poderes.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${x.id===p.id?'selected':''}>${escaparHtmlInventario_(getNome(x))} · ${x.esfera} · A${Number(x.arco||1)}</option>`).join('')}</select></label>
+          <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Alvo</small><select onchange="labPsiSelecionarAlvo_(this.value)" style="width:100%;margin:0;">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(alvo.id)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
+          <label style="margin:0;"><small style="display:block;margin-bottom:4px;">PP</small><input type="number" min="${min}" max="${rest}" value="${Math.max(min,Number(t.acaoAuxLab.custo||min))}" onchange="labPsiCusto_(this.value)" style="width:100%;height:48px;margin:0;text-align:center;"></label>
+          ${p.id==='cura_psi'?`<label style="margin:0;"><small style="display:block;margin-bottom:4px;">Local</small><select onchange="labPsiSelecionarLocal_(this.value)" style="width:100%;margin:0;">${feridas.map(x=>`<option value="${escaparHtmlInventario_(x.local)}" ${x.local===t.acaoAuxLab.local?'selected':''}>${escaparHtmlInventario_(x.local)}</option>`).join('')||'<option value="">Sem ferida</option>'}</select></label>`:''}
+          <button class="btn-small btn-select" onclick="labUsarPsi_()" ${rest<min?'disabled':''} style="height:48px;min-width:165px;">✨ Usar (1 AÇ)</button><button class="btn-small" onclick="labCancelarAcaoAux_()" style="height:48px;min-width:100px;">Cancelar</button></div>
+          <div style="margin-top:7px;color:#b9add8;"><b>Teste ${valor}%</b> · custo mínimo ${min} PP · ${escaparHtmlInventario_(getObservacaoPsi_(p))}</div>${labResumoPVHtml_(t,'SEUS PV')}${alvo&&String(alvo.id)!==String(t.id)?labEstadoPublicoAlvoHtml_(alvo):''}</div>`;return;
+    }
+
     if(t.primeirosSocorrosLab){
         const ps=t.primeirosSocorrosLab,alvo=labTokenPorId_(ps.alvoId),st=labGarantirSnapshotCombate_(alvo);
         if(!alvo||!st||st.morto){
@@ -7441,6 +7544,8 @@ function labRenderActionPanel_(){
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;">
         <button class="btn-small" onclick="labLevantar_()" ${!labGarantirSnapshotCombate_(t)?.derrubado||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} title="${labGarantirSnapshotCombate_(t)?.derrubado?'Gasta 1 AÇ para se levantar.':'Disponível quando o personagem estiver Derrubado.'}" style="height:44px;min-width:160px;font-size:.96em;">⬆️ Levantar (1 AÇ)</button>
+        <button class="btn-small" onclick="labAbrirTeste_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:160px;font-size:.96em;">🎲 Teste (1 AÇ)</button>
+        ${temPsiquismoInvestido_(labCharToken_(t)||t.charLab)?`<button class="btn-small" onclick="labAbrirPsi_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:180px;font-size:.96em;color:#e4c7ff;">🔮 Psiquismo · ${labPsiRestantes_(t)}/${labPsiMax_(t)} PP</button>`:''}
         ${labPrimeirosSocorrosPericia_(t)?`<button class="btn-small" onclick="labAbrirPrimeirosSocorros_()" ${!labPodePrimeirosSocorros_(t)||Number(t.acoesAtuaisLab||0)<=0||!(labEstado_.tokens||[]).some(x=>labFeridasTrataveis_(x).length&&!labGarantirSnapshotCombate_(x)?.morto)?'disabled':''} title="Escolha paciente e localização ferida. Iniciar custa 1 AÇ e encerra a oportunidade." style="height:44px;min-width:210px;font-size:.96em;">🩹 Primeiros Socorros</button>`:''}
       </div>
       ${t?labResumoPVHtml_(t,'SEUS PV'):''}
@@ -7490,6 +7595,34 @@ function labOverlayMovimentoHtml_(t,ppm){
     const alc=(labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id))?labAlcanceSelecionado_(t):0;
     if(alc>0){const r=alc*ppm;h+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${2*r}px;height:${2*r}px;border-radius:50%;border:2px dotted rgba(255,105,105,.82);pointer-events:none"></div>`;}return h;
 }
+
+function labHoverConteudo_(t){
+    if(!t)return '';
+    const st=labGarantirSnapshotCombate_(t);
+    const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" style="width:100%;height:190px;object-fit:contain;background:rgba(255,255,255,.04);border-radius:9px;">`
+        :`<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:48px;">${String(t.id).startsWith('dummy:')?'🎯':'👤'}</div>`;
+    const estados=[st?.morto?'💀 Morto':'',st?.inconsciente?'💤 Inconsciente':'',st?.sangrando?'🩸 Sangrando':'',st?.derrubado?'💥 Derrubado':'',st?.atordoado?'✨ Atordoado':''].filter(Boolean).join(' · ');
+    let mestre='';
+    if(batalhaEhMestre_()&&st){
+        const locs=Object.keys(st.hitMax||{});
+        mestre=`<div style="margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.12);">
+          <div style="font-size:.78em;color:#ffd166;font-weight:700;margin-bottom:4px;">VISÃO DO MESTRE · PV / ARMADURA</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;font-size:.78em;">${locs.map(loc=>`<span>${escaparHtmlInventario_(loc)}</span><span style="text-align:right;"><b>${Number(st.hit?.[loc]??0)}/${Number(st.hitMax?.[loc]??0)}</b> · PA ${Number(st.armor?.[loc]||0)}</span>`).join('')}</div>
+        </div>`;
+    }
+    return `${img}<div style="margin-top:7px;font-size:1.05em;font-weight:800;color:#fff;">${escaparHtmlInventario_(t.nome)}</div>
+      <div style="font-size:.82em;color:#9fdfff;">${escaparHtmlInventario_(t.tipo||'')}</div>
+      ${estados?`<div style="margin-top:5px;color:#ffb0b0;font-size:.82em;">${estados}</div>`:''}${mestre}`;
+}
+window.labHoverShow_=function(ev,id){const t=labTokenPorId_(id),el=document.getElementById('labHoverCard');if(!t||!el)return;el.innerHTML=labHoverConteudo_(t);el.style.display='block';labHoverMove_(ev);};
+window.labHoverMove_=function(ev){
+    const el=document.getElementById('labHoverCard');if(!el||el.style.display==='none')return;
+    const pad=16,w=el.offsetWidth||300,h=el.offsetHeight||300;let x=Number(ev.clientX||0)+18,y=Number(ev.clientY||0)+18;
+    if(x+w>window.innerWidth-pad)x=Number(ev.clientX||0)-w-18;if(y+h>window.innerHeight-pad)y=Number(ev.clientY||0)-h-18;
+    el.style.left=`${Math.max(pad,x)}px`;el.style.top=`${Math.max(pad,y)}px`;
+};
+window.labHoverHide_=function(){const el=document.getElementById('labHoverCard');if(el)el.style.display='none';};
+
 function labRender_(){
     labSanearEstado_();
     const map=document.getElementById('labMetricMap');if(!map)return;const ppm=Number(labEstado_.pxPorMetro||48);
@@ -7498,7 +7631,7 @@ function labRender_(){
     const tokens=labEstado_.tokens.map(t=>{const d=Math.max(24,t.diametroM*ppm),sel=String(t.id)===String(labEstado_.selecionadoId),turno=labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id);
         const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
         const alvoAtual=labEstado_.fase==='combate'&&String(labTokenAtual_()?.alvoLab)===String(t.id);
-        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${t.iniciativaLab!==null&&t.iniciativaLab!==''&&Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}${t.combateLab?.morto?' · 💀':t.combateLab?.inconsciente?' · 💤':''}</div></div>`;}).join('');
+        return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onmouseenter="labHoverShow_(event,this.dataset.id)" onmousemove="labHoverMove_(event)" onmouseleave="labHoverHide_()" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${t.iniciativaLab!==null&&t.iniciativaLab!==''&&Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}${t.combateLab?.morto?' · 💀':t.combateLab?.inconsciente?' · 💤':''}</div></div>`;}).join('');
     map.innerHTML=overlay+tokens;labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
@@ -14658,7 +14791,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.20.1: estados limpos por combate, Esquiva oposta Mythras, resultados privados, ações visíveis e alcances naturais revisados -->
+<!-- Mesa Estelar v46.21.0: desempate por margem, testes de perícia, Psiquismo inicial e hover detalhado dos tokens -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
