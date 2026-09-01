@@ -6613,7 +6613,7 @@ function labTokenAtual_(){
     const id=labEstado_.ordemIniciativa[Math.max(0,Math.min(labEstado_.ordemIniciativa.length-1,Number(labEstado_.turnoIndex||0)))];
     return (labEstado_.tokens||[]).find(t=>String(t.id)===String(id))||null;
 }
-function labPrepararNovaRodada_(){for(const t of labTokensCombatentes_()){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=labMovimentoPorAcao_(t)>0;}}
+function labPrepararNovaRodada_(){for(const t of labTokensCombatentes_()){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=labMovimentoPorAcao_(t)>0;t.passagensLab=0;}}
 window.labIniciarCombate_=function(){
     const cs=labTokensCombatentes_();if(!cs.length){notificar_('Adicione participantes antes de iniciar o combate.','aviso');return;}
     for(const t of labEstado_.tokens||[]){
@@ -6633,6 +6633,21 @@ window.labIniciarCombate_=function(){
     labEstado_.ordemIniciativa=cs.map(t=>String(t.id));labEstado_.turnoIndex=0;labEstado_.rodada=1;labEstado_.fase='combate';labEstado_.pendenciaLab=null;labEstado_.danoPendenteLab=null;labPrepararNovaRodada_();
     const atual=labTokenAtual_();if(atual)labEstado_.selecionadoId=String(atual.id);labSalvarLocal_();labRender_();
 };
+
+window.labPassarAcao_=function(){
+    if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return;
+    const t=labTokenAtual_();if(!t)return;
+    const n=Math.max(0,Number(t.passagensLab||0));
+    if(n>0){
+        if(Number(t.acoesAtuaisLab||0)<=0)return;
+        t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);
+        t.ultimoResultadoProprioLab='Passou novamente: 1 AÇ gasta.';
+    }else t.ultimoResultadoProprioLab='Passou a primeira oportunidade da rodada sem gastar AÇ.';
+    t.passagensLab=n+1;
+    labSalvarLocal_();
+    window.labEncerrarOportunidade_();
+};
+
 window.labEncerrarOportunidade_=function(){
     if(labEstado_.fase!=='combate')return;
     if(labEstado_.pendenciaLab||labEstado_.danoPendenteLab){notificar_('Resolva a defesa e o dano pendentes antes de encerrar a oportunidade.','aviso');return;}
@@ -6866,8 +6881,18 @@ window.labMudarDefesa_=function(v){
 
 function labPericiasTeste_(t){
     const c=labCharToken_(t);if(!c)return [];
-    const base=batalhaListaPericias_(c)||[];
-    const espec=(especializacoesDB||[]).filter(p=>c?.especializacoes?.[p.id]).map(p=>({...p,__especializacao:true}));
+    const base=(batalhaListaPericias_(c)||[]).filter(p=>{
+        const reg=c?.pericias?.[p.id];
+        if(typeof reg==='number')return reg>0;
+        if(reg&&typeof reg==='object')return Number(reg.pontos||reg.investido||reg.treino||0)>0;
+        return false;
+    });
+    const espec=(especializacoesDB||[]).filter(p=>{
+        const reg=c?.especializacoes?.[p.id];
+        if(typeof reg==='number')return reg>0;
+        if(reg&&typeof reg==='object')return Number(reg.pontos||reg.investido||reg.treino||reg.valor||1)>0;
+        return !!reg;
+    }).map(p=>({...p,__especializacao:true}));
     const vistos=new Set();
     return [...base,...espec].filter(p=>{const k=`${p.__especializacao?'e':'p'}:${p.id}`;if(vistos.has(k))return false;vistos.add(k);return true;})
         .sort((a,b)=>getNome(a).localeCompare(getNome(b)));
@@ -6884,7 +6909,15 @@ window.labExecutarTeste_=function(){
     const t=labTokenAtual_(),a=t?.acaoAuxLab;if(!t||a?.tipo!=='teste_pericia'||Number(t.acoesAtuaisLab||0)<=0)return;
     const per=labPericiasTeste_(t).find(p=>batalhaTokenPericia_(p)===a.periciaToken);if(!per)return;
     const valor=labValorTeste_(t,per),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
-    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);t.acaoAuxLab=null;t.ultimoResultadoProprioLab=`Teste: ${getNome(per)} ${roll}/${valor} → ${r.grau}.`;
+    t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);t.acaoAuxLab=null;
+    let efeito='';
+    const nome=normalizarTextoCombate_(getNome(per)),sucesso=batalhaResultadoGradeValor_(r.grau)>=2;
+    if(sucesso&&/atlet|corrida|acrob/.test(nome)){t.movimentoGratisDisponivel=true;efeito=' · Mobilidade: recupera 1 m de deslocamento gratuito nesta oportunidade.';}
+    else if(sucesso&&/percep|observ|vigil|sentid/.test(nome)){t.bonusPercepcaoLab=1;efeito=' · Percepção: vantagem informacional até o fim desta oportunidade (base para ocultação/furtividade).';}
+    else if(sucesso&&/furtiv|stealth/.test(nome)){t.furtivoLab=true;efeito=' · Furtividade: estado furtivo provisório ativado; será confrontado por Percepção quando implementarmos linha de visão.';}
+    else if(sucesso&&/primeiros socorros|medic|cura/.test(nome)){efeito=' · Sucesso técnico; para curar PV use a ação específica Primeiros Socorros.';}
+    else if(sucesso&&/forca|força|muscul|briga/.test(nome)){t.bonusForcaLab=1;efeito=' · Esforço físico bem-sucedido; pode ser usado pelo mestre para empurrar, romper ou escapar de agarrões.';}
+    t.ultimoResultadoProprioLab=`Teste: ${getNome(per)} ${roll}/${valor} → ${r.grau}${efeito}.`;
     try{somDado_();if(r.grau==='Crítico')somCritico_();else if(r.grau==='Fiasco')somFiasco_();}catch(_){}
     labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();
 };
@@ -6919,14 +6952,22 @@ window.labUsarPsi_=function(){
     const valor=labPsiValor_(t,p),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
     t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);t.psiGastosLab=Math.max(0,Number(t.psiGastosLab||0))+gasto;
     let efeito='O poder não produziu efeito.';
+    if(r.grau==='Fiasco'&&labPsiRestantes_(t)>0){t.psiGastosLab++;efeito='Fiasco psíquico: perde 1 PP adicional.';}
     if(batalhaResultadoGradeValor_(r.grau)>=2){
         if(p.id==='cura_psi'){
             const st=labGarantirSnapshotCombate_(alvo),feridas=labFeridasTrataveis_(alvo);let loc=a.local&&feridas.some(x=>x.local===a.local)?a.local:feridas[0]?.local;
             if(loc){const antes=Number(st.hit?.[loc]||0),max=Number(st.hitMax?.[loc]||0),cura=Math.min(gasto,Math.max(0,max-antes));st.hit[loc]=Math.min(max,antes+cura);labReavaliarFerimento_(alvo,loc);efeito=`Cura psíquica restaurou ${cura} PV em ${loc}.`;}else efeito='O alvo não possui ferimento tratável.';
         }else if(p.id==='impulso'){labPsiEmpurrar_(t,alvo,5);efeito=`${alvo.nome} foi impulsionado aproximadamente 5 m.`;}
         else if(p.id==='atordoar_psi'||p.id==='grito_psiquico'){labGarantirSnapshotCombate_(alvo).atordoado=true;efeito=`${alvo.nome} ficou Atordoado (duração provisória).`;}
-        else if(p.id==='salto')efeito='Salto psíquico ativado; deslocamento especial será refinado na próxima etapa.';
-        else efeito=`${getNome(p)} ativado. Efeito específico ainda narrativo nesta etapa.`;
+        else if(p.id==='salto'){t.movimentoGratisDisponivel=true;efeito='Salto psíquico ativado: o usuário recupera o deslocamento gratuito nesta oportunidade.';}
+        else{
+            const pn=normalizarTextoCombate_(`${p.id||''} ${getNome(p)} ${p.esfera||''}`);
+            if(/escudo|barreira|protec|defesa/.test(pn)){labGarantirSnapshotCombate_(t).escudoPsi=Math.max(1,gasto);efeito=`Escudo psíquico ativo: ${Math.max(1,gasto)} ponto(s) de proteção psíquica provisória.`;}
+            else if(/telepat|mente|mental|ler mente/.test(pn)){labGarantirSnapshotCombate_(alvo).marcadoPsi=true;efeito=`Contato mental estabelecido com ${alvo.nome}; o mestre pode revelar informação compatível com o poder.`;}
+            else if(/telecin|telek|empurr|mover/.test(pn)){labPsiEmpurrar_(t,alvo,Math.max(2,Math.min(10,gasto*2)));efeito=`${alvo.nome} foi deslocado telecineticamente ${Math.max(2,Math.min(10,gasto*2))} m.`;}
+            else if(/dor|ataque|choque|raio|ferir/.test(pn)){const st=labGarantirSnapshotCombate_(alvo),locs=Object.keys(st.hitMax||{});const loc=locs[Math.floor(Math.random()*Math.max(1,locs.length))];if(loc){const dano=Math.max(1,gasto);st.hit[loc]=Number(st.hit?.[loc]||0)-dano;labReavaliarFerimento_(alvo,loc);efeito=`Ataque psíquico causou ${dano} de dano em ${loc}.`;} }
+            else efeito=`${getNome(p)} ativado com sucesso; o gasto de PP e o teste já foram aplicados, mas este poder ainda exige adjudicação narrativa do mestre.`;
+        }
     }
     t.ultimoResultadoProprioLab=`Psiquismo: ${getNome(p)} · ${p.esfera} ${roll}/${valor} → ${r.grau} · gasto ${gasto} PP. ${efeito}`;t.acaoAuxLab=null;try{somMagico_();}catch(_){}
     labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();
@@ -7544,6 +7585,7 @@ function labRenderActionPanel_(){
         <label style="margin:0;"><small style="display:block;margin-bottom:4px;visibility:hidden;">Ação</small><button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;min-width:0;padding:0 12px;font-size:1em;margin:0;box-sizing:border-box;white-space:nowrap;">🎲 Atacar (1 AÇ)</button></label>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;">
+        <button class="btn-small" onclick="labPassarAcao_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} title="${Number(t.passagensLab||0)===0?'Primeira passagem da rodada: não gasta AÇ.':'Passagens seguintes nesta rodada custam 1 AÇ.'}" style="height:44px;min-width:185px;font-size:.96em;">⏭ ${Number(t.passagensLab||0)===0?'Passar (grátis)':'Passar (1 AÇ)'}</button>
         <button class="btn-small" onclick="labLevantar_()" ${!labGarantirSnapshotCombate_(t)?.derrubado||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} title="${labGarantirSnapshotCombate_(t)?.derrubado?'Gasta 1 AÇ para se levantar.':'Disponível quando o personagem estiver Derrubado.'}" style="height:44px;min-width:160px;font-size:.96em;">⬆️ Levantar (1 AÇ)</button>
         <button class="btn-small" onclick="labAbrirTeste_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:160px;font-size:.96em;">🎲 Teste (1 AÇ)</button>
         ${temPsiquismoInvestido_(labCharToken_(t)||t.charLab)?`<button class="btn-small" onclick="labAbrirPsi_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:180px;font-size:.96em;color:#e4c7ff;">🔮 Psiquismo · ${labPsiRestantes_(t)}/${labPsiMax_(t)} PP</button>`:''}
@@ -14792,7 +14834,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.21.1: revisão do banco de criaturas, alcances/movimentos/anatomia explícitos e Derrubar por propriedades -->
+<!-- Mesa Estelar v46.22.0: Passar restaurado, testes só de perícias investidas, efeitos úteis iniciais e Psiquismo funcional -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
