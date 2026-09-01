@@ -398,6 +398,15 @@
 #labMasterMapLoader .btn-small{height:40px;}
 @media (max-width:900px){#labParticipanteSelect,#labMapaSalvoSelect{width:min(72vw,300px)!important;min-width:180px;}}
 </style>
+
+<style id="mesaProgressaoV4637">
+.creation-locked input[data-creation-field],.creation-locked select[data-creation-field]{opacity:.72;cursor:not-allowed}
+.creation-guide-highlight{outline:3px solid #ffd166!important;outline-offset:4px;position:relative;z-index:12002!important}
+#creationGuideBubble{position:fixed;z-index:12003;max-width:390px;padding:14px 16px;border-radius:12px;background:#151525;border:1px solid #ffd166;color:#f4f4f6;box-shadow:0 12px 38px rgba(0,0,0,.48);line-height:1.45}
+#creationGuideBubble .guide-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+#gmXpPermitidos{min-height:132px}
+.xp-grant-card{padding:12px;border-radius:10px;background:rgba(155,89,182,.10);border:1px solid rgba(155,89,182,.28);margin-top:10px}
+</style>
 </head>
 <body>
     <div class="galaxy-bg"></div>
@@ -631,9 +640,14 @@
 
                 <div id="characterSection" class="hidden">
                     <div id="masterCharacterControlBanner" class="hidden" style="margin:0 0 14px;padding:12px 16px;border-radius:10px;background:rgba(255,193,7,.10);border:1px solid rgba(255,193,7,.35);color:#ffd166;font-weight:600;"></div>
+                    <div id="charProgressionBanner" class="hidden" style="margin:0 0 14px;padding:12px 16px;border-radius:10px;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.28);color:#c8f7ff;"></div>
+                    <div id="charCreationGuideBar" class="hidden" style="margin:0 0 12px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;padding:10px 12px;border-radius:10px;background:rgba(155,89,182,.10);border:1px solid rgba(155,89,182,.28);">
+                        <span>🧭 <b>Criação de personagem</b> · guia passo a passo</span>
+                        <button class="btn-small" type="button" onclick="iniciarTutorialCriacao_()">▶ Mostrar guia</button>
+                    </div>
                     <div class="char-tabs">
                         <button class="char-tab-btn active" onclick="mostrarCharAba('personagem', this)" data-i18n="charTabCharacter">📄 Personagem</button>
-                        <button class="char-tab-btn" onclick="mostrarCharAba('pericias', this)" data-i18n="charTabSkills">📚 Perícias</button>
+                        <button class="char-tab-btn" id="charSkillsTabBtn" onclick="mostrarCharAba('pericias', this)" data-i18n="charTabSkills">📚 Perícias</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('inventario', this)" data-i18n="charTabInventory">🎒 Inventário</button>
                         <button class="char-tab-btn" id="charOtherTraitsTabBtn" onclick="mostrarCharAba('combate', this)">🧩 Outras Características</button>
                         <button class="char-tab-btn" onclick="mostrarCharAba('anotacoes', this)" data-i18n="charTabNotes">📔 Anotações</button>
@@ -681,19 +695,19 @@
 
                         <div class="form-section">
                             <h3 data-i18n="editChar2">Editar Personagem</h3>
-                            <div class="form-group"><label data-i18n="nameLabel">Nome:</label><input type="text" id="editName"></div>
+                            <div class="form-group" id="creationNameGroup"><label data-i18n="nameLabel">Nome:</label><input type="text" id="editName"></div>
                             <div class="form-group"><label data-i18n="race">Raça:</label><input type="text" id="editRace" value="Humano"></div>
                             <div class="form-group"><label data-i18n="genderLabel">Gênero:</label><select id="editSex"><option value="Masculino">Masculino</option><option value="Feminino">Feminino</option><option value="Hermafrodita">Hermafrodita</option><option value="Andrógeno">Andrógeno</option><option value="Neutro">Neutro</option></select></div>
                             <div class="form-group"><label data-i18n="charImageUrl">Imagem do Personagem (URL):</label><input type="url" id="editCharImage" placeholder="https://..." oninput="previewImagemPersonagem()"></div>
                             <div class="form-group"><label data-i18n="orUpload">Ou fazer upload:</label><input type="file" id="editCharImageFile" accept="image/*" onchange="handleCharacterImageUpload(event)"><small id="charImageUploadStatus" style="display:block; opacity:.75; margin-top:6px;"></small></div>
                             <div class="form-group"><div class="avatar" id="editCharImagePreview" style="width:120px;height:120px;"><span>👤</span></div></div>
-                            <div class="form-group"><label data-i18n="origin">Origem:</label><select id="editOrigin"></select></div>
-                            <div class="form-group"><label data-i18n="career">Carreira:</label><select id="editCareer"></select></div>
+                            <div class="form-group" id="creationOriginGroup"><label data-i18n="origin">Origem:</label><select id="editOrigin"></select></div>
+                            <div class="form-group" id="creationCareerGroup"><label data-i18n="career">Carreira:</label><select id="editCareer"></select></div>
                             <div class="form-group"><label data-i18n="bodyType">Tipo Corporal:</label><select id="editBodyType" onchange="calcularAlturaPesoDoFormulario()"><option value="Leve">Leve</option><option value="Médio" selected>Médio</option><option value="Pesado">Pesado</option></select></div>
                             
                             <div class="total-points"><div class="value" id="totalPoints">70</div><div class="limit">/ 80 pontos</div></div>
                             
-                            <div style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; margin:20px 0;">
+                            <div id="creationAttributesGrid" style="display:grid; grid-template-columns: repeat(7, 1fr); gap:10px; margin:20px 0;">
                                 <div><label data-i18n="FOR">FOR</label><input type="number" id="editFOR" min="3" max="18" value="10" oninput="validarAtributos()"></div>
                                 <div><label data-i18n="CON">CON</label><input type="number" id="editCON" min="3" max="18" value="10" oninput="validarAtributos()"></div>
                                 <div><label data-i18n="TAM">TAM</label><input type="number" id="editTAM" min="6" max="18" value="10" oninput="validarAtributos(); calcularAlturaPesoDoFormulario()"></div>
@@ -703,7 +717,7 @@
                                 <div><label data-i18n="CAR">CAR</label><input type="number" id="editCAR" min="3" max="18" value="10" oninput="validarAtributos()"></div>
                             </div>
                             
-                            <button class="btn-save" onclick="salvarPersonagem()" data-i18n="saveSimple">💾 Salvar</button>
+                            <button class="btn-save" id="saveCharacterBtn" onclick="salvarPersonagem()" data-i18n="saveSimple">💾 Salvar</button>
                         </div>
                     </div>
 
@@ -764,7 +778,8 @@
                                 <div id="psiPowersContainer"></div>
                             </div>
 
-                            <button class="btn-save" onclick="salvarPericias()" style="margin-top: 20px;" data-i18n="saveSkills">💾 Salvar Perícias</button>
+                            <div id="xpPendingPanel" class="hidden" style="margin-top:20px;"></div>
+                            <button class="btn-save" id="saveSkillsBtn" onclick="salvarPericias()" style="margin-top: 20px;" data-i18n="saveSkills">💾 Salvar Perícias</button>
                         </div>
                     </div>
 
@@ -1282,6 +1297,27 @@
                                     <button class="btn-small" style="width:100%;min-height:44px;" type="button" onclick="novaSessaoCampanha_()">🎲 Nova sessão</button>
                                 </div>
                             </div>
+                            <div style="margin-top:18px;padding:14px;border-radius:12px;background:rgba(0,212,255,.055);border:1px solid rgba(0,212,255,.20);">
+                                <h4 style="margin:0 0 12px;color:#8feaff;">🩺 Ajustes de personagens</h4>
+                                <div style="display:grid;grid-template-columns:minmax(220px,1.25fr) minmax(190px,1fr) minmax(110px,.55fr) minmax(170px,.8fr);gap:10px;align-items:end;">
+                                    <div class="form-group" style="margin:0;"><label>Personagem</label><select id="gmAjusteAlvo"><option value="">Escolher personagem...</option></select></div>
+                                    <div class="form-group" style="margin:0;"><label>Ajuste</label><select id="gmAjusteTipo"><option value="pv">PV (+ cura / − dano)</option><option value="pv_total">Restaurar todos os PV</option><option value="magia">Pontos de Magia (+/−)</option><option value="magia_total">Restaurar Magia</option><option value="sorte">Pontos de Sorte (+/−)</option><option value="sorte_total">Restaurar Sorte</option><option value="dificuldade">Mod. dificuldade global</option></select></div>
+                                    <div class="form-group" style="margin:0;"><label>Valor</label><input id="gmAjusteValor" type="number" value="1" step="1"></div>
+                                    <div class="form-group" style="margin:0;"><label>Local de PV</label><select id="gmAjusteLocal"><option value="PV Global">PV Global / geral</option><option>Cabeça</option><option>Peito</option><option>Abdômen</option><option>Braço Direito</option><option>Braço Esquerdo</option><option>Perna Direita</option><option>Perna Esquerda</option></select></div>
+                                </div>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn-small" onclick="aplicarAjusteCampanha_(false)">Aplicar ao selecionado</button><button class="btn-small" onclick="aplicarAjusteCampanha_(true)">Aplicar a todos</button></div>
+                                <small style="display:block;color:#9db7c0;margin-top:8px;">Dificuldade: valor positivo torna os testes mais difíceis; negativo facilita. O modificador fica no personagem até o mestre alterá-lo novamente.</small>
+                            </div>
+                            <div style="margin-top:14px;padding:14px;border-radius:12px;background:rgba(155,89,182,.075);border:1px solid rgba(155,89,182,.25);">
+                                <h4 style="margin:0 0 12px;color:#d8b4ff;">⭐ Conceder XP direcionado</h4>
+                                <div style="display:grid;grid-template-columns:minmax(220px,1fr) 120px minmax(330px,1.8fr);gap:10px;align-items:end;">
+                                    <div class="form-group" style="margin:0;"><label>Personagem</label><select id="gmXpAlvo"><option value="">Escolher personagem...</option></select></div>
+                                    <div class="form-group" style="margin:0;"><label>Pontos de XP</label><input id="gmXpPontos" type="number" min="1" step="1" value="1"></div>
+                                    <div class="form-group" style="margin:0;"><label>Perícias/especializações permitidas</label><select id="gmXpPermitidos" multiple size="6"></select></div>
+                                </div>
+                                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;"><button class="btn-small" onclick="concederXpDirecionado_()">⭐ Conceder XP</button><small style="color:#bcaad0;">O aviso permanece na conta do jogador até ele gastar todos os pontos concedidos.</small></div>
+                            </div>
+
                             <div class="form-group"><label>Resumo atual:</label><textarea id="gmCampanhaResumo" rows="4" placeholder="Situação geral, missão em andamento, acontecimentos importantes..."></textarea></div>
                             <button class="btn-save" onclick="salvarEstadoCampanha()" style="width:auto;">💾 Salvar estado da campanha</button>
                         </div>
@@ -2848,6 +2884,7 @@ window.novoPersonagem = async () => {
     }
     const recursosInput = document.getElementById('editRecursos');
     if (recursosInput) recursosInput.value = recursosIniciaisNovo;
+    if(userData?.role!=='mestre')setTimeout(()=>iniciarTutorialCriacao_(),700);
 };
 
 function personagemAtualEhNPC_() {
@@ -3175,9 +3212,13 @@ function preencherFormulario(data) {
         document.getElementById(`edit${attr}`).value = attrs[attr] || 10;
     });
     calcularTotal();
+    aplicarBloqueioCriacao_(data);
+    renderizarAvisosProgressao_(data);
 }
 
 window.salvarPersonagem = async () => {
+    const existente=(userCharacters||[]).find(c=>c.id===currentCharId);
+    if(existente && personagemCriacaoConcluida_(existente) && userData?.role!=='mestre'){notificar_('A criação deste personagem já foi concluída. Alterações estruturais exigem intervenção do mestre.','aviso',5000);return;}
     const nome = document.getElementById('editName').value.trim();
     if (!nome) { alert('Preencha o nome'); return; }
     
@@ -3230,6 +3271,8 @@ window.salvarPersonagem = async () => {
     }
     
     await carregarPersonagens();
+    const salvo=(userCharacters||[]).find(c=>c.id===currentCharId);
+    if(salvo)await verificarEConcluirCriacao_(salvo);
     somSalvar_();
     alert('Salvo!');
 };
@@ -4911,17 +4954,19 @@ function aplicarDificuldadeEFadiga_(char, valorBase, dificuldadeId, degrausExtra
     const escolhida = obterGrauDificuldade_(dificuldadeId);
     const indiceEscolhido = GRAUS_DIFICULDADE.findIndex(g => g.id === escolhida.id);
     const indiceFadiga = indiceMinimoDificuldadeFadiga_(char);
-    const extras = Math.max(0, parseInt(degrausExtras)||0);
+    const modMestre=parseInt(char?.modDificuldadeMestre)||0;
+    const extrasBase = parseInt(degrausExtras)||0;
 
     // Fadiga estabelece o piso de dificuldade; incompatibilidade da arma agrava depois.
     const indiceBase = Math.max(indiceEscolhido, Math.min(indiceFadiga,GRAUS_DIFICULDADE.length-1));
-    const indiceEfetivo = Math.min(GRAUS_DIFICULDADE.length - 1, indiceBase + extras);
+    const indiceEfetivo = Math.max(0,Math.min(GRAUS_DIFICULDADE.length - 1, indiceBase + extrasBase + modMestre));
     const efetiva = GRAUS_DIFICULDADE[indiceEfetivo];
     const valor = Math.max(1, Math.floor((parseInt(valorBase) || 0) * efetiva.multiplicador));
     return {
         valor, bloqueado:false, regra, escolhida, efetiva,
         degrausFadiga:Math.max(0,indiceBase-indiceEscolhido),
-        degrausExtras:extras,
+        degrausExtras:extrasBase,
+        modificadorMestre:modMestre,
         dificuldadeMinimaFadiga:GRAUS_DIFICULDADE[Math.min(indiceFadiga,GRAUS_DIFICULDADE.length-1)]?.id||'herculeo'
     };
 }
@@ -6501,7 +6546,7 @@ window.mostrarCharAba = (abaId, btn) => {
     if (currentCharId) {
         const char = userCharacters.find(c => c.id === currentCharId);
         if (char && abaId === 'pericias') {
-            document.getElementById('periciasEtapa').value = 'origem';
+            document.getElementById('periciasEtapa').value = personagemCriacaoConcluida_(char) ? 'todas' : 'origem';
             renderizarPericias(char);
         }
         if (char && abaId === 'combate') renderizarCombate(char);
@@ -11613,7 +11658,8 @@ function obterInvestimentosPericia_(dados = {}) {
         return {
             origem: Math.max(0, parseInt(dados.investimentos.origem) || 0),
             carreira: Math.max(0, parseInt(dados.investimentos.carreira) || 0),
-            hobbie: Math.max(0, parseInt(dados.investimentos.hobbie) || 0)
+            hobbie: Math.max(0, parseInt(dados.investimentos.hobbie) || 0),
+            xp: Math.max(0, parseInt(dados.investimentos.xp) || 0)
         };
     }
 
@@ -11623,13 +11669,14 @@ function obterInvestimentosPericia_(dados = {}) {
     return {
         origem: chaveLegada === 'origem' ? legado : 0,
         carreira: chaveLegada === 'carreira' ? legado : 0,
-        hobbie: chaveLegada === 'hobbie' ? legado : 0
+        hobbie: chaveLegada === 'hobbie' ? legado : 0,
+        xp: Math.max(0, parseInt(dados.xpTreino) || 0)
     };
 }
 
 function totalTreinoPericia_(dados = {}) {
     const inv = obterInvestimentosPericia_(dados);
-    return inv.origem + inv.carreira + inv.hobbie;
+    return inv.origem + inv.carreira + inv.hobbie + inv.xp;
 }
 
 function listaIds_(valor) {
@@ -11784,7 +11831,7 @@ function renderizarPericias(char) {
         const inv=obterInvestimentosPericia_(dados);
         return Number(inv[visao]||0)>0;
     };
-    const somenteLeitura = visao === 'todas';
+    const somenteLeitura = visao === 'todas' || (personagemCriacaoConcluida_(char) && !isMaster);
 
     // Enquanto edita, a linha permanece onde estava. Só "sobe" para
     // Perícias com Investimento depois de clicar Salvar Perícias.
@@ -11807,6 +11854,7 @@ function renderizarPericias(char) {
     const tabEsp=corpoEspecializacoes?.closest('table');
     if(secEsp)secEsp.style.display=(visao==='origem'||(!espNaoInvestidas.length&&!espInvestidas.length))?'none':'';
     if(tabEsp)tabEsp.style.display=(visao==='origem'||!espNaoInvestidas.length)?'none':'';
+    renderizarXpPendente_(char);
 }
 
 window.atualizarTreinoPericia = (periciaId, valor, tipo, categoria) => {
@@ -11829,7 +11877,7 @@ window.atualizarTreinoPericia = (periciaId, valor, tipo, categoria) => {
 
     inv[categoria] = valorNum;
     atual.investimentos = inv;
-    atual.treinoTotal = inv.origem + inv.carreira + inv.hobbie;
+    atual.treinoTotal = inv.origem + inv.carreira + inv.hobbie + inv.xp;
     atual.tipo = tipo;
     delete atual.treinoTotalAnterior;
     pericias[periciaId] = atual;
@@ -11857,7 +11905,7 @@ window.atualizarTreinoEspecializacao = (espId, valor, categoria) => {
 
     inv[categoria] = valorNum;
     atual.investimentos = inv;
-    atual.treinoTotal = inv.origem + inv.carreira + inv.hobbie;
+    atual.treinoTotal = inv.origem + inv.carreira + inv.hobbie + inv.xp;
     delete atual.treinoTotalAnterior;
     especializacoes[espId] = atual;
     draft.sujo=true;
@@ -11868,6 +11916,7 @@ window.salvarPericias = async () => {
     if(!currentCharId)return;
     const char=userCharacters.find(c=>c.id===currentCharId);
     if(!char)return;
+    if(personagemCriacaoConcluida_(char) && userData?.role!=='mestre'){notificar_('A ficha concluída só recebe novos pontos pelas concessões de XP.','aviso',4500);return;}
     const draft=rascunhoPericiasChar_(char);
     if(!draft)return;
     char.pericias=JSON.parse(JSON.stringify(draft.pericias||{}));
@@ -11879,6 +11928,7 @@ window.salvarPericias = async () => {
     limparRascunhoPericias_(currentCharId);
     somSalvar_();
     notificar_('Perícias salvas. Os investimentos foram organizados.','info',2600);
+    await verificarEConcluirCriacao_(char);
     renderizarPericias(char);
 };
 window.mudarEtapaPericias = () => {
@@ -13998,6 +14048,7 @@ function renderizarCampanhaMestre_() {
     ].join('');
     preencherEstadoCampanha_();
     popularAlvosFadigaMestre_();
+    popularControlesProgressaoMestre_();
     renderizarDiaCampanhaFicha_();
 }
 
@@ -16174,8 +16225,130 @@ window.labRenderObjetoPainel_=function(){
 garantirObjetosMapaPadrao_();
 setTimeout(()=>{try{labAtualizarSelectObjetosMapa_();renderizarBancoObjetosMapa_();}catch(_){}},500);
 
+
+// ============================================================
+// v46.37.0 — progressão, conclusão de ficha e ferramentas de campanha
+// ============================================================
+function personagemEhPCJogador_(c){return !!c && String(c.tipo||'pc').toLowerCase()==='pc' && c.dono!==currentUserUid;}
+function personagemCriacaoConcluida_(c){return !!c?.criacaoConcluida;}
+function totaisCriacao_(char){
+    const atr=Object.values(char?.atributos||{}).reduce((s,v)=>s+(Number(v)||0),0);
+    const tot={origem:0,carreira:0,hobbie:0};
+    for(const d of [...Object.values(char?.pericias||{}),...Object.values(char?.especializacoes||{})]){
+        const i=obterInvestimentosPericia_(d);tot.origem+=i.origem;tot.carreira+=i.carreira;tot.hobbie+=i.hobbie;
+    }
+    return {atributos:atr,...tot};
+}
+function criacaoPronta_(char){
+    const t=totaisCriacao_(char);
+    return t.atributos===Number(configuracoes.etapa1||80)&&t.origem===Number(configuracoes.etapa2||100)&&t.carreira===Number(configuracoes.etapa3||100)&&t.hobbie===Number(configuracoes.etapa4||150);
+}
+async function verificarEConcluirCriacao_(char){
+    if(!char||personagemCriacaoConcluida_(char)||userData?.role==='mestre'||String(char.tipo||'pc')!=='pc')return false;
+    if(!criacaoPronta_(char))return false;
+    char.criacaoConcluida=true;char.criacaoConcluidaEm=new Date().toISOString();
+    await setDoc(doc(db,'personagens',char.id),{criacaoConcluida:true,criacaoConcluidaEm:char.criacaoConcluidaEm},{merge:true});
+    aplicarBloqueioCriacao_(char);renderizarAvisosProgressao_(char);
+    notificar_('✅ Criação concluída. A ficha foi bloqueada; novos treinamentos agora entram apenas por XP concedido pelo mestre.','sucesso',7000);
+    return true;
+}
+function aplicarBloqueioCriacao_(char){
+    const lock=personagemCriacaoConcluida_(char)&&userData?.role!=='mestre';
+    const ids=['editName','editRace','editSex','editCharImage','editCharImageFile','editOrigin','editCareer','editBodyType','editFOR','editCON','editTAM','editDES','editINT','editPOD','editCAR'];
+    ids.forEach(id=>{const e=document.getElementById(id);if(e){e.disabled=lock;e.dataset.creationField='1';}});
+    const b=document.getElementById('saveCharacterBtn');if(b){b.disabled=lock;b.title=lock?'Ficha concluída; alterações estruturais exigem o mestre.':'';}
+    const bar=document.getElementById('charCreationGuideBar');if(bar)bar.classList.toggle('hidden',lock||userData?.role==='mestre');
+    document.getElementById('characterSection')?.classList.toggle('creation-locked',lock);
+}
+function renderizarAvisosProgressao_(char){
+    const b=document.getElementById('charProgressionBanner');if(!b||!char)return;
+    const grants=(char.xpPendentes||[]).filter(g=>Number(g.restantes||0)>0);
+    const partes=[];
+    if(personagemCriacaoConcluida_(char))partes.push('🔒 <b>Ficha concluída.</b> Origem, profissão, atributos e investimentos iniciais estão bloqueados para o jogador.');
+    if(grants.length){const n=grants.reduce((s,g)=>s+Number(g.restantes||0),0);partes.push(`⭐ <b>Você ganhou ${n} ponto(s) de XP ainda não investidos.</b> Abra a aba Perícias para escolher entre as opções autorizadas pelo mestre.`);}
+    if(!partes.length){b.classList.add('hidden');b.innerHTML='';return;}b.classList.remove('hidden');b.innerHTML=partes.join('<br>');
+}
+
+function renderizarXpPendente_(char){
+    const box=document.getElementById('xpPendingPanel');if(!box)return;
+    const grants=(char?.xpPendentes||[]).filter(g=>Number(g.restantes||0)>0);
+    if(!grants.length){box.classList.add('hidden');box.innerHTML='';return;}
+    box.classList.remove('hidden');
+    box.innerHTML=`<h3 style="color:#d8b4ff;margin:0 0 8px;">⭐ XP para investir</h3><p style="color:#bbb;margin:0 0 10px;">Estes pontos só podem ser gastos nas perícias autorizadas pelo mestre e o aviso permanece até todo o XP ser investido.</p>`+grants.map(g=>{
+        const allowed=(g.permitidos||[]);
+        return `<div class="xp-grant-card"><b>${Number(g.restantes||0)} ponto(s) restantes</b>${g.mensagem?` · ${escaparHtmlInventario_(g.mensagem)}`:''}<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:9px;">${allowed.map(a=>`<label style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0;padding:7px 9px;background:rgba(0,0,0,.15);border-radius:8px;"><span>${escaparHtmlInventario_(a.nome||a.id)}</span><input class="xp-alloc" data-grant="${escaparHtmlInventario_(g.id)}" data-tipo="${escaparHtmlInventario_(a.tipo)}" data-id="${escaparHtmlInventario_(a.id)}" type="number" min="0" max="${Number(g.restantes||0)}" value="0" style="width:72px;margin:0;"></label>`).join('')}</div><button class="btn-small" style="margin-top:9px;" onclick="investirXpPendente_('${String(g.id).replace(/'/g,"\\'")}')">Aplicar investimento de XP</button></div>`;
+    }).join('');
+}
+window.investirXpPendente_=async function(grantId){
+    const char=(userCharacters||[]).find(c=>c.id===currentCharId);if(!char)return;
+    const grants=Array.isArray(char.xpPendentes)?char.xpPendentes:[];const g=grants.find(x=>String(x.id)===String(grantId));if(!g)return;
+    const ins=[...document.querySelectorAll(`.xp-alloc[data-grant="${CSS.escape(String(grantId))}"]`)];
+    const alocs=ins.map(i=>({tipo:i.dataset.tipo,id:i.dataset.id,q:Math.max(0,Math.floor(Number(i.value)||0))})).filter(x=>x.q>0);
+    const total=alocs.reduce((s,x)=>s+x.q,0);if(total<=0){notificar_('Informe quantos pontos deseja investir.','aviso');return;}if(total>Number(g.restantes||0)){notificar_('O investimento excede o XP disponível nesta concessão.','aviso');return;}
+    char.pericias=char.pericias||{};char.especializacoes=char.especializacoes||{};
+    for(const a of alocs){const colecao=a.tipo==='especializacao'?char.especializacoes:char.pericias;const d={...(colecao[a.id]||{})};const inv=obterInvestimentosPericia_(d);inv.xp=(inv.xp||0)+a.q;d.investimentos=inv;d.treinoTotal=inv.origem+inv.carreira+inv.hobbie+inv.xp;colecao[a.id]=d;}
+    g.restantes=Math.max(0,Number(g.restantes||0)-total);char.xpPendentes=grants.filter(x=>Number(x.restantes||0)>0);
+    await setDoc(doc(db,'personagens',char.id),{pericias:char.pericias,especializacoes:char.especializacoes,xpPendentes:char.xpPendentes},{merge:true});
+    limparRascunhoPericias_(char.id);renderizarPericias(char);renderizarAvisosProgressao_(char);somSalvar_();notificar_(`⭐ ${total} ponto(s) de XP investidos.`,'sucesso',3500);
+};
+
+function popularControlesProgressaoMestre_(){
+    if(userData?.role!=='mestre')return;const pcs=(userCharacters||[]).filter(c=>String(c.tipo||'pc').toLowerCase()==='pc');
+    for(const id of ['gmAjusteAlvo','gmXpAlvo']){const s=document.getElementById(id);if(!s)continue;const v=s.value;s.innerHTML='<option value="">Escolher personagem...</option>'+pcs.map(c=>`<option value="${escaparHtmlInventario_(c.id)}">${escaparHtmlInventario_(c.nome||'Sem nome')}</option>`).join('');if(pcs.some(c=>c.id===v))s.value=v;}
+    const ps=document.getElementById('gmXpPermitidos');if(ps&&!ps.options.length){const itens=[...(periciasDB||[]).map(p=>({tipo:'pericia',id:p.id,nome:getNome(p)})),...(especializacoesDB||[]).map(e=>({tipo:'especializacao',id:e.id,nome:getNome(e)}))].sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR'));ps.innerHTML=itens.map(x=>`<option value="${x.tipo}:${escaparHtmlInventario_(x.id)}">${x.tipo==='especializacao'?'⚔️':'📚'} ${escaparHtmlInventario_(x.nome)}</option>`).join('');}
+}
+async function aplicarAjusteUm_(c,tipo,valor,local){
+    c.combate=c.combate||{};
+    if(tipo==='pv_total'){if(modoCombateAtual_()==='simplificado'){c.combate.pvGlobalAtual=calcularPVGlobalMax_(c);}else{const ms=pvMaxLocais_(c);c.combate.hitLocations={...ms};}return {combate:c.combate};}
+    if(tipo==='pv'){
+        if(modoCombateAtual_()==='simplificado'||local==='PV Global'){const max=calcularPVGlobalMax_(c),at=Number(c.combate.pvGlobalAtual??max);c.combate.pvGlobalAtual=Math.max(-max,Math.min(max,at+valor));}
+        else{const ms=pvMaxLocais_(c),max=Number(ms[local]||1);c.combate.hitLocations=c.combate.hitLocations||{};const at=Number(c.combate.hitLocations[local]??max);c.combate.hitLocations[local]=Math.max(-max,Math.min(max,at+valor));}
+        return {combate:c.combate};
+    }
+    if(tipo==='magia_total'){c.pontosMagiaGastos=0;return {pontosMagiaGastos:0};}
+    if(tipo==='magia'){const max=pontosMagiaMax_(c),atu=max-Math.max(0,Number(c.pontosMagiaGastos||0)),novo=Math.max(0,Math.min(max,atu+valor));c.pontosMagiaGastos=max-novo;return {pontosMagiaGastos:c.pontosMagiaGastos};}
+    if(tipo==='sorte_total'){const max=pontosSorteMax_(c);c.pontosSorte=max;c.pontosSorteDerivadoV15=true;return {pontosSorte:max,pontosSorteDerivadoV15:true};}
+    if(tipo==='sorte'){const max=pontosSorteMax_(c),novo=Math.max(0,Math.min(max,pontosSorteAtuais_(c)+valor));c.pontosSorte=novo;c.pontosSorteDerivadoV15=true;return {pontosSorte:novo,pontosSorteDerivadoV15:true};}
+    if(tipo==='dificuldade'){c.modDificuldadeMestre=Math.max(-3,Math.min(3,Math.floor(valor||0)));return {modDificuldadeMestre:c.modDificuldadeMestre};}
+    return {};
+}
+window.aplicarAjusteCampanha_=async function(todos=false){
+    if(userData?.role!=='mestre')return;const tipo=document.getElementById('gmAjusteTipo')?.value||'pv',valor=Math.floor(Number(document.getElementById('gmAjusteValor')?.value)||0),local=document.getElementById('gmAjusteLocal')?.value||'PV Global';
+    let alvos=(userCharacters||[]).filter(c=>String(c.tipo||'pc').toLowerCase()==='pc');if(!todos){const id=document.getElementById('gmAjusteAlvo')?.value;alvos=alvos.filter(c=>c.id===id);}if(!alvos.length){notificar_('Escolha um personagem.','aviso');return;}
+    for(const c of alvos){const patch=await aplicarAjusteUm_(c,tipo,valor,local);await setDoc(doc(db,'personagens',c.id),patch,{merge:true});}
+    const atual=obterPersonagemAtual_();if(atual){atualizarVisualizacao(atual);renderizarCombate(atual);}renderizarBatalhaCompartilhada_();notificar_(`Ajuste aplicado a ${alvos.length} personagem(ns).`,'sucesso',3200);
+};
+window.concederXpDirecionado_=async function(){
+    if(userData?.role!=='mestre')return;const id=document.getElementById('gmXpAlvo')?.value||'',pts=Math.max(1,Math.floor(Number(document.getElementById('gmXpPontos')?.value)||1)),sel=document.getElementById('gmXpPermitidos');const c=(userCharacters||[]).find(x=>x.id===id);if(!c){notificar_('Escolha um personagem.','aviso');return;}const vals=[...(sel?.selectedOptions||[])].map(o=>o.value);if(!vals.length){notificar_('Selecione ao menos uma perícia ou especialização permitida.','aviso');return;}
+    const permitidos=vals.map(v=>{const [tipo,...rest]=v.split(':');const pid=rest.join(':');const obj=tipo==='especializacao'?(especializacoesDB||[]).find(x=>x.id===pid):(periciasDB||[]).find(x=>x.id===pid);return {tipo,id:pid,nome:obj?getNome(obj):pid};});
+    const grants=Array.isArray(c.xpPendentes)?c.xpPendentes:[];grants.push({id:`xp_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,pontos:pts,restantes:pts,permitidos,criadoEm:new Date().toISOString()});c.xpPendentes=grants;await setDoc(doc(db,'personagens',c.id),{xpPendentes:grants},{merge:true});notificar_(`⭐ ${pts} XP concedidos a ${c.nome}.`,'sucesso',3500);
+};
+
+const TUTORIAL_CRIACAO_=[
+    {tab:'personagem',target:'creationNameGroup',texto:'Comece pelo nome do personagem. Insira aqui o nome que será usado na ficha e no Mapa da Mesa.'},
+    {tab:'personagem',target:'creationOriginGroup',texto:'Escolha a Origem. Ela representa a sociedade, família e ambiente em que o personagem cresceu e define as primeiras habilidades que alguém aprende nesse contexto.'},
+    {tab:'personagem',target:'creationCareerGroup',texto:'Depois escolha a Profissão/Carreira. Ela libera as perícias e especializações aprendidas por treinamento profissional.'},
+    {tab:'personagem',target:'creationAttributesGrid',texto:'Distribua todos os pontos de atributos. Para concluir a criação, a soma precisa usar exatamente o total disponível da Etapa 1.'},
+    {tab:'pericias',visao:'origem',target:'periciasEtapa',texto:'Agora vá às Perícias. Comece por Origem: estes pontos representam as habilidades iniciais aprendidas na sociedade, família e ambiente de criação.'},
+    {tab:'pericias',visao:'carreira',target:'periciasEtapa',texto:'Em seguida invista os pontos de Carreira nas habilidades profissionais permitidas pela profissão escolhida.'},
+    {tab:'pericias',visao:'hobbie',target:'periciasEtapa',texto:'Depois use os pontos de Hobbie. Eles representam interesses, prática informal e capacidades desenvolvidas fora da formação principal.'},
+    {tab:'pericias',visao:'hobbie',target:'saveSkillsBtn',texto:'Por fim, salve as perícias. Quando atributos, Origem, Carreira e Hobbie estiverem com todos os pontos distribuídos, a ficha será considerada concluída e ficará bloqueada. Depois disso, o jogador só aumenta perícias por XP concedido pelo mestre.'}
+];
+let tutorialCriacaoIdx_=0;
+function fecharTutorialCriacao_(){document.querySelectorAll('.creation-guide-highlight').forEach(e=>e.classList.remove('creation-guide-highlight'));document.getElementById('creationGuideBubble')?.remove();}
+function tutorialMostrarPasso_(){
+    fecharTutorialCriacao_();const st=TUTORIAL_CRIACAO_[tutorialCriacaoIdx_];if(!st)return;
+    const tabBtn=st.tab==='pericias'?document.getElementById('charSkillsTabBtn'):document.querySelector('.char-tab-btn[onclick*="personagem"]');if(tabBtn&&!document.getElementById(`char-${st.tab}`)?.classList.contains('active'))mostrarCharAba(st.tab,tabBtn);
+    if(st.visao){const se=document.getElementById('periciasEtapa');if(se){se.value=st.visao;const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(c)renderizarPericias(c);}}
+    setTimeout(()=>{const t=document.getElementById(st.target);if(!t)return;t.classList.add('creation-guide-highlight');t.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>{const r=t.getBoundingClientRect(),b=document.createElement('div');b.id='creationGuideBubble';b.innerHTML=`<div><b>Passo ${tutorialCriacaoIdx_+1}/${TUTORIAL_CRIACAO_.length}</b></div><div style="margin-top:6px;">${st.texto}</div><div class="guide-actions"><button class="btn-small" onclick="fecharTutorialCriacao_()">Fechar</button>${tutorialCriacaoIdx_>0?'<button class="btn-small" onclick="tutorialCriacaoAnterior_()">← Voltar</button>':''}<button class="btn-small btn-select" onclick="tutorialCriacaoProximo_()">${tutorialCriacaoIdx_===TUTORIAL_CRIACAO_.length-1?'Concluir guia':'Próximo →'}</button></div>`;document.body.appendChild(b);const br=b.getBoundingClientRect();let left=Math.max(10,Math.min(window.innerWidth-br.width-10,r.left)),top=r.bottom+10;if(top+br.height>window.innerHeight-10)top=Math.max(10,r.top-br.height-10);b.style.left=`${left}px`;b.style.top=`${top}px`;},320);},80);
+}
+window.iniciarTutorialCriacao_=function(){const c=(userCharacters||[]).find(x=>x.id===currentCharId);if(!c||personagemCriacaoConcluida_(c))return;tutorialCriacaoIdx_=0;tutorialMostrarPasso_();};
+window.tutorialCriacaoProximo_=function(){if(tutorialCriacaoIdx_>=TUTORIAL_CRIACAO_.length-1){fecharTutorialCriacao_();return;}tutorialCriacaoIdx_++;tutorialMostrarPasso_();};
+window.tutorialCriacaoAnterior_=function(){tutorialCriacaoIdx_=Math.max(0,tutorialCriacaoIdx_-1);tutorialMostrarPasso_();};
+window.fecharTutorialCriacao_=fecharTutorialCriacao_;
+
 </script>
-<!-- Mesa Estelar v46.36.0: painel alinhado; objetos persistem nos mapas; jogadores podem escolher perícia/alvo, mover o próprio token e enviar ataques ao mestre -->
+<!-- Mesa Estelar v46.37.0: ferramentas de campanha, XP direcionado, conclusão/bloqueio de criação e guia passo a passo -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 <!-- Mesa Estelar v46.30.0: entrada RGB direta para pintura e tokens sempre acima do desenho -->
