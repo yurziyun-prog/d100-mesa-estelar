@@ -459,7 +459,16 @@
                             <option value="borracha">Borracha</option>
                           </select>
                         </label>
-                        <label style="display:flex;align-items:center;gap:5px;">Cor <input id="labDrawColor" type="color" value="#ffcf4d" onchange="labDesenhoCor_(this.value)"></label>
+                        <label style="display:flex;align-items:center;gap:5px;">Cor <input id="labDrawColor" type="color" value="#ffcf4d" onchange="labDesenhoCor_(this.value)" style="width:32px;height:27px;padding:1px;"></label>
+                        <span style="display:flex;gap:3px;align-items:center;" title="Cores rápidas">
+                          <button onclick="labDesenhoCor_('#ffffff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffffff"></button>
+                          <button onclick="labDesenhoCor_('#111111')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#111111"></button>
+                          <button onclick="labDesenhoCor_('#ff5252')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ff5252"></button>
+                          <button onclick="labDesenhoCor_('#ffcf4d')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#ffcf4d"></button>
+                          <button onclick="labDesenhoCor_('#56f08a')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#56f08a"></button>
+                          <button onclick="labDesenhoCor_('#45b7ff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#45b7ff"></button>
+                          <button onclick="labDesenhoCor_('#b56cff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#b56cff"></button>
+                        </span>
                         <label style="display:flex;align-items:center;gap:5px;">Pincel <input id="labDrawSize" type="range" min="2" max="48" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:90px;"></label>
                         <button class="btn-small" onclick="labDesenhoLimpar_()" title="Apaga todos os desenhos. Pode ser desfeito com ↶.">🗑️ Limpar tudo</button>
                         <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
@@ -480,7 +489,7 @@
                         <label style="display:flex;align-items:center;gap:6px;">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
                     </div>
                     <div id="labCombatStatus" style="padding:9px 11px;margin-bottom:8px;border-radius:8px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ffe29a;"></div>
-                    <div id="labActionPanel" style="display:none;margin-bottom:8px;padding:10px 12px;border-radius:10px;background:rgba(22,18,48,.88);border:1px solid rgba(0,212,255,.28);"></div>
+                    <div id="labActionPanel" style="display:none;margin-bottom:7px;padding:7px 9px;border-radius:9px;font-size:.88em;background:rgba(22,18,48,.88);border:1px solid rgba(0,212,255,.28);"></div>
                     <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste o token para mover. Arraste a seta dourada na borda para girar a frente. A sombra mostra o deslocamento disponível em metros.</div>
                     <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
                         <div id="labHoverCard" style="display:none;position:fixed;z-index:99999;pointer-events:none;width:300px;max-height:520px;overflow:hidden;border:1px solid rgba(0,212,255,.55);border-radius:12px;background:rgba(12,14,33,.97);box-shadow:0 12px 34px rgba(0,0,0,.55);padding:10px;"></div>
@@ -1676,7 +1685,7 @@ let criaturasDB = [];
 
 const CRIATURAS_TESTE_PSI_ = [
 {id:'vampiro_generico',nome:'Vampiro Genérico',nome_en:'Generic Vampire',nome_zh:'通用吸血鬼',tipo:'Criatura',especie:'Hospedeiro racional parasitado',habitat:'Assentamentos e ruínas habitadas',comportamento:'Predador racional; preserva inteligência e memórias do hospedeiro',altura:'1.80',tamanho:'Médio',pesoCorporal:'75',FOR:15,CON:15,TAM:12,DES:14,INT:12,POD:12,CAR:8,periciasTexto:'Atletismo:58|Esquiva:55|Furtividade:62|Percepção:58',especializacoesTexto:'Combate Desarmado:65',armasTexto:'Mordida:1d6+MD|Garras:1d6+MD',alcancesAtaques:'Mordida:0.8|Garras:1.5',propriedadesAtaques:'Mordida:infeccioso,drenagem_sangue|Garras:sangramento',habilidadesTexto:'parasita_vampirico|regeneracao|hematofagia|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',habilidadesEspeciais:'parasita_vampirico|regeneracao|drenagem_sangue|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:5,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Hospedeiro racional vivo transformado pelo parasita. Mantém inteligência e parte ou totalidade das memórias. Precisa beber sangue da própria espécie. O parasita se aloja no coração e no cérebro.'},
-{id:'vampiro_psiquico',nome:'Vampiro Psíquico',nome_en:'Psychic Vampire',nome_zh:'灵能吸血鬼',tipo:'Criatura',especie:'Hospedeiro racional parasitado',habitat:'Assentamentos e ruínas habitadas',comportamento:'Predador racional, manipulador e sensitivo',altura:'1.80',tamanho:'Médio',pesoCorporal:'75',FOR:14,CON:14,TAM:12,DES:14,INT:14,POD:17,CAR:10,periciasTexto:'Atletismo:52|Esquiva:55|Furtividade:65|Percepção:65',especializacoesTexto:'Combate Desarmado:60|Psiquismo (Mente):30|Psiquismo (Sentidos):30',armasTexto:'Mordida:1d6+MD|Garras:1d6+MD',alcancesAtaques:'Mordida:0.8|Garras:1.5',propriedadesAtaques:'Mordida:infeccioso,drenagem_sangue|Garras:sangramento',habilidadesTexto:'parasita_vampirico|regeneracao|hematofagia|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata|psiquico',habilidadesEspeciais:'parasita_vampirico|regeneracao|drenagem_sangue|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',poderesPsiIds:'detectar|intuicao|medo|telepatia|ler_mente|influenciar_mente|ocultar_mente|grito_psiquico',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:5,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Variante vampírica em que a simbiose parasitária manifesta capacidades psíquicas, sobretudo nas esferas Mente e Sentidos.'},
+{id:'vampiro_psiquico',nome:'Vampiro Psíquico',nome_en:'Psychic Vampire',nome_zh:'灵能吸血鬼',tipo:'Criatura',especie:'Hospedeiro racional parasitado',habitat:'Assentamentos e ruínas habitadas',comportamento:'Predador racional, manipulador e sensitivo',altura:'1.80',tamanho:'Médio',pesoCorporal:'75',FOR:14,CON:14,TAM:12,DES:14,INT:14,POD:17,CAR:10,periciasTexto:'Atletismo:52|Esquiva:55|Furtividade:65|Percepção:65',especializacoesTexto:'Combate Desarmado:60|Psiquismo (Mente):30|Psiquismo (Sentidos):30',armasTexto:'Mordida:1d6+MD|Garras:1d6+MD',alcancesAtaques:'Mordida:0.8|Garras:1.5',propriedadesAtaques:'Mordida:infeccioso,drenagem_sangue|Garras:sangramento',habilidadesTexto:'parasita_vampirico|regeneracao|hematofagia|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata|psiquico',habilidadesEspeciais:'parasita_vampirico|regeneracao|drenagem_sangue|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',poderesPsiIds:'cura_psi|detectar|intuicao|medo|telepatia|ler_mente|influenciar_mente|ocultar_mente|grito_psiquico',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:5,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Variante vampírica em que a simbiose parasitária manifesta capacidades psíquicas, sobretudo nas esferas Mente e Sentidos.'},
 {id:'metamorfo_generico',nome:'Metamorfo Genérico',nome_en:'Generic Shapeshifter',nome_zh:'通用变形体',tipo:'Criatura',especie:'Animal parasitado / quimera',habitat:'Variável',comportamento:'Predador adaptativo; incorpora traços das presas',altura:'1.70',tamanho:'Médio',pesoCorporal:'85',FOR:16,CON:15,TAM:13,DES:15,INT:8,POD:12,CAR:5,periciasTexto:'Atletismo:65|Esquiva:58|Furtividade:68|Percepção:58',especializacoesTexto:'Combate Desarmado:68',armasTexto:'Mordida:1d6+MD|Garras:1d8+MD',alcancesAtaques:'Mordida:1|Garras:1.8',propriedadesAtaques:'Mordida:infeccioso|Garras:sangramento',habilidadesTexto:'parasita_metamorfo|metamorfose|incorporar_presa|imitacao_humana_apos_consumo|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',habilidadesEspeciais:'metamorfose_preparada|incorporar_presa|imitacao_humana_apos_consumo|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:6,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Animal transformado pelo parasita. Alimenta-se de qualquer criatura e pode incorporar formas e características das presas. Depois de consumir um humano, pode aprender imitação humana. A metamorfose está cadastrada para futura implementação no mapa.'},
 {id:'metamorfo_psiquico',nome:'Metamorfo Psíquico',nome_en:'Psychic Shapeshifter',nome_zh:'灵能变形体',tipo:'Criatura',especie:'Animal parasitado / quimera psíquica',habitat:'Variável',comportamento:'Predador adaptativo e psíquico',altura:'1.70',tamanho:'Médio',pesoCorporal:'85',FOR:15,CON:14,TAM:13,DES:16,INT:10,POD:17,CAR:6,periciasTexto:'Atletismo:60|Esquiva:62|Furtividade:72|Percepção:66',especializacoesTexto:'Combate Desarmado:62|Psiquismo (Mente):30|Psiquismo (Sentidos):30',armasTexto:'Mordida:1d6+MD|Garras:1d8+MD',alcancesAtaques:'Mordida:1|Garras:1.8',propriedadesAtaques:'Mordida:infeccioso|Garras:sangramento',habilidadesTexto:'parasita_metamorfo|metamorfose|incorporar_presa|imitacao_humana_apos_consumo|psiquico|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',habilidadesEspeciais:'metamorfose_preparada|incorporar_presa|imitacao_humana_apos_consumo|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',poderesPsiIds:'detectar|intuicao|empatia|medo|ocultar_mente|ilusao',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:6,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Metamorfo em que a infecção também produz capacidades psíquicas. Metamorfose preparada para futura troca de forma, retrato, tamanho e aparência do token.'},
 {id:'larva_interdimensional',nome:'Larva Interdimensional',nome_en:'Interdimensional Larva',nome_zh:'异维幼体',tipo:'Criatura',especie:'Fauna psíquica extradimensional',habitat:'Regiões isoladas e locais de anomalia',comportamento:'Curiosa, evasiva e enigmática; raramente hostil',altura:'1.35',tamanho:'Médio',pesoCorporal:'55',FOR:7,CON:13,TAM:11,DES:13,INT:8,POD:20,CAR:10,periciasTexto:'Esquiva:62|Furtividade:58|Percepção:78',especializacoesTexto:'Combate Desarmado:28|Psiquismo (Sentidos):30|Psiquismo (Matéria):30',armasTexto:'Toque:1d3',alcancesAtaques:'Toque:1',propriedadesAtaques:'',habilidadesTexto:'passagem_interdimensional|desaparecer_dimensional|reaparecer_dimensional|misteriosa|nao_predatoria',habilidadesEspeciais:'passagem_interdimensional_preparada|fora_da_dimensao_inatingivel|reaparecimento',poderesPsiIds:'detectar|intuicao|visao_distante|psicometria|salto|impulso',vinculosAtaquesPericias:'Combate Desarmado:Toque',acoesMaxEspecial:3,armaduraNatural:0,movimentoTerrestre:3,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Criatura semelhante ao mesmo tempo a uma coruja e a uma larva de borboleta. Seu aparente teletransporte é interpretado como entrada em uma dimensão desconhecida seguida de retorno ao espaço observável. É sobretudo um mistério ecológico, não uma ameaça. A passagem dimensional fica preparada para futura mecânica de desaparecer e reaparecer no mapa.'},
@@ -6550,7 +6559,7 @@ function labSnapshotChar_(c){
 function labTokenDeParticipante_(p,i=0){
     const c=batalhaCharLocal_(p.id),mov=labHeuristicaMovimento_(p,c);
     const max=Math.max(0,Number(p?.acoesMax||obterPAMaxCombate_(c)||2));
-    return {id:String(p.id),nome:String(p.nome||'Participante'),imagem:String(p.imagem||c?.imagem||''),tipo:String(p.tipo||''),
+    return {id:String(p.id),nome:String(p.nome||'Participante'),imagem:String(p.imagem||c?.imagem||''),tipo:String(p.tipo||''),donoUid:String(p.donoUid||p.dono||c?.donoUid||c?.dono||''),
         x:Math.min(labEstado_.larguraM-1,1.5+(i%8)*2.5),y:Math.min(labEstado_.alturaM-1,1.5+Math.floor(i/8)*2.5),
         diametroM:labTamanhoTokenM_(c),angulo:0,attrs:c?.atributos?JSON.parse(JSON.stringify(c.atributos)):{},
         acoesMaxLab:max,acoesAtuaisLab:max,movimentoGratisDisponivel:mov.terra>0||mov.voo>0||mov.nat>0,
@@ -6724,15 +6733,18 @@ window.labEncerrarOportunidade_=function(){
     if(atual)labEstado_.selecionadoId=String(atual.id);labSalvarLocal_();labRender_();
 };
 
+let labAutoAvancoArmado_=false;
 function labAutoAvancarSeSemAcoes_(){
     if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return false;
-    const atual=labTokenAtual_();
-    if(!atual||Number(atual.acoesAtuaisLab||0)>0)return false;
+    const atual=labTokenAtual_();if(!atual||Number(atual.acoesAtuaisLab||0)>0)return false;
+    if(labAutoAvancoArmado_)return true;
+    labAutoAvancoArmado_=true;
     setTimeout(()=>{
-        if(labEstado_.fase==='combate'&&!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab&&Number(labTokenAtual_()?.acoesAtuaisLab||0)<=0){
-            window.labEncerrarOportunidade_();
-        }
-    },350);
+        labAutoAvancoArmado_=false;
+        if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return;
+        const a=labTokenAtual_();
+        if(a&&Number(a.acoesAtuaisLab||0)<=0){window.labEncerrarOportunidade_();setTimeout(()=>labAutoAvancarSeSemAcoes_(),100);}
+    },180);
     return true;
 }
 window.labVoltarPreparacao_=function(){
@@ -6769,7 +6781,7 @@ window.labSelecionar_=function(id){
             const alvo=(labEstado_.tokens||[]).find(t=>String(t.id)===sid);
             atual.alvoLab=sid;
             labApontarPara_(atual,alvo);
-            labEstado_.selecionadoId=String(atual.id);
+            labEstado_.selecionadoId=sid;
             labEstado_.ultimoResultadoLab=`Alvo selecionado: ${alvo?.nome||'alvo'}.`;
             labSalvarLocal_();labRender_();return;
         }
@@ -7120,7 +7132,7 @@ window.labUsarPsi_=function(){
     if(batalhaResultadoGradeValor_(r.grau)>=2){
         if(labPsiEhCura_(p)){
             const st=labGarantirSnapshotCombate_(alvo),feridas=labFeridasTrataveis_(alvo);let loc=a.local&&feridas.some(x=>x.local===a.local)?a.local:feridas[0]?.local;
-            if(loc){const antes=Number(st.hit?.[loc]||0),max=Number(st.hitMax?.[loc]||0),cura=Math.min(gasto,Math.max(0,max-antes));st.hit[loc]=Math.min(max,antes+cura);labReavaliarFerimento_(alvo,loc);efeito=`Cura psíquica restaurou ${cura} PV em ${loc}.`;}else efeito='O alvo não possui ferimento tratável.';
+            if(loc){const antes=Number(st.hit?.[loc]||0),max=Number(st.hitMax?.[loc]||0),cura=Math.min(gasto,Math.max(0,max-antes));st.hit[loc]=Math.min(max,antes+cura);labReavaliarFerimento_(alvo,loc);if(cura>0)labAdicionarFloat_(alvo,cura,'cura');efeito=`Cura psíquica restaurou ${cura} PV em ${loc}.`;}else efeito='O alvo não possui ferimento tratável.';
         }else if(p.id==='impulso'){labPsiEmpurrar_(t,alvo,5);efeito=`${alvo.nome} foi impulsionado aproximadamente 5 m.`;}
         else if(p.id==='atordoar_psi'||p.id==='grito_psiquico'){const stA=labGarantirSnapshotCombate_(alvo);stA.atordoado=true;stA.atordoadoAteOportunidade=true;efeito=`${alvo.nome} ficou Atordoado: +1 grau de dificuldade em ações e reações até o fim da próxima oportunidade.`;}
         else if(p.id==='salto'){t.movimentoGratisDisponivel=true;efeito='Salto psíquico ativado: o usuário recupera o deslocamento gratuito nesta oportunidade.';}
@@ -7129,7 +7141,7 @@ window.labUsarPsi_=function(){
             if(/escudo|barreira|protec|defesa/.test(pn)){labGarantirSnapshotCombate_(t).escudoPsi=Math.max(1,gasto);efeito=`Escudo psíquico ativo: ${Math.max(1,gasto)} ponto(s) de proteção psíquica provisória.`;}
             else if(/telepat|mente|mental|ler mente/.test(pn)){labGarantirSnapshotCombate_(alvo).marcadoPsi=true;efeito=`Contato mental estabelecido com ${alvo.nome}; o mestre pode revelar informação compatível com o poder.`;}
             else if(/telecin|telek|empurr|mover/.test(pn)){labPsiEmpurrar_(t,alvo,Math.max(2,Math.min(10,gasto*2)));efeito=`${alvo.nome} foi deslocado telecineticamente ${Math.max(2,Math.min(10,gasto*2))} m.`;}
-            else if(/dor|ataque|choque|raio|ferir/.test(pn)){const st=labGarantirSnapshotCombate_(alvo),locs=Object.keys(st.hitMax||{});const loc=locs[Math.floor(Math.random()*Math.max(1,locs.length))];if(loc){const dano=Math.max(1,gasto);st.hit[loc]=Number(st.hit?.[loc]||0)-dano;labReavaliarFerimento_(alvo,loc);efeito=`Ataque psíquico causou ${dano} de dano em ${loc}.`;} }
+            else if(/dor|ataque|choque|raio|ferir/.test(pn)){const st=labGarantirSnapshotCombate_(alvo),locs=Object.keys(st.hitMax||{});const loc=locs[Math.floor(Math.random()*Math.max(1,locs.length))];if(loc){const dano=Math.max(1,gasto);st.hit[loc]=Number(st.hit?.[loc]||0)-dano;labReavaliarFerimento_(alvo,loc);labAdicionarFloat_(alvo,-dano,'dano');efeito=`Ataque psíquico causou ${dano} de dano em ${loc}.`;} }
             else efeito=`${getNome(p)} ativado com sucesso; o gasto de PP e o teste já foram aplicados, mas este poder ainda exige adjudicação narrativa do mestre.`;
         }
     }
@@ -7258,12 +7270,12 @@ window.labPSConcluir_=function(){
     }else if(batalhaResultadoGradeValor_(r.grau)>=2){
         st.sangrando=false;st.tratados=st.tratados||{};
         if(r.grau==='Crítico'){
-            st.hit[ps.local]=max;delete st.ferimentos?.[ps.local];delete st.tratados?.[ps.local];
+            const ganho=Math.max(0,max-atual);st.hit[ps.local]=max;if(ganho>0)labAdicionarFloat_(alvo,ganho,'cura');delete st.ferimentos?.[ps.local];delete st.tratados?.[ps.local];
             if(/Cabeça|Peito|Abdômen/.test(ps.local))st.inconsciente=false;
             res=`Crítico: ${ps.local} restaurado totalmente.`;
         }else if(atual>0){
             const cura=1+Math.floor(Math.random()*3),real=Math.min(cura,max-atual);
-            st.hit[ps.local]=Math.min(max,atual+cura);res=`Recuperou ${real} PV.`;
+            st.hit[ps.local]=Math.min(max,atual+cura);if(real>0)labAdicionarFloat_(alvo,real,'cura');res=`Recuperou ${real} PV.`;
         }else if(atual>-max){
             st.tratados[ps.local]=true;
             if(/Cabeça|Peito|Abdômen/.test(ps.local))st.inconsciente=false;
@@ -7553,6 +7565,7 @@ window.labRolarDano_=function(){
     labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
     labEstado_.logLab=labEstado_.logLab.slice(0,20);
     labEstado_.danoPendenteLab=null;
+    if(ap.final>0)labAdicionarFloat_(defensor,-ap.final,'dano');
     labSalvarLocal_();labRender_();
     labAutoAvancarSeSemAcoes_();
 };
@@ -7821,23 +7834,31 @@ function labOverlayMovimentoHtml_(t,ppm){
     if(alc>0){const r=alc*ppm;h+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${2*r}px;height:${2*r}px;border-radius:50%;border:2px dotted rgba(255,105,105,.82);pointer-events:none"></div>`;}return h;
 }
 
+function labPodeVerDetalhesToken_(t){
+    if(!t)return false;
+    if(batalhaEhMestre_())return true;
+    const uid=String(currentUserUid||currentUser?.uid||'');
+    return !!uid&&String(t.donoUid||'')===uid;
+}
+function labPodeControlarToken_(t){return batalhaEhMestre_()||labPodeVerDetalhesToken_(t);}
 function labHoverConteudo_(t){
     if(!t)return '';
     const st=labGarantirSnapshotCombate_(t);
     const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" style="width:100%;height:190px;object-fit:contain;background:rgba(255,255,255,.04);border-radius:9px;">`
         :`<div style="height:100px;display:flex;align-items:center;justify-content:center;font-size:48px;">${String(t.id).startsWith('dummy:')?'🎯':'👤'}</div>`;
     const estados=[st?.morto?'💀 Morto':'',st?.inconsciente?'💤 Inconsciente':'',st?.sangrando?'🩸 Sangrando':'',st?.derrubado?'💥 Derrubado':'',st?.atordoado?'✨ Atordoado':''].filter(Boolean).join(' · ');
-    let mestre='';
-    if(batalhaEhMestre_()&&st){
+    let detalhes='';
+    if(labPodeVerDetalhesToken_(t)&&st){
         const locs=Object.keys(st.hitMax||{});
-        mestre=`<div style="margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.12);">
-          <div style="font-size:.78em;color:#ffd166;font-weight:700;margin-bottom:4px;">VISÃO DO MESTRE · PV / ARMADURA</div>
+        detalhes=`<div style="margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.12);">
+          <div style="font-size:.78em;color:#ffd166;font-weight:700;margin-bottom:4px;">${batalhaEhMestre_()?'VISÃO DO MESTRE':'SEU PERSONAGEM'} · PV / ARMADURA</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;font-size:.78em;">${locs.map(loc=>`<span>${escaparHtmlInventario_(loc)}</span><span style="text-align:right;"><b>${Number(st.hit?.[loc]??0)}/${Number(st.hitMax?.[loc]??0)}</b> · PA ${Number(st.armor?.[loc]||0)}</span>`).join('')}</div>
+          <div style="margin-top:7px;font-size:.76em;color:#b8dfff;">AÇ ${Number(t.acoesAtuaisLab||0)}/${Number(t.acoesMaxLab||0)}${labPsiMax_(t)>0?` · PP ${labPsiRestantes_(t)}/${labPsiMax_(t)}`:''}</div>
         </div>`;
     }
     return `${img}<div style="margin-top:7px;font-size:1.05em;font-weight:800;color:#fff;">${escaparHtmlInventario_(t.nome)}</div>
       <div style="font-size:.82em;color:#9fdfff;">${escaparHtmlInventario_(t.tipo||'')}</div>
-      ${estados?`<div style="margin-top:5px;color:#ffb0b0;font-size:.82em;">${estados}</div>`:''}${mestre}`;
+      ${estados?`<div style="margin-top:5px;color:#ffb0b0;font-size:.82em;">${estados}</div>`:''}${detalhes}`;
 }
 window.labHoverShow_=function(ev,id){const t=labTokenPorId_(id),el=document.getElementById('labHoverCard');if(!t||!el)return;el.innerHTML=labHoverConteudo_(t);el.style.display='block';labHoverMove_(ev);};
 window.labHoverMove_=function(ev){
@@ -7888,14 +7909,14 @@ window.labMicroModoSelecionar_=function(modo){
                 const p=poderes[0];
                 t.acaoAuxLab={tipo:'psiquismo',poderId:p.id,alvoId:String(t.alvoLab||t.id),custo:Math.max(0,Number(p.custo||0)),local:''};
             }
-            labPsiAjustarCura_(t);
+            if(t.acaoAuxLab&&labEstado_.selecionadoId)t.acaoAuxLab.alvoId=String(labEstado_.selecionadoId);labPsiAjustarCura_(t);
         }
     }else if(modo==='socorros'){
         if(!labPrimeirosSocorrosPericia_(t)){notificar_('Este participante não possui Primeiros Socorros.','aviso');t.microModoLab='ataque';return;}
         if(!t.primeirosSocorrosLab&&t.acaoAuxLab?.tipo!=='primeiros_socorros'){
             const salvo=t.psSelecaoLab;
             if(salvo?.tipo==='primeiros_socorros')t.acaoAuxLab=JSON.parse(JSON.stringify(salvo));
-            else window.labAbrirPrimeirosSocorros_();
+            else window.labAbrirPrimeirosSocorros_();if(t.acaoAuxLab?.tipo==='primeiros_socorros'&&labEstado_.selecionadoId)t.acaoAuxLab.alvoId=String(labEstado_.selecionadoId);
         }
     }
     labSalvarLocal_();labRender_();
@@ -7918,18 +7939,40 @@ window.labMicroExecutar_=function(){
     }
     window.labRolarAtaque_();
 };
-function labMicroPainelHtml_(t,ppm,d){
-    if(labEstado_.fase!=='combate'||!t||String(labTokenAtual_()?.id)!==String(t.id)||String(labEstado_.selecionadoId)!==String(t.id))return '';
-    const psi=temPsiquismoInvestido_(labCharToken_(t)||t.charLab),ps=!!labPrimeirosSocorrosPericia_(t),modo=labMicroModo_(t);
-    const top=t.y*ppm+d/2+27,left=t.x*ppm;
-    return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${top}px;transform:translateX(-50%);z-index:18;min-width:250px;max-width:390px;padding:6px;border-radius:10px;background:rgba(10,13,30,.96);border:1px solid rgba(126,231,255,.48);box-shadow:0 8px 22px rgba(0,0,0,.45);display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap;">
-      <button class="btn-small ${modo==='ataque'?'btn-select':''}" onclick="labMicroModoSelecionar_('ataque')" style="min-height:34px;padding:4px 8px;">⚔️ Ataque</button>
-      ${psi?`<button class="btn-small ${modo==='psi'?'btn-select':''}" onclick="labMicroModoSelecionar_('psi')" style="min-height:34px;padding:4px 8px;">🔮 Psi</button>`:''}
-      ${ps?`<button class="btn-small ${modo==='socorros'?'btn-select':''}" onclick="labMicroModoSelecionar_('socorros')" style="min-height:34px;padding:4px 8px;">🩹 1º socorros</button>`:''}
-      <button class="btn-small btn-select" onclick="labMicroExecutar_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="min-height:36px;padding:4px 12px;font-weight:800;">${modo==='psi'?'✨':modo==='socorros'?'🩹':'🎯'} ${escaparHtmlInventario_(labMicroNomeAcao_(t))}</button>
+function labMicroPainelHtml_(alvoVisual,ppm,d){
+    if(labEstado_.fase!=='combate'||!alvoVisual)return '';
+    const ator=labTokenAtual_();if(!ator||!labPodeControlarToken_(ator))return '';
+    const pend=labEstado_.pendenciaLab,dp=labEstado_.danoPendenteLab;
+    const topBaixo=alvoVisual.y*ppm+d/2+14,left=alvoVisual.x*ppm;
+
+    if(pend&&String(pend.defensorId)===String(alvoVisual.id)&&labPodeControlarToken_(alvoVisual)){
+        const defs=labDefesasDisponiveis_(alvoVisual),c=labCharToken_(alvoVisual);
+        if(defs.length&&!defs.some(x=>batalhaTokenPericia_(x)===alvoVisual.defesaLab))alvoVisual.defesaLab=batalhaTokenPericia_(defs[0]);
+        const per=labPericiaPorToken_(alvoVisual,alvoVisual.defesaLab),valor=per?labValorDefesa_(c,per):0;
+        return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${topBaixo}px;transform:translateX(-50%);z-index:24;padding:4px;border-radius:8px;background:rgba(10,13,30,.96);border:1px solid rgba(255,117,117,.62);display:flex;gap:4px;white-space:nowrap;">
+          <button class="btn-small btn-select" onclick="labResponderDefesa_(true)" ${Number(alvoVisual.acoesAtuaisLab||0)<=0?'disabled':''} title="${escaparHtmlInventario_(per?getNome(per):'Defesa')} ${valor}%" style="min-height:27px;padding:2px 7px;font-size:.72em;">🛡️ Defender</button>
+          <button class="btn-small" onclick="labResponderDefesa_(false)" style="min-height:27px;padding:2px 7px;font-size:.72em;">✋ Não</button>
+        </div>`;
+    }
+
+    if(dp&&String(dp.defensorId)===String(alvoVisual.id)&&String(dp.atacanteId)===String(ator.id)&&Number(dp.efeitosRestantes||0)>0&&!dp.escolhendoLocalizacao){
+        const efs=labEfeitosDisponiveis_(dp),top=Math.max(2,alvoVisual.y*ppm-d/2-42);
+        return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${top}px;transform:translateX(-50%);z-index:24;padding:4px;border-radius:8px;background:rgba(10,13,30,.97);border:1px solid rgba(255,213,74,.65);display:flex;gap:3px;flex-wrap:wrap;justify-content:center;max-width:330px;">
+          ${efs.map(e=>`<button class="btn-small" onclick="labEscolherEfeito_('${e.id}')" style="min-height:25px;padding:2px 6px;font-size:.68em;">${escaparHtmlInventario_(e.nome)}</button>`).join('')}
+          <button class="btn-small" onclick="labPularEfeitos_()" style="min-height:25px;padding:2px 6px;font-size:.68em;">Pular</button>
+        </div>`;
+    }
+
+    if(String(labEstado_.selecionadoId||'')!==String(alvoVisual.id)||Number(ator.acoesAtuaisLab||0)<=0)return '';
+    const psi=temPsiquismoInvestido_(labCharToken_(ator)||ator.charLab),ps=!!labPrimeirosSocorrosPericia_(ator),modo=labMicroModo_(ator);
+    const ehProprio=String(alvoVisual.id)===String(ator.id),item=labItemSelecionado_(ator),ataqueNome=item?.natural===true?(getNome(item)||'Atacar'):'Atacar';
+    const podePS=ps&&(ehProprio||labDistanciaEntre_(ator,alvoVisual)<=1.5);
+    return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${topBaixo}px;transform:translateX(-50%);z-index:20;padding:4px;border-radius:8px;background:rgba(10,13,30,.95);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:310px;">
+      ${!ehProprio?`<button class="btn-small btn-select" onclick="labMicroModoSelecionar_('ataque');labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">⚔️ ${escaparHtmlInventario_(ataqueNome)}</button>`:''}
+      ${psi?`<button class="btn-small ${modo==='psi'?'btn-select':''}" onclick="labMicroModoSelecionar_('psi')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 Psi</button>${modo==='psi'?`<button class="btn-small btn-select" onclick="labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">✨ ${escaparHtmlInventario_(labMicroNomeAcao_(ator))}</button>`:''}`:''}
+      ${podePS?`<button class="btn-small ${modo==='socorros'?'btn-select':''}" onclick="labMicroModoSelecionar_('socorros')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🩹 1º socorros</button>${modo==='socorros'?`<button class="btn-small btn-select" onclick="labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">🩹 ${escaparHtmlInventario_(labMicroNomeAcao_(ator))}</button>`:''}`:''}
     </div>`;
 }
-
 
 let labDesenhoUndo_=[];
 let labDesenhoRedo_=[];
@@ -7979,11 +8022,16 @@ function labMapaDadosAtuais_(nome,id=''){
         atualizadoEm:new Date().toISOString()
     };
 }
+
+function labMapasLocaisLer_(){try{return JSON.parse(localStorage.getItem('mesa_estelar_mapas_locais_v1')||'[]')||[];}catch(_){return [];}}
+function labMapasLocaisSalvar_(lista){try{localStorage.setItem('mesa_estelar_mapas_locais_v1',JSON.stringify(lista||[]));return true;}catch(_){return false;}}
+function labMesclarMapasLocais_(){const ids=new Set((mapasDB||[]).map(m=>String(m.id)));for(const m of labMapasLocaisLer_())if(!ids.has(String(m.id)))mapasDB.push({...m,__local:true});}
+labMesclarMapasLocais_();
 function labAtualizarSelectMapas_(){
     const sel=document.getElementById('labMapaSalvoSelect');if(!sel)return;
     const atual=String(labMapaSelecionado_||sel.value||'');
     const lista=[...(mapasDB||[])].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
-    sel.innerHTML='<option value="">— nenhum —</option>'+lista.map(m=>`<option value="${escaparHtmlInventario_(m.id)}">${escaparHtmlInventario_(m.nome||m.id)}</option>`).join('');
+    sel.innerHTML='<option value="">— nenhum —</option>'+lista.map(m=>`<option value="${escaparHtmlInventario_(m.id)}">${m.__local?'💻 ':''}${escaparHtmlInventario_(m.nome||m.id)}</option>`).join('');
     if(lista.some(m=>String(m.id)===atual)){sel.value=atual;labMapaSelecionado_=atual;}
     else {sel.value='';labMapaSelecionado_='';}
 }
@@ -8005,8 +8053,11 @@ window.labSalvarMapaBanco_=async function(){
         labMapaSelecionado_=id;labAtualizarSelectMapas_();
         notificar_(`Mapa “${dados.nome}” salvo no banco /mapas.`,'sucesso',4200);
     }catch(e){
-        console.error('Salvar mapa',e);
-        notificar_('Não foi possível salvar em /mapas. Se a coleção ainda não estiver autorizada, acrescente-a às regras do Firestore.','erro',7000);
+        console.warn('Firestore /mapas indisponível; usando armazenamento local.',e);
+        const locais=labMapasLocaisLer_(),ix=locais.findIndex(m=>String(m.id)===String(id)),local={...dados,__local:true};
+        if(ix>=0)locais[ix]=local;else locais.push(local);
+        if(labMapasLocaisSalvar_(locais)){const j=mapasDB.findIndex(m=>String(m.id)===String(id));if(j>=0)mapasDB[j]=local;else mapasDB.push(local);labMapaSelecionado_=id;labAtualizarSelectMapas_();notificar_(`Firestore bloqueou /mapas; “${dados.nome}” foi salvo localmente neste navegador.`,'aviso',6500);}
+        else notificar_('Não foi possível salvar o mapa nem no Firestore nem localmente.','erro',6500);
     }
 };
 window.labCarregarMapaBanco_=function(){
@@ -8099,6 +8150,20 @@ window.labDesenhoPointerDown_=function(ev){
     const up=()=>{window.removeEventListener('pointermove',move);labSalvarLocal_();labRender_();};
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
 };
+
+function labAdicionarFloat_(t,valor,tipo='dano'){
+    if(!t||!Number(valor))return;
+    labEstado_.floatsLab=Array.isArray(labEstado_.floatsLab)?labEstado_.floatsLab:[];
+    const id=`f_${Date.now()}_${Math.random().toString(36).slice(2,6)}`;
+    labEstado_.floatsLab.push({id,tokenId:String(t.id),valor:Number(valor),tipo});
+    setTimeout(()=>{labEstado_.floatsLab=(labEstado_.floatsLab||[]).filter(x=>x.id!==id);document.querySelector(`[data-lab-float="${id}"]`)?.remove();},1450);
+}
+function labFloatHtml_(f,ppm){
+    const t=labTokenPorId_(f.tokenId);if(!t)return '';
+    const cura=f.tipo==='cura'||Number(f.valor)>0,txt=`${cura?'+':'−'}${Math.abs(Number(f.valor))}`;
+    return `<div data-lab-float="${f.id}" style="position:absolute;left:${t.x*ppm}px;top:${t.y*ppm-8}px;transform:translate(-50%,-50%);z-index:40;pointer-events:none;font-size:25px;font-weight:900;color:${cura?'#56f08a':'#ff5252'};text-shadow:0 2px 5px #000;animation:labFloatUp 1.4s ease-out forwards;">${txt}</div>`;
+}
+if(!document.getElementById('labFloatStyle')){const st=document.createElement('style');st.id='labFloatStyle';st.textContent='@keyframes labFloatUp{0%{opacity:0;transform:translate(-50%,-20%) scale(.8)}15%{opacity:1;transform:translate(-50%,-55%) scale(1.12)}100%{opacity:0;transform:translate(-50%,-155%) scale(.95)}}';document.head.appendChild(st);}
 function labRender_(){
     labSanearEstado_();
     const map=document.getElementById('labMetricMap');if(!map)return;const ppm=Number(labEstado_.pxPorMetro||48);
@@ -8111,9 +8176,14 @@ function labRender_(){
         const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
         const alvoAtual=labEstado_.fase==='combate'&&String(labTokenAtual_()?.alvoLab)===String(t.id);
         return `<div class="lab-token" data-id="${escaparHtmlInventario_(t.id)}" style="position:absolute;left:${t.x*ppm-d/2}px;top:${t.y*ppm-d/2}px;width:${d}px;height:${d}px;border-radius:50%;background:#23314d;border:${turno?'5px solid #ffd54a':alvoAtual?'5px solid #ff5b66':sel?'4px solid #ffd54a':'3px solid #00bfe8'};box-shadow:${turno?'0 0 22px 8px rgba(255,213,74,.62),0 3px 12px rgba(0,0,0,.45)':alvoAtual?'0 0 18px 6px rgba(255,70,85,.45),0 3px 12px rgba(0,0,0,.45)':'0 3px 12px rgba(0,0,0,.45)'};display:flex;align-items:center;justify-content:center;cursor:grab;z-index:${turno?7:sel?5:3};touch-action:none" onmouseenter="labHoverShow_(event,this.dataset.id)" onmousemove="labHoverMove_(event)" onmouseleave="labHoverHide_()" onpointerdown="labPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" onclick="labSelecionar_('${String(t.id).replace(/'/g,"\\'")}')">${img}<div class="lab-facing-frame" style="position:absolute;inset:-4px;pointer-events:none;transform:rotate(${t.angulo||0}deg);transform-origin:50% 50%"><div onpointerdown="labRotacaoPointerDown_(event,'${String(t.id).replace(/'/g,"\\'")}')" style="position:absolute;left:50%;top:-12px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-bottom:18px solid #ffd54a;pointer-events:auto;cursor:crosshair"></div></div><div style="position:absolute;left:50%;bottom:-5px;transform:translate(-50%,100%);white-space:nowrap;padding:2px 5px;border-radius:5px;background:rgba(10,12,25,.82);color:white;font-size:11px;pointer-events:none">${escaparHtmlInventario_(t.nome)}${t.iniciativaLab!==null&&t.iniciativaLab!==''&&Number.isFinite(Number(t.iniciativaLab))?` · INI ${t.iniciativaLab}`:''}${t.combateLab?.morto?' · 💀':t.combateLab?.inconsciente?' · 💤':''}</div></div>`;}).join('');
-    const atualMicro=labTokenAtual_(),dMicro=atualMicro?Math.max(24,Number(atualMicro.diametroM||.9)*ppm):0;
-    const micro=atualMicro?labMicroPainelHtml_(atualMicro,ppm,dMicro):'';
-    map.innerHTML=drawCanvas+overlay+tokens+micro;
+    let microToken=null;
+    if(labEstado_.pendenciaLab)microToken=labTokenPorId_(labEstado_.pendenciaLab.defensorId);
+    else if(labEstado_.danoPendenteLab)microToken=labTokenPorId_(labEstado_.danoPendenteLab.defensorId);
+    else microToken=labTokenPorId_(labEstado_.selecionadoId)||labTokenAtual_();
+    const dMicro=microToken?Math.max(24,Number(microToken.diametroM||.9)*ppm):0;
+    const micro=microToken?labMicroPainelHtml_(microToken,ppm,dMicro):'';
+    const floats=(labEstado_.floatsLab||[]).map(f=>labFloatHtml_(f,ppm)).join('');
+    map.innerHTML=drawCanvas+overlay+tokens+micro+floats;
     labDesenhoRender_();
     const cfg=labDesenhoConfig_(),tg=document.getElementById('labDrawToggle'),eb=document.getElementById('labEraserBtn'),ft=document.getElementById('labDrawTool'),cc=document.getElementById('labDrawColor'),sz=document.getElementById('labDrawSize'),ub=document.getElementById('labUndoBtn'),rb=document.getElementById('labRedoBtn');
     if(tg){tg.textContent=cfg.ativo&&cfg.ferramenta!=='borracha'?'✅ Desenhando':'✏️ Desenhar';tg.classList.toggle('btn-select',cfg.ativo&&cfg.ferramenta!=='borracha');}
@@ -8125,7 +8195,7 @@ function labRender_(){
     if(bg)bg.value=labEstado_.fundo||'#d7d7d7';if(gc)gc.value=labEstado_.corGrade||'#777777';if(gv)gv.checked=labEstado_.gradeVisivel!==false;if(tx)tx.value=labEstado_.textura||'nenhuma';
     if(ms){const v=`${labEstado_.larguraM}x${labEstado_.alturaM}`;if([...ms.options].some(o=>o.value===v))ms.value=v;}
     if(zm)zm.value=String(labEstado_.pxPorMetro||48);
-    labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();
+    labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();labAutoAvancarSeSemAcoes_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
     ev.preventDefault();ev.stopPropagation();
@@ -8143,7 +8213,7 @@ window.labPointerDown_=function(ev,id){
     if(ev.button===2)return;ev.preventDefault();const map=document.getElementById('labMetricMap'),t=labEstado_.tokens.find(x=>String(x.id)===String(id));if(!map||!t)return;labEstado_.selecionadoId=String(id);
     const rect=map.getBoundingClientRect(),ppm=labEstado_.pxPorMetro,origem={x:t.x,y:t.y},prep=labEstado_.fase!=='combate',at=labTokenAtual_();
     if(!prep&&String(at?.id)!==String(t.id)){
-        at.alvoLab=String(t.id);labApontarPara_(at,t);labEstado_.selecionadoId=String(at.id);labSalvarLocal_();labRender_();return;
+        at.alvoLab=String(t.id);labApontarPara_(at,t);labEstado_.selecionadoId=String(t.id);labSalvarLocal_();labRender_();return;
     }
     if(!prep&&t.primeirosSocorrosLab){notificar_('Primeiros Socorros em andamento impedem deslocamento e outras ações proativas.','aviso');return;}
     const maxM=(prep||t.livreMestre)?999:labMovimentoMaxM_(t);if(!prep&&maxM<=0&&!t.livreMestre){notificar_(`${t.nome} é imóvel em combate. Na preparação o mestre pode posicioná-lo livremente.`,'aviso');return;}
@@ -15288,7 +15358,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.26.0: desfazer/refazer desenho, borracha real e banco Firestore de mapas -->
+<!-- Mesa Estelar v46.27.0: ações contextuais no alvo, defesa/efeitos na grade, dano flutuante, privacidade, autoavanço e mapas locais -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
