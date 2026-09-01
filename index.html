@@ -2508,14 +2508,18 @@ async function carregarBancosDeDados() {
     if(userData?.role==='mestre'){
         try{
             const qMapas=await getDocs(collection(db,'mapas'));
-            mapasDB=[];qMapas.forEach(d=>mapasDB.push({id:d.id,...d.data()}));
+            mapasDB=[];qMapas.forEach(d=>{const x={id:d.id,...d.data()};if(x.tipo!=='mapa-parte')mapasDB.push(x);});
             mapasDB.sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
         }catch(e){console.warn('Banco de mapas indisponível. Verifique as regras Firestore de /mapas.',e);mapasDB=[];}
     }
     if(userData?.role==='mestre'){
         try{
             const dObj=await getDoc(doc(db,'configuracoes','objetosMapa'));
-            objetosMapaDB=dObj.exists()&&Array.isArray(dObj.data()?.lista)?dObj.data().lista:[];
+            const idx=dObj.exists()?dObj.data():{};
+            if(Array.isArray(idx?.ids)){
+                const arr=[];for(const id of idx.ids){try{const ds=await getDoc(doc(db,'configuracoes',objetoMapaDocId_(id)));if(ds.exists())arr.push({id,...ds.data()});}catch(e){console.warn('Objeto de mapa indisponível',id,e);}}
+                objetosMapaDB=arr;
+            }else objetosMapaDB=Array.isArray(idx?.lista)?idx.lista:[];
         }catch(e){console.warn('Banco de objetos de mapa indisponível:',e);objetosMapaDB=[];}
         garantirObjetosMapaPadrao_();
     }
@@ -6542,7 +6546,7 @@ window.recarregarBancoMapas_=async function(){
     if(!userData||userData.role!=='mestre')return;
     try{
         const q=await getDocs(collection(db,'mapas'));
-        mapasDB=[];q.forEach(d=>mapasDB.push({id:d.id,...d.data()}));
+        mapasDB=[];q.forEach(d=>{const x={id:d.id,...d.data()};if(x.tipo!=='mapa-parte')mapasDB.push(x);});
         mapasDB.sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
         if(typeof labMesclarMapasLocais_==='function')labMesclarMapasLocais_();
         renderizarBancoMapas_();
@@ -6589,13 +6593,14 @@ window.renomearMapaBanco_=async function(id){
 
 window.duplicarMapaBanco_=async function(id){
     if(!userData||userData.role!=='mestre')return;
-    const m=(mapasDB||[]).find(x=>String(x.id)===String(id));if(!m)return;
+    const m0=(mapasDB||[]).find(x=>String(x.id)===String(id));if(!m0)return;
+    let m=m0;try{m=await labMapaHidratar_(m0);}catch(e){console.error(e);notificar_('Não foi possível ler o mapa para duplicar.','erro');return;}
     let nome=prompt('Nome da cópia:',`${m.nome||'Mapa'} - cópia`);if(nome==null||!String(nome).trim())return;nome=String(nome).trim();
     let novoId=labMapaSlug_(nome),base=novoId,n=2;while((mapasDB||[]).some(x=>String(x.id)===String(novoId)))novoId=`${base}_${n++}`;
     const copia={...JSON.parse(JSON.stringify(m)),id:novoId,nome,criadoPor:currentUserUid||'',atualizadoEm:new Date().toISOString()};delete copia.__local;
     try{
-        await setDoc(doc(db,'mapas',novoId),copia,{merge:false});
-        mapasDB.push(copia);renderizarBancoMapas_();if(typeof labAtualizarSelectMapas_==='function')labAtualizarSelectMapas_();
+        const salva=await labMapaSalvarFirestore_(copia,0);
+        mapasDB.push(salva);renderizarBancoMapas_();if(typeof labAtualizarSelectMapas_==='function')labAtualizarSelectMapas_();
         notificar_(`Mapa “${nome}” duplicado.`,'sucesso',3200);
     }catch(e){console.error('Duplicar mapa',e);notificar_('Não foi possível duplicar o mapa.','erro');}
 };
@@ -6607,7 +6612,7 @@ window.excluirMapaBancoAdmin_=async function(id){
     try{
         if(m.__local){
             const locais=labMapasLocaisLer_().filter(x=>String(x.id)!==String(id));labMapasLocaisSalvar_(locais);
-        }else await deleteDoc(doc(db,'mapas',String(id)));
+        }else {await labMapaApagarPartesAntigas_(id,Number(m.partes||0));await deleteDoc(doc(db,'mapas',String(id)));}
         mapasDB=mapasDB.filter(x=>String(x.id)!==String(id));
         if(String(labMapaSelecionado_||'')===String(id))labMapaSelecionado_='';
         renderizarBancoMapas_();if(typeof labAtualizarSelectMapas_==='function')labAtualizarSelectMapas_();
@@ -8214,6 +8219,53 @@ function labMapaDadosAtuais_(nome,id=''){
     };
 }
 
+// Mapas grandes não cabem de forma confiável em um único documento Firestore.
+// O cabeçalho fica em /mapas/{id}; desenho/objetos são serializados e divididos
+// em documentos irmãos /mapas/{id}__parte__0001, todos cobertos pelas mesmas regras /mapas.
+const LAB_MAPA_PARTE_CHARS_=360000;
+function labMapaParteId_(id,indice){return `${id}__parte__${String(indice+1).padStart(4,'0')}`;}
+function labMapaSepararPayload_(dados){
+    const meta={...dados};
+    const payload={desenhos:meta.desenhos||[],objetos:meta.objetos||[]};
+    delete meta.desenhos;delete meta.objetos;delete meta.__local;
+    const texto=JSON.stringify(payload),partes=[];
+    for(let i=0;i<texto.length;i+=LAB_MAPA_PARTE_CHARS_)partes.push(texto.slice(i,i+LAB_MAPA_PARTE_CHARS_));
+    if(!partes.length)partes.push('{}');
+    return {meta:{...meta,formato:'partes-v1',partes:partes.length,tamanhoSerializado:texto.length,tipo:'mapa'},partes};
+}
+async function labMapaApagarPartesAntigas_(id,quantidade){
+    for(let i=0;i<Number(quantidade||0);i++){
+        try{await deleteDoc(doc(db,'mapas',labMapaParteId_(id,i)));}catch(e){console.warn('Não foi possível remover parte antiga do mapa',id,i,e);}
+    }
+}
+async function labMapaSalvarFirestore_(dados,partesAntigas=0){
+    const {meta,partes}=labMapaSepararPayload_(dados);
+    // Grava primeiro as partes e só então publica o cabeçalho. Assim um cabeçalho nunca
+    // aponta para uma gravação incompleta caso uma parte falhe.
+    for(let i=0;i<partes.length;i++){
+        await setDoc(doc(db,'mapas',labMapaParteId_(dados.id,i)),{tipo:'mapa-parte',mapaId:dados.id,indice:i,dados:partes[i],atualizadoEm:meta.atualizadoEm},{merge:false});
+    }
+    await setDoc(doc(db,'mapas',String(dados.id)),meta,{merge:false});
+    if(Number(partesAntigas||0)>partes.length){
+        for(let i=partes.length;i<Number(partesAntigas||0);i++){
+            try{await deleteDoc(doc(db,'mapas',labMapaParteId_(dados.id,i)));}catch(e){console.warn('Parte antiga excedente',e);}
+        }
+    }
+    return {...meta,desenhos:dados.desenhos,objetos:dados.objetos};
+}
+async function labMapaHidratar_(m){
+    if(!m)return null;
+    if(m.formato!=='partes-v1')return m;
+    const n=Math.max(1,Number(m.partes||1));let texto='';
+    for(let i=0;i<n;i++){
+        const snap=await getDoc(doc(db,'mapas',labMapaParteId_(m.id,i)));
+        if(!snap.exists())throw new Error(`Parte ${i+1}/${n} do mapa não encontrada.`);
+        texto+=String(snap.data()?.dados||'');
+    }
+    const payload=JSON.parse(texto||'{}');
+    return {...m,desenhos:Array.isArray(payload.desenhos)?payload.desenhos:[],objetos:Array.isArray(payload.objetos)?payload.objetos:[]};
+}
+
 function labMapasLocaisLer_(){try{return JSON.parse(localStorage.getItem('mesa_estelar_mapas_locais_v1')||'[]')||[];}catch(_){return [];}}
 function labMapasLocaisSalvar_(lista){try{localStorage.setItem('mesa_estelar_mapas_locais_v1',JSON.stringify(lista||[]));return true;}catch(_){return false;}}
 function labMesclarMapasLocais_(){const ids=new Set((mapasDB||[]).map(m=>String(m.id)));for(const m of labMapasLocaisLer_())if(!ids.has(String(m.id)))mapasDB.push({...m,__local:true});}
@@ -8226,81 +8278,53 @@ function labAtualizarSelectMapas_(){
     if(lista.some(m=>String(m.id)===atual)){sel.value=atual;labMapaSelecionado_=atual;}
     else {sel.value='';labMapaSelecionado_='';}
 }
-// O seletor vive no HTML normal, enquanto este código está em <script type="module">.
-// Por isso a alteração precisa passar por uma função exposta em window.
-window.labSelecionarMapaSalvo_=function(id){
-    labMapaSelecionado_=String(id||'');
-};
+window.labSelecionarMapaSalvo_=function(id){labMapaSelecionado_=String(id||'');};
 async function labPersistirMapaNovo_(nome){
-    nome=String(nome||'').trim();
-    if(!nome)return null;
-    let id=labMapaSlug_(nome),base=id,n=2;
-    while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
+    nome=String(nome||'').trim();if(!nome)return null;
+    let id=labMapaSlug_(nome),base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
     const dados=labMapaDadosAtuais_(nome,id);
     try{
-        await setDoc(doc(db,'mapas',id),dados,{merge:false});
-        mapasDB.push(dados);
-        labMapaSelecionado_=id;labAtualizarSelectMapas_();
+        const salvo=await labMapaSalvarFirestore_(dados,0);
+        mapasDB.push(salvo);labMapaSelecionado_=id;labAtualizarSelectMapas_();
         if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
-        notificar_(`Novo mapa “${dados.nome}” salvo no Firestore.`,'sucesso',4200);
-        return dados;
+        notificar_(`Novo mapa “${dados.nome}” salvo.`,'sucesso',4200);return salvo;
     }catch(e){
-        console.warn('Firestore /mapas indisponível; usando armazenamento local.',e);
-        const locais=labMapasLocaisLer_(),local={...dados,__local:true};
-        locais.push(local);
+        console.error('Falha ao salvar mapa no Firestore',e);
+        const locais=labMapasLocaisLer_(),local={...dados,__local:true};locais.push(local);
         if(labMapasLocaisSalvar_(locais)){
-            mapasDB.push(local);labMapaSelecionado_=id;labAtualizarSelectMapas_();
-            if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
-            notificar_(`Firestore indisponível; “${dados.nome}” foi salvo localmente neste navegador.`,'aviso',6500);
-            return local;
+            mapasDB.push(local);labMapaSelecionado_=id;labAtualizarSelectMapas_();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+            notificar_(`Firestore falhou; “${dados.nome}” foi salvo localmente neste navegador.`,'aviso',6500);return local;
         }
-        notificar_('Não foi possível salvar o mapa nem no Firestore nem localmente.','erro',6500);
-        return null;
+        notificar_('Não foi possível salvar o mapa. O navegador também ficou sem espaço local. Veja o console para o erro do Firestore.','erro',7500);return null;
     }
 }
-
-window.labSalvarMapaComoNovo_=async function(){
-    if(!batalhaEhMestre_())return;
-    const nome=prompt('Nome para o novo mapa:','');
-    if(nome==null||!String(nome).trim())return;
-    await labPersistirMapaNovo_(nome);
-};
-
+window.labSalvarMapaComoNovo_=async function(){if(!batalhaEhMestre_())return;const nome=prompt('Nome para o novo mapa:','');if(nome==null||!String(nome).trim())return;await labPersistirMapaNovo_(nome);};
 window.labSalvarMapaBanco_=async function(){
     if(!batalhaEhMestre_())return;
     const existente=(mapasDB||[]).find(m=>String(m.id)===String(labMapaSelecionado_));
-    if(!existente){
-        const nome=prompt('Nenhum mapa está selecionado. Nome para criar um novo mapa:','');
-        if(nome==null||!String(nome).trim())return;
-        await labPersistirMapaNovo_(nome);
-        return;
-    }
-    const nome=prompt('Nome do mapa:',existente.nome||'');
-    if(nome==null||!String(nome).trim())return;
+    if(!existente){const nome=prompt('Nenhum mapa está selecionado. Nome para criar um novo mapa:','');if(nome==null||!String(nome).trim())return;await labPersistirMapaNovo_(nome);return;}
+    const nome=prompt('Nome do mapa:',existente.nome||'');if(nome==null||!String(nome).trim())return;
     const dados=labMapaDadosAtuais_(nome,existente.id);
     try{
-        await setDoc(doc(db,'mapas',String(existente.id)),dados,{merge:false});
-        const ix=mapasDB.findIndex(m=>String(m.id)===String(existente.id));
-        if(ix>=0)mapasDB[ix]=dados;
-        labMapaSelecionado_=String(existente.id);labAtualizarSelectMapas_();
-        if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+        const salvo=await labMapaSalvarFirestore_(dados,Number(existente.partes||0));
+        const ix=mapasDB.findIndex(m=>String(m.id)===String(existente.id));if(ix>=0)mapasDB[ix]=salvo;
+        labMapaSelecionado_=String(existente.id);labAtualizarSelectMapas_();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
         notificar_(`Alterações de “${dados.nome}” salvas.`,'sucesso',4200);
     }catch(e){
-        console.warn('Firestore /mapas indisponível; usando armazenamento local.',e);
+        console.error('Falha ao salvar alterações do mapa',e);
         const locais=labMapasLocaisLer_(),ix=locais.findIndex(m=>String(m.id)===String(existente.id)),local={...dados,__local:true};
         if(ix>=0)locais[ix]=local;else locais.push(local);
         if(labMapasLocaisSalvar_(locais)){
-            const j=mapasDB.findIndex(m=>String(m.id)===String(existente.id));
-            if(j>=0)mapasDB[j]=local;else mapasDB.push(local);
-            labMapaSelecionado_=String(existente.id);labAtualizarSelectMapas_();
-            if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
-            notificar_(`Firestore indisponível; alterações de “${dados.nome}” foram salvas localmente.`,'aviso',6500);
-        }else notificar_('Não foi possível salvar o mapa nem no Firestore nem localmente.','erro',6500);
+            const j=mapasDB.findIndex(m=>String(m.id)===String(existente.id));if(j>=0)mapasDB[j]=local;else mapasDB.push(local);
+            labMapaSelecionado_=String(existente.id);labAtualizarSelectMapas_();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+            notificar_(`Firestore falhou; alterações de “${dados.nome}” foram salvas localmente.`,'aviso',6500);
+        }else notificar_('Não foi possível salvar o mapa. O navegador também ficou sem espaço local. Veja o console para o erro do Firestore.','erro',7500);
     }
 };
-window.labCarregarMapaBanco_=function(){
-    const m=(mapasDB||[]).find(x=>String(x.id)===String(labMapaSelecionado_));
-    if(!m){notificar_('Selecione um mapa salvo.','aviso');return;}
+window.labCarregarMapaBanco_=async function(){
+    const m0=(mapasDB||[]).find(x=>String(x.id)===String(labMapaSelecionado_));
+    if(!m0){notificar_('Selecione um mapa salvo.','aviso');return;}
+    let m=m0;try{m=await labMapaHidratar_(m0);}catch(e){console.error('Carregar partes do mapa',e);notificar_('Não foi possível carregar os dados completos deste mapa.','erro',6000);return;}
     if((labEstado_.desenhosLab||[]).length&&!confirm(`Carregar “${m.nome}”? O terreno/desenho atual será substituído. Os participantes não serão removidos.`))return;
     labEstado_.larguraM=Math.max(4,Number(m.larguraM||28));
     labEstado_.alturaM=Math.max(4,Number(m.alturaM||14));
@@ -8326,6 +8350,7 @@ window.labExcluirMapaBanco_=async function(){
     if(!m){notificar_('Selecione um mapa salvo.','aviso');return;}
     if(!confirm(`Excluir permanentemente o mapa “${m.nome}” do banco?`))return;
     try{
+        if(!m.__local)await labMapaApagarPartesAntigas_(m.id,Number(m.partes||0));
         await deleteDoc(doc(db,'mapas',String(m.id)));
         mapasDB=mapasDB.filter(x=>String(x.id)!==String(m.id));
         labMapaSelecionado_='';labAtualizarSelectMapas_();
@@ -15876,10 +15901,18 @@ function garantirObjetosMapaPadrao_(){
     }
 }
 window.garantirObjetosMapaPadrao_=garantirObjetosMapaPadrao_;
+function objetoMapaDocId_(id){return `objetoMapa_${String(id||'objeto').replace(/[^a-zA-Z0-9_-]/g,'_')}`;}
+async function salvarObjetosMapaLista_(lista){
+    if(!batalhaEhMestre_())throw new Error('Apenas o mestre pode salvar objetos.');
+    const limpos=(lista||[]).map(o=>JSON.parse(JSON.stringify(o)));
+    // Cada objeto fica em seu próprio documento. Imagens PNG/WebP em data URL não
+    // fazem mais todos os objetos competirem pelo limite de 1 MiB de um único documento.
+    for(const o of limpos)await setDoc(doc(db,'configuracoes',objetoMapaDocId_(o.id)),o,{merge:false});
+    await setDoc(doc(db,'configuracoes','objetosMapa'),{formato:'docs-v1',ids:limpos.map(o=>o.id),atualizadoEm:new Date().toISOString()},{merge:false});
+}
 async function salvarObjetosMapaDB_(){
-    if(!batalhaEhMestre_())return;
-    try{await setDoc(doc(db,'configuracoes','objetosMapa'),{lista:objetosMapaDB,atualizadoEm:new Date().toISOString()},{merge:false});}
-    catch(e){console.error('Objetos de mapa',e);notificar_('Não foi possível salvar o banco de objetos de mapa.','erro',4500);throw e;}
+    try{await salvarObjetosMapaLista_(objetosMapaDB);}
+    catch(e){console.error('Objetos de mapa',e);notificar_(`Não foi possível salvar o objeto: ${e?.message||'erro no Firestore'}.`,'erro',6500);throw e;}
 }
 function objetoNumero_(v,padrao,min=0){const n=Number(v);return Number.isFinite(n)?Math.max(min,n):padrao;}
 window.renderizarBancoObjetosMapa_=function(){
@@ -15913,15 +15946,23 @@ window.objMapaLerImagem_=function(ev){
     };im.src=rd.result;};rd.readAsDataURL(f);
 };
 window.salvarObjetoMapaEditor_=async function(){
-    garantirObjetosMapaPadrao_();const editId=String(document.getElementById('objMapaEditId')?.value||''),nome=String(document.getElementById('objMapaNome')?.value||'').trim();if(!nome){notificar_('Dê um nome ao objeto.','aviso');return;}
-    let o=editId?objetosMapaDB.find(x=>String(x.id)===editId):null;if(!o){let id=labMapaSlug_(nome)||`objeto_${Date.now()}`,b=id,n=2;while(objetosMapaDB.some(x=>String(x.id)===id))id=`${b}_${n++}`;o={id};objetosMapaDB.push(o);}
+    garantirObjetosMapaPadrao_();
+    const editId=String(document.getElementById('objMapaEditId')?.value||''),nome=String(document.getElementById('objMapaNome')?.value||'').trim();
+    if(!nome){notificar_('Dê um nome ao objeto.','aviso');return;}
+    const lista=JSON.parse(JSON.stringify(objetosMapaDB||[]));
+    let o=editId?lista.find(x=>String(x.id)===editId):null;
+    if(!o){let id=labMapaSlug_(nome)||`objeto_${Date.now()}`,b=id,n=2;while(lista.some(x=>String(x.id)===id))id=`${b}_${n++}`;o={id};lista.push(o);}
     const prev=document.getElementById('objMapaImagemPreview'),img=String(prev?.dataset?.imagem||prev?.src||'').trim()||objetoSvgData_('caixa');
     Object.assign(o,{nome,imagem:img,tipoVisual:o.tipoVisual||'personalizado',larguraM:objetoNumero_(document.getElementById('objMapaLargura')?.value,1,.1),alturaM:objetoNumero_(document.getElementById('objMapaAltura')?.value,1,.1),pvMax:objetoNumero_(document.getElementById('objMapaPV')?.value,10,0),dureza:objetoNumero_(document.getElementById('objMapaDureza')?.value,2,0),destrutivel:!!document.getElementById('objMapaDestrutivel')?.checked,inflamavel:!!document.getElementById('objMapaInflamavel')?.checked,bloqueiaMovimento:!!document.getElementById('objMapaBloqueiaMov')?.checked,bloqueiaVisao:!!document.getElementById('objMapaBloqueiaVisao')?.checked});
-    await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();fecharEditorObjetoMapa_();notificar_(`Objeto “${nome}” salvo.`,'sucesso',2800);
+    try{
+        await salvarObjetosMapaLista_(lista);objetosMapaDB=lista;renderizarBancoObjetosMapa_();fecharEditorObjetoMapa_();notificar_(`Objeto “${nome}” salvo.`,'sucesso',2800);
+    }catch(e){console.error('Salvar objeto de mapa',e);notificar_(`Não foi possível salvar “${nome}”. ${e?.message||''}`,'erro',7000);}
 };
 window.excluirObjetoMapaBanco_=async function(id){
     const o=objetosMapaDB.find(x=>String(x.id)===String(id));if(!o||!confirm(`Excluir o modelo “${o.nome}”? Objetos já colocados nos mapas não serão removidos.`))return;
-    objetosMapaDB=objetosMapaDB.filter(x=>String(x.id)!==String(id));await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();
+    const lista=objetosMapaDB.filter(x=>String(x.id)!==String(id));
+    try{await salvarObjetosMapaLista_(lista);try{await deleteDoc(doc(db,'configuracoes',objetoMapaDocId_(id)));}catch(_){}objetosMapaDB=lista;renderizarBancoObjetosMapa_();}
+    catch(e){console.error(e);notificar_('Não foi possível excluir o objeto.','erro',5000);}
 };
 window.restaurarObjetosMapaPadrao_=async function(){const defs=objetosMapaPadrao_(),ids=new Set(defs.map(x=>x.id));objetosMapaDB=(objetosMapaDB||[]).filter(x=>!ids.has(String(x.id)));objetosMapaDB.push(...defs);await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();notificar_('Modelos básicos restaurados com os visuais atuais.','sucesso',2500);};
 window.labAtualizarSelectObjetosMapa_=function(){
@@ -15973,6 +16014,6 @@ setTimeout(()=>{try{labAtualizarSelectObjetosMapa_();renderizarBancoObjetosMapa_
 <!-- Mesa Estelar v46.30.0: entrada RGB direta para pintura e tokens sempre acima do desenho -->
 
 
-<!-- Mesa Estelar v46.34.0: Mapa da Mesa oficial, modo de edição recolhível, participantes diretos, objetos personalizados e sincronização pública de visualização -->
+<!-- Mesa Estelar v46.34.1: Mapa da Mesa oficial, modo de edição recolhível, participantes diretos, objetos personalizados e sincronização pública de visualização -->
 </body>
 </html>
