@@ -15954,9 +15954,22 @@ window.salvarObjetoMapaEditor_=async function(){
     if(!o){let id=labMapaSlug_(nome)||`objeto_${Date.now()}`,b=id,n=2;while(lista.some(x=>String(x.id)===id))id=`${b}_${n++}`;o={id};lista.push(o);}
     const prev=document.getElementById('objMapaImagemPreview'),img=String(prev?.dataset?.imagem||prev?.src||'').trim()||objetoSvgData_('caixa');
     Object.assign(o,{nome,imagem:img,tipoVisual:o.tipoVisual||'personalizado',larguraM:objetoNumero_(document.getElementById('objMapaLargura')?.value,1,.1),alturaM:objetoNumero_(document.getElementById('objMapaAltura')?.value,1,.1),pvMax:objetoNumero_(document.getElementById('objMapaPV')?.value,10,0),dureza:objetoNumero_(document.getElementById('objMapaDureza')?.value,2,0),destrutivel:!!document.getElementById('objMapaDestrutivel')?.checked,inflamavel:!!document.getElementById('objMapaInflamavel')?.checked,bloqueiaMovimento:!!document.getElementById('objMapaBloqueiaMov')?.checked,bloqueiaVisao:!!document.getElementById('objMapaBloqueiaVisao')?.checked});
+    const botao=document.querySelector('#editorObjetoMapaBanco .btn-save');
+    const textoBotao=botao?.innerHTML||'💾 Salvar objeto';
+    if(botao){botao.disabled=true;botao.innerHTML='⏳ Salvando...';}
     try{
-        await salvarObjetosMapaLista_(lista);objetosMapaDB=lista;renderizarBancoObjetosMapa_();fecharEditorObjetoMapa_();notificar_(`Objeto “${nome}” salvo.`,'sucesso',2800);
-    }catch(e){console.error('Salvar objeto de mapa',e);notificar_(`Não foi possível salvar “${nome}”. ${e?.message||''}`,'erro',7000);}
+        // Salva SOMENTE o objeto editado. A versão anterior regravava toda a biblioteca
+        // (incluindo todas as imagens) a cada clique, tornando o salvamento cada vez mais lento.
+        await setDoc(doc(db,'configuracoes',objetoMapaDocId_(o.id)),JSON.parse(JSON.stringify(o)),{merge:false});
+        // O índice é pequeno: contém apenas os IDs, nunca as imagens.
+        await setDoc(doc(db,'configuracoes','objetosMapa'),{formato:'docs-v1',ids:lista.map(x=>x.id),atualizadoEm:new Date().toISOString()},{merge:false});
+        objetosMapaDB=lista;renderizarBancoObjetosMapa_();fecharEditorObjetoMapa_();notificar_(`Objeto “${nome}” salvo.`,'sucesso',2800);
+    }catch(e){
+        console.error('Salvar objeto de mapa',e);
+        notificar_(`Não foi possível salvar “${nome}”. ${e?.message||''}`,'erro',7000);
+    }finally{
+        if(botao){botao.disabled=false;botao.innerHTML=textoBotao;}
+    }
 };
 window.excluirObjetoMapaBanco_=async function(id){
     const o=objetosMapaDB.find(x=>String(x.id)===String(id));if(!o||!confirm(`Excluir o modelo “${o.nome}”? Objetos já colocados nos mapas não serão removidos.`))return;
@@ -16015,5 +16028,6 @@ setTimeout(()=>{try{labAtualizarSelectObjetosMapa_();renderizarBancoObjetosMapa_
 
 
 <!-- Mesa Estelar v46.34.1: Mapa da Mesa oficial, modo de edição recolhível, participantes diretos, objetos personalizados e sincronização pública de visualização -->
+<!-- Mesa Estelar v46.34.2: salvamento incremental de objetos de mapa -->
 </body>
 </html>
