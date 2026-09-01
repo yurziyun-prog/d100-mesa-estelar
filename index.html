@@ -473,6 +473,11 @@
                         <label style="display:flex;align-items:center;gap:5px;">Pincel <input id="labDrawSize" type="range" min="2" max="48" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:90px;"></label>
                         <button class="btn-small" onclick="labDesenhoLimpar_()" title="Apaga todos os desenhos. Pode ser desfeito com ↶.">🗑️ Limpar tudo</button>
                         <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
+                        <label style="display:flex;align-items:center;gap:5px;">Objeto
+                          <select id="labObjetoModeloSelect" style="width:165px;margin:0;"><option value="">— objeto —</option></select>
+                        </label>
+                        <button class="btn-small btn-select" onclick="labAdicionarObjetoSelecionado_()">➕ Colocar</button>
+                        <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
                         <label style="display:flex;align-items:center;gap:5px;">Mapas salvos
                           <select id="labMapaSalvoSelect" onchange="labSelecionarMapaSalvo_(this.value)" style="width:190px;margin:0;"><option value="">— nenhum —</option></select>
                         </label>
@@ -493,6 +498,7 @@
                     <div id="labCombatStatus" style="padding:9px 11px;margin-bottom:8px;border-radius:8px;background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.30);color:#ffe29a;"></div>
                     <div id="labActionPanel" style="display:none;margin-bottom:7px;padding:7px 9px;border-radius:9px;font-size:.88em;background:rgba(22,18,48,.88);border:1px solid rgba(0,212,255,.28);"></div>
                     <div id="labInfo" style="padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(0,212,255,.07);border:1px solid rgba(0,212,255,.20);color:#cdefff;">Clique num token para selecioná-lo. Arraste o token para mover. Arraste a seta dourada na borda para girar a frente. A sombra mostra o deslocamento disponível em metros.</div>
+                    <div id="labObjetoPainel" style="display:none;padding:9px 11px;margin-bottom:10px;border-radius:8px;background:rgba(86,240,138,.07);border:1px solid rgba(86,240,138,.28);color:#d8ffe5;"></div>
                     <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
                         <div id="labHoverCard" style="display:none;position:fixed;z-index:99999;pointer-events:none;width:300px;max-height:520px;overflow:hidden;border:1px solid rgba(0,212,255,.55);border-radius:12px;background:rgba(12,14,33,.97);box-shadow:0 12px 34px rgba(0,0,0,.55);padding:10px;"></div>
                     <div id="labMetricMap" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
@@ -980,7 +986,7 @@
                         <button class="tab-btn" onclick="mostrarBancoAba('especializacoes', this)">Especializações</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('poderesPsi', this)">Poderes Psi</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('itens', this)">Itens</button>
-                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button><button class="tab-btn" onclick="mostrarBancoAba('criaturas', this)">Criaturas</button><button class="tab-btn" onclick="mostrarBancoAba('mapas', this)">Mapas</button>
+                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button><button class="tab-btn" onclick="mostrarBancoAba('criaturas', this)">Criaturas</button><button class="tab-btn" onclick="mostrarBancoAba('objetosMapa', this)">Objetos de Mapa</button><button class="tab-btn" onclick="mostrarBancoAba('mapas', this)">Mapas</button>
                     </div>
 
                     <div id="banco-pericias" class="tab-content active">
@@ -1103,6 +1109,16 @@
                       </div>
                       <div id="listaBancoCriaturas"></div>
                       <button class="btn-save" onclick="adicionarCriaturaBanco_()" style="margin-top:15px">➕ Adicionar Criatura</button>
+                    </div>
+
+                    <div id="banco-objetosMapa" class="tab-content">
+                        <h4 style="color:#fff;margin-bottom:8px;">🌳 Objetos de Mapa</h4>
+                        <p style="color:#aaa;margin-bottom:14px;">Modelos reutilizáveis de cenário. Eles podem ser colocados na mesa, movidos, girados, sofrer dano e são salvos junto com cada mapa.</p>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                            <button class="btn-small btn-select" onclick="novoObjetoMapaBanco_()">➕ Novo objeto</button>
+                            <button class="btn-small" onclick="restaurarObjetosMapaPadrao_()">🌱 Restaurar modelos básicos</button>
+                        </div>
+                        <div id="listaBancoObjetosMapa"></div>
                     </div>
 
                     <div id="banco-mapas" class="tab-content">
@@ -1692,6 +1708,7 @@ let poderesPsiDB = [];
 let itensDB = [];
 let cenariosDB = [];
 let mapasDB = [];
+let objetosMapaDB = [];
 let npcsDB = [];
 let criaturasDB = [];
 
@@ -2492,6 +2509,13 @@ async function carregarBancosDeDados() {
             mapasDB.sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
         }catch(e){console.warn('Banco de mapas indisponível. Verifique as regras Firestore de /mapas.',e);mapasDB=[];}
     }
+    if(userData?.role==='mestre'){
+        try{
+            const dObj=await getDoc(doc(db,'configuracoes','objetosMapa'));
+            objetosMapaDB=dObj.exists()&&Array.isArray(dObj.data()?.lista)?dObj.data().lista:[];
+        }catch(e){console.warn('Banco de objetos de mapa indisponível:',e);objetosMapaDB=[];}
+        garantirObjetosMapaPadrao_();
+    }
     if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'npcs'));npcsDB=[];q.forEach(d=>npcsDB.push({id:d.id,...d.data()}));}catch(e){console.warn(e);}}
     if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'criaturas'));criaturasDB=[];q.forEach(d=>criaturasDB.push({id:d.id,...d.data()}));}catch(e){console.warn('Banco de criaturas indisponível:',e);criaturasDB=[];}}
     if(userData?.role==='mestre'){
@@ -2606,6 +2630,7 @@ function renderizarBancoDados() {
     renderizarBancoCenarios();
     renderizarBancoNPCs_();
     renderizarBancoCriaturas_();
+    renderizarBancoObjetosMapa_();
     renderizarBancoMapas_();
 }
 
@@ -6457,6 +6482,7 @@ window.mostrarBancoAba = (abaId, btn) => {
     if (abaId === 'criaturas') renderizarBancoCriaturas_();
     if (abaId === 'cenarios') renderizarBancoCenarios();
     if (abaId === 'mapas') renderizarBancoMapas_();
+    if (abaId === 'objetosMapa') renderizarBancoObjetosMapa_();
 };
 
 
@@ -6596,7 +6622,7 @@ window.excluirMapaBancoAdmin_=async function(id){
 
 let labEstado_={
     tokens:[],pxPorMetro:48,larguraM:28,alturaM:14,fundo:'#d7d7d7',
-    corGrade:'#777777',gradeVisivel:true,textura:'nenhuma',selecionadoId:'',
+    corGrade:'#777777',gradeVisivel:true,textura:'nenhuma',selecionadoId:'',objetosLab:[],objetoSelecionadoId:'',
     fase:'preparacao',rodada:0,ordemIniciativa:[],turnoIndex:0,logLab:[],ultimoResultadoLab:'',pendenciaLab:null,danoPendenteLab:null
 };
 let labDrag_=null;
@@ -6786,6 +6812,7 @@ window.labResetarAcoes_=function(){
 
 function labSanearEstado_(){
     labEstado_.tokens=Array.isArray(labEstado_.tokens)?labEstado_.tokens:[];
+    labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
     if(!Array.isArray(labEstado_.ordemIniciativa))labEstado_.ordemIniciativa=[];
     const ids=new Set(labEstado_.tokens.map(t=>String(t.id)));
     labEstado_.ordemIniciativa=labEstado_.ordemIniciativa.filter(id=>ids.has(String(id)));
@@ -8158,6 +8185,7 @@ function labMapaDadosAtuais_(nome,id=''){
         gradeVisivel:labEstado_.gradeVisivel!==false,
         textura:String(labEstado_.textura||'nenhuma'),
         desenhos:labDesenhoSnapshot_(),
+        objetos:JSON.parse(JSON.stringify(labEstado_.objetosLab||[])),
         criadoPor:currentUserUid||'',
         atualizadoEm:new Date().toISOString()
     };
@@ -8258,7 +8286,9 @@ window.labCarregarMapaBanco_=function(){
     labEstado_.gradeVisivel=m.gradeVisivel!==false;
     labEstado_.textura=String(m.textura||'nenhuma');
     labEstado_.desenhosLab=JSON.parse(JSON.stringify(m.desenhos||[]));
-    // Mantém tokens, combate, PV e iniciativa. Apenas o cenário gráfico é trocado.
+    labEstado_.objetosLab=JSON.parse(JSON.stringify(m.objetos||[]));
+    labEstado_.objetoSelecionadoId='';
+    // Mantém tokens, combate, PV e iniciativa. O terreno e os objetos de cenário são trocados.
     for(const t of labEstado_.tokens||[]){
         t.x=Math.max(0,Math.min(labEstado_.larguraM,Number(t.x||0)));
         t.y=Math.max(0,Math.min(labEstado_.alturaM,Number(t.y||0)));
@@ -8379,6 +8409,7 @@ function labRender_(){
     const drawCfg=labDesenhoConfig_();
     const cursorDesenho=!drawCfg.ativo?'default':drawCfg.ferramenta==='borracha'?'cell':'crosshair';
     const drawCanvas=`<canvas id="labDrawCanvas" onpointerdown="labDesenhoPointerDown_(event)" style="position:absolute;inset:0;z-index:2;pointer-events:${drawCfg.ativo?'auto':'none'};cursor:${cursorDesenho};"></canvas>`;
+    const objetos=(labEstado_.objetosLab||[]).map(o=>labObjetoHtml_(o,ppm)).join('');
     const tokens=labEstado_.tokens.map(t=>{const d=Math.max(24,t.diametroM*ppm),sel=String(t.id)===String(labEstado_.selecionadoId),turno=labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id);
         const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
         const alvoAtual=labEstado_.fase==='combate'&&String(labTokenAtual_()?.alvoLab)===String(t.id);
@@ -8390,7 +8421,7 @@ function labRender_(){
     const dMicro=microToken?Math.max(24,Number(microToken.diametroM||.9)*ppm):0;
     const micro=microToken?labMicroPainelHtml_(microToken,ppm,dMicro):'';
     const floats=(labEstado_.floatsLab||[]).map(f=>labFloatHtml_(f,ppm)).join('');
-    map.innerHTML=drawCanvas+overlay+tokens+micro+floats;
+    map.innerHTML=drawCanvas+overlay+objetos+tokens+micro+floats;
     labDesenhoRender_();
     const cfg=labDesenhoConfig_(),tg=document.getElementById('labDrawToggle'),eb=document.getElementById('labEraserBtn'),ft=document.getElementById('labDrawTool'),cc=document.getElementById('labDrawColor'),rgb=document.getElementById('labDrawRgb'),sz=document.getElementById('labDrawSize'),ub=document.getElementById('labUndoBtn'),rb=document.getElementById('labRedoBtn');
     if(tg){tg.textContent=cfg.ativo&&cfg.ferramenta!=='borracha'?'✅ Desenhando':'✏️ Desenhar';tg.classList.toggle('btn-select',cfg.ativo&&cfg.ferramenta!=='borracha');}
@@ -8398,6 +8429,8 @@ function labRender_(){
     if(ub)ub.disabled=!labDesenhoUndo_.length;if(rb)rb.disabled=!labDesenhoRedo_.length;
     if(ft)ft.value=cfg.ferramenta;if(cc)cc.value=cfg.cor;if(rgb){const v=labCorHexParaRgb_(cfg.cor);if(v&&document.activeElement!==rgb)rgb.value=v.join('/');}if(sz)sz.value=cfg.tamanho;
     labAtualizarSelectMapas_();
+    labAtualizarSelectObjetosMapa_();
+    labRenderObjetoPainel_();
     const bg=document.getElementById('labBgColor'),gc=document.getElementById('labGridColor'),gv=document.getElementById('labGridVisible'),tx=document.getElementById('labTexture'),ms=document.getElementById('labMapSize'),zm=document.getElementById('labZoom');
     if(bg)bg.value=labEstado_.fundo||'#d7d7d7';if(gc)gc.value=labEstado_.corGrade||'#777777';if(gv)gv.checked=labEstado_.gradeVisivel!==false;if(tx)tx.value=labEstado_.textura||'nenhuma';
     if(ms){const v=`${labEstado_.larguraM}x${labEstado_.alturaM}`;if([...ms.options].some(o=>o.value===v))ms.value=v;}
@@ -15564,10 +15597,116 @@ window.calicoAplicarAoCenario_=async function(){
     notificar_('Estado de Calico aplicado ao cenário atual.','info',3500);
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
+
+// ============================================================
+// v46.31 — OBJETOS DE MAPA
+// Modelos no Banco de Dados + instâncias destrutíveis na mesa.
+// ============================================================
+function objetoSvgData_(tipo){
+    const svgs={
+      arvore:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><defs><radialGradient id="g"><stop stop-color="#7fce62"/><stop offset="1" stop-color="#276b35"/></radialGradient></defs><circle cx="100" cy="100" r="83" fill="url(#g)" stroke="#173f24" stroke-width="8"/><circle cx="72" cy="78" r="38" fill="#4b9c43"/><circle cx="125" cy="70" r="42" fill="#3d8c3f"/><circle cx="118" cy="123" r="46" fill="#347c38"/><circle cx="74" cy="128" r="35" fill="#4a9842"/><circle cx="100" cy="102" r="18" fill="#76502e"/></svg>`,
+      rocha:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><path d="M30 122 44 66 82 31 137 40 171 83 158 140 119 169 62 158Z" fill="#83878a" stroke="#4d5154" stroke-width="9"/><path d="m59 77 31-28 38 11 19 30-34-9-22 31Z" fill="#a8abad" opacity=".8"/><path d="m70 139 28-20 43 8-25 25Z" fill="#62676a"/></svg>`,
+      caixa:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect x="25" y="25" width="150" height="150" rx="8" fill="#9b6334" stroke="#55351e" stroke-width="9"/><path d="M32 60h136M32 140h136M60 32v136M140 32v136M38 38l124 124M162 38 38 162" stroke="#c58b51" stroke-width="9" opacity=".8"/></svg>`
+    };
+    const svg=svgs[tipo]||svgs.caixa;
+    return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+}
+function objetosMapaPadrao_(){return [
+ {id:'arvore_media',nome:'Árvore média',tipoVisual:'arvore',imagem:objetoSvgData_('arvore'),larguraM:2.2,alturaM:2.2,pvMax:30,dureza:5,destrutivel:true,inflamavel:true,bloqueiaMovimento:true,bloqueiaVisao:true},
+ {id:'rocha_media',nome:'Rocha média',tipoVisual:'rocha',imagem:objetoSvgData_('rocha'),larguraM:1.5,alturaM:1.3,pvMax:45,dureza:9,destrutivel:true,inflamavel:false,bloqueiaMovimento:true,bloqueiaVisao:false},
+ {id:'caixa_madeira',nome:'Caixa de madeira',tipoVisual:'caixa',imagem:objetoSvgData_('caixa'),larguraM:1,alturaM:1,pvMax:15,dureza:3,destrutivel:true,inflamavel:true,bloqueiaMovimento:true,bloqueiaVisao:false}
+];}
+function garantirObjetosMapaPadrao_(){
+    objetosMapaDB=Array.isArray(objetosMapaDB)?objetosMapaDB:[];
+    const ids=new Set(objetosMapaDB.map(o=>String(o.id)));
+    for(const o of objetosMapaPadrao_())if(!ids.has(o.id))objetosMapaDB.push(o);
+}
+window.garantirObjetosMapaPadrao_=garantirObjetosMapaPadrao_;
+async function salvarObjetosMapaDB_(){
+    if(!batalhaEhMestre_())return;
+    try{await setDoc(doc(db,'configuracoes','objetosMapa'),{lista:objetosMapaDB,atualizadoEm:new Date().toISOString()},{merge:false});}
+    catch(e){console.error('Objetos de mapa',e);notificar_('Não foi possível salvar o banco de objetos de mapa.','erro',4500);throw e;}
+}
+function objetoNumero_(v,padrao,min=0){const n=Number(v);return Number.isFinite(n)?Math.max(min,n):padrao;}
+window.renderizarBancoObjetosMapa_=function(){
+    garantirObjetosMapaPadrao_();
+    const e=document.getElementById('listaBancoObjetosMapa');if(!e)return;
+    e.innerHTML=`<div class="db-table-wrap"><table class="db-table" style="min-width:1180px"><thead><tr><th>Objeto</th><th>Tamanho m</th><th>PV</th><th>Dureza</th><th>Propriedades</th><th>Ações</th></tr></thead><tbody>${objetosMapaDB.map(o=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:10px"><img src="${o.imagem||''}" style="width:58px;height:58px;object-fit:contain;background:rgba(255,255,255,.05);border-radius:8px"><div><b>${escaparBanco_(o.nome||o.id)}</b><br><small style="color:#888">${escaparBanco_(o.id||'')}</small></div></div></td>
+    <td>${Number(o.larguraM||1)} × ${Number(o.alturaM||1)}</td><td>${Number(o.pvMax||0)}</td><td>${Number(o.dureza||0)}</td>
+    <td><small>${o.destrutivel!==false?'💥 destrutível':'♾️ indestrutível'} · ${o.inflamavel?'🔥 inflamável':'🚫🔥'} · ${o.bloqueiaMovimento?'🚧 bloqueia movimento':'passável'} · ${o.bloqueiaVisao?'👁️ bloqueia visão':'visão livre'}</small></td>
+    <td><button class="btn-small" onclick="editarObjetoMapaBanco_('${String(o.id).replace(/'/g,"\\'")}')">✏️ Editar</button> <button class="btn-small btn-delete" onclick="excluirObjetoMapaBanco_('${String(o.id).replace(/'/g,"\\'")}')">🗑️ Excluir</button></td></tr>`).join('')}</tbody></table></div>`;
+    labAtualizarSelectObjetosMapa_();
+};
+window.novoObjetoMapaBanco_=async function(){
+    const nome=prompt('Nome do novo objeto:','Novo objeto');if(nome==null||!String(nome).trim())return;
+    let id=labMapaSlug_(nome),b=id,n=2;while(objetosMapaDB.some(o=>String(o.id)===id))id=`${b}_${n++}`;
+    const o={id,nome:String(nome).trim(),tipoVisual:'caixa',imagem:objetoSvgData_('caixa'),larguraM:1,alturaM:1,pvMax:10,dureza:2,destrutivel:true,inflamavel:false,bloqueiaMovimento:true,bloqueiaVisao:false};
+    objetosMapaDB.push(o);await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();
+};
+window.editarObjetoMapaBanco_=async function(id){
+    const o=objetosMapaDB.find(x=>String(x.id)===String(id));if(!o)return;
+    const nome=prompt('Nome:',o.nome||'');if(nome==null)return;
+    const tam=prompt('Tamanho largura/altura em metros. Ex.: 2.2/2.2',`${o.larguraM||1}/${o.alturaM||1}`);if(tam==null)return;
+    const [w,h]=String(tam).split(/[xX\/;, ]+/).map(Number);
+    const pv=prompt('PV máximos:',String(o.pvMax||0));if(pv==null)return;
+    const dur=prompt('Dureza (reduz dano recebido):',String(o.dureza||0));if(dur==null)return;
+    Object.assign(o,{nome:String(nome).trim()||o.nome,larguraM:objetoNumero_(w,o.larguraM||1,.1),alturaM:objetoNumero_(h,o.alturaM||1,.1),pvMax:objetoNumero_(pv,o.pvMax||0,0),dureza:objetoNumero_(dur,o.dureza||0,0)});
+    await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();
+};
+window.excluirObjetoMapaBanco_=async function(id){
+    const o=objetosMapaDB.find(x=>String(x.id)===String(id));if(!o||!confirm(`Excluir o modelo “${o.nome}”? Objetos já colocados nos mapas não serão removidos.`))return;
+    objetosMapaDB=objetosMapaDB.filter(x=>String(x.id)!==String(id));await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();
+};
+window.restaurarObjetosMapaPadrao_=async function(){garantirObjetosMapaPadrao_();await salvarObjetosMapaDB_();renderizarBancoObjetosMapa_();notificar_('Modelos básicos disponíveis.','sucesso',2500);};
+window.labAtualizarSelectObjetosMapa_=function(){
+    garantirObjetosMapaPadrao_();const s=document.getElementById('labObjetoModeloSelect');if(!s)return;const v=s.value;
+    s.innerHTML='<option value="">— objeto —</option>'+objetosMapaDB.map(o=>`<option value="${escaparHtmlInventario_(o.id)}">${escaparHtmlInventario_(o.nome||o.id)}</option>`).join('');
+    if(objetosMapaDB.some(o=>String(o.id)===String(v)))s.value=v;
+};
+window.labAdicionarObjetoSelecionado_=function(){
+    if(!batalhaEhMestre_())return;garantirObjetosMapaPadrao_();const id=document.getElementById('labObjetoModeloSelect')?.value;
+    const m=objetosMapaDB.find(x=>String(x.id)===String(id));if(!m){notificar_('Escolha um objeto de mapa.','aviso');return;}
+    labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
+    const inst={...JSON.parse(JSON.stringify(m)),id:`obj:${Date.now()}:${Math.floor(Math.random()*10000)}`,modeloId:m.id,x:labEstado_.larguraM/2,y:labEstado_.alturaM/2,angulo:0,pvAtual:Number(m.pvMax||0),destruido:false};
+    labEstado_.objetosLab.push(inst);labEstado_.objetoSelecionadoId=inst.id;labEstado_.selecionadoId='';labSalvarLocal_();labRender_();
+};
+function labObjetoPorId_(id){return (labEstado_.objetosLab||[]).find(o=>String(o.id)===String(id))||null;}
+function labObjetoHtml_(o,ppm){
+    const w=Math.max(18,Number(o.larguraM||1)*ppm),h=Math.max(18,Number(o.alturaM||1)*ppm),sel=String(o.id)===String(labEstado_.objetoSelecionadoId),dead=!!o.destruido;
+    const img=o.imagem?`<img src="${o.imagem}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none">`:`<span style="font-size:28px">🧱</span>`;
+    return `<div class="lab-map-object" data-id="${escaparHtmlInventario_(o.id)}" title="${escaparHtmlInventario_(o.nome||'Objeto')} · PV ${Number((o.pvAtual??o.pvMax)||0)}/${Number(o.pvMax||0)} · Dureza ${Number(o.dureza||0)}" style="position:absolute;left:${o.x*ppm-w/2}px;top:${o.y*ppm-h/2}px;width:${w}px;height:${h}px;transform:rotate(${Number(o.angulo||0)}deg);transform-origin:center;z-index:${sel?14:10};display:flex;align-items:center;justify-content:center;cursor:grab;opacity:${dead ? .42 : 1};filter:${dead?'grayscale(.8)':''};outline:${sel?'3px solid #56f08a':'none'};outline-offset:2px;touch-action:none" onpointerdown="labObjetoPointerDown_(event,'${String(o.id).replace(/'/g,"\\'")}')" onclick="labSelecionarObjeto_('${String(o.id).replace(/'/g,"\\'")}')">${img}${dead?'<span style="position:absolute;font-size:26px">💥</span>':''}</div>`;
+}
+window.labObjetoHtml_=labObjetoHtml_;
+window.labSelecionarObjeto_=function(id){labEstado_.objetoSelecionadoId=String(id||'');labEstado_.selecionadoId='';labSalvarLocal_();labRenderObjetoPainel_();};
+window.labObjetoPointerDown_=function(ev,id){
+    if(!batalhaEhMestre_())return;ev.preventDefault();ev.stopPropagation();const o=labObjetoPorId_(id),map=document.getElementById('labMetricMap');if(!o||!map)return;
+    labEstado_.objetoSelecionadoId=String(id);labEstado_.selecionadoId='';const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);
+    const move=e=>{o.x=Math.max(0,Math.min(labEstado_.larguraM,(e.clientX-rect.left)/ppm));o.y=Math.max(0,Math.min(labEstado_.alturaM,(e.clientY-rect.top)/ppm));const n=map.querySelector(`.lab-map-object[data-id="${CSS.escape(String(id))}"]`);if(n){const w=n.offsetWidth,h=n.offsetHeight;n.style.left=`${o.x*ppm-w/2}px`;n.style.top=`${o.y*ppm-h/2}px`;}};
+    const up=()=>{window.removeEventListener('pointermove',move);labSalvarLocal_();labRender_();};window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+};
+window.labObjetoGirar_=function(delta){const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;o.angulo=(Number(o.angulo||0)+Number(delta||0)+360)%360;labSalvarLocal_();labRender_();};
+window.labObjetoAplicarDano_=function(){
+    const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o||o.destrutivel===false)return;const inp=document.getElementById('labObjetoDanoInput'),bruto=Math.max(0,Number(inp?.value||0));
+    const efetivo=Math.max(0,bruto-Number(o.dureza||0));o.pvAtual=Math.max(0,Number((o.pvAtual??o.pvMax)||0)-efetivo);if(o.pvAtual<=0)o.destruido=true;
+    labSalvarLocal_();labRender_();notificar_(`${o.nome}: dano ${bruto}, dureza ${Number(o.dureza||0)}, perdeu ${efetivo} PV.`,'info',3500);
+};
+window.labObjetoRestaurar_=function(){const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;o.pvAtual=Number(o.pvMax||0);o.destruido=false;labSalvarLocal_();labRender_();};
+window.labObjetoExcluir_=function(){const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o)return;if(!confirm(`Remover “${o.nome}” deste mapa?`))return;labEstado_.objetosLab=labEstado_.objetosLab.filter(x=>String(x.id)!==String(o.id));labEstado_.objetoSelecionadoId='';labSalvarLocal_();labRender_();};
+window.labRenderObjetoPainel_=function(){
+    const e=document.getElementById('labObjetoPainel');if(!e)return;const o=labObjetoPorId_(labEstado_.objetoSelecionadoId);if(!o){e.style.display='none';e.innerHTML='';return;}
+    e.style.display='flex';e.style.alignItems='center';e.style.gap='8px';e.style.flexWrap='wrap';
+    e.innerHTML=`<b>🌳 ${escaparHtmlInventario_(o.nome||'Objeto')}</b><span>PV <b>${Number((o.pvAtual??o.pvMax)||0)}/${Number(o.pvMax||0)}</b></span><span>Dureza <b>${Number(o.dureza||0)}</b></span>${o.destruido?'<span style="color:#ff8d8d">💥 destruído</span>':''}<button class="btn-small" onclick="labObjetoGirar_(-15)">↶ 15°</button><button class="btn-small" onclick="labObjetoGirar_(15)">↷ 15°</button><label style="display:flex;align-items:center;gap:5px;margin:0">Dano <input id="labObjetoDanoInput" type="number" min="0" value="5" style="width:70px;margin:0;padding:6px"></label><button class="btn-small" onclick="labObjetoAplicarDano_()" ${o.destrutivel===false?'disabled':''}>💥 Aplicar</button><button class="btn-small" onclick="labObjetoRestaurar_()">🛠️ Restaurar</button><button class="btn-small btn-delete" onclick="labObjetoExcluir_()">🗑️ Remover</button>`;
+};
+garantirObjetosMapaPadrao_();
+setTimeout(()=>{try{labAtualizarSelectObjetosMapa_();renderizarBancoObjetosMapa_();}catch(_){}},500);
+
 </script>
 <!-- Mesa Estelar v46.28.0: banco administrativo de mapas no Escudo do Mestre, com abrir, renomear, duplicar e excluir -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 <!-- Mesa Estelar v46.30.0: entrada RGB direta para pintura e tokens sempre acima do desenho -->
+
+
 </body>
 </html>
