@@ -6613,7 +6613,7 @@ function labTokenAtual_(){
     const id=labEstado_.ordemIniciativa[Math.max(0,Math.min(labEstado_.ordemIniciativa.length-1,Number(labEstado_.turnoIndex||0)))];
     return (labEstado_.tokens||[]).find(t=>String(t.id)===String(id))||null;
 }
-function labPrepararNovaRodada_(){for(const t of labTokensCombatentes_()){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=labMovimentoPorAcao_(t)>0;t.passagensLab=0;}}
+function labPrepararNovaRodada_(){for(const t of labTokensCombatentes_()){t.acoesAtuaisLab=Math.max(0,Number(t.acoesMaxLab||0));t.movimentoGratisDisponivel=labMovimentoPorAcao_(t)>0;t.movimentoBonusLab=0;t.passagensLab=0;}}
 window.labIniciarCombate_=function(){
     const cs=labTokensCombatentes_();if(!cs.length){notificar_('Adicione participantes antes de iniciar o combate.','aviso');return;}
     for(const t of labEstado_.tokens||[]){
@@ -6727,8 +6727,22 @@ window.labMudarModoMovimento_=function(v){
     const ok=(v==='terrestre'&&t.movimentoTerrestre>0)||(v==='voo'&&t.movimentoVoo>0)||(v==='natacao'&&t.movimentoNatacao>0);if(ok){t.modoMovimento=v;labSalvarLocal_();labRender_();}
 };
 function labMovimentoPorAcao_(t){if(!t)return 0;if(t.livreMestre)return 999;if(t.modoMovimento==='voo')return Number(t.movimentoVoo||0);if(t.modoMovimento==='natacao')return Number(t.movimentoNatacao||0);if(t.modoMovimento==='terrestre')return Number(t.movimentoTerrestre||0);return 0;}
-function labMovimentoMaxM_(t){if(!t)return 0;if(t.livreMestre)return 999;const p=labMovimentoPorAcao_(t);if(p<=0)return 0;return Math.max(Number(t.acoesAtuaisLab||0)*p,t.movimentoGratisDisponivel!==false?Math.min(1,p):0);}
-function labCustoMovimento_(t,dist){if(t?.livreMestre)return {acoes:0,usaGratis:false};if(dist<=.001)return {acoes:0,usaGratis:false};const p=labMovimentoPorAcao_(t);if(p<=0)return {acoes:0};if(dist<=1.0001&&t.movimentoGratisDisponivel!==false)return {acoes:0,usaGratis:true};return {acoes:Math.max(1,Math.ceil((dist-.0001)/p)),usaGratis:false};}
+function labMovimentoMaxM_(t){
+    if(!t)return 0;if(t.livreMestre)return 999;
+    const p=labMovimentoPorAcao_(t),bonus=Math.max(0,Number(t.movimentoBonusLab||0));
+    if(p<=0)return bonus;
+    const normal=Math.max(Number(t.acoesAtuaisLab||0)*p,t.movimentoGratisDisponivel!==false?Math.min(1,p):0);
+    return bonus+normal;
+}
+function labCustoMovimento_(t,dist){
+    if(t?.livreMestre)return {acoes:0,usaGratis:false,usaBonus:0};
+    if(dist<=.001)return {acoes:0,usaGratis:false,usaBonus:0};
+    const bonus=Math.max(0,Number(t?.movimentoBonusLab||0)),usaBonus=Math.min(bonus,dist),rest=Math.max(0,dist-usaBonus);
+    if(rest<=.001)return {acoes:0,usaGratis:false,usaBonus};
+    const p=labMovimentoPorAcao_(t);if(p<=0)return {acoes:0,usaGratis:false,usaBonus};
+    if(rest<=1.0001&&t.movimentoGratisDisponivel!==false)return {acoes:0,usaGratis:true,usaBonus};
+    return {acoes:Math.max(1,Math.ceil((rest-.0001)/p)),usaGratis:false,usaBonus};
+}
 
 function labCharToken_(t){
     if(!t||String(t.id).startsWith('dummy:'))return null;
@@ -6881,21 +6895,14 @@ window.labMudarDefesa_=function(v){
 
 function labPericiasTeste_(t){
     const c=labCharToken_(t);if(!c)return [];
-    const base=(batalhaListaPericias_(c)||[]).filter(p=>{
+    return (batalhaListaPericias_(c)||[]).filter(p=>{
+        if(p?.__especializacao)return false;
+        const nome=normalizarTextoCombate_(`${p?.id||''} ${getNome(p)||''}`);
+        // Primeiros Socorros tem fluxo próprio no combate.
+        if(/primeiros socorros|first aid|急救/.test(nome))return false;
         const reg=c?.pericias?.[p.id];
-        if(typeof reg==='number')return reg>0;
-        if(reg&&typeof reg==='object')return Number(reg.pontos||reg.investido||reg.treino||0)>0;
-        return false;
-    });
-    const espec=(especializacoesDB||[]).filter(p=>{
-        const reg=c?.especializacoes?.[p.id];
-        if(typeof reg==='number')return reg>0;
-        if(reg&&typeof reg==='object')return Number(reg.pontos||reg.investido||reg.treino||reg.valor||1)>0;
-        return !!reg;
-    }).map(p=>({...p,__especializacao:true}));
-    const vistos=new Set();
-    return [...base,...espec].filter(p=>{const k=`${p.__especializacao?'e':'p'}:${p.id}`;if(vistos.has(k))return false;vistos.add(k);return true;})
-        .sort((a,b)=>getNome(a).localeCompare(getNome(b)));
+        return totalTreinoPericia_(reg)>0;
+    }).sort((a,b)=>getNome(a).localeCompare(getNome(b)));
 }
 function labValorTeste_(t,per){
     const c=labCharToken_(t);if(!c||!per)return 0;
@@ -6912,10 +6919,9 @@ window.labExecutarTeste_=function(){
     t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);t.acaoAuxLab=null;
     let efeito='';
     const nome=normalizarTextoCombate_(getNome(per)),sucesso=batalhaResultadoGradeValor_(r.grau)>=2;
-    if(sucesso&&/atlet|corrida|acrob/.test(nome)){t.movimentoGratisDisponivel=true;efeito=' · Mobilidade: recupera 1 m de deslocamento gratuito nesta oportunidade.';}
+    if(sucesso&&/atlet/.test(nome)){t.movimentoBonusLab=Math.max(0,Number(t.movimentoBonusLab||0))+9;efeito=' · Corrida: ganha 9 m de deslocamento adicional nesta oportunidade.';}
     else if(sucesso&&/percep|observ|vigil|sentid/.test(nome)){t.bonusPercepcaoLab=1;efeito=' · Percepção: vantagem informacional até o fim desta oportunidade (base para ocultação/furtividade).';}
     else if(sucesso&&/furtiv|stealth/.test(nome)){t.furtivoLab=true;efeito=' · Furtividade: estado furtivo provisório ativado; será confrontado por Percepção quando implementarmos linha de visão.';}
-    else if(sucesso&&/primeiros socorros|medic|cura/.test(nome)){efeito=' · Sucesso técnico; para curar PV use a ação específica Primeiros Socorros.';}
     else if(sucesso&&/forca|força|muscul|briga/.test(nome)){t.bonusForcaLab=1;efeito=' · Esforço físico bem-sucedido; pode ser usado pelo mestre para empurrar, romper ou escapar de agarrões.';}
     t.ultimoResultadoProprioLab=`Teste: ${getNome(per)} ${roll}/${valor} → ${r.grau}${efeito}.`;
     try{somDado_();if(r.grau==='Crítico')somCritico_();else if(r.grau==='Fiasco')somFiasco_();}catch(_){}
@@ -6940,21 +6946,52 @@ window.labAbrirPsi_=function(){
     const p=poderes[0],alvos=[t,...(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id))];
     t.acaoAuxLab={tipo:'psiquismo',poderId:p.id,alvoId:String(alvos[0]?.id||t.id),custo:Math.max(0,Number(p.custo||0)),local:''};labSalvarLocal_();labRender_();
 };
-window.labPsiSelecionarPoder_=function(v){const t=labTokenAtual_();if(!t?.acaoAuxLab)return;const p=labPsiPoderes_(t).find(x=>x.id===String(v||''));if(!p)return;t.acaoAuxLab.poderId=p.id;t.acaoAuxLab.custo=Math.max(0,Number(p.custo||0));t.acaoAuxLab.local='';labSalvarLocal_();labRender_();};
-window.labPsiSelecionarAlvo_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.alvoId=String(v||'');labSalvarLocal_();labRender_();};
-window.labPsiSelecionarLocal_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.local=String(v||'');labSalvarLocal_();labRender_();};
-window.labPsiCusto_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.custo=Math.max(0,Math.floor(Number(v)||0));labSalvarLocal_();labRender_();};
+
+function labPsiEhCura_(p){return p?.id==='cura_psi'||normalizarTextoCombate_(getNome(p)||'')==='cura';}
+function labPsiCuraFalta_(alvo,local){
+    const st=labGarantirSnapshotCombate_(alvo);if(!st||!local)return 0;
+    return Math.max(0,Number(st.hitMax?.[local]||0)-Number(st.hit?.[local]??st.hitMax?.[local]??0));
+}
+function labPsiCuraLimite_(t,p,alvo,local){
+    const min=Math.max(0,Number(p?.custo||0)),rest=labPsiRestantes_(t),falta=labPsiCuraFalta_(alvo,local);
+    if(falta<=0)return 0;
+    return Math.max(min,Math.min(rest,falta));
+}
+function labPsiAjustarCura_(t){
+    const a=t?.acaoAuxLab;if(!t||a?.tipo!=='psiquismo')return;
+    const p=labPsiPoderes_(t).find(x=>x.id===a.poderId);if(!labPsiEhCura_(p))return;
+    const alvo=labTokenPorId_(a.alvoId)||t,feridas=labFeridasTrataveis_(alvo);
+    if(!feridas.some(x=>x.local===a.local))a.local=feridas[0]?.local||'';
+    const lim=labPsiCuraLimite_(t,p,alvo,a.local),min=Math.max(0,Number(p?.custo||0));
+    if(lim<=0)a.custo=min;
+    else a.custo=Math.max(min,Math.min(lim,Math.floor(Number(a.custo||min))));
+}
+window.labPsiSelecionarPoder_=function(v){const t=labTokenAtual_();if(!t?.acaoAuxLab)return;const p=labPsiPoderes_(t).find(x=>x.id===String(v||''));if(!p)return;t.acaoAuxLab.poderId=p.id;t.acaoAuxLab.custo=Math.max(0,Number(p.custo||0));t.acaoAuxLab.local='';labPsiAjustarCura_(t);labSalvarLocal_();labRender_();};
+window.labPsiSelecionarAlvo_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.alvoId=String(v||'');labPsiAjustarCura_(t);labSalvarLocal_();labRender_();};
+window.labPsiSelecionarLocal_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.local=String(v||'');labPsiAjustarCura_(t);labSalvarLocal_();labRender_();};
+window.labPsiCusto_=function(v){
+    const t=labTokenAtual_();if(!t?.acaoAuxLab)return;
+    t.acaoAuxLab.custo=Math.max(0,Math.floor(Number(v)||0));labPsiAjustarCura_(t);labSalvarLocal_();labRender_();
+};
 function labPsiEmpurrar_(origem,alvo,metros=5){let dx=Number(alvo.x||0)-Number(origem.x||0),dy=Number(alvo.y||0)-Number(origem.y||0),d=Math.hypot(dx,dy);if(d<.01){dx=0;dy=1;d=1;}alvo.x=Math.max(0,Math.min(labEstado_.larguraM,Number(alvo.x||0)+dx/d*metros));alvo.y=Math.max(0,Math.min(labEstado_.alturaM,Number(alvo.y||0)+dy/d*metros));}
 window.labUsarPsi_=function(){
     const t=labTokenAtual_(),a=t?.acaoAuxLab;if(!t||a?.tipo!=='psiquismo'||Number(t.acoesAtuaisLab||0)<=0)return;
     const p=labPsiPoderes_(t).find(x=>x.id===a.poderId),alvo=labTokenPorId_(a.alvoId)||t;if(!p||!alvo)return;
-    const minimo=Math.max(0,Number(p.custo||0)),gasto=Math.max(minimo,Math.floor(Number(a.custo||0)));if(gasto>labPsiRestantes_(t)){notificar_(`PP insuficientes. Disponíveis: ${labPsiRestantes_(t)}.`,'aviso');return;}
+    const minimo=Math.max(0,Number(p.custo||0));
+    let gasto=Math.max(minimo,Math.floor(Number(a.custo||0)));
+    if(labPsiEhCura_(p)){
+        labPsiAjustarCura_(t);
+        const limite=labPsiCuraLimite_(t,p,alvo,a.local);
+        if(limite<=0){notificar_('Escolha uma localização que ainda tenha PV para recuperar.','aviso');return;}
+        gasto=Math.min(gasto,limite);
+    }
+    if(gasto>labPsiRestantes_(t)){notificar_(`PP insuficientes. Disponíveis: ${labPsiRestantes_(t)}.`,'aviso');return;}
     const valor=labPsiValor_(t,p),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
     t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);t.psiGastosLab=Math.max(0,Number(t.psiGastosLab||0))+gasto;
     let efeito='O poder não produziu efeito.';
     if(r.grau==='Fiasco'&&labPsiRestantes_(t)>0){t.psiGastosLab++;efeito='Fiasco psíquico: perde 1 PP adicional.';}
     if(batalhaResultadoGradeValor_(r.grau)>=2){
-        if(p.id==='cura_psi'){
+        if(labPsiEhCura_(p)){
             const st=labGarantirSnapshotCombate_(alvo),feridas=labFeridasTrataveis_(alvo);let loc=a.local&&feridas.some(x=>x.local===a.local)?a.local:feridas[0]?.local;
             if(loc){const antes=Number(st.hit?.[loc]||0),max=Number(st.hitMax?.[loc]||0),cura=Math.min(gasto,Math.max(0,max-antes));st.hit[loc]=Math.min(max,antes+cura);labReavaliarFerimento_(alvo,loc);efeito=`Cura psíquica restaurou ${cura} PV em ${loc}.`;}else efeito='O alvo não possui ferimento tratável.';
         }else if(p.id==='impulso'){labPsiEmpurrar_(t,alvo,5);efeito=`${alvo.nome} foi impulsionado aproximadamente 5 m.`;}
@@ -6969,6 +7006,7 @@ window.labUsarPsi_=function(){
             else efeito=`${getNome(p)} ativado com sucesso; o gasto de PP e o teste já foram aplicados, mas este poder ainda exige adjudicação narrativa do mestre.`;
         }
     }
+    if(labPsiEhCura_(p)&&batalhaResultadoGradeValor_(r.grau)<2)efeito=`Falha: ${gasto} PP consumidos e 0 PV recuperados.`;
     t.ultimoResultadoProprioLab=`Psiquismo: ${getNome(p)} · ${p.esfera} ${roll}/${valor} → ${r.grau} · gasto ${gasto} PP. ${efeito}`;t.acaoAuxLab=null;try{somMagico_();}catch(_){}
     labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();
 };
@@ -7512,16 +7550,18 @@ function labRenderActionPanel_(){
     if(t.acaoAuxLab?.tipo==='psiquismo'){
         const poderes=labPsiPoderes_(t),p=poderes.find(x=>x.id===t.acaoAuxLab.poderId)||poderes[0];if(!p){t.acaoAuxLab=null;labSalvarLocal_();labRender_();return;}
         t.acaoAuxLab.poderId=p.id;const alvos=[t,...(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id))],alvo=labTokenPorId_(t.acaoAuxLab.alvoId)||t,feridas=labFeridasTrataveis_(alvo);
-        if(p.id==='cura_psi'&&!feridas.some(x=>x.local===t.acaoAuxLab.local))t.acaoAuxLab.local=feridas[0]?.local||'';
+        if(labPsiEhCura_(p)){labPsiAjustarCura_(t);}
         const min=Math.max(0,Number(p.custo||0)),rest=labPsiRestantes_(t),valor=labPsiValor_(t,p);
+        const curaLimite=labPsiEhCura_(p)?labPsiCuraLimite_(t,p,alvo,t.acaoAuxLab.local):rest;
+        const ppMax=labPsiEhCura_(p)?Math.max(min,curaLimite):rest;
         el.innerHTML=`<div><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;"><strong style="color:#d8b4ff;">🔮 Psiquismo</strong><span style="color:#e6d4ff;font-weight:700;">PP ${rest}/${labPsiMax_(t)}</span></div>
-          <div style="display:grid;grid-template-columns:minmax(210px,1.25fr) minmax(150px,.9fr) 100px ${p.id==='cura_psi'?'minmax(150px,.9fr) ':''}auto auto;gap:8px;align-items:end;margin-top:8px;">
+          <div style="display:grid;grid-template-columns:minmax(210px,1.25fr) minmax(150px,.9fr) 100px ${labPsiEhCura_(p)?'minmax(150px,.9fr) ':''}auto auto;gap:8px;align-items:end;margin-top:8px;">
           <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Poder</small><select onchange="labPsiSelecionarPoder_(this.value)" style="width:100%;margin:0;">${poderes.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${x.id===p.id?'selected':''}>${escaparHtmlInventario_(getNome(x))} · ${x.esfera} · A${Number(x.arco||1)}</option>`).join('')}</select></label>
           <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Alvo</small><select onchange="labPsiSelecionarAlvo_(this.value)" style="width:100%;margin:0;">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(alvo.id)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
-          <label style="margin:0;"><small style="display:block;margin-bottom:4px;">PP</small><input type="number" min="${min}" max="${rest}" value="${Math.max(min,Number(t.acaoAuxLab.custo||min))}" onchange="labPsiCusto_(this.value)" style="width:100%;height:48px;margin:0;text-align:center;"></label>
-          ${p.id==='cura_psi'?`<label style="margin:0;"><small style="display:block;margin-bottom:4px;">Local</small><select onchange="labPsiSelecionarLocal_(this.value)" style="width:100%;margin:0;">${feridas.map(x=>`<option value="${escaparHtmlInventario_(x.local)}" ${x.local===t.acaoAuxLab.local?'selected':''}>${escaparHtmlInventario_(x.local)}</option>`).join('')||'<option value="">Sem ferida</option>'}</select></label>`:''}
-          <button class="btn-small btn-select" onclick="labUsarPsi_()" ${rest<min?'disabled':''} style="height:48px;min-width:165px;">✨ Usar (1 AÇ)</button><button class="btn-small" onclick="labCancelarAcaoAux_()" style="height:48px;min-width:100px;">Cancelar</button></div>
-          <div style="margin-top:7px;color:#b9add8;"><b>Teste ${valor}%</b> · custo mínimo ${min} PP · ${escaparHtmlInventario_(getObservacaoPsi_(p))}</div>${labResumoPVHtml_(t,'SEUS PV')}${alvo&&String(alvo.id)!==String(t.id)?labEstadoPublicoAlvoHtml_(alvo):''}</div>`;return;
+          <label style="margin:0;"><small style="display:block;margin-bottom:4px;">PP</small><input type="number" min="${min}" max="${ppMax}" value="${Math.min(ppMax,Math.max(min,Number(t.acaoAuxLab.custo||min)))}" onchange="labPsiCusto_(this.value)" style="width:100%;height:48px;margin:0;text-align:center;"></label>
+          ${labPsiEhCura_(p)?`<label style="margin:0;"><small style="display:block;margin-bottom:4px;">Local</small><select onchange="labPsiSelecionarLocal_(this.value)" style="width:100%;margin:0;">${feridas.map(x=>`<option value="${escaparHtmlInventario_(x.local)}" ${x.local===t.acaoAuxLab.local?'selected':''}>${escaparHtmlInventario_(x.local)}</option>`).join('')||'<option value="">Sem ferida</option>'}</select></label>`:''}
+          <button class="btn-small btn-select" onclick="labUsarPsi_()" ${rest<min||(labPsiEhCura_(p)&&curaLimite<=0)?'disabled':''} style="height:48px;min-width:165px;">✨ Usar (1 AÇ)</button><button class="btn-small" onclick="labCancelarAcaoAux_()" style="height:48px;min-width:100px;">Cancelar</button></div>
+          <div style="margin-top:7px;color:#b9add8;"><b>Teste ${valor}%</b> · custo mínimo ${min} PP · ${escaparHtmlInventario_(getObservacaoPsi_(p))}${labPsiEhCura_(p)&&t.acaoAuxLab.local?` · <b>máx. nesta localização: ${curaLimite} PP</b>`:''}</div>${labResumoPVHtml_(t,'SEUS PV')}${alvo&&String(alvo.id)!==String(t.id)?labEstadoPublicoAlvoHtml_(alvo):''}</div>`;return;
     }
 
     if(t.primeirosSocorrosLab){
@@ -7703,7 +7743,7 @@ window.labPointerDown_=function(ev,id){
         if(!prep&&dist>.08){
             let deg=Math.atan2(dx,-dy)*180/Math.PI;if(deg<0)deg+=360;t.angulo=Math.round(deg);
         }
-        if(!prep){if(c.usaGratis)t.movimentoGratisDisponivel=false;if(c.acoes>0)t.acoesAtuaisLab=Math.max(0,t.acoesAtuaisLab-c.acoes);}
+        if(!prep){if(c.usaBonus>0)t.movimentoBonusLab=Math.max(0,Number(t.movimentoBonusLab||0)-Number(c.usaBonus||0));if(c.usaGratis)t.movimentoGratisDisponivel=false;if(c.acoes>0)t.acoesAtuaisLab=Math.max(0,t.acoesAtuaisLab-c.acoes);}
         labSalvarLocal_();labRender_();
         if(!prep)labAutoAvancarSeSemAcoes_();};
     window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
@@ -14834,7 +14874,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.22.0: Passar restaurado, testes só de perícias investidas, efeitos úteis iniciais e Psiquismo funcional -->
+<!-- Mesa Estelar v46.22.1: Corrida de Atletismo +9 m, testes sem especializações/Primeiros Socorros e Cura Psi corrigida -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
