@@ -473,9 +473,10 @@
                         <button class="btn-small" onclick="labDesenhoLimpar_()" title="Apaga todos os desenhos. Pode ser desfeito com ↶.">🗑️ Limpar tudo</button>
                         <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
                         <label style="display:flex;align-items:center;gap:5px;">Mapas salvos
-                          <select id="labMapaSalvoSelect" onchange="labMapaSelecionado_=this.value" style="width:190px;margin:0;"><option value="">— nenhum —</option></select>
+                          <select id="labMapaSalvoSelect" onchange="labSelecionarMapaSalvo_(this.value)" style="width:190px;margin:0;"><option value="">— nenhum —</option></select>
                         </label>
-                        <button class="btn-small" onclick="labSalvarMapaBanco_()" title="Salva terreno, grade, textura e desenhos no banco /mapas">💾 Salvar mapa</button>
+                        <button class="btn-small" onclick="labSalvarMapaBanco_()" title="Salva alterações no mapa atualmente selecionado. Se nenhum mapa estiver selecionado, cria um novo.">💾 Salvar alterações</button>
+                        <button class="btn-small btn-select" onclick="labSalvarMapaComoNovo_()" title="Cria um novo mapa a partir do cenário que está atualmente na mesa, sem substituir o mapa selecionado.">➕ Salvar como novo</button>
                         <button class="btn-small" onclick="labCarregarMapaBanco_()" title="Carrega o mapa selecionado sem carregar personagens">📂 Carregar</button>
                         <button class="btn-small" onclick="labExcluirMapaBanco_()" title="Exclui o mapa selecionado do banco">🗑️ Excluir mapa</button>
                         <label style="display:flex;align-items:center;gap:6px;">Mapa
@@ -8173,29 +8174,76 @@ function labAtualizarSelectMapas_(){
     if(lista.some(m=>String(m.id)===atual)){sel.value=atual;labMapaSelecionado_=atual;}
     else {sel.value='';labMapaSelecionado_='';}
 }
-window.labSalvarMapaBanco_=async function(){
-    if(!batalhaEhMestre_())return;
-    let existente=(mapasDB||[]).find(m=>String(m.id)===String(labMapaSelecionado_));
-    const nome=prompt(existente?'Nome do mapa (salvará sobre este mapa):':'Nome para salvar este mapa:',existente?.nome||'');
-    if(nome==null||!String(nome).trim())return;
-    let id=existente?.id||labMapaSlug_(nome);
-    if(!existente){
-        let base=id,n=2;
-        while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
-    }
+// O seletor vive no HTML normal, enquanto este código está em <script type="module">.
+// Por isso a alteração precisa passar por uma função exposta em window.
+window.labSelecionarMapaSalvo_=function(id){
+    labMapaSelecionado_=String(id||'');
+};
+async function labPersistirMapaNovo_(nome){
+    nome=String(nome||'').trim();
+    if(!nome)return null;
+    let id=labMapaSlug_(nome),base=id,n=2;
+    while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
     const dados=labMapaDadosAtuais_(nome,id);
     try{
         await setDoc(doc(db,'mapas',id),dados,{merge:false});
-        const ix=mapasDB.findIndex(m=>String(m.id)===String(id));
-        if(ix>=0)mapasDB[ix]=dados;else mapasDB.push(dados);
+        mapasDB.push(dados);
         labMapaSelecionado_=id;labAtualizarSelectMapas_();
-        notificar_(`Mapa “${dados.nome}” salvo no banco /mapas.`,'sucesso',4200);
+        if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+        notificar_(`Novo mapa “${dados.nome}” salvo no Firestore.`,'sucesso',4200);
+        return dados;
     }catch(e){
         console.warn('Firestore /mapas indisponível; usando armazenamento local.',e);
-        const locais=labMapasLocaisLer_(),ix=locais.findIndex(m=>String(m.id)===String(id)),local={...dados,__local:true};
+        const locais=labMapasLocaisLer_(),local={...dados,__local:true};
+        locais.push(local);
+        if(labMapasLocaisSalvar_(locais)){
+            mapasDB.push(local);labMapaSelecionado_=id;labAtualizarSelectMapas_();
+            if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+            notificar_(`Firestore indisponível; “${dados.nome}” foi salvo localmente neste navegador.`,'aviso',6500);
+            return local;
+        }
+        notificar_('Não foi possível salvar o mapa nem no Firestore nem localmente.','erro',6500);
+        return null;
+    }
+}
+
+window.labSalvarMapaComoNovo_=async function(){
+    if(!batalhaEhMestre_())return;
+    const nome=prompt('Nome para o novo mapa:','');
+    if(nome==null||!String(nome).trim())return;
+    await labPersistirMapaNovo_(nome);
+};
+
+window.labSalvarMapaBanco_=async function(){
+    if(!batalhaEhMestre_())return;
+    const existente=(mapasDB||[]).find(m=>String(m.id)===String(labMapaSelecionado_));
+    if(!existente){
+        const nome=prompt('Nenhum mapa está selecionado. Nome para criar um novo mapa:','');
+        if(nome==null||!String(nome).trim())return;
+        await labPersistirMapaNovo_(nome);
+        return;
+    }
+    const nome=prompt('Nome do mapa:',existente.nome||'');
+    if(nome==null||!String(nome).trim())return;
+    const dados=labMapaDadosAtuais_(nome,existente.id);
+    try{
+        await setDoc(doc(db,'mapas',String(existente.id)),dados,{merge:false});
+        const ix=mapasDB.findIndex(m=>String(m.id)===String(existente.id));
+        if(ix>=0)mapasDB[ix]=dados;
+        labMapaSelecionado_=String(existente.id);labAtualizarSelectMapas_();
+        if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+        notificar_(`Alterações de “${dados.nome}” salvas.`,'sucesso',4200);
+    }catch(e){
+        console.warn('Firestore /mapas indisponível; usando armazenamento local.',e);
+        const locais=labMapasLocaisLer_(),ix=locais.findIndex(m=>String(m.id)===String(existente.id)),local={...dados,__local:true};
         if(ix>=0)locais[ix]=local;else locais.push(local);
-        if(labMapasLocaisSalvar_(locais)){const j=mapasDB.findIndex(m=>String(m.id)===String(id));if(j>=0)mapasDB[j]=local;else mapasDB.push(local);labMapaSelecionado_=id;labAtualizarSelectMapas_();notificar_(`Firestore bloqueou /mapas; “${dados.nome}” foi salvo localmente neste navegador.`,'aviso',6500);}
-        else notificar_('Não foi possível salvar o mapa nem no Firestore nem localmente.','erro',6500);
+        if(labMapasLocaisSalvar_(locais)){
+            const j=mapasDB.findIndex(m=>String(m.id)===String(existente.id));
+            if(j>=0)mapasDB[j]=local;else mapasDB.push(local);
+            labMapaSelecionado_=String(existente.id);labAtualizarSelectMapas_();
+            if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+            notificar_(`Firestore indisponível; alterações de “${dados.nome}” foram salvas localmente.`,'aviso',6500);
+        }else notificar_('Não foi possível salvar o mapa nem no Firestore nem localmente.','erro',6500);
     }
 };
 window.labCarregarMapaBanco_=function(){
