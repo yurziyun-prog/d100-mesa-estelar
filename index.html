@@ -1662,6 +1662,20 @@ let itensDB = [];
 let cenariosDB = [];
 let npcsDB = [];
 let criaturasDB = [];
+
+const CRIATURAS_TESTE_PSI_ = [
+{id:'vampiro_generico',nome:'Vampiro Genérico',nome_en:'Generic Vampire',nome_zh:'通用吸血鬼',tipo:'Criatura',especie:'Hospedeiro racional parasitado',habitat:'Assentamentos e ruínas habitadas',comportamento:'Predador racional; preserva inteligência e memórias do hospedeiro',altura:'1.80',tamanho:'Médio',pesoCorporal:'75',FOR:15,CON:15,TAM:12,DES:14,INT:12,POD:12,CAR:8,periciasTexto:'Atletismo:58|Esquiva:55|Furtividade:62|Percepção:58',especializacoesTexto:'Combate Desarmado:65',armasTexto:'Mordida:1d6+MD|Garras:1d6+MD',alcancesAtaques:'Mordida:0.8|Garras:1.5',propriedadesAtaques:'Mordida:infeccioso,drenagem_sangue|Garras:sangramento',habilidadesTexto:'parasita_vampirico|regeneracao|hematofagia|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',habilidadesEspeciais:'parasita_vampirico|regeneracao|drenagem_sangue|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:5,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Hospedeiro racional vivo transformado pelo parasita. Mantém inteligência e parte ou totalidade das memórias. Precisa beber sangue da própria espécie. O parasita se aloja no coração e no cérebro.'},
+{id:'vampiro_psiquico',nome:'Vampiro Psíquico',nome_en:'Psychic Vampire',nome_zh:'灵能吸血鬼',tipo:'Criatura',especie:'Hospedeiro racional parasitado',habitat:'Assentamentos e ruínas habitadas',comportamento:'Predador racional, manipulador e sensitivo',altura:'1.80',tamanho:'Médio',pesoCorporal:'75',FOR:14,CON:14,TAM:12,DES:14,INT:14,POD:17,CAR:10,periciasTexto:'Atletismo:52|Esquiva:55|Furtividade:65|Percepção:65',especializacoesTexto:'Combate Desarmado:60|Psiquismo (Mente):30|Psiquismo (Sentidos):30',armasTexto:'Mordida:1d6+MD|Garras:1d6+MD',alcancesAtaques:'Mordida:0.8|Garras:1.5',propriedadesAtaques:'Mordida:infeccioso,drenagem_sangue|Garras:sangramento',habilidadesTexto:'parasita_vampirico|regeneracao|hematofagia|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata|psiquico',habilidadesEspeciais:'parasita_vampirico|regeneracao|drenagem_sangue|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',poderesPsiIds:'detectar|intuicao|medo|telepatia|ler_mente|influenciar_mente|ocultar_mente|grito_psiquico',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:5,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Variante vampírica em que a simbiose parasitária manifesta capacidades psíquicas, sobretudo nas esferas Mente e Sentidos.'},
+{id:'metamorfo_generico',nome:'Metamorfo Genérico',nome_en:'Generic Shapeshifter',nome_zh:'通用变形体',tipo:'Criatura',especie:'Animal parasitado / quimera',habitat:'Variável',comportamento:'Predador adaptativo; incorpora traços das presas',altura:'1.70',tamanho:'Médio',pesoCorporal:'85',FOR:16,CON:15,TAM:13,DES:15,INT:8,POD:12,CAR:5,periciasTexto:'Atletismo:65|Esquiva:58|Furtividade:68|Percepção:58',especializacoesTexto:'Combate Desarmado:68',armasTexto:'Mordida:1d6+MD|Garras:1d8+MD',alcancesAtaques:'Mordida:1|Garras:1.8',propriedadesAtaques:'Mordida:infeccioso|Garras:sangramento',habilidadesTexto:'parasita_metamorfo|metamorfose|incorporar_presa|imitacao_humana_apos_consumo|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',habilidadesEspeciais:'metamorfose_preparada|incorporar_presa|imitacao_humana_apos_consumo|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:6,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Animal transformado pelo parasita. Alimenta-se de qualquer criatura e pode incorporar formas e características das presas. Depois de consumir um humano, pode aprender imitação humana. A metamorfose está cadastrada para futura implementação no mapa.'},
+{id:'metamorfo_psiquico',nome:'Metamorfo Psíquico',nome_en:'Psychic Shapeshifter',nome_zh:'灵能变形体',tipo:'Criatura',especie:'Animal parasitado / quimera psíquica',habitat:'Variável',comportamento:'Predador adaptativo e psíquico',altura:'1.70',tamanho:'Médio',pesoCorporal:'85',FOR:15,CON:14,TAM:13,DES:16,INT:10,POD:17,CAR:6,periciasTexto:'Atletismo:60|Esquiva:62|Furtividade:72|Percepção:66',especializacoesTexto:'Combate Desarmado:62|Psiquismo (Mente):30|Psiquismo (Sentidos):30',armasTexto:'Mordida:1d6+MD|Garras:1d8+MD',alcancesAtaques:'Mordida:1|Garras:1.8',propriedadesAtaques:'Mordida:infeccioso|Garras:sangramento',habilidadesTexto:'parasita_metamorfo|metamorfose|incorporar_presa|imitacao_humana_apos_consumo|psiquico|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',habilidadesEspeciais:'metamorfose_preparada|incorporar_presa|imitacao_humana_apos_consumo|vulneravel_sol_intenso|coracao_paralisante|vulneravel_prata',poderesPsiIds:'detectar|intuicao|empatia|medo|ocultar_mente|ilusao',vinculosAtaquesPericias:'Combate Desarmado:Mordida,Garras',acoesMaxEspecial:3,armaduraNatural:1,movimentoTerrestre:6,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Metamorfo em que a infecção também produz capacidades psíquicas. Metamorfose preparada para futura troca de forma, retrato, tamanho e aparência do token.'},
+{id:'larva_interdimensional',nome:'Larva Interdimensional',nome_en:'Interdimensional Larva',nome_zh:'异维幼体',tipo:'Criatura',especie:'Fauna psíquica extradimensional',habitat:'Regiões isoladas e locais de anomalia',comportamento:'Curiosa, evasiva e enigmática; raramente hostil',altura:'1.35',tamanho:'Médio',pesoCorporal:'55',FOR:7,CON:13,TAM:11,DES:13,INT:8,POD:20,CAR:10,periciasTexto:'Esquiva:62|Furtividade:58|Percepção:78',especializacoesTexto:'Combate Desarmado:28|Psiquismo (Sentidos):30|Psiquismo (Matéria):30',armasTexto:'Toque:1d3',alcancesAtaques:'Toque:1',propriedadesAtaques:'',habilidadesTexto:'passagem_interdimensional|desaparecer_dimensional|reaparecer_dimensional|misteriosa|nao_predatoria',habilidadesEspeciais:'passagem_interdimensional_preparada|fora_da_dimensao_inatingivel|reaparecimento',poderesPsiIds:'detectar|intuicao|visao_distante|psicometria|salto|impulso',vinculosAtaquesPericias:'Combate Desarmado:Toque',acoesMaxEspecial:3,armaduraNatural:0,movimentoTerrestre:3,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Criatura semelhante ao mesmo tempo a uma coruja e a uma larva de borboleta. Seu aparente teletransporte é interpretado como entrada em uma dimensão desconhecida seguida de retorno ao espaço observável. É sobretudo um mistério ecológico, não uma ameaça. A passagem dimensional fica preparada para futura mecânica de desaparecer e reaparecer no mapa.'},
+{id:'cavalgante_prismatico',nome:'Cavalgante Prismático',nome_en:'Prismatic Strider',nome_zh:'棱彩行兽',tipo:'Criatura',especie:'Fauna psíquica',habitat:'Planícies e regiões abertas',comportamento:'Social, sensitivo e potencialmente domesticável',altura:'2.40',tamanho:'Grande',pesoCorporal:'420',FOR:17,CON:16,TAM:18,DES:15,INT:7,POD:18,CAR:12,periciasTexto:'Atletismo:72|Esquiva:50|Percepção:72',especializacoesTexto:'Combate Desarmado:52|Psiquismo (Sentidos):30|Psiquismo (Mente):20',armasTexto:'Coice:1d8+MD|Chifrada Sensorial:1d6+MD',alcancesAtaques:'Coice:2|Chifrada Sensorial:2.2',propriedadesAtaques:'Coice:impacto,derrubar',habilidadesTexto:'antenas_psiquicas|empatia_de_manada|montaria|sensor_hostilidade',habilidadesEspeciais:'montaria|empatia_de_manada|sensor_hostilidade',poderesPsiIds:'detectar|intuicao|empatia|telepatia',vinculosAtaquesPericias:'Combate Desarmado:Coice,Chifrada Sensorial',acoesMaxEspecial:3,armaduraNatural:2,movimentoTerrestre:8,movimentoVoo:0,movimentoNatacao:0,selecionavelCombate:true,imagem:'',descricao:'Grande herbívoro alienígena multicolorido, de longas antenas sensoriais e anatomia adequada à montaria. Percebe emoções, hostilidade e a intenção de indivíduos próximos; grupos parecem compartilhar sinais mentais simples.'}
+];
+function garantirCriaturasTestePsi_(){
+    const ids=new Set((criaturasDB||[]).map(x=>String(x.id)));
+    for(const c of CRIATURAS_TESTE_PSI_)if(!ids.has(String(c.id)))criaturasDB.push(JSON.parse(JSON.stringify(c)));
+}
+
 let mercadoLocalConfig_ = {cenarioId:'',cenarioNome:'',estabelecimentoNome:'',estabelecimentoTipo:'',itens:[],servicos:[],prestadores:[],vincularNPCsCenario:false,precosServicos:{reparo:0,cura:0,primeiros_socorros:0}};
 let mercadoLocalUnsub_ = null;
 let mercadoLocalNegociacao_ = {};
@@ -6504,6 +6518,8 @@ function labSnapshotChar_(c){
             bonus:JSON.parse(JSON.stringify(c.bonus||{})),
             pericias:JSON.parse(JSON.stringify(c.pericias||{})),
             especializacoes:JSON.parse(JSON.stringify(c.especializacoes||{})),
+            poderesPsiIds:JSON.parse(JSON.stringify(c.poderesPsiIds||[])),
+            habilidadesEspeciais:JSON.parse(JSON.stringify(c.habilidadesEspeciais||[])),
             armasNaturais:JSON.parse(JSON.stringify(c.armasNaturais||[])),
             ataquesNaturais:JSON.parse(JSON.stringify(c.ataquesNaturais||[])),
             mapaPericiaAtaques:JSON.parse(JSON.stringify(c.mapaPericiaAtaques||{})),
@@ -7023,7 +7039,8 @@ function labPsiMax_(t){const c=labCharToken_(t)||t?.charLab;return c?Math.max(0,
 function labPsiRestantes_(t){return Math.max(0,labPsiMax_(t)-Math.max(0,Number(t?.psiGastosLab||0)));}
 function labPsiPoderes_(t){
     const c=labCharToken_(t)||t?.charLab;if(!c)return [];
-    return (poderesPsiDB||[]).filter(p=>{const treino=treinoPsiEsfera_(c,p.esfera),arco=arcoPsiPorTreino_(treino);return treino>0&&Number(p.arco||1)<=arco;})
+    const permitidos=Array.isArray(c.poderesPsiIds)&&c.poderesPsiIds.length?new Set(c.poderesPsiIds.map(String)):null;
+    return (poderesPsiDB||[]).filter(p=>{const treino=treinoPsiEsfera_(c,p.esfera),arco=arcoPsiPorTreino_(treino);return treino>0&&Number(p.arco||1)<=arco&&(!permitidos||permitidos.has(String(p.id)));})
       .sort((a,b)=>String(a.esfera).localeCompare(String(b.esfera))||Number(a.arco||1)-Number(b.arco||1)||getNome(a).localeCompare(getNome(b)));
 }
 function labPsiValor_(t,poder){
@@ -8201,6 +8218,10 @@ function criarCriaturaCombateDoBanco_(modelo,participante=null){
         bonus:{FOR:0,CON:0,TAM:0,DES:0,INT:0,POD:0,CAR:0},
         pericias:periciasModelo,
         especializacoes:especializacoesModelo,
+        // Criaturas podem possuir Psiquismo exatamente como personagens.
+        // Os campos abaixo também deixam habilidades especiais preparadas para futuras mecânicas.
+        poderesPsiIds:String(modelo.poderesPsiIds||'').split('|').map(x=>x.trim()).filter(Boolean),
+        habilidadesEspeciais:String(modelo.habilidadesEspeciais||modelo.habilidadesTexto||'').split('|').map(x=>x.trim()).filter(Boolean),
         armasNaturais:ataques,
         inventario:(()=>{
             if(participante?.criaturaInventario&&typeof participante.criaturaInventario==='object')return JSON.parse(JSON.stringify(participante.criaturaInventario));
@@ -11752,8 +11773,8 @@ window.abrirAdminNoEscudo_=function(tipo,btn){
     h.classList.remove('hidden');p.classList.add('active');h.appendChild(p);
     if(tipo==='banco')renderizarBancoDados();
 };
-function criaturaBancoPorId_(id){return (criaturasDB||[]).find(x=>String(x.id)===String(id))||null;}
-function renderizarBancoCriaturas_(){
+function criaturaBancoPorId_(id){garantirCriaturasTestePsi_();return (criaturasDB||[]).find(x=>String(x.id)===String(id))||null;}
+function renderizarBancoCriaturas_(){garantirCriaturasTestePsi_();
  const e=document.getElementById('listaBancoCriaturas');if(!e)return;
  const l=[...criaturasDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
  e.innerHTML=l.length?`<div class="db-table-wrap"><table class="db-table"><thead><tr><th style="width:76px;">Imagem</th><th>Nome</th><th>Tipo</th><th>Atributos</th><th>Ataques</th><th>Ações</th></tr></thead><tbody>${l.map(n=>`<tr><td>${n.imagem?`<img src="${escaparBanco_(n.imagem)}" style="width:58px;height:58px;object-fit:cover;border-radius:9px;">`:`<div style="width:58px;height:58px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:1.5em;">🦖</div>`}</td><td><b>${escaparBanco_(n.nome)}</b><br><small>${escaparBanco_(n.especie||'')}</small></td><td>${escaparBanco_(n.tipo||'Criatura')}<br><small>${escaparBanco_(n.habitat||'')}</small></td><td>FOR ${n.FOR||0} · CON ${n.CON||0} · TAM ${n.TAM||0} · DES ${n.DES||0}<br>INT ${n.INT||0} · POD ${n.POD||0} · CAR ${n.CAR||0}</td><td>${escaparBanco_(n.armasTexto||'—')}<br><small>${escaparBanco_(n.propriedadesAtaques||'')}</small></td><td><button class="btn-small" onclick="editarCriaturaBanco_('${n.id}')">✏️ Editar</button> <button class="btn-small" onclick="duplicarCriaturaBanco_('${n.id}')">📑 Duplicar</button></td></tr>`).join('')}</tbody></table></div>`:'<p style="color:#aaa">Banco vazio.</p>';
@@ -15122,7 +15143,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.24.0: microações na grade, seleção persistente de Psi/Primeiros Socorros, hover lateral e desenho do GM -->
+<!-- Mesa Estelar v46.25.0: vampiros/metamorfos de teste, fauna psíquica e Psi para criaturas -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
