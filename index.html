@@ -449,6 +449,9 @@
                         </label>
                         <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
                         <button class="btn-small" id="labDrawToggle" onclick="labDesenhoAlternar_()" title="Ativa/desativa desenho sobre o mapa">✏️ Desenhar</button>
+                        <button class="btn-small" id="labEraserBtn" onclick="labDesenhoBorracha_()" title="Borracha de verdade: apaga apenas onde você passar">🧽 Borracha</button>
+                        <button class="btn-small" id="labUndoBtn" onclick="labDesenhoDesfazer_()" title="Desfazer última alteração no desenho">↶</button>
+                        <button class="btn-small" id="labRedoBtn" onclick="labDesenhoRefazer_()" title="Refazer alteração desfeita">↷</button>
                         <label style="display:flex;align-items:center;gap:5px;">Ferramenta
                           <select id="labDrawTool" onchange="labDesenhoFerramenta_(this.value)" style="width:auto;margin:0;">
                             <option value="traco">Traço</option>
@@ -457,8 +460,15 @@
                           </select>
                         </label>
                         <label style="display:flex;align-items:center;gap:5px;">Cor <input id="labDrawColor" type="color" value="#ffcf4d" onchange="labDesenhoCor_(this.value)"></label>
-                        <label style="display:flex;align-items:center;gap:5px;">Pincel <input id="labDrawSize" type="range" min="2" max="34" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:90px;"></label>
-                        <button class="btn-small" onclick="labDesenhoLimpar_()">🧽 Limpar desenho</button>
+                        <label style="display:flex;align-items:center;gap:5px;">Pincel <input id="labDrawSize" type="range" min="2" max="48" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:90px;"></label>
+                        <button class="btn-small" onclick="labDesenhoLimpar_()" title="Apaga todos os desenhos. Pode ser desfeito com ↶.">🗑️ Limpar tudo</button>
+                        <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
+                        <label style="display:flex;align-items:center;gap:5px;">Mapas salvos
+                          <select id="labMapaSalvoSelect" onchange="labMapaSelecionado_=this.value" style="width:190px;margin:0;"><option value="">— nenhum —</option></select>
+                        </label>
+                        <button class="btn-small" onclick="labSalvarMapaBanco_()" title="Salva terreno, grade, textura e desenhos no banco /mapas">💾 Salvar mapa</button>
+                        <button class="btn-small" onclick="labCarregarMapaBanco_()" title="Carrega o mapa selecionado sem carregar personagens">📂 Carregar</button>
+                        <button class="btn-small" onclick="labExcluirMapaBanco_()" title="Exclui o mapa selecionado do banco">🗑️ Excluir mapa</button>
                         <label style="display:flex;align-items:center;gap:6px;">Mapa
                             <select id="labMapSize" onchange="labMudarTamanhoMapa_(this.value)">
                                 <option value="24x14">24 × 14 m</option>
@@ -1660,6 +1670,7 @@ let especializacoesDB = [];
 let poderesPsiDB = [];
 let itensDB = [];
 let cenariosDB = [];
+let mapasDB = [];
 let npcsDB = [];
 let criaturasDB = [];
 
@@ -2453,6 +2464,13 @@ async function carregarBancosDeDados() {
         }
     }
 
+    if(userData?.role==='mestre'){
+        try{
+            const qMapas=await getDocs(collection(db,'mapas'));
+            mapasDB=[];qMapas.forEach(d=>mapasDB.push({id:d.id,...d.data()}));
+            mapasDB.sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
+        }catch(e){console.warn('Banco de mapas indisponível. Verifique as regras Firestore de /mapas.',e);mapasDB=[];}
+    }
     if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'npcs'));npcsDB=[];q.forEach(d=>npcsDB.push({id:d.id,...d.data()}));}catch(e){console.warn(e);}}
     if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'criaturas'));criaturasDB=[];q.forEach(d=>criaturasDB.push({id:d.id,...d.data()}));}catch(e){console.warn('Banco de criaturas indisponível:',e);criaturasDB=[];}}
     if(userData?.role==='mestre'){
@@ -7912,18 +7930,136 @@ function labMicroPainelHtml_(t,ppm,d){
     </div>`;
 }
 
+
+let labDesenhoUndo_=[];
+let labDesenhoRedo_=[];
+let labMapaSelecionado_='';
+
+function labDesenhoSnapshot_(){
+    return JSON.parse(JSON.stringify(Array.isArray(labEstado_.desenhosLab)?labEstado_.desenhosLab:[]));
+}
+function labDesenhoRegistrarHistorico_(){
+    labDesenhoUndo_.push(labDesenhoSnapshot_());
+    if(labDesenhoUndo_.length>60)labDesenhoUndo_.shift();
+    labDesenhoRedo_=[];
+}
+window.labDesenhoDesfazer_=function(){
+    if(!labDesenhoUndo_.length)return;
+    labDesenhoRedo_.push(labDesenhoSnapshot_());
+    labEstado_.desenhosLab=labDesenhoUndo_.pop();
+    labSalvarLocal_();labRender_();
+};
+window.labDesenhoRefazer_=function(){
+    if(!labDesenhoRedo_.length)return;
+    labDesenhoUndo_.push(labDesenhoSnapshot_());
+    labEstado_.desenhosLab=labDesenhoRedo_.pop();
+    labSalvarLocal_();labRender_();
+};
+window.labDesenhoBorracha_=function(){
+    const c=labDesenhoConfig_();
+    c.ativo=true;c.ferramenta='borracha';
+    labSalvarLocal_();labRender_();
+};
+function labMapaSlug_(nome){
+    const x=normalizarTextoCombate_(String(nome||'mapa')).replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'');
+    return x||`mapa_${Date.now()}`;
+}
+function labMapaDadosAtuais_(nome,id=''){
+    return {
+        id:id||labMapaSlug_(nome),
+        nome:String(nome||'Mapa sem nome').trim()||'Mapa sem nome',
+        larguraM:Number(labEstado_.larguraM||28),
+        alturaM:Number(labEstado_.alturaM||14),
+        fundo:String(labEstado_.fundo||'#d7d7d7'),
+        corGrade:String(labEstado_.corGrade||'#777777'),
+        gradeVisivel:labEstado_.gradeVisivel!==false,
+        textura:String(labEstado_.textura||'nenhuma'),
+        desenhos:labDesenhoSnapshot_(),
+        criadoPor:currentUserUid||'',
+        atualizadoEm:new Date().toISOString()
+    };
+}
+function labAtualizarSelectMapas_(){
+    const sel=document.getElementById('labMapaSalvoSelect');if(!sel)return;
+    const atual=String(labMapaSelecionado_||sel.value||'');
+    const lista=[...(mapasDB||[])].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
+    sel.innerHTML='<option value="">— nenhum —</option>'+lista.map(m=>`<option value="${escaparHtmlInventario_(m.id)}">${escaparHtmlInventario_(m.nome||m.id)}</option>`).join('');
+    if(lista.some(m=>String(m.id)===atual)){sel.value=atual;labMapaSelecionado_=atual;}
+    else {sel.value='';labMapaSelecionado_='';}
+}
+window.labSalvarMapaBanco_=async function(){
+    if(!batalhaEhMestre_())return;
+    let existente=(mapasDB||[]).find(m=>String(m.id)===String(labMapaSelecionado_));
+    const nome=prompt(existente?'Nome do mapa (salvará sobre este mapa):':'Nome para salvar este mapa:',existente?.nome||'');
+    if(nome==null||!String(nome).trim())return;
+    let id=existente?.id||labMapaSlug_(nome);
+    if(!existente){
+        let base=id,n=2;
+        while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
+    }
+    const dados=labMapaDadosAtuais_(nome,id);
+    try{
+        await setDoc(doc(db,'mapas',id),dados,{merge:false});
+        const ix=mapasDB.findIndex(m=>String(m.id)===String(id));
+        if(ix>=0)mapasDB[ix]=dados;else mapasDB.push(dados);
+        labMapaSelecionado_=id;labAtualizarSelectMapas_();
+        notificar_(`Mapa “${dados.nome}” salvo no banco /mapas.`,'sucesso',4200);
+    }catch(e){
+        console.error('Salvar mapa',e);
+        notificar_('Não foi possível salvar em /mapas. Se a coleção ainda não estiver autorizada, acrescente-a às regras do Firestore.','erro',7000);
+    }
+};
+window.labCarregarMapaBanco_=function(){
+    const m=(mapasDB||[]).find(x=>String(x.id)===String(labMapaSelecionado_));
+    if(!m){notificar_('Selecione um mapa salvo.','aviso');return;}
+    if((labEstado_.desenhosLab||[]).length&&!confirm(`Carregar “${m.nome}”? O terreno/desenho atual será substituído. Os participantes não serão removidos.`))return;
+    labEstado_.larguraM=Math.max(4,Number(m.larguraM||28));
+    labEstado_.alturaM=Math.max(4,Number(m.alturaM||14));
+    labEstado_.fundo=String(m.fundo||'#d7d7d7');
+    labEstado_.corGrade=String(m.corGrade||'#777777');
+    labEstado_.gradeVisivel=m.gradeVisivel!==false;
+    labEstado_.textura=String(m.textura||'nenhuma');
+    labEstado_.desenhosLab=JSON.parse(JSON.stringify(m.desenhos||[]));
+    // Mantém tokens, combate, PV e iniciativa. Apenas o cenário gráfico é trocado.
+    for(const t of labEstado_.tokens||[]){
+        t.x=Math.max(0,Math.min(labEstado_.larguraM,Number(t.x||0)));
+        t.y=Math.max(0,Math.min(labEstado_.alturaM,Number(t.y||0)));
+    }
+    labDesenhoUndo_=[];labDesenhoRedo_=[];
+    labSalvarLocal_();labRender_();
+    notificar_(`Mapa “${m.nome}” carregado.`,'info',3500);
+};
+window.labExcluirMapaBanco_=async function(){
+    if(!batalhaEhMestre_())return;
+    const m=(mapasDB||[]).find(x=>String(x.id)===String(labMapaSelecionado_));
+    if(!m){notificar_('Selecione um mapa salvo.','aviso');return;}
+    if(!confirm(`Excluir permanentemente o mapa “${m.nome}” do banco?`))return;
+    try{
+        await deleteDoc(doc(db,'mapas',String(m.id)));
+        mapasDB=mapasDB.filter(x=>String(x.id)!==String(m.id));
+        labMapaSelecionado_='';labAtualizarSelectMapas_();
+        notificar_(`Mapa “${m.nome}” excluído.`,'info');
+    }catch(e){
+        console.error('Excluir mapa',e);
+        notificar_('Não foi possível excluir o mapa do banco.','erro');
+    }
+};
 function labDesenhoConfig_(){
     labEstado_.desenhoCfg=labEstado_.desenhoCfg||{ativo:false,ferramenta:'traco',cor:'#ffcf4d',tamanho:7};
     labEstado_.desenhosLab=Array.isArray(labEstado_.desenhosLab)?labEstado_.desenhosLab:[];
     return labEstado_.desenhoCfg;
 }
-window.labDesenhoAlternar_=function(){const c=labDesenhoConfig_();c.ativo=!c.ativo;labSalvarLocal_();labRender_();};
-window.labDesenhoFerramenta_=function(v){labDesenhoConfig_().ferramenta=String(v||'traco');labSalvarLocal_();labRender_();};
+window.labDesenhoAlternar_=function(){const c=labDesenhoConfig_();if(c.ferramenta==='borracha')c.ferramenta='traco';c.ativo=!c.ativo;labSalvarLocal_();labRender_();};
+window.labDesenhoFerramenta_=function(v){const c=labDesenhoConfig_();c.ferramenta=String(v||'traco');c.ativo=true;labSalvarLocal_();labRender_();};
 window.labDesenhoCor_=function(v){labDesenhoConfig_().cor=String(v||'#ffcf4d');labSalvarLocal_();labRender_();};
 window.labDesenhoTamanho_=function(v){labDesenhoConfig_().tamanho=Math.max(2,Math.min(34,Number(v)||7));labSalvarLocal_();};
 window.labDesenhoLimpar_=function(){
     if(!batalhaEhMestre_())return;
-    if(!labEstado_.desenhosLab?.length||confirm('Apagar todos os desenhos do mapa?')){labEstado_.desenhosLab=[];labSalvarLocal_();labRender_();}
+    if(!labEstado_.desenhosLab?.length)return;
+    if(confirm('Apagar todos os desenhos do mapa? Você ainda poderá usar ↶ para desfazer.')){
+        labDesenhoRegistrarHistorico_();
+        labEstado_.desenhosLab=[];labSalvarLocal_();labRender_();
+    }
 };
 function labDesenhoRender_(){
     const cv=document.getElementById('labDrawCanvas'),map=document.getElementById('labMetricMap');if(!cv||!map)return;
@@ -7956,6 +8092,7 @@ window.labDesenhoPointerDown_=function(ev){
     ev.preventDefault();ev.stopPropagation();
     const map=document.getElementById('labMetricMap'),rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);
     const ponto=e=>({x:Math.max(0,Math.min(labEstado_.larguraM,(e.clientX-rect.left)/ppm)),y:Math.max(0,Math.min(labEstado_.alturaM,(e.clientY-rect.top)/ppm))});
+    labDesenhoRegistrarHistorico_();
     const stroke={tool:cfg.ferramenta,color:cfg.cor,size:cfg.tamanho,pts:[ponto(ev)]};
     labEstado_.desenhosLab.push(stroke);
     const move=e=>{stroke.pts.push(ponto(e));labDesenhoRender_();};
@@ -7968,7 +8105,8 @@ function labRender_(){
     map.style.width=`${labEstado_.larguraM*ppm}px`;map.style.height=`${labEstado_.alturaM*ppm}px`;map.style.backgroundColor=labEstado_.fundo;map.style.backgroundImage=labBackgroundImage_();map.style.backgroundSize=`${ppm}px ${ppm}px,${ppm}px ${ppm}px,56px 56px`;
     const st=labEstado_.tokens.find(t=>String(t.id)===String(labEstado_.selecionadoId)),overlay=labOverlayMovimentoHtml_(st,ppm);
     const drawCfg=labDesenhoConfig_();
-    const drawCanvas=`<canvas id="labDrawCanvas" onpointerdown="labDesenhoPointerDown_(event)" style="position:absolute;inset:0;z-index:${drawCfg.ativo?30:1};pointer-events:${drawCfg.ativo?'auto':'none'};cursor:${drawCfg.ativo?'crosshair':'default'};"></canvas>`;
+    const cursorDesenho=!drawCfg.ativo?'default':drawCfg.ferramenta==='borracha'?'cell':'crosshair';
+    const drawCanvas=`<canvas id="labDrawCanvas" onpointerdown="labDesenhoPointerDown_(event)" style="position:absolute;inset:0;z-index:${drawCfg.ativo?30:1};pointer-events:${drawCfg.ativo?'auto':'none'};cursor:${cursorDesenho};"></canvas>`;
     const tokens=labEstado_.tokens.map(t=>{const d=Math.max(24,t.diametroM*ppm),sel=String(t.id)===String(labEstado_.selecionadoId),turno=labEstado_.fase==='combate'&&String(labTokenAtual_()?.id)===String(t.id);
         const img=t.imagem?`<img src="${escaparHtmlInventario_(t.imagem)}" draggable="false" style="width:100%;height:100%;object-fit:cover;border-radius:50%;pointer-events:none">`:`<span>${String(t.id).startsWith('dummy:')?'🎯':'👤'}</span>`;
         const alvoAtual=labEstado_.fase==='combate'&&String(labTokenAtual_()?.alvoLab)===String(t.id);
@@ -7977,9 +8115,16 @@ function labRender_(){
     const micro=atualMicro?labMicroPainelHtml_(atualMicro,ppm,dMicro):'';
     map.innerHTML=drawCanvas+overlay+tokens+micro;
     labDesenhoRender_();
-    const cfg=labDesenhoConfig_(),tg=document.getElementById('labDrawToggle'),ft=document.getElementById('labDrawTool'),cc=document.getElementById('labDrawColor'),sz=document.getElementById('labDrawSize');
-    if(tg){tg.textContent=cfg.ativo?'✅ Desenhando':'✏️ Desenhar';tg.classList.toggle('btn-select',cfg.ativo);}
+    const cfg=labDesenhoConfig_(),tg=document.getElementById('labDrawToggle'),eb=document.getElementById('labEraserBtn'),ft=document.getElementById('labDrawTool'),cc=document.getElementById('labDrawColor'),sz=document.getElementById('labDrawSize'),ub=document.getElementById('labUndoBtn'),rb=document.getElementById('labRedoBtn');
+    if(tg){tg.textContent=cfg.ativo&&cfg.ferramenta!=='borracha'?'✅ Desenhando':'✏️ Desenhar';tg.classList.toggle('btn-select',cfg.ativo&&cfg.ferramenta!=='borracha');}
+    if(eb)eb.classList.toggle('btn-select',cfg.ativo&&cfg.ferramenta==='borracha');
+    if(ub)ub.disabled=!labDesenhoUndo_.length;if(rb)rb.disabled=!labDesenhoRedo_.length;
     if(ft)ft.value=cfg.ferramenta;if(cc)cc.value=cfg.cor;if(sz)sz.value=cfg.tamanho;
+    labAtualizarSelectMapas_();
+    const bg=document.getElementById('labBgColor'),gc=document.getElementById('labGridColor'),gv=document.getElementById('labGridVisible'),tx=document.getElementById('labTexture'),ms=document.getElementById('labMapSize'),zm=document.getElementById('labZoom');
+    if(bg)bg.value=labEstado_.fundo||'#d7d7d7';if(gc)gc.value=labEstado_.corGrade||'#777777';if(gv)gv.checked=labEstado_.gradeVisivel!==false;if(tx)tx.value=labEstado_.textura||'nenhuma';
+    if(ms){const v=`${labEstado_.larguraM}x${labEstado_.alturaM}`;if([...ms.options].some(o=>o.value===v))ms.value=v;}
+    if(zm)zm.value=String(labEstado_.pxPorMetro||48);
     labAtualizarStatusCombate_();labRenderActionPanel_();labAtualizarInfo_();
 }
 window.labRotacaoPointerDown_=function(ev,id){
@@ -15143,7 +15288,7 @@ window.calicoAplicarAoCenario_=async function(){
 };
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 </script>
-<!-- Mesa Estelar v46.25.0: vampiros/metamorfos de teste, fauna psíquica e Psi para criaturas -->
+<!-- Mesa Estelar v46.26.0: desfazer/refazer desenho, borracha real e banco Firestore de mapas -->
 
 <div id="battleTokenPreview" class="battle-token-preview" aria-hidden="true"></div>
 </body>
