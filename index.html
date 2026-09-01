@@ -470,7 +470,21 @@
                           <button onclick="labDesenhoCor_('#45b7ff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#45b7ff"></button>
                           <button onclick="labDesenhoCor_('#b56cff')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:#b56cff"></button>
                         </span>
-                        <label style="display:flex;align-items:center;gap:5px;">Pincel <input id="labDrawSize" type="range" min="2" max="48" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:90px;"></label>
+                        <label style="display:flex;align-items:center;gap:5px;">Tamanho <input id="labDrawSize" type="range" min="2" max="48" value="7" onchange="labDesenhoTamanho_(this.value)" style="width:82px;"></label>
+                        <label style="display:flex;align-items:center;gap:5px;">Opacidade <input id="labDrawOpacity" type="range" min="5" max="100" step="5" value="100" oninput="labDesenhoOpacidade_(this.value)" style="width:82px;"><span id="labDrawOpacityValue" style="min-width:34px;color:#bbb;font-size:.82em;">100%</span></label>
+                        <label style="display:flex;align-items:center;gap:5px;">Pincel
+                          <select id="labDrawBrush" onchange="labDesenhoPincel_(this.value)" style="width:auto;margin:0;">
+                            <option value="redondo">Redondo</option>
+                            <option value="spray">Spray</option>
+                            <option value="irregular">Irregular</option>
+                          </select>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:5px;">Textura do traço
+                          <select id="labDrawStrokeTexture" onchange="labDesenhoTexturaTraco_(this.value)" style="width:auto;margin:0;">
+                            <option value="solida">Sólida</option>
+                            <option value="pontilhada">Pontilhada</option>
+                          </select>
+                        </label>
                         <button class="btn-small" onclick="labDesenhoLimpar_()" title="Apaga todos os desenhos. Pode ser desfeito com ↶.">🗑️ Limpar tudo</button>
                         <span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span>
                         <label style="display:flex;align-items:center;gap:5px;">Objeto
@@ -8313,7 +8327,12 @@ window.labExcluirMapaBanco_=async function(){
     }
 };
 function labDesenhoConfig_(){
-    labEstado_.desenhoCfg=labEstado_.desenhoCfg||{ativo:false,ferramenta:'traco',cor:'#ffcf4d',tamanho:7};
+    labEstado_.desenhoCfg=labEstado_.desenhoCfg||{ativo:false,ferramenta:'traco',cor:'#ffcf4d',tamanho:7,opacidade:1,pincel:'redondo',texturaTraco:'solida'};
+    const dc=labEstado_.desenhoCfg;
+    if(!Number.isFinite(Number(dc.opacidade)))dc.opacidade=1;
+    dc.opacidade=Math.max(.05,Math.min(1,Number(dc.opacidade)));
+    if(!['redondo','spray','irregular'].includes(dc.pincel))dc.pincel='redondo';
+    if(!['solida','pontilhada'].includes(dc.texturaTraco))dc.texturaTraco='solida';
     labEstado_.desenhosLab=Array.isArray(labEstado_.desenhosLab)?labEstado_.desenhosLab:[];
     return labEstado_.desenhoCfg;
 }
@@ -8341,6 +8360,9 @@ window.labDesenhoCorRGB_=function(v){
     labDesenhoRender_();
 };
 window.labDesenhoTamanho_=function(v){labDesenhoConfig_().tamanho=Math.max(2,Math.min(34,Number(v)||7));labSalvarLocal_();};
+window.labDesenhoOpacidade_=function(v){const c=labDesenhoConfig_();c.opacidade=Math.max(.05,Math.min(1,(Number(v)||100)/100));const out=document.getElementById('labDrawOpacityValue');if(out)out.textContent=`${Math.round(c.opacidade*100)}%`;labSalvarLocal_();};
+window.labDesenhoPincel_=function(v){const c=labDesenhoConfig_();c.pincel=['redondo','spray','irregular'].includes(String(v))?String(v):'redondo';c.ativo=true;labSalvarLocal_();labRender_();};
+window.labDesenhoTexturaTraco_=function(v){const c=labDesenhoConfig_();c.texturaTraco=String(v)==='pontilhada'?'pontilhada':'solida';c.ativo=true;labSalvarLocal_();labRender_();};
 window.labDesenhoLimpar_=function(){
     if(!batalhaEhMestre_())return;
     if(!labEstado_.desenhosLab?.length)return;
@@ -8349,6 +8371,10 @@ window.labDesenhoLimpar_=function(){
         labEstado_.desenhosLab=[];labSalvarLocal_();labRender_();
     }
 };
+function labDesenhoRand_(n){
+    const x=Math.sin(Number(n||0)*12.9898+78.233)*43758.5453;
+    return x-Math.floor(x);
+}
 function labDesenhoRender_(){
     const cv=document.getElementById('labDrawCanvas'),map=document.getElementById('labMetricMap');if(!cv||!map)return;
     const ppm=Number(labEstado_.pxPorMetro||48),w=Math.round(labEstado_.larguraM*ppm),h=Math.round(labEstado_.alturaM*ppm);
@@ -8357,22 +8383,43 @@ function labDesenhoRender_(){
     for(const st of labEstado_.desenhosLab||[]){
         const pts=Array.isArray(st.pts)?st.pts:[];if(pts.length<1)continue;
         const tool=st.tool||'traco',size=Math.max(1,Number(st.size||6)),color=st.color||'#ffcf4d';
-        if(tool==='textura'){
-            ctx.save();ctx.fillStyle=color;ctx.globalAlpha=.38;
-            for(let j=0;j<pts.length;j+=2){
-                const p=pts[j],seed=(j*9301+49297)%233280;
-                for(let k=0;k<5;k++){
-                    const ang=(seed+k*1.73)%6.28,rad=(size*.75)*((k+1)/5);
-                    ctx.beginPath();ctx.arc(p.x*ppm+Math.cos(ang)*rad,p.y*ppm+Math.sin(ang)*rad,Math.max(1,size*.16),0,Math.PI*2);ctx.fill();
-                }
-            }ctx.restore();continue;
+        const opacity=Math.max(.02,Math.min(1,Number(st.opacity??st.opacidade??(tool==='textura'?.38:1))));
+        const brush=['redondo','spray','irregular'].includes(st.brush||st.pincel)?(st.brush||st.pincel):(tool==='textura'?'spray':'redondo');
+        const texture=(st.texture||st.texturaTraco)==='pontilhada'?'pontilhada':'solida';
+        ctx.save();
+        if(tool==='borracha'){
+            ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.strokeStyle='rgba(0,0,0,1)';ctx.lineWidth=size;
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);ctx.stroke();ctx.restore();continue;
         }
-        ctx.save();ctx.strokeStyle=tool==='borracha'?'rgba(0,0,0,1)':color;ctx.lineWidth=size;
-        if(tool==='borracha')ctx.globalCompositeOperation='destination-out';
-        ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);
-        for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
-        if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);
-        ctx.stroke();ctx.restore();
+        ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.strokeStyle=color;
+        if(brush==='spray'){
+            for(let j=0;j<pts.length;j+=1){
+                const p=pts[j],cx=p.x*ppm,cy=p.y*ppm,dots=Math.max(4,Math.round(size*.8));
+                for(let k=0;k<dots;k++){
+                    const a=labDesenhoRand_(j*97+k*13)*Math.PI*2,r=Math.sqrt(labDesenhoRand_(j*193+k*29))*size*.8;
+                    const rr=Math.max(.7,size*(.045+.08*labDesenhoRand_(j*71+k*41)));
+                    ctx.beginPath();ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r,rr,0,Math.PI*2);ctx.fill();
+                }
+            }
+        }else if(brush==='irregular'){
+            ctx.lineWidth=size;ctx.lineCap='round';ctx.lineJoin='round';
+            ctx.beginPath();
+            for(let j=0;j<pts.length;j++){
+                const wob=size*.22,ox=(labDesenhoRand_(j*151+3)-.5)*wob,oy=(labDesenhoRand_(j*211+9)-.5)*wob,x=pts[j].x*ppm+ox,y=pts[j].y*ppm+oy;
+                if(j===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+            }
+            if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);ctx.stroke();
+            for(let j=0;j<pts.length;j+=2){const rr=Math.max(1,size*(.18+.2*labDesenhoRand_(j+17)));ctx.beginPath();ctx.arc(pts[j].x*ppm+(labDesenhoRand_(j+31)-.5)*size*.65,pts[j].y*ppm+(labDesenhoRand_(j+47)-.5)*size*.65,rr,0,Math.PI*2);ctx.fill();}
+        }else if(texture==='pontilhada'){
+            const step=Math.max(2,size*.7);
+            for(let j=0;j<pts.length;j++){
+                if(j%Math.max(1,Math.round(step/3))!==0)continue;
+                ctx.beginPath();ctx.arc(pts[j].x*ppm,pts[j].y*ppm,Math.max(1,size*.22),0,Math.PI*2);ctx.fill();
+            }
+        }else{
+            ctx.lineWidth=size;ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);ctx.stroke();
+        }
+        ctx.restore();
     }
 }
 window.labDesenhoPointerDown_=function(ev){
@@ -8381,7 +8428,7 @@ window.labDesenhoPointerDown_=function(ev){
     const map=document.getElementById('labMetricMap'),rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);
     const ponto=e=>({x:Math.max(0,Math.min(labEstado_.larguraM,(e.clientX-rect.left)/ppm)),y:Math.max(0,Math.min(labEstado_.alturaM,(e.clientY-rect.top)/ppm))});
     labDesenhoRegistrarHistorico_();
-    const stroke={tool:cfg.ferramenta,color:cfg.cor,size:cfg.tamanho,pts:[ponto(ev)]};
+    const stroke={tool:cfg.ferramenta,color:cfg.cor,size:cfg.tamanho,opacity:cfg.opacidade,brush:cfg.pincel,texture:cfg.texturaTraco,pts:[ponto(ev)]};
     labEstado_.desenhosLab.push(stroke);
     const move=e=>{stroke.pts.push(ponto(e));labDesenhoRender_();};
     const up=()=>{window.removeEventListener('pointermove',move);labSalvarLocal_();labRender_();};
@@ -8423,11 +8470,11 @@ function labRender_(){
     const floats=(labEstado_.floatsLab||[]).map(f=>labFloatHtml_(f,ppm)).join('');
     map.innerHTML=drawCanvas+overlay+objetos+tokens+micro+floats;
     labDesenhoRender_();
-    const cfg=labDesenhoConfig_(),tg=document.getElementById('labDrawToggle'),eb=document.getElementById('labEraserBtn'),ft=document.getElementById('labDrawTool'),cc=document.getElementById('labDrawColor'),rgb=document.getElementById('labDrawRgb'),sz=document.getElementById('labDrawSize'),ub=document.getElementById('labUndoBtn'),rb=document.getElementById('labRedoBtn');
+    const cfg=labDesenhoConfig_(),tg=document.getElementById('labDrawToggle'),eb=document.getElementById('labEraserBtn'),ft=document.getElementById('labDrawTool'),cc=document.getElementById('labDrawColor'),rgb=document.getElementById('labDrawRgb'),sz=document.getElementById('labDrawSize'),op=document.getElementById('labDrawOpacity'),opv=document.getElementById('labDrawOpacityValue'),br=document.getElementById('labDrawBrush'),stx=document.getElementById('labDrawStrokeTexture'),ub=document.getElementById('labUndoBtn'),rb=document.getElementById('labRedoBtn');
     if(tg){tg.textContent=cfg.ativo&&cfg.ferramenta!=='borracha'?'✅ Desenhando':'✏️ Desenhar';tg.classList.toggle('btn-select',cfg.ativo&&cfg.ferramenta!=='borracha');}
     if(eb)eb.classList.toggle('btn-select',cfg.ativo&&cfg.ferramenta==='borracha');
     if(ub)ub.disabled=!labDesenhoUndo_.length;if(rb)rb.disabled=!labDesenhoRedo_.length;
-    if(ft)ft.value=cfg.ferramenta;if(cc)cc.value=cfg.cor;if(rgb){const v=labCorHexParaRgb_(cfg.cor);if(v&&document.activeElement!==rgb)rgb.value=v.join('/');}if(sz)sz.value=cfg.tamanho;
+    if(ft)ft.value=cfg.ferramenta;if(cc)cc.value=cfg.cor;if(rgb){const v=labCorHexParaRgb_(cfg.cor);if(v&&document.activeElement!==rgb)rgb.value=v.join('/');}if(sz)sz.value=cfg.tamanho;if(op)op.value=String(Math.round(cfg.opacidade*100));if(opv)opv.textContent=`${Math.round(cfg.opacidade*100)}%`;if(br)br.value=cfg.pincel;if(stx)stx.value=cfg.texturaTraco;
     labAtualizarSelectMapas_();
     labAtualizarSelectObjetosMapa_();
     labRenderObjetoPainel_();
