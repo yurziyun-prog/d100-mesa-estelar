@@ -414,7 +414,7 @@
 </style>
 
 <style id="lab-ui-fix-v46430">
-/* v46.43.0 — selects sem recorte e contraste de ações Psi */
+/* v46.44.0 — selects sem recorte e contraste de ações Psi */
 #laboratorio-combate #labParticipanteSelect,
 #laboratorio-combate #labMapaSalvoSelect,
 #laboratorio-combate #labZoom,
@@ -2597,6 +2597,8 @@ async function carregarBancosDeDados() {
         periciasDB = []; periciasSnap.forEach(doc => periciasDB.push({ id: doc.id, ...doc.data() }));
     }
 
+    periciasDB = aplicarMetadadosReformaPericias_(periciasDB);
+
     const origensSnap = await getDocs(collection(db, "origens"));
     if (origensSnap.empty) {
         for (const o of origensPadrao) await setDoc(doc(db, "origens", o.id), o);
@@ -2620,6 +2622,15 @@ async function carregarBancosDeDados() {
     } else {
         especializacoesDB = []; espSnap.forEach(doc => especializacoesDB.push({ id: doc.id, ...doc.data() }));
     }
+
+    const reformaEsp={
+      combate_pistola_laser:{formula:'DES*2'}, pistolas_revolveres:{formula:'DES*2'},
+      atirador_elite:{formula:'DES+INT'}, fuzis_carabinas:{formula:'DES+INT'}, rifles_laser:{formula:'DES+INT'}, armas_energia:{formula:'DES+INT'},
+      luta_gravidade_zero:{formula:'DES+INT'}, combate_traje_espacial:{formula:'DES+CON'},
+      ninja:{nome:'Ataque Furtivo',nome_en:'Sneak Attack',nome_zh:'偷袭',formula:'DES+INT'},
+      briga_taberna_pugilismo:{nome:'Pugilismo',nome_en:'Pugilism',nome_zh:'拳击',formula:'FOR+DES'}
+    };
+    especializacoesDB=(especializacoesDB||[]).map(e=>Object.assign(e,reformaEsp[e.id]||{}));
 
     try {
         const psiSnap = await getDocs(collection(db, "poderesPsi"));
@@ -5638,13 +5649,13 @@ function setupDragAndDrop() {
 // ============================================
 const periciasPadrao = [
     { id: 'atletismo', nome: 'Atletismo', nome_en: 'Athletics', nome_zh: '运动', categoria: 'Física', tipo: 'Básica', formula: 'FOR+DES', especializavel: false, penalidadeArmadura: 1 },
-    { id: 'navegacao_remo', nome: 'Navegação a Remo', nome_en: 'Rowing', nome_zh: '划船', categoria: 'Veículos', tipo: 'Básica', formula: 'FOR+CON', especializavel: false, penalidadeArmadura: 1 },
+    { id: 'navegacao_remo', nome: 'Navegação a Remo', disponivelCampanha: false, nome_en: 'Rowing', nome_zh: '划船', categoria: 'Veículos', tipo: 'Básica', formula: 'FOR+CON', especializavel: false, penalidadeArmadura: 1 },
     { id: 'forca_bruta', nome: 'Força Bruta', nome_en: 'Brute Force', nome_zh: '蛮力', categoria: 'Física', tipo: 'Básica', formula: 'FOR+TAM', especializavel: false, penalidadeArmadura: 1 },
-    { id: 'ocultar_itens', nome: 'Ocultar Itens', nome_en: 'Hide Items', nome_zh: '隐藏物品', categoria: 'Furtividade', tipo: 'Básica', formula: 'DES+POD', especializavel: false, penalidadeArmadura: 0.5 },
-    { id: 'costumes', nome: 'Costumes', nome_en: 'Customs', nome_zh: '习俗', categoria: 'Conhecimento', tipo: 'Básica', formula: 'INT*2+40', especializavel: true, penalidadeArmadura: 0 },
+    { id: 'ocultar_itens', nome: 'Ocultar Itens', nome_en: 'Hide Items', nome_zh: '隐藏物品', categoria: 'Furtividade', tipo: 'Básica', formula: 'DES*2', especializavel: false, penalidadeArmadura: 0.5 },
+    { id: 'costumes', nome: 'Tradição', nome_en: 'Tradition', nome_zh: '传统', categoria: 'Conhecimento', tipo: 'Básica', formula: 'INT*2+40', especializavel: true, penalidadeArmadura: 0 },
     { id: 'danca', nome: 'Dança', nome_en: 'Dance', nome_zh: '舞蹈', categoria: 'Social', tipo: 'Básica', formula: 'DES+CAR', especializavel: true, penalidadeArmadura: 0.5 },
-    { id: 'dissimulacao', nome: 'Dissimulação', nome_en: 'Deception', nome_zh: '欺骗', categoria: 'Social', tipo: 'Básica', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0.5 },
-    { id: 'conduzir', nome: 'Conduzir', nome_en: 'Drive', nome_zh: '驾驶', categoria: 'Veículos', tipo: 'Básica', formula: 'DES+POD', especializavel: true, penalidadeArmadura: 0.5 },
+    { id: 'dissimulacao', nome: 'Enganação', nome_en: 'Deception', nome_zh: '欺骗', categoria: 'Social', tipo: 'Básica', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0.5 },
+    { id: 'conduzir', nome: 'Condução de Veículos', nome_en: 'Vehicle Operation', nome_zh: '车辆驾驶', categoria: 'Veículos', tipo: 'Básica', formula: 'DES+INT', especializavel: true, penalidadeArmadura: 0.5 },
     { id: 'resistencia', nome: 'Resistência', nome_en: 'Endurance', nome_zh: '耐力', categoria: 'Sobrevivência', tipo: 'Básica', formula: 'CON*2', especializavel: false, penalidadeArmadura: 1 },
     { id: 'esquiva', nome: 'Esquiva', nome_en: 'Dodge', nome_zh: '闪避', categoria: 'Combate', tipo: 'Básica', formula: 'DES*2', especializavel: false, penalidadeArmadura: 1 },
     { id: 'primeiros_socorros', nome: 'Primeiros Socorros', nome_en: 'First Aid', nome_zh: '急救', categoria: 'Técnica', tipo: 'Básica', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 0.5 },
@@ -5653,7 +5664,7 @@ const periciasPadrao = [
     { id: 'regiao', nome: 'Região', nome_en: 'Region', nome_zh: '地区', categoria: 'Conhecimento', tipo: 'Básica', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
     { id: 'lingua_nativa', nome: 'Língua Nativa', nome_en: 'Native Language', nome_zh: '母语', categoria: 'Conhecimento', tipo: 'Básica', formula: 'INT+CAR+40', especializavel: true, penalidadeArmadura: 0 },
     { id: 'percepcao', nome: 'Percepção', nome_en: 'Perception', nome_zh: '感知', categoria: 'Percepção', tipo: 'Básica', formula: 'INT+POD', especializavel: false, penalidadeArmadura: 0.5 },
-    { id: 'cavalgar', nome: 'Cavalgar', nome_en: 'Ride', nome_zh: '骑乘', categoria: 'Veículos', tipo: 'Básica', formula: 'DES+POD', especializavel: true, penalidadeArmadura: 1 },
+    { id: 'cavalgar', nome: 'Cavalgar', nome_en: 'Ride', nome_zh: '骑乘', categoria: 'Animais', tipo: 'Básica', formula: 'DES+CAR', especializavel: true, penalidadeArmadura: 1 },
     { id: 'canto', nome: 'Canto', nome_en: 'Singing', nome_zh: '唱歌', categoria: 'Social', tipo: 'Básica', formula: 'CAR+POD', especializavel: true, penalidadeArmadura: 0.5 },
     { id: 'furtividade', nome: 'Furtividade', nome_en: 'Stealth', nome_zh: '潜行', categoria: 'Furtividade', tipo: 'Básica', formula: 'DES+INT', especializavel: false, penalidadeArmadura: 1 },
     { id: 'natacao', nome: 'Natação', nome_en: 'Swimming', nome_zh: '游泳', categoria: 'Física', tipo: 'Básica', formula: 'FOR+CON', especializavel: false, penalidadeArmadura: 1 },
@@ -5662,22 +5673,88 @@ const periciasPadrao = [
     { id: 'arte', nome: 'Arte', nome_en: 'Art', nome_zh: '艺术', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
     { id: 'comercio', nome: 'Comércio', nome_en: 'Commerce', nome_zh: '商业', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
     { id: 'engenharia', nome: 'Engenharia', nome_en: 'Engineering', nome_zh: '工程', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0.5 },
-    { id: 'medicina', nome: 'Medicina', nome_en: 'Medicine', nome_zh: '医学', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 },
-    { id: 'pilotagem', nome: 'Pilotagem', nome_en: 'Piloting', nome_zh: '驾驶', categoria: 'Veículos', tipo: 'Profissional', formula: 'DES+POD', especializavel: true, penalidadeArmadura: 0 },
+    { id: 'medicina', nome: 'Medicina', nome_en: 'Medicine', nome_zh: '医学', categoria: 'Medicina', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0.5 },
+    { id: 'pilotagem', nome: 'Pilotagem', nome_en: 'Piloting', nome_zh: '驾驶', categoria: 'Veículos', tipo: 'Profissional', formula: 'DES+INT', especializavel: true, penalidadeArmadura: 0 },
     { id: 'sobrevivencia', nome: 'Sobrevivência', nome_en: 'Survival', nome_zh: '生存', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+CON', especializavel: true, penalidadeArmadura: 0 },
     { id: 'tatica', nome: 'Tática', nome_en: 'Tactics', nome_zh: '战术', categoria: 'Combate', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
     { id: 'armeiro', nome: 'Armeiro', nome_en: 'Gunsmith', nome_zh: '枪械师', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 0 },
     { id: 'interrogatorio', nome: 'Interrogatório', nome_en: 'Interrogation', nome_zh: '审讯', categoria: 'Social', tipo: 'Profissional', formula: 'INT+CAR', especializavel: true, penalidadeArmadura: 0 },
     { id: 'rastrear', nome: 'Rastrear', nome_en: 'Tracking', nome_zh: '追踪', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 1 },
-    { id: 'submundo', nome: 'Submundo/Malandragem', nome_en: 'Underworld', nome_zh: '地下世界', categoria: 'Furtividade', tipo: 'Profissional', formula: 'POD+CAR', especializavel: true, penalidadeArmadura: 1 },
+    { id: 'submundo', nome: 'Submundo', nome_en: 'Underworld', nome_zh: '地下世界', categoria: 'Furtividade', tipo: 'Profissional', formula: 'POD+CAR', especializavel: true, penalidadeArmadura: 1 },
     { id: 'astronavegacao', nome: 'Astronavegação', nome_en: 'Astrogation', nome_zh: '星际导航', categoria: 'Veículos', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
     { id: 'mecanica', nome: 'Mecânica', nome_en: 'Mechanics', nome_zh: '机械', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 1 },
     { id: 'eletronica', nome: 'Eletrônica', nome_en: 'Electronics', nome_zh: '电子', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+DES', especializavel: true, penalidadeArmadura: 0.5 },
     { id: 'computadores', nome: 'Computadores', nome_en: 'Computers', nome_zh: '计算机', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0 },
     { id: 'sobrevivencia_espacial', nome: 'Sobrevivência Espacial', nome_en: 'Space Survival', nome_zh: '太空生存', categoria: 'Sobrevivência', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 },
     { id: 'sistemas_escudo', nome: 'Sistemas de Escudo/Sensores', nome_en: 'Shield/Sensor Systems', nome_zh: '护盾/传感器', categoria: 'Técnica', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0 },
-    { id: 'logistica', nome: 'Logística', nome_en: 'Logistics', nome_zh: '物流', categoria: 'Conhecimento', tipo: 'Profissional', formula: 'INT+POD', especializavel: true, penalidadeArmadura: 0.5 }
+    { id: 'logistica', nome: 'Logística', nome_en: 'Logistics', nome_zh: '物流', categoria: 'Estratégica', tipo: 'Profissional', formula: 'INT*2', especializavel: true, penalidadeArmadura: 0.5 }
 ];
+
+// Reforma de perícias v46.44: escolas, famílias, disponibilidade e sinergias.
+const reformaPericiasV4644_ = {
+  resistencia:{descricao:'Suporta exaustão, dor e ambientes hostis. Também participa dos testes de vida após ferimentos graves.',familias:['Física']},
+  esquiva:{descricao:'Defesa ativa baseada em reflexos e deslocamento. É a perícia geral de Destreza.',familias:['Combate']},
+  forca_bruta:{descricao:'Aplicação geral de força física. Pode substituir tarefas técnicas puramente físicas, como mineração bruta, com dificuldade maior.',familias:['Física']},
+  influencia:{descricao:'Capacidade social geral baseada em presença e carisma.',familias:['Social']},
+  forca_vontade:{descricao:'Autocontrole, determinação e resistência mental. É a perícia geral de Poder.',familias:['Mental']},
+  natacao:{familias:['Física'],sinergias:{atletismo:.20,navegacao_remo:.20}},
+  atletismo:{familias:['Física'],sinergias:{natacao:.20}},
+  navegacao_remo:{disponivelCampanha:false,familias:['Veículos','Física'],sinergias:{natacao:.20}},
+  cavalgar:{formula:'DES+CAR',familias:['Animais'],descricao:'Controlar e conduzir uma montaria. Carisma representa comunicação, presença e vínculo com o animal.'},
+  ocultar_itens:{formula:'DES*2',familias:['Infiltração']},
+  costumes:{nome:'Tradição',nome_en:'Tradition',nome_zh:'传统',familias:['Cultura'],exigeEscola:true,escolas:['Cultura de origem','Tradição regional','Tradição religiosa','Tradição profissional']},
+  dissimulacao:{nome:'Enganação',familias:['Social','Infiltração']},
+  conduzir:{nome:'Condução de Veículos',nome_en:'Vehicle Operation',nome_zh:'车辆驾驶',formula:'DES+INT',familias:['Veículos'],exigeEscola:true,escolas:['Veículos terrestres','Motocicletas','Veículos pesados','Veículos aquáticos','Veículos exóticos']},
+  sobrevivencia:{familias:['Exploração'],exigeEscola:true,escolas:['Urbana','Rural','Florestas','Desertos','Montanhas','Mares e Costas','Polar','Subterrânea','Espacial','Ambientes Exóticos'],sinergias:{rastrear:.20}},
+  rastrear:{familias:['Exploração'],sinergias:{sobrevivencia:.20}},
+  medicina:{formula:'INT*2',familias:['Medicina'],exigeEscola:true,escolas:['Clínica Geral','Cirurgia','Traumatologia','Medicina de Emergência','Psiquiatria','Medicina Espacial','Xenomedicina'],sinergias:{primeiros_socorros:.20}},
+  primeiros_socorros:{familias:['Medicina'],sinergias:{medicina:.10}},
+  pesquisa:{formula:'INT*2',familias:['Acadêmica'],sinergias:{historia:.10,ensino:.10}},
+  ensino:{familias:['Acadêmica'],sinergias:{historia:.05,pesquisa:.10}},
+  historia:{formula:'INT*2',familias:['Acadêmica'],exigeEscola:true,escolas:['História do Império','História Planetária','História Militar','História Política','História da Tecnologia','História Econômica','História Social','História da Arte','Genealogia e Heraldismo','Arqueologia'],sinergias:{pesquisa:.05,ensino:.05}},
+  saber:{nome:'Conhecimentos Gerais',nome_en:'General Knowledge',nome_zh:'通识',formula:'INT*2',familias:['Acadêmica'],exigeEscola:true,escolas:['Cultura Imperial','Ciências','Humanidades','Tecnologia','Sociedade e Atualidades'],penalidadeForaEscola:2},
+  pilotagem:{formula:'DES+INT',familias:['Veículos','Navegação'],exigeEscola:true,escolas:['Naves pequenas','Naves capitais','Aeronaves','VTOL/Gravíticos','Mechas'],sinergias:{astronavegacao:.20}},
+  astronavegacao:{formula:'INT*2',familias:['Navegação'],sinergias:{pilotagem:.20}},
+  navegacao:{formula:'INT*2',familias:['Navegação'],exigeEscola:true,escolas:['Terrestre','Marítima','Aérea','Subterrânea']},
+  mecanica:{familias:['Tecnologia'],exigeEscola:true,escolas:['Veículos','Naves','Industrial','Mecatrônica','Máquinas Exóticas'],sinergias:{robotica:.20,eletronica:.10}},
+  eletronica:{familias:['Tecnologia'],exigeEscola:true,escolas:['Sistemas gerais','Comunicações','Sensores','Controle','Potência'],sinergias:{robotica:.20,cibernetica:.10}},
+  computadores:{nome:'Computação',nome_en:'Computing',nome_zh:'计算技术',formula:'INT*2',familias:['Tecnologia'],sinergias:{ciberseguranca:.20,robotica:.10}},
+  ciberseguranca:{formula:'INT*2',familias:['Tecnologia'],sinergias:{computadores:.20}},
+  logistica:{formula:'INT*2',familias:['Estratégica'],sinergias:{tatica:.20,estrategia:.20,lideranca:.20}},
+  tatica:{familias:['Estratégica'],sinergias:{estrategia:.20,logistica:.20,lideranca:.20}},
+  estrategia:{formula:'INT+POD',familias:['Estratégica'],sinergias:{tatica:.20,logistica:.20,lideranca:.20}},
+  comando:{nome:'Liderança',nome_en:'Leadership',nome_zh:'领导力',formula:'INT+CAR',familias:['Estratégica','Social'],sinergias:{tatica:.20,estrategia:.20,logistica:.20}},
+  seducao:{formula:'POD+CAR',familias:['Social']},
+  avaliacao:{formula:'INT+POD',familias:['Conhecimento']},
+  intimidacao:{nome:'Intimidação',nome_en:'Intimidation',nome_zh:'威吓',formula:'POD+MAIOR',tipo:'Básica',categoria:'Social',familias:['Social'],descricao:'Intimida usando POD somado ao maior entre FOR, TAM, DES, INT e CAR. Interprete a abordagem conforme o atributo escolhido: força física, porte, velocidade, intelecto ou presença.'},
+  mineracao:{formula:'INT+FOR',familias:['Exploração','Técnica'],exigeEscola:true,escolas:['Minérios metálicos','Cristais e gemas','Combustíveis e minerais','Mineração subterrânea','Mineração espacial']},
+  meditacao:{familias:['Mental','Psi'],exigeEscola:true,escolas:['Transe','Contemplativa','Respiratória','Psi']},
+  arte:{familias:['Artes'],sinergias:{danca:.20,canto:.20,musica:.20,teatro:.20}},
+  danca:{familias:['Artes'],sinergias:{arte:.20,canto:.20,musica:.20,teatro:.20}},
+  canto:{familias:['Artes'],sinergias:{arte:.20,danca:.20,musica:.20,teatro:.20}},
+  musica:{familias:['Artes'],sinergias:{arte:.20,danca:.20,canto:.20,teatro:.20}},
+  teatro:{familias:['Artes','Representação'],sinergias:{arte:.20,danca:.20,canto:.20,musica:.20,disfarce:.20,dissimulacao:.20}},
+  disfarce:{familias:['Representação','Infiltração'],sinergias:{teatro:.20,dissimulacao:.20}},
+  interrogatorio:{familias:['Psicologia','Social'],sinergias:{psicologia:.20}},
+  psicologia:{familias:['Psicologia'],sinergias:{interrogatorio:.10}},
+  robotica:{nome:'Robótica',nome_en:'Robotics',nome_zh:'机器人学',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia'],exigeEscola:true,escolas:['Drones','Robôs industriais','Robôs humanoides','Autômatos militares'],sinergias:{mecanica:.20,eletronica:.20,computadores:.10}},
+  cibernetica:{nome:'Cibernética',nome_en:'Cybernetics',nome_zh:'控制论与义体',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Medicina'],exigeEscola:true,escolas:['Próteses','Implantes neurais','Interfaces homem-máquina','Órgãos artificiais'],sinergias:{eletronica:.10,medicina:.10}},
+  comunicacoes:{nome:'Comunicações',nome_en:'Communications',nome_zh:'通信',formula:'INT+CAR',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia'],exigeEscola:true,escolas:['Rádio','Comunicações espaciais','Redes táticas','Interferência e contramedidas']},
+  sensoriamento:{nome:'Sensoriamento',nome_en:'Sensor Operations',nome_zh:'传感器操作',formula:'INT*2',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Espacial'],exigeEscola:true,escolas:['Radar/Lidar','Espectroscopia','Varredura espacial','Sensores planetários']},
+  sistemas_defensivos:{nome:'Sistemas Defensivos',nome_en:'Defensive Systems',nome_zh:'防御系统',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Espacial'],exigeEscola:true,escolas:['Escudos','Contramedidas','Defesa eletrônica','Defesa de ponto']},
+  seguranca:{nome:'Segurança',nome_en:'Security',nome_zh:'安保技术',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Infiltração'],exigeEscola:true,escolas:['Cofres e Fechaduras','Alarmes','Controle de Acesso','Vigilância']}
+};
+
+function aplicarMetadadosReformaPericias_(lista){
+  const mapa=new Map((lista||[]).map(x=>[x.id,x]));
+  for(const [id,meta] of Object.entries(reformaPericiasV4644_)){
+    if(mapa.has(id)) Object.assign(mapa.get(id),meta);
+    else mapa.set(id,{id,especializavel:!!meta.exigeEscola,penalidadeArmadura:0,...meta});
+  }
+  return [...mapa.values()].filter(p=>p.disponivelCampanha!==false || userData?.role==='mestre');
+}
+function escolaPadraoPericia_(p){return Array.isArray(p?.escolas)&&p.escolas.length?p.escolas[0]:'';}
+window.definirEscolaPericia_=(id,valor)=>{const c=userCharacters.find(x=>x.id===currentCharId);if(!c)return;const d=rascunhoPericiasChar_(c);d.pericias[id]={...(d.pericias[id]||{}),escola:String(valor||'')};d.sujo=true;renderizarPericias(c);};
 
 const origensPadrao = [
     { id: 'urbano', nome: 'Urbano (Metrópole)', nome_en: 'Urban (Metropolis)', nome_zh: '城市', periciasBasicas: ['costumes', 'dissimulacao', 'conduzir', 'influencia', 'intuicao', 'regiao', 'percepcao'] },
@@ -5701,12 +5778,12 @@ const carreirasPadrao = [
 ];
 
 const especializacoesPadrao = [
-    { id: 'combate_pistola_laser', nome: 'Combate com Pistola Laser', nome_en: 'Laser Pistol Combat', nome_zh: '激光手枪战斗', tipo: 'Combate', uso: 'Distância', formula: 'DES+POD' },
-    { id: 'atirador_elite', nome: 'Atirador de Elite', nome_en: 'Elite Sniper', nome_zh: '精英狙击手', tipo: 'Combate', uso: 'Distância', formula: 'DES+POD' },
+    { id: 'combate_pistola_laser', nome: 'Combate com Pistola Laser', nome_en: 'Laser Pistol Combat', nome_zh: '激光手枪战斗', tipo: 'Combate', uso: 'Distância', formula: 'DES*2' },
+    { id: 'atirador_elite', nome: 'Atirador de Elite', nome_en: 'Elite Sniper', nome_zh: '精英狙击手', tipo: 'Combate', uso: 'Distância', formula: 'DES+INT' },
     { id: 'arma_laser_pesada', nome: 'Arma Laser Pesada', nome_en: 'Heavy Laser Weapon', nome_zh: '重型激光武器', tipo: 'Combate', uso: 'Distância', formula: 'FOR+DES' },
-    { id: 'luta_gravidade_zero', nome: 'Luta em Gravidade Zero', nome_en: 'Zero-G Combat', nome_zh: '零重力战斗', tipo: 'Combate', uso: 'Corpo a corpo + Distância + Defesa', formula: 'DES+POD' },
+    { id: 'luta_gravidade_zero', nome: 'Luta em Gravidade Zero', nome_en: 'Zero-G Combat', nome_zh: '零重力战斗', tipo: 'Combate', uso: 'Corpo a corpo + Distância + Defesa', formula: 'DES+INT' },
     { id: 'guarda_costas_arma_longa', nome: 'Guarda-Costas (Arma Longa/Escudo)', nome_en: 'Bodyguard (Long Weapon/Shield)', nome_zh: '保镖', tipo: 'Combate', uso: 'Corpo a corpo + Defesa', formula: 'FOR+DES' },
-    { id: 'combate_traje_espacial', nome: 'Combate em Traje Espacial', nome_en: 'Spacesuit Combat', nome_zh: '太空服战斗', tipo: 'Combate', uso: 'Corpo a corpo + Distância + Defesa', formula: 'DES+POD' },
+    { id: 'combate_traje_espacial', nome: 'Combate em Traje Espacial', nome_en: 'Spacesuit Combat', nome_zh: '太空服战斗', tipo: 'Combate', uso: 'Corpo a corpo + Distância + Defesa', formula: 'DES+CON' },
     { id: 'psiquismo_materia', nome: 'Psiquismo (Matéria)', nome_en: 'Psychism (Matter)', nome_zh: '心灵感应(物质)', tipo: 'Psi', uso: 'Teste', formula: 'INT+POD' },
     { id: 'psiquismo_mente', nome: 'Psiquismo (Mente)', nome_en: 'Psychism (Mind)', nome_zh: '心灵感应(心灵)', tipo: 'Psi', uso: 'Teste', formula: 'INT+POD' },
     { id: 'psiquismo_sentidos', nome: 'Psiquismo (Sentidos)', nome_en: 'Psychism (Senses)', nome_zh: '心灵感应(感官)', tipo: 'Psi', uso: 'Teste', formula: 'INT+POD' }
@@ -11935,6 +12012,7 @@ function renderizarPericias(char) {
     const calcularFormula = (formula, valores) => {
         try {
             let expr = String(formula || '0');
+            if(expr.includes('MAIOR')){ const maior=Math.max(...['FOR','TAM','DES','INT','CAR'].map(k=>Number(valores?.[k]||0))); expr=expr.replace(/MAIOR/g,String(maior)); }
             ['FOR', 'CON', 'TAM', 'DES', 'INT', 'POD', 'CAR'].forEach(a => {
                 expr = expr.replace(new RegExp(a, 'g'), valores[a] || 0);
             });
@@ -11991,7 +12069,10 @@ function renderizarPericias(char) {
         const input = somenteLeitura
             ? `<span>${treinoTotal}</span>`
             : `<input type="number" value="${treinoVisao}" min="0" max="${maxTreinoCategoria}" oninput="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo}', '${visao}')">`;
-        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(p)}</td><td>${formatarFormulaIdioma_(p.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
+        const escolaAtual=dados.escola||'';
+        const seletorEscola=(p.exigeEscola&&treinoTotal>0)?`<div style="margin-top:5px"><select onchange="definirEscolaPericia_('${p.id}',this.value)" style="max-width:220px"><option value="">— escolher escola —</option>${(p.escolas||[]).map(x=>`<option value="${x}" ${x===escolaAtual?'selected':''}>${x}</option>`).join('')}</select></div>`:'';
+        const dica=p.descricao?` title="${String(p.descricao).replace(/"/g,'&quot;')}"`:'';
+        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td${dica}>${getNome(p)}${seletorEscola}</td><td>${formatarFormulaIdioma_(p.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
 
     const renderLinhaEspecializacao = (e, somenteLeitura = false) => {
@@ -12099,6 +12180,14 @@ window.salvarPericias = async () => {
     if(personagemCriacaoConcluida_(char) && userData?.role!=='mestre'){notificar_('A ficha concluída só recebe novos pontos pelas concessões de XP.','aviso',4500);return;}
     const draft=rascunhoPericiasChar_(char);
     if(!draft)return;
+    for(const p of (periciasDB||[])){
+      const d=draft.pericias?.[p.id]; const treino=totalTreinoPericia_(d||{});
+      if(p.exigeEscola&&treino>0&&!d?.escola){
+        const antigo=(char.pericias?.[p.id]&&totalTreinoPericia_(char.pericias[p.id])>0);
+        if(antigo){ d.escola=escolaPadraoPericia_(p); }
+        else { notificar_(`Escolha uma escola para ${getNome(p)} antes de salvar.`,'aviso',5000); renderizarPericias(char); return; }
+      }
+    }
     char.pericias=JSON.parse(JSON.stringify(draft.pericias||{}));
     char.especializacoes=JSON.parse(JSON.stringify(draft.especializacoes||{}));
     await setDoc(doc(db,'personagens',currentCharId),{
@@ -16741,6 +16830,6 @@ window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.43.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.44.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
