@@ -412,6 +412,30 @@
 #laboratorio-combate .lab-repeat-btn{border-color:rgba(181,108,255,.48);color:#ead8ff;}
 .xp-grant-card{padding:12px;border-radius:10px;background:rgba(155,89,182,.10);border:1px solid rgba(155,89,182,.28);margin-top:10px}
 </style>
+
+<style id="lab-ui-fix-v46430">
+/* v46.43.0 — selects sem recorte e contraste de ações Psi */
+#laboratorio-combate #labParticipanteSelect,
+#laboratorio-combate #labMapaSalvoSelect,
+#laboratorio-combate #labZoom,
+#laboratorio-combate #labMapCreationControls select{
+  height:42px !important;
+  min-height:42px !important;
+  padding:0 34px 0 12px !important;
+  line-height:40px !important;
+  font-size:.84em !important;
+  box-sizing:border-box !important;
+  vertical-align:middle !important;
+}
+#laboratorio-combate #labParticipanteSelect{width:390px !important;min-width:390px !important;}
+#laboratorio-combate #labMapaSalvoSelect{width:315px !important;min-width:315px !important;}
+#laboratorio-combate #labZoom{width:175px !important;min-width:175px !important;}
+#laboratorio-combate .lab-psi-action{color:#4b176b !important;font-weight:800 !important;}
+@media (max-width:900px){
+ #laboratorio-combate #labParticipanteSelect,#laboratorio-combate #labMapaSalvoSelect{width:min(78vw,360px)!important;min-width:220px!important;}
+}
+</style>
+
 </head>
 <body>
     <div class="galaxy-bg"></div>
@@ -541,7 +565,7 @@
                     <div style="overflow:auto;padding:10px;border-radius:12px;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.12);">
                         <div id="labHoverCard" style="display:none;position:fixed;z-index:99999;pointer-events:none;width:300px;max-height:520px;overflow:hidden;border:1px solid rgba(0,212,255,.55);border-radius:12px;background:rgba(12,14,33,.97);box-shadow:0 12px 34px rgba(0,0,0,.55);padding:10px;"></div>
                     <div id="labPlayerPrivateResult" style="display:none"></div>
-                    <div id="labMetricMap" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
+                    <div id="labMetricMap" onclick="labCliqueFundoMapa_(event)" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
                     <div id="labHistoricoMesa" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(8,12,29,.68);border:1px solid rgba(0,212,255,.22);max-height:210px;overflow:auto;"></div>
                     <div style="margin-top:8px;color:#888;font-size:.88em;">Área padrão: 28 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
@@ -8295,7 +8319,7 @@ function labRenderActionPanel_(){
         ${item&&labEhArmaMuniciada_(item)?`<button class="btn-small" onclick="labRecarregar_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} title="Recarga local/simulada. Capacidade definida pelo campo Uso da arma." style="height:44px;min-width:170px;font-size:.96em;">🔋 Recarregar · ${labMunicaoAtual_(t,item)}/${labCapacidadeArma_(item)}</button>`:''}
         <button class="btn-small" onclick="labLevantar_()" ${!labGarantirSnapshotCombate_(t)?.derrubado||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} title="${labGarantirSnapshotCombate_(t)?.derrubado?'Gasta 1 AÇ para se levantar.':'Disponível quando o personagem estiver Derrubado.'}" style="height:44px;min-width:160px;font-size:.96em;">⬆️ Levantar (1 AÇ)</button>
         <button class="btn-small" onclick="labAbrirTeste_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:160px;font-size:.96em;">🎲 Teste (1 AÇ)</button>
-        ${temPsiquismoInvestido_(labCharToken_(t)||t.charLab)?`<button class="btn-small" onclick="labAbrirPsi_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:180px;font-size:.96em;color:#e4c7ff;">🔮 Psiquismo · ${labPsiRestantes_(t)}/${labPsiMax_(t)} PP</button>`:''}
+        ${temPsiquismoInvestido_(labCharToken_(t)||t.charLab)?`<button class="btn-small" onclick="labAbrirPsi_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:44px;min-width:180px;font-size:.96em;color:#4b176b;font-weight:800;">🔮 Psiquismo · ${labPsiRestantes_(t)}/${labPsiMax_(t)} PP</button>`:''}
         ${labPrimeirosSocorrosPericia_(t)?`<button class="btn-small" onclick="labAbrirPrimeirosSocorros_()" ${!labPodePrimeirosSocorros_(t)||Number(t.acoesAtuaisLab||0)<=0||!(labEstado_.tokens||[]).some(x=>labFeridasTrataveis_(x).length&&!labGarantirSnapshotCombate_(x)?.morto)?'disabled':''} title="Escolha paciente e localização ferida. Iniciar custa 1 AÇ e encerra a oportunidade." style="height:44px;min-width:210px;font-size:.96em;">🩹 Primeiros Socorros</button>`:''}
       </div>
       ${t?labResumoPVHtml_(t,'SEUS PV'):''}
@@ -8341,7 +8365,9 @@ function labAtualizarInfo_(){
 }
 let labTokenArrastandoId_='';
 function labOverlayMovimentoHtml_(t,ppm){
-    if(!t)return '';let h='';const atual=labTokenAtual_(),ativo=String(labEstado_.selecionadoId||'')===String(t.id)||String(labTokenArrastandoId_||'')===String(t.id),ehAtual=labEstado_.fase==='combate'&&String(atual?.id)===String(t.id);
+    if(!t)return '';
+    if(!batalhaEhMestre_()&&!labPodeVerDetalhesToken_(t))return '';
+    let h='';const atual=labTokenAtual_(),ativo=String(labEstado_.selecionadoId||'')===String(t.id)||String(labTokenArrastandoId_||'')===String(t.id),ehAtual=labEstado_.fase==='combate'&&String(atual?.id)===String(t.id);
     if(!ehAtual||!ativo)return '';
     const max=labMovimentoMaxM_(t);
     if(max>0&&max<100){const r=max*ppm;h+=`<div style="position:absolute;left:${t.x*ppm-r}px;top:${t.y*ppm-r}px;width:${2*r}px;height:${2*r}px;border-radius:50%;background:rgba(70,170,255,.10);border:2px dashed rgba(90,195,255,.65);pointer-events:none"></div>`;}
@@ -8481,7 +8507,7 @@ function labMicroPainelHtml_(alvoVisual,ppm,d){
     const podePS=ps&&labFeridasTrataveis_(alvoVisual).length>0&&(ehProprio||labDistanciaEntre_(ator,alvoVisual)<=1.5);
     return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${topBaixo}px;transform:translateX(-50%);z-index:20;padding:4px;border-radius:8px;background:rgba(10,13,30,.95);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:310px;">
       ${!ehProprio?`<button class="btn-small btn-select" onclick="labMicroModoSelecionar_('ataque');labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">⚔️ ${escaparHtmlInventario_(ataqueNome)}</button>`:''}
-      ${psi?`<button class="btn-small ${modo==='psi'?'btn-select':''}" onclick="${modo==='psi'?"labMicroExecutar_()":"labMicroModoSelecionar_('psi')"}" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 ${escaparHtmlInventario_(modo==='psi'?labMicroNomeAcao_(ator):(psiCtx.length===1?getNome(psiCtx[0]):'Poder psi'))}</button>`:''}
+      ${psi?psiCtx.map(p=>`<button class="btn-small lab-psi-action" onclick="labAbrirPsiContextual_('${String(p.id).replace(/'/g,"\\'")}','${String(alvoVisual.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 ${escaparHtmlInventario_(getNome(p))}</button>`).join(''):''}
       ${podePS?`<button class="btn-small ${modo==='socorros'?'btn-select':''}" onclick="labMicroModoSelecionar_('socorros')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🩹 1º socorros</button>${modo==='socorros'?`<button class="btn-small btn-select" onclick="labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">🩹 ${escaparHtmlInventario_(labMicroNomeAcao_(ator))}</button>`:''}`:''}
     </div>`;
 }
@@ -8972,7 +8998,20 @@ window.labAdicionarParticipanteSelecionado_=function(){
     if(c.__npcTemporario||c.__criaturaTemporaria)c.nome=batalhaNomeUnicoInstancia_(c.nome,(labEstado_.tokens||[]));
     let t=labTokenDeCharDireto_(c,id,(labEstado_.tokens||[]).length);
     if((labEstado_.tokens||[]).some(x=>String(x.id)===String(t.id)))t.id=`${t.id}:lab:${Date.now()}`;
-    labEstado_.tokens.push(t);labEstado_.selecionadoId=t.id;labSalvarLocal_();labRender_();
+    const atorAntes=labTokenAtual_()?.id||'';
+    if(labEstado_.fase==='combate')t.iniciativaLab=1+Math.floor(Math.random()*10)+Number(t.iniciativaBonus||0);
+    labEstado_.tokens.push(t);
+    if(labEstado_.fase==='combate'){
+        const ids=(labEstado_.ordemIniciativa||[]).filter(id0=>(labEstado_.tokens||[]).some(x=>String(x.id)===String(id0)));
+        if(!ids.some(id0=>String(id0)===String(t.id)))ids.push(String(t.id));
+        ids.sort((ia,ib)=>{const a=labTokenPorId_(ia),b=labTokenPorId_(ib);return Number(b?.iniciativaLab||0)-Number(a?.iniciativaLab||0)||Number(b?.iniciativaBonus||0)-Number(a?.iniciativaBonus||0)||String(a?.nome||'').localeCompare(String(b?.nome||''));});
+        labEstado_.ordemIniciativa=ids;
+        const idx=ids.findIndex(x=>String(x)===String(atorAntes));if(idx>=0)labEstado_.turnoIndex=idx;
+        labEstado_.ultimoResultadoLab=`${t.nome} entrou no combate com iniciativa ${t.iniciativaLab}.`;
+        labEstado_.logLab=Array.isArray(labEstado_.logLab)?labEstado_.logLab:[];
+        labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:`${t.nome} entrou no combate · INI ${t.iniciativaLab}`});
+    }
+    labEstado_.selecionadoId=t.id;labSalvarLocal_();labRender_();
 };
 
 function labRender_(){
@@ -16411,6 +16450,31 @@ window.labAbrirPsiContextual_=function(poderId,alvoId){
     if(labPsiEhObjeto_(alvo)){labEstado_.objetoSelecionadoId=String(alvo.id);labEstado_.selecionadoId='';}else labEstado_.selecionadoId=String(alvo.id);
     labSalvarLocal_();labRender_();
 };
+window.labUsarPsiContextualRapido_=function(poderId,alvoId){
+    const t=labTokenAtual_(),alvo=labPsiAlvoPorId_(alvoId);if(!t||!alvo||!labPodeControlarToken_(t))return;
+    const p=labPsiPoderesParaAlvo_(t,alvo).find(x=>String(x.id)===String(poderId));if(!p)return;
+    const min=p.id==='mover_objeto'&&labPsiEhObjeto_(alvo)?labPsiMoverCustoKg_(p,alvo):Math.max(0,Number(p.custo||0));
+    t.microModoLab='psi';t.acaoAuxLab={tipo:'psiquismo',poderId:p.id,alvoId:String(alvo.id),custo:min,local:''};
+    t.psiSelecaoLab=JSON.parse(JSON.stringify(t.acaoAuxLab));
+    if(labPsiEhObjeto_(alvo)){labEstado_.objetoSelecionadoId=String(alvo.id);labEstado_.selecionadoId='';}
+    else {labEstado_.selecionadoId=String(alvo.id);labEstado_.objetoSelecionadoId='';}
+    window.labUsarPsi_();
+};
+window.labAtacarObjetoContextual_=function(objetoId){
+    const t=labTokenAtual_(),o=labObjetoPorId_(objetoId);if(!t||!o||!labPodeControlarToken_(t))return;
+    t.alvoLab=String(o.id);t.microModoLab='ataque';t.acaoAuxLab=null;
+    labEstado_.objetoSelecionadoId=String(o.id);labEstado_.selecionadoId='';
+    labSalvarLocal_();window.labRolarAtaque_();
+};
+window.labCliqueFundoMapa_=function(ev){
+    const map=document.getElementById('labMetricMap');if(!map)return;
+    const alvo=ev?.target;
+    if(alvo?.closest?.('.lab-token,.lab-map-object,.lab-micro-actions'))return;
+    labEstado_.selecionadoId='';labEstado_.objetoSelecionadoId='';
+    const t=labTokenAtual_();if(t&&labPodeControlarToken_(t))t.alvoLab='';
+    labTokenArrastandoId_='';
+    labSalvarLocal_();labRender_();
+};
 function labObjetoNatureza_(o){const m=labObjetoModelo_(o),n=normalizarTextoCombate_(`${o?.nome||''} ${m?.nome||''} ${o?.descricao||''} ${m?.descricao||''}`);if(/arvore|árvore|tronco|madeira|tree|wood/.test(n))return 'arvore';if(/rocha|pedra|miner|ore|rock|stone/.test(n))return 'rocha';return 'outro';}
 function labEquipadoRegex_(t,re){const c=labCharToken_(t);if(!c)return null;try{return (obterItensEquipados_(c)||[]).find(i=>re.test(normalizarTextoCombate_(`${getNome(i)||i.nome||''} ${i.tipo||''} ${i.categoria||''}`)))||null;}catch(_){return null;}}
 function labPericiaRegex_(t,re){const c=labCharToken_(t);if(!c)return null;return (batalhaListaPericias_(c)||[]).find(p=>re.test(normalizarTextoCombate_(`${p.id||''} ${getNome(p)||''}`)))||null;}
@@ -16445,7 +16509,7 @@ function labObjetoMicroPainelHtml_(o,ppm){
     const ator=labTokenAtual_();if(!ator||!labPodeControlarToken_(ator)||Number(ator.acoesAtuaisLab||0)<=0)return '';
     const psis=labPsiPoderesParaAlvo_(ator,o),nat=labObjetoNatureza_(o),perMin=labPericiaRegex_(ator,/mineracao|mineração|mining|采矿/),pic=labEquipadoRegex_(ator,/picareta|pickaxe|mining pick/),axe=labEquipadoRegex_(ator,/machado|axe|斧/);
     const top=o.y*ppm+Math.max(18,Number(o.alturaM||1)*ppm)/2+10,left=o.x*ppm;
-    return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${top}px;transform:translateX(-50%);z-index:28;padding:4px;border-radius:8px;background:rgba(10,13,30,.96);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:410px;">${o.destrutivel!==false?`<button class="btn-small btn-select" onclick="labMicroModoSelecionar_('ataque');labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">⚔️ Atacar</button>`:''}<button class="btn-small" onclick="labObjetoAcao_('mover','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">💪 Mover</button>${nat==='rocha'&&perMin&&pic?`<button class="btn-small" onclick="labObjetoAcao_('minerar','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">⛏️ Minerar</button>`:''}${nat==='arvore'&&axe?`<button class="btn-small" onclick="labObjetoAcao_('cortar','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🪓 Cortar</button>`:''}${psis.map(p=>`<button class="btn-small" onclick="labAbrirPsiContextual_('${String(p.id).replace(/'/g,"\\'")}','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;color:#e4c7ff;">🔮 ${escaparHtmlInventario_(getNome(p))}</button>`).join('')}</div>`;
+    return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${top}px;transform:translateX(-50%);z-index:28;padding:4px;border-radius:8px;background:rgba(10,13,30,.96);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:410px;">${o.destrutivel!==false?`<button class="btn-small btn-select" onclick="labAtacarObjetoContextual_('${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">⚔️ Atacar</button>`:''}<button class="btn-small" onclick="labObjetoAcao_('mover','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">💪 Mover</button>${nat==='rocha'&&perMin&&pic?`<button class="btn-small" onclick="labObjetoAcao_('minerar','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">⛏️ Minerar</button>`:''}${nat==='arvore'&&axe?`<button class="btn-small" onclick="labObjetoAcao_('cortar','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🪓 Cortar</button>`:''}${psis.map(p=>`<button class="btn-small lab-psi-action" onclick="${p.id==='mover_objeto'?`labUsarPsiContextualRapido_('${String(p.id).replace(/'/g,"\\'")}','${String(o.id).replace(/'/g,"\\'")}')`:`labAbrirPsiContextual_('${String(p.id).replace(/'/g,"\\'")}','${String(o.id).replace(/'/g,"\\'")}')`}" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 ${escaparHtmlInventario_(getNome(p))}</button>`).join('')}</div>`;
 }
 function labObjetoHtml_(o,ppm){
     const w=Math.max(18,Number(o.larguraM||1)*ppm),h=Math.max(18,Number(o.alturaM||1)*ppm),cfg=labDesenhoConfig_(),sel=!!labEstado_.modoCriacaoMapa&&!cfg.ativo&&String(o.id)===String(labEstado_.objetoSelecionadoId),dead=!!o.destruido;
@@ -16677,6 +16741,6 @@ window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.42.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.43.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
