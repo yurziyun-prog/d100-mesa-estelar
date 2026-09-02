@@ -17232,7 +17232,7 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 
 
 // ============================================================
-// V46.46.0 — XP PSI, respostas flutuantes, resistências e Oficina completa
+// V46.46.1 — XP PSI, respostas flutuantes, resistências e Oficina completa
 // ============================================================
 // Um minuto de manutenção Psi equivale provisoriamente a 10 turnos de combate.
 const PSI_TURNOS_POR_MINUTO_=10;
@@ -17299,7 +17299,7 @@ const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_
 
 
 // ============================================================
-// V46.46.0 — estabilização Psi, testes no mapa e Oficina avançada
+// V46.46.1 — estabilização Psi, testes no mapa e Oficina avançada
 // ============================================================
 
 // ---------- Identificação robusta de PJ real ----------
@@ -17654,7 +17654,7 @@ labRender_=function(){
 
 
 // ============================================================
-// V46.46.0 — Teletransporte por clique e teletransportes caóticos
+// V46.46.1 — Teletransporte por clique e teletransportes caóticos
 // ============================================================
 function labPsiPosicaoAleatoriaValida_(alvo){
     const raio=Math.max(.3,Number(alvo?.diametroM||.9)/2);
@@ -17769,7 +17769,7 @@ labOverlayMovimentoHtml_=function(t,ppm){
 
 
 // ============================================================
-// V46.46.0 — roteamento de resistência Psi + nomes sempre retos
+// V46.46.1 — roteamento de resistência Psi + nomes sempre retos
 // ============================================================
 
 // Qualquer token com donoUid é tratado como controlado por uma conta real.
@@ -17964,7 +17964,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.46.0',e);}
+    }catch(e){console.warn('v46.46.1',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -17974,7 +17974,7 @@ window.labPsiRenderModalMestre_=labPsiRenderModalMestre_;
 
 
 // ============================================================
-// V46.46.0 — Oficina avançada + laser + perícias + Mimetismo
+// V46.46.1 — Oficina avançada + laser + perícias + Mimetismo
 // ============================================================
 
 // ---------- Testes de perícia gerais no Mapa da Mesa ----------
@@ -18225,6 +18225,381 @@ labRender_=function(){
 };
 window.labRender_=labRender_;
 
+
+
+// ============================================================
+// V46.46.1 — correções reais: Força Bruta, laser e Oficina V2
+// ============================================================
+
+// ---------- 1) Força Bruta sempre disponível para mover objetos ----------
+const labPericiaRegexV46461_ = labPericiaRegex_;
+labPericiaRegex_ = function(t,re){
+    const achou = labPericiaRegexV46461_(t,re);
+    if(achou) return achou;
+    // Perícias básicas continuam utilizáveis mesmo sem treino explícito.
+    const banco = (periciasDB||[]).find(p=>re.test(normalizarTextoCombate_(`${p.id||''} ${getNome(p)||''}`)));
+    if(banco) return banco;
+    // Fallback defensivo específico para a perícia geral de força.
+    if(re.test('forca bruta força bruta brute force 蛮力')){
+        return {id:'forca_bruta',nome:'Força Bruta',nome_en:'Brute Force',nome_zh:'蛮力',tipo:'Básica',formula:'FOR+TAM',penalidadeArmadura:1};
+    }
+    return null;
+};
+
+// ---------- 2) Laser: não renderizar antes do rerender do mapa ----------
+labDispararEfeitoVisualAtaque_ = function(atacante,alvo,item,acertou,grau){
+    if(!labTipoVisualArma_(item)||!atacante||!alvo)return;
+    labEstado_.efeitoVisualLab={
+      id:`fx:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
+      x1:Number(atacante.x||0),y1:Number(atacante.y||0),
+      x2:Number(alvo.x||0),y2:Number(alvo.y||0),
+      cor:labCorVisualArma_(item),acertou:!!acertou,grau:String(grau||''),ts:Date.now()
+    };
+    // Não chama labRenderEfeitoVisualAtaque_ aqui: o mapa ainda será rerenderizado
+    // pela resolução do ataque e destruiria o feixe imediatamente.
+    labSalvarLocal_();labAgendarSyncRemoto_();
+};
+
+// ---------- 3) Teste geral: básicas + profissionais investidas, sem armas ----------
+labPericiasTeste_ = function(t){
+    const c=labCharToken_(t);if(!c)return [];
+    const out=[],vistos=new Set();
+    const add=p=>{
+        if(!p?.id||vistos.has(String(p.id)))return;
+        const nome=normalizarTextoCombate_(`${p.id||''} ${getNome(p)||''}`);
+        const tipo=normalizarTextoCombate_(p.tipo||'');
+        if(/primeiros socorros|first aid|急救/.test(nome))return;
+        if(/combate|combat/.test(tipo))return;
+        if((especializacoesDB||[]).some(e=>String(e.id)===String(p.id)))return;
+        vistos.add(String(p.id));out.push(p);
+    };
+    for(const p of (periciasDB||[])){
+        if(p.disponivelCampanha===false)continue;
+        const reg=c?.pericias?.[p.id];
+        const tipo=normalizarTextoCombate_(p.tipo||'');
+        const basica=/basica|basic|básica/.test(tipo);
+        if(basica||totalTreinoPericia_(reg)>0)add(p);
+    }
+    // Registros antigos/internos investidos ainda podem ser testados se não forem combate.
+    for(const [id,reg] of Object.entries(c?.pericias||{})){
+        if(totalTreinoPericia_(reg)<=0||vistos.has(String(id)))continue;
+        const p=(periciasDB||[]).find(x=>String(x.id)===String(id));
+        if(p)add(p);
+    }
+    return out.sort((a,b)=>getNome(a).localeCompare(getNome(b),'pt'));
+};
+window.labAbrirTeste_=function(){
+    const t=labTokenAtual_();if(!t||t.primeirosSocorrosLab)return;
+    const ps=labPericiasTeste_(t);
+    if(!ps.length){notificar_('Nenhuma perícia geral disponível para este personagem.','aviso',3200);return;}
+    t.acaoAuxLab={tipo:'teste_pericia',periciaToken:batalhaTokenPericia_(ps[0])};
+    labSalvarLocal_();labRender_();
+};
+
+// ---------- 4) Oficina de Mapas V2: implementação isolada e funcional ----------
+const gmOficinaV2Cfg_ = {
+    ativo:false,
+    ferramenta:'traco',
+    cor:'#ffcf4d',
+    tamanho:7,
+    opacidade:1,
+    pincel:'redondo',
+    texturaTraco:'solida'
+};
+let gmOficinaV2Undo_=[];
+let gmOficinaV2Redo_=[];
+let gmOficinaV2Stroke_=null;
+let gmOficinaV2Raf_=0;
+
+function gmOficinaV2Snapshot_(){
+    return JSON.parse(JSON.stringify({
+        desenhos:gmOficinaEstado_.desenhos||[],
+        objetos:gmOficinaEstado_.objetos||[]
+    }));
+}
+function gmOficinaV2Historico_(){
+    gmOficinaV2Undo_.push(gmOficinaV2Snapshot_());
+    if(gmOficinaV2Undo_.length>80)gmOficinaV2Undo_.shift();
+    gmOficinaV2Redo_=[];
+}
+function gmOficinaV2CorRgb_(hex){
+    const h=String(hex||'#ffcf4d').replace('#','');
+    if(!/^[0-9a-f]{6}$/i.test(h))return '255/207/77';
+    return `${parseInt(h.slice(0,2),16)}/${parseInt(h.slice(2,4),16)}/${parseInt(h.slice(4,6),16)}`;
+}
+function gmOficinaV2Hex_(r,g,b){
+    const q=n=>Math.max(0,Math.min(255,Number(n)||0)).toString(16).padStart(2,'0');
+    return `#${q(r)}${q(g)}${q(b)}`;
+}
+function gmOficinaV2Background_(){
+    const c=gmOficinaEstado_.corGrade||'#777777';
+    const grid=gmOficinaEstado_.gradeVisivel!==false
+      ? `linear-gradient(to right,${c} 1px,transparent 1px),linear-gradient(to bottom,${c} 1px,transparent 1px)`:'';
+    const tex={
+      nenhuma:'',
+      concreto:'radial-gradient(circle at 20% 30%,rgba(255,255,255,.08) 0 1px,transparent 2px),radial-gradient(circle at 70% 65%,rgba(0,0,0,.10) 0 1px,transparent 2px)',
+      areia:'radial-gradient(circle,rgba(255,248,205,.22) 0 1px,transparent 1.6px)',
+      terra:'radial-gradient(circle at 30% 20%,rgba(65,30,10,.22) 0 2px,transparent 3px)',
+      grama:'repeating-linear-gradient(78deg,rgba(30,90,35,.18) 0 2px,transparent 2px 8px)',
+      floresta:'radial-gradient(circle at 15% 25%,rgba(18,85,35,.34) 0 7px,transparent 8px),radial-gradient(circle at 75% 70%,rgba(32,105,43,.30) 0 9px,transparent 10px)',
+      rochas:'radial-gradient(ellipse at 20% 30%,rgba(70,70,75,.28) 0 7px,transparent 8px),radial-gradient(ellipse at 70% 65%,rgba(35,35,40,.20) 0 10px,transparent 11px)',
+      neve:'radial-gradient(circle,rgba(255,255,255,.55) 0 2px,transparent 2.6px)',
+      agua:'repeating-radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.10) 0 2px,transparent 3px 11px)',
+      vulcanico:'radial-gradient(circle at 25% 35%,rgba(255,95,0,.24) 0 2px,transparent 3px)',
+      metal:'repeating-linear-gradient(135deg,rgba(255,255,255,.045) 0 3px,rgba(0,0,0,.05) 3px 6px)',
+      ruinas:'repeating-linear-gradient(22deg,rgba(70,55,45,.16) 0 5px,transparent 5px 13px)',
+      alien:'radial-gradient(circle at 25% 35%,rgba(100,255,150,.14) 0 8px,transparent 9px),radial-gradient(circle at 72% 65%,rgba(150,70,220,.14) 0 10px,transparent 11px)',
+      nevoa:'radial-gradient(ellipse at 20% 35%,rgba(255,255,255,.18),transparent 35%)'
+    }[gmOficinaEstado_.textura||'nenhuma']||'';
+    return [grid,tex].filter(Boolean).join(',');
+}
+function gmOficinaV2DesenharCanvas_(){
+    const cv=document.getElementById('gmOficinaV2Canvas');if(!cv)return;
+    const ppm=32,w=Math.round(gmOficinaEstado_.larguraM*ppm),h=Math.round(gmOficinaEstado_.alturaM*ppm);
+    if(cv.width!==w)cv.width=w;if(cv.height!==h)cv.height=h;
+    const ctx=cv.getContext('2d');ctx.clearRect(0,0,w,h);ctx.lineCap='round';ctx.lineJoin='round';
+
+    for(const st of (gmOficinaEstado_.desenhos||[])){
+        const pts=Array.isArray(st.pts)?st.pts:[];if(!pts.length)continue;
+        const tool=st.tool||st.ferramenta||'traco';
+        const size=Math.max(1,Number(st.size||st.esp||7));
+        const color=st.color||st.cor||'#ffcf4d';
+        const opacity=Math.max(.02,Math.min(1,Number(st.opacity??st.opacidade??1)));
+        const brush=st.brush||st.pincel||'redondo';
+        const texture=st.texture||st.textura||'solida';
+        ctx.save();
+        if(tool==='borracha'){
+            ctx.globalCompositeOperation='destination-out';
+            ctx.globalAlpha=1;ctx.strokeStyle='#000';ctx.lineWidth=size;
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);
+            for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
+            if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);
+            ctx.stroke();ctx.restore();continue;
+        }
+        ctx.globalAlpha=opacity;ctx.strokeStyle=color;ctx.fillStyle=color;
+        if(texture!=='solida'){
+            labDesenhoAplicarTextura_(ctx,texture,pts,0,size,color,ppm,brush);
+        }else if(brush==='spray'){
+            for(let j=0;j<pts.length;j++){
+                const p=pts[j],dots=Math.max(5,Math.round(size*.85));
+                for(let k=0;k<dots;k++){
+                    const a=labDesenhoRand_(j*97+k*13)*Math.PI*2;
+                    const rr0=Math.sqrt(labDesenhoRand_(j*193+k*29))*size*.82;
+                    const rr=Math.max(.7,size*(.05+.07*labDesenhoRand_(j*71+k*41)));
+                    ctx.beginPath();ctx.arc(p.x*ppm+Math.cos(a)*rr0,p.y*ppm+Math.sin(a)*rr0,rr,0,Math.PI*2);ctx.fill();
+                }
+            }
+        }else if(brush==='quadrado'){
+            for(const p of pts)ctx.fillRect(p.x*ppm-size/2,p.y*ppm-size/2,size,size);
+        }else if(brush==='irregular'){
+            ctx.lineWidth=size;ctx.beginPath();
+            pts.forEach((p,j)=>{
+                const wob=size*.7;
+                const x=p.x*ppm+(labDesenhoRand_(j*151+3)-.5)*wob;
+                const y=p.y*ppm+(labDesenhoRand_(j*211+9)-.5)*wob;
+                j?ctx.lineTo(x,y):ctx.moveTo(x,y);
+            });
+            ctx.stroke();
+        }else{
+            ctx.lineWidth=brush==='caligrafico'?Math.max(1,size*.42):size;
+            ctx.lineCap=brush==='caligrafico'?'butt':'round';
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);
+            for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
+            if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+function gmOficinaV2PopularObjetos_(){
+    const sel=document.getElementById('gmOficinaV2Objeto');if(!sel)return;
+    const atual=sel.value;
+    sel.innerHTML='<option value="">— objeto do banco —</option>'+
+      [...(objetosMapaDB||[])].sort((a,b)=>getNome(a).localeCompare(getNome(b))).map(o=>
+        `<option value="${escaparHtmlInventario_(o.id)}">${escaparHtmlInventario_(getNome(o))}</option>`).join('');
+    if([...sel.options].some(o=>o.value===atual))sel.value=atual;
+}
+function gmOficinaV2RenderObjetos_(){
+    const layer=document.getElementById('gmOficinaV2Objects');if(!layer)return;
+    const ppm=32;
+    layer.innerHTML=(gmOficinaEstado_.objetos||[]).map(o=>{
+        const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(o.modeloId)),img=o.imagem||m?.imagem||'';
+        const w=Math.max(18,Number(o.larguraM||1)*ppm),h=Math.max(18,Number(o.alturaM||1)*ppm);
+        return `<div data-of2="${escaparHtmlInventario_(o.id)}" onpointerdown="gmOficinaV2ArrastarObjeto_(event,'${String(o.id).replace(/'/g,"\\'")}')" style="position:absolute;left:${o.x*ppm-w/2}px;top:${o.y*ppm-h/2}px;width:${w}px;height:${h}px;z-index:8;cursor:${gmOficinaV2Cfg_.ativo?'default':'grab'};touch-action:none">${img?`<img src="${img}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none">`:'🧱'}</div>`;
+    }).join('');
+}
+function gmOficinaV2Status_(){
+    const e=document.getElementById('gmOficinaV2Status');if(e)e.textContent=
+      `Privado · ${gmOficinaEstado_.larguraM} × ${gmOficinaEstado_.alturaM} m · ${(gmOficinaEstado_.desenhos||[]).length} traços · ${(gmOficinaEstado_.objetos||[]).length} objetos`;
+}
+function gmOficinaV2ConstruirUI_(){
+    const root=document.getElementById('gm-sub-oficina-mapas');if(!root)return false;
+    root.innerHTML=`
+      <div style="padding:4px 0 10px;">
+        <h3 style="margin:0 0 5px;color:#8ee7ff">🗺️ Oficina de Mapas</h3>
+        <div style="color:#aeb7c8;margin-bottom:10px">Editor privado do mestre. Usa o mesmo formato de desenho da Mesa da Mesa; mapas salvos aqui podem ser carregados normalmente depois.</div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px">
+          <button class="btn-small" onclick="gmOficinaV2Novo_()">🆕 Novo</button>
+          <button class="btn-small btn-select" onclick="gmOficinaSalvarComoMapa_()">💾 Salvar na biblioteca</button>
+          <button class="btn-small" onclick="gmOficinaPublicarMesa_()">📡 Publicar na Mesa</button>
+        </div>
+        <div style="display:flex;gap:7px;align-items:end;flex-wrap:wrap;padding:10px;border:1px solid rgba(126,231,255,.18);border-radius:10px;background:rgba(0,0,0,.13);margin-bottom:10px">
+          <label style="margin:0"><small>Tamanho</small><select id="gmOficinaV2Size" onchange="gmOficinaV2Tamanho_(this.value)" style="margin:3px 0 0">
+            <option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option><option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option>
+          </select></label>
+          <label style="margin:0"><small>Fundo</small><input id="gmOficinaV2Fundo" type="color" onchange="gmOficinaV2Fundo_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
+          <label style="margin:0"><small>Grade</small><input id="gmOficinaV2GradeCor" type="color" onchange="gmOficinaV2GradeCor_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
+          <label style="display:flex;align-items:center;gap:5px;margin:0 2px 7px 0"><input id="gmOficinaV2GradeVis" type="checkbox" onchange="gmOficinaV2GradeVis_(this.checked)"> Mostrar grade</label>
+          <label style="margin:0"><small>Textura do terreno</small><select id="gmOficinaV2Terreno" onchange="gmOficinaV2Terreno_(this.value)" style="margin:3px 0 0">
+            <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option><option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option><option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option><option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
+          </select></label>
+          <span style="height:30px;border-left:1px solid rgba(255,255,255,.18)"></span>
+          <button id="gmOficinaV2DrawBtn" class="btn-small" onclick="gmOficinaV2Toggle_()" style="height:38px">✏️ Desenhar</button>
+          <button class="btn-small" onclick="gmOficinaV2Tool_('borracha')" style="height:38px">🧽 Borracha</button>
+          <button class="btn-small" onclick="gmOficinaV2Undo_()" style="height:38px">↶</button>
+          <button class="btn-small" onclick="gmOficinaV2Redo_()" style="height:38px">↷</button>
+          <label style="margin:0"><small>Ferramenta</small><select id="gmOficinaV2Tool" onchange="gmOficinaV2Tool_(this.value)" style="margin:3px 0 0"><option value="traco">Traço</option><option value="textura">Textura</option><option value="borracha">Borracha</option></select></label>
+          <label style="margin:0"><small>Cor</small><input id="gmOficinaV2Color" type="color" onchange="gmOficinaV2Color_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
+          <label style="margin:0"><small>RGB</small><input id="gmOficinaV2Rgb" type="text" oninput="gmOficinaV2Rgb_(this.value)" style="width:92px;margin:3px 0 0;padding:6px 8px"></label>
+          <span style="display:flex;gap:3px;align-items:center;padding-bottom:6px">
+            ${['#ffffff','#111111','#ff5252','#ffcf4d','#56f08a','#45b7ff','#b56cff'].map(c=>`<button onclick="gmOficinaV2Color_('${c}')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:${c}"></button>`).join('')}
+          </span>
+          <label style="margin:0"><small>Tamanho</small><input id="gmOficinaV2BrushSize" type="range" min="2" max="48" value="7" oninput="gmOficinaV2BrushSize_(this.value)" style="width:90px;margin:8px 0"><span id="gmOficinaV2BrushSizeVal" style="font-size:.78em;color:#bbb">7</span></label>
+          <label style="margin:0"><small>Opacidade</small><input id="gmOficinaV2Opacity" type="range" min="5" max="100" step="5" value="100" oninput="gmOficinaV2Opacity_(this.value)" style="width:90px;margin:8px 0"><span id="gmOficinaV2OpacityVal" style="font-size:.78em;color:#bbb">100%</span></label>
+          <label style="margin:0"><small>Pincel</small><select id="gmOficinaV2Brush" onchange="gmOficinaV2Brush_(this.value)" style="margin:3px 0 0"><option value="redondo">Redondo</option><option value="quadrado">Quadrado</option><option value="spray">Spray</option><option value="irregular">Irregular</option><option value="caligrafico">Caligráfico</option></select></label>
+          <label style="margin:0"><small>Textura do traço</small><select id="gmOficinaV2StrokeTexture" onchange="gmOficinaV2StrokeTexture_(this.value)" style="margin:3px 0 0"><option value="solida">Sólida</option><option value="pontilhada">Pontilhada</option><option value="giz">Giz</option><option value="ranhura">Ranhura</option><option value="areia">Areia</option><option value="cascalho">Cascalho</option><option value="grama">Grama</option><option value="folhas">Folhas</option><option value="neve">Neve</option><option value="fumaca">Fumaça</option></select></label>
+          <button class="btn-small" onclick="gmOficinaV2Clear_()" style="height:38px">🗑️ Limpar pintura</button>
+          <span style="height:30px;border-left:1px solid rgba(255,255,255,.18)"></span>
+          <select id="gmOficinaV2Objeto" style="min-width:220px;margin:0"></select>
+          <button class="btn-small" onclick="gmOficinaV2AddObjeto_()" style="height:38px">➕ Objeto</button>
+          <button class="btn-small" onclick="gmOficinaV2Repeat_()" style="height:38px">⧉ Repetir ao lado</button>
+        </div>
+        <div id="gmOficinaV2Viewport" style="overflow:auto;max-width:100%;min-height:520px;padding:10px;border:1px solid rgba(126,231,255,.25);border-radius:12px;background:rgba(0,0,0,.20)">
+          <div id="gmOficinaV2Map" style="position:relative;touch-action:none">
+            <canvas id="gmOficinaV2Canvas" onpointerdown="gmOficinaV2PointerDown_(event)" style="position:absolute;inset:0;z-index:3;touch-action:none"></canvas>
+            <div id="gmOficinaV2Objects" style="position:absolute;inset:0;z-index:8;pointer-events:none"></div>
+          </div>
+        </div>
+        <div id="gmOficinaV2Status" style="margin-top:8px;color:#9fc6d8;font-size:.86em"></div>
+      </div>`;
+    return true;
+}
+function gmOficinaV2SyncUI_(){
+    const size=document.getElementById('gmOficinaV2Size');if(size){const v=`${gmOficinaEstado_.larguraM}x${gmOficinaEstado_.alturaM}`;if([...size.options].some(o=>o.value===v))size.value=v;}
+    const f=document.getElementById('gmOficinaV2Fundo');if(f)f.value=gmOficinaEstado_.fundo||'#d7d7d7';
+    const g=document.getElementById('gmOficinaV2GradeCor');if(g)g.value=gmOficinaEstado_.corGrade||'#777777';
+    const gv=document.getElementById('gmOficinaV2GradeVis');if(gv)gv.checked=gmOficinaEstado_.gradeVisivel!==false;
+    const tr=document.getElementById('gmOficinaV2Terreno');if(tr)tr.value=gmOficinaEstado_.textura||'nenhuma';
+    const db=document.getElementById('gmOficinaV2DrawBtn');if(db){db.classList.toggle('btn-select',gmOficinaV2Cfg_.ativo);db.textContent=gmOficinaV2Cfg_.ativo?'✅ Desenhando':'✏️ Desenhar';}
+    const tool=document.getElementById('gmOficinaV2Tool');if(tool)tool.value=gmOficinaV2Cfg_.ferramenta;
+    const col=document.getElementById('gmOficinaV2Color');if(col)col.value=gmOficinaV2Cfg_.cor;
+    const rgb=document.getElementById('gmOficinaV2Rgb');if(rgb&&document.activeElement!==rgb)rgb.value=gmOficinaV2CorRgb_(gmOficinaV2Cfg_.cor);
+    const bs=document.getElementById('gmOficinaV2BrushSize');if(bs)bs.value=gmOficinaV2Cfg_.tamanho;
+    const bsv=document.getElementById('gmOficinaV2BrushSizeVal');if(bsv)bsv.textContent=String(gmOficinaV2Cfg_.tamanho);
+    const op=document.getElementById('gmOficinaV2Opacity');if(op)op.value=Math.round(gmOficinaV2Cfg_.opacidade*100);
+    const opv=document.getElementById('gmOficinaV2OpacityVal');if(opv)opv.textContent=`${Math.round(gmOficinaV2Cfg_.opacidade*100)}%`;
+    const br=document.getElementById('gmOficinaV2Brush');if(br)br.value=gmOficinaV2Cfg_.pincel;
+    const st=document.getElementById('gmOficinaV2StrokeTexture');if(st)st.value=gmOficinaV2Cfg_.texturaTraco;
+}
+window.gmOficinaRender_=function(){
+    if(!batalhaEhMestre_())return;
+    if(!document.getElementById('gmOficinaV2Map'))gmOficinaV2ConstruirUI_();
+    const ppm=32,map=document.getElementById('gmOficinaV2Map');
+    if(!map)return;
+    const w=Math.round(gmOficinaEstado_.larguraM*ppm),h=Math.round(gmOficinaEstado_.alturaM*ppm);
+    map.style.width=`${w}px`;map.style.height=`${h}px`;map.style.backgroundColor=gmOficinaEstado_.fundo||'#d7d7d7';
+    map.style.backgroundImage=gmOficinaV2Background_();map.style.backgroundSize=`${ppm}px ${ppm}px`;
+    const cv=document.getElementById('gmOficinaV2Canvas');if(cv){cv.style.width=`${w}px`;cv.style.height=`${h}px`;cv.style.pointerEvents=gmOficinaV2Cfg_.ativo?'auto':'none';cv.style.cursor=gmOficinaV2Cfg_.ferramenta==='borracha'?'cell':gmOficinaV2Cfg_.ativo?'crosshair':'default';}
+    const layer=document.getElementById('gmOficinaV2Objects');if(layer){layer.style.width=`${w}px`;layer.style.height=`${h}px`;layer.style.pointerEvents='none';}
+    gmOficinaV2DesenharCanvas_();gmOficinaV2RenderObjetos_();gmOficinaV2PopularObjetos_();gmOficinaV2SyncUI_();gmOficinaV2Status_();
+};
+
+window.gmOficinaV2Toggle_=function(){gmOficinaV2Cfg_.ativo=!gmOficinaV2Cfg_.ativo;if(gmOficinaV2Cfg_.ativo&&gmOficinaV2Cfg_.ferramenta==='borracha')gmOficinaV2Cfg_.ferramenta='traco';gmOficinaRender_();};
+window.gmOficinaV2Tool_=function(v){gmOficinaV2Cfg_.ferramenta=['traco','textura','borracha'].includes(String(v))?String(v):'traco';gmOficinaV2Cfg_.ativo=true;gmOficinaRender_();};
+window.gmOficinaV2Color_=function(v){gmOficinaV2Cfg_.cor=String(v||'#ffcf4d');gmOficinaV2SyncUI_();};
+window.gmOficinaV2Rgb_=function(v){const m=String(v||'').match(/(\d{1,3})\D+(\d{1,3})\D+(\d{1,3})/);if(!m)return;gmOficinaV2Cfg_.cor=gmOficinaV2Hex_(m[1],m[2],m[3]);gmOficinaV2SyncUI_();};
+window.gmOficinaV2BrushSize_=function(v){gmOficinaV2Cfg_.tamanho=Math.max(2,Math.min(48,Number(v)||7));gmOficinaV2SyncUI_();};
+window.gmOficinaV2Opacity_=function(v){gmOficinaV2Cfg_.opacidade=Math.max(.05,Math.min(1,(Number(v)||100)/100));gmOficinaV2SyncUI_();};
+window.gmOficinaV2Brush_=function(v){gmOficinaV2Cfg_.pincel=['redondo','quadrado','spray','irregular','caligrafico'].includes(String(v))?String(v):'redondo';gmOficinaV2Cfg_.ativo=true;gmOficinaRender_();};
+window.gmOficinaV2StrokeTexture_=function(v){gmOficinaV2Cfg_.texturaTraco=['solida','pontilhada','giz','ranhura','areia','cascalho','grama','folhas','neve','fumaca'].includes(String(v))?String(v):'solida';gmOficinaV2Cfg_.ativo=true;gmOficinaRender_();};
+window.gmOficinaV2Tamanho_=function(v){const m=String(v||'').match(/^(\d+)x(\d+)$/);if(!m)return;gmOficinaEstado_.larguraM=Number(m[1]);gmOficinaEstado_.alturaM=Number(m[2]);gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2Fundo_=function(v){gmOficinaEstado_.fundo=String(v||'#d7d7d7');gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2GradeCor_=function(v){gmOficinaEstado_.corGrade=String(v||'#777777');gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2GradeVis_=function(v){gmOficinaEstado_.gradeVisivel=!!v;gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2Terreno_=function(v){gmOficinaEstado_.textura=String(v||'nenhuma');gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2Undo_=function(){if(!gmOficinaV2Undo_.length)return;gmOficinaV2Redo_.push(gmOficinaV2Snapshot_());const x=gmOficinaV2Undo_.pop();gmOficinaEstado_.desenhos=x.desenhos;gmOficinaEstado_.objetos=x.objetos;gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2Redo_=function(){if(!gmOficinaV2Redo_.length)return;gmOficinaV2Undo_.push(gmOficinaV2Snapshot_());const x=gmOficinaV2Redo_.pop();gmOficinaEstado_.desenhos=x.desenhos;gmOficinaEstado_.objetos=x.objetos;gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2Clear_=function(){if(!(gmOficinaEstado_.desenhos||[]).length)return;gmOficinaV2Historico_();gmOficinaEstado_.desenhos=[];gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2Novo_=function(){if(!confirm('Limpar o rascunho privado da Oficina?'))return;gmOficinaEstado_={larguraM:28,alturaM:14,fundo:'#d7d7d7',corGrade:'#777777',gradeVisivel:true,textura:'nenhuma',objetos:[],desenhos:[]};gmOficinaV2Undo_=[];gmOficinaV2Redo_=[];gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2AddObjeto_=function(){const id=document.getElementById('gmOficinaV2Objeto')?.value,m=(objetosMapaDB||[]).find(x=>String(x.id)===String(id));if(!m)return;gmOficinaV2Historico_();gmOficinaEstado_.objetos.push({...JSON.parse(JSON.stringify(m)),id:`ofobj:${Date.now()}:${Math.random().toString(36).slice(2,5)}`,modeloId:m.id,x:gmOficinaEstado_.larguraM/2,y:gmOficinaEstado_.alturaM/2,angulo:0});gmOficinaPersistir_();gmOficinaRender_();};
+window.gmOficinaV2Repeat_=function(){const objs=gmOficinaEstado_.objetos||[],ds=gmOficinaEstado_.desenhos||[];if(!objs.length&&!ds.length)return;gmOficinaV2Historico_();if(objs.length){const cp=JSON.parse(JSON.stringify(objs[objs.length-1]));cp.id=`ofobj:${Date.now()}`;cp.x=Math.min(gmOficinaEstado_.larguraM,Number(cp.x||0)+1);objs.push(cp);}else{const cp=JSON.parse(JSON.stringify(ds[ds.length-1]));cp.pts=(cp.pts||[]).map(p=>({x:Math.min(gmOficinaEstado_.larguraM,p.x+1),y:p.y}));ds.push(cp);}gmOficinaPersistir_();gmOficinaRender_();};
+
+window.gmOficinaV2PointerDown_=function(ev){
+    if(!gmOficinaV2Cfg_.ativo||ev.button===2)return;
+    ev.preventDefault();ev.stopPropagation();gmOficinaV2Historico_();
+    const cv=document.getElementById('gmOficinaV2Canvas'),rect=cv.getBoundingClientRect(),ppm=32;
+    const ponto=e=>({x:Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-rect.left)/ppm)),y:Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-rect.top)/ppm))});
+    gmOficinaV2Stroke_={tool:gmOficinaV2Cfg_.ferramenta,color:gmOficinaV2Cfg_.cor,size:gmOficinaV2Cfg_.tamanho,opacity:gmOficinaV2Cfg_.opacidade,brush:gmOficinaV2Cfg_.pincel,texture:gmOficinaV2Cfg_.texturaTraco,pts:[ponto(ev)]};
+    gmOficinaEstado_.desenhos.push(gmOficinaV2Stroke_);
+    const move=e=>{
+        const p=ponto(e),ant=gmOficinaV2Stroke_.pts[gmOficinaV2Stroke_.pts.length-1];
+        const dx=(p.x-ant.x)*ppm,dy=(p.y-ant.y)*ppm;
+        if(dx*dx+dy*dy<2.25)return;
+        gmOficinaV2Stroke_.pts.push(p);
+        if(!gmOficinaV2Raf_)gmOficinaV2Raf_=requestAnimationFrame(()=>{gmOficinaV2Raf_=0;gmOficinaV2DesenharCanvas_();});
+    };
+    const up=()=>{
+        window.removeEventListener('pointermove',move);
+        if(gmOficinaV2Raf_){cancelAnimationFrame(gmOficinaV2Raf_);gmOficinaV2Raf_=0;}
+        gmOficinaV2Stroke_=null;gmOficinaPersistir_();gmOficinaV2DesenharCanvas_();gmOficinaV2Status_();
+    };
+    window.addEventListener('pointermove',move,{passive:false});
+    window.addEventListener('pointerup',up,{once:true});
+};
+window.gmOficinaV2ArrastarObjeto_=function(ev,id){
+    if(gmOficinaV2Cfg_.ativo)return;
+    ev.preventDefault();ev.stopPropagation();gmOficinaV2Historico_();
+    const o=(gmOficinaEstado_.objetos||[]).find(x=>String(x.id)===String(id)),map=document.getElementById('gmOficinaV2Map');
+    if(!o||!map)return;const rect=map.getBoundingClientRect(),ppm=32,node=map.querySelector(`[data-of2="${CSS.escape(String(id))}"]`);
+    const move=e=>{
+        o.x=Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-rect.left)/ppm));
+        o.y=Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-rect.top)/ppm));
+        if(node){const w=node.offsetWidth,h=node.offsetHeight;node.style.left=`${o.x*ppm-w/2}px`;node.style.top=`${o.y*ppm-h/2}px`;}
+    };
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();gmOficinaV2Status_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+
+// Salva e publica exatamente o terreno produzido pela Oficina V2.
+window.gmOficinaSalvarComoMapa_=async function(){
+    if(!batalhaEhMestre_())return;
+    const nome=prompt('Nome do mapa preparado:','');if(nome==null||!String(nome).trim())return;
+    let id=labMapaSlug_(nome),base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
+    const dados={id,nome:String(nome).trim(),larguraM:gmOficinaEstado_.larguraM,alturaM:gmOficinaEstado_.alturaM,fundo:gmOficinaEstado_.fundo,corGrade:gmOficinaEstado_.corGrade,gradeVisivel:gmOficinaEstado_.gradeVisivel!==false,textura:gmOficinaEstado_.textura||'nenhuma',desenhos:JSON.parse(JSON.stringify(gmOficinaEstado_.desenhos||[])),objetos:JSON.parse(JSON.stringify(gmOficinaEstado_.objetos||[])),criadoPor:currentUserUid||'',atualizadoEm:new Date().toISOString()};
+    try{const salvo=await labMapaSalvarFirestore_(dados,0);mapasDB.push(salvo);labAtualizarSelectMapas_();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();notificar_(`Mapa “${dados.nome}” salvo na biblioteca.`,'sucesso',3500);}catch(e){console.error(e);notificar_('Não foi possível salvar o mapa preparado.','erro');}
+};
+window.gmOficinaPublicarMesa_=function(){
+    if(!batalhaEhMestre_())return;if(!confirm('Publicar este terreno na Mesa ao Vivo? Participantes serão mantidos.'))return;
+    labEstado_.larguraM=gmOficinaEstado_.larguraM;labEstado_.alturaM=gmOficinaEstado_.alturaM;labEstado_.fundo=gmOficinaEstado_.fundo;labEstado_.corGrade=gmOficinaEstado_.corGrade;labEstado_.gradeVisivel=gmOficinaEstado_.gradeVisivel!==false;labEstado_.textura=gmOficinaEstado_.textura||'nenhuma';labEstado_.desenhosLab=JSON.parse(JSON.stringify(gmOficinaEstado_.desenhos||[]));labEstado_.objetosLab=JSON.parse(JSON.stringify(gmOficinaEstado_.objetos||[])).map(o=>({...o,id:String(o.id).startsWith('obj:')?o.id:`obj:${Date.now()}:${Math.random().toString(36).slice(2,6)}`}));
+    labSalvarLocal_();labRender_();notificar_('Terreno da Oficina publicado na Mesa ao Vivo.','sucesso',3500);
+};
+
+// O layer de objetos precisa receber ponteiro apenas nos objetos.
+const gmOficinaV2RenderObjetosBase_=gmOficinaV2RenderObjetos_;
+gmOficinaV2RenderObjetos_=function(){
+    gmOficinaV2RenderObjetosBase_();
+    document.querySelectorAll('#gmOficinaV2Objects [data-of2]').forEach(n=>n.style.pointerEvents='auto');
+};
+
+// Renderiza o laser depois que o mapa terminou de ser recriado.
+const labRenderV46461_ = labRender_;
+labRender_ = function(){
+    const r=labRenderV46461_();
+    try{setTimeout(()=>labRenderEfeitoVisualAtaque_(),0);}catch(_){}
+    return r;
+};
+window.labRender_=labRender_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -18240,6 +18615,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.46.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.46.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
