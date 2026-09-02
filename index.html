@@ -17232,7 +17232,7 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 
 
 // ============================================================
-// V46.46.1 — XP PSI, respostas flutuantes, resistências e Oficina completa
+// V46.46.2 — XP PSI, respostas flutuantes, resistências e Oficina completa
 // ============================================================
 // Um minuto de manutenção Psi equivale provisoriamente a 10 turnos de combate.
 const PSI_TURNOS_POR_MINUTO_=10;
@@ -17299,7 +17299,7 @@ const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_
 
 
 // ============================================================
-// V46.46.1 — estabilização Psi, testes no mapa e Oficina avançada
+// V46.46.2 — estabilização Psi, testes no mapa e Oficina avançada
 // ============================================================
 
 // ---------- Identificação robusta de PJ real ----------
@@ -17654,7 +17654,7 @@ labRender_=function(){
 
 
 // ============================================================
-// V46.46.1 — Teletransporte por clique e teletransportes caóticos
+// V46.46.2 — Teletransporte por clique e teletransportes caóticos
 // ============================================================
 function labPsiPosicaoAleatoriaValida_(alvo){
     const raio=Math.max(.3,Number(alvo?.diametroM||.9)/2);
@@ -17769,7 +17769,7 @@ labOverlayMovimentoHtml_=function(t,ppm){
 
 
 // ============================================================
-// V46.46.1 — roteamento de resistência Psi + nomes sempre retos
+// V46.46.2 — roteamento de resistência Psi + nomes sempre retos
 // ============================================================
 
 // Qualquer token com donoUid é tratado como controlado por uma conta real.
@@ -17964,7 +17964,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.46.1',e);}
+    }catch(e){console.warn('v46.46.2',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -17974,7 +17974,7 @@ window.labPsiRenderModalMestre_=labPsiRenderModalMestre_;
 
 
 // ============================================================
-// V46.46.1 — Oficina avançada + laser + perícias + Mimetismo
+// V46.46.2 — Oficina avançada + laser + perícias + Mimetismo
 // ============================================================
 
 // ---------- Testes de perícia gerais no Mapa da Mesa ----------
@@ -18228,7 +18228,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.46.1 — correções reais: Força Bruta, laser e Oficina V2
+// V46.46.2 — correções reais: Força Bruta, laser e Oficina V2
 // ============================================================
 
 // ---------- 1) Força Bruta sempre disponível para mover objetos ----------
@@ -18600,6 +18600,306 @@ labRender_ = function(){
 };
 window.labRender_=labRender_;
 
+
+
+// ============================================================
+// V46.46.2 — painel compacto, escala da Oficina, armas corretas,
+//             mapa estável e laser realmente visível
+// ============================================================
+
+// ---------- Painel do Mapa da Mesa mais limpo ----------
+function labCompactarPainelMesaV46462_(){
+    const root=document.getElementById('laboratorio-combate');if(!root)return;
+
+    // Texto descritivo superior não precisa ocupar espaço durante o uso.
+    const p=root.querySelector('.form-section > div:first-child p');
+    if(p)p.style.display='none';
+
+    // Em preparação, não exibe banner explicativo permanente.
+    const status=document.getElementById('labCombatStatus');
+    if(status && labEstado_.fase!=='combate'){
+        status.style.display='none';
+        status.innerHTML='';
+    }else if(status){
+        status.style.display='';
+    }
+
+    // A caixa "Clique num token..." só existe quando há informação útil.
+    const info=document.getElementById('labInfo');
+    if(info){
+        const sel=labEstado_.tokens?.find(x=>String(x.id)===String(labEstado_.selecionadoId));
+        info.style.display=sel?'':'none';
+    }
+
+    const controls=document.getElementById('labMasterGameControls');
+    const loader=document.getElementById('labMasterMapLoader');
+    if(controls && loader && loader.parentElement){
+        const label=loader.querySelector('label');
+        if(label && label.parentElement!==controls){
+            label.style.margin='0';
+            controls.appendChild(label);
+        }
+        loader.querySelectorAll('button').forEach(b=>b.remove());
+        loader.style.display='none';
+    }
+
+    // Escala e Editar mapa na mesma faixa dos controles do mestre.
+    const zoom=document.getElementById('labZoom')?.closest('label');
+    const edit=document.getElementById('labEditMapToggleWrap');
+    if(controls && zoom && zoom.parentElement!==controls)controls.appendChild(zoom);
+    if(controls && edit && edit.parentElement!==controls)controls.appendChild(edit);
+
+    // Textos mais curtos.
+    const restaurar=[...(controls?.querySelectorAll('button')||[])].find(b=>/Restaurar participantes/.test(b.textContent||''));
+    if(restaurar)restaurar.textContent='♻️ Restaurar';
+    const limpar=[...(controls?.querySelectorAll('button')||[])].find(b=>/Limpar mesa/.test(b.textContent||''));
+    if(limpar)limpar.textContent='🧹 Limpar';
+}
+const labAtualizarStatusCombateV46462_=labAtualizarStatusCombate_;
+labAtualizarStatusCombate_=function(){
+    labAtualizarStatusCombateV46462_();
+    labCompactarPainelMesaV46462_();
+};
+const labAtualizarInfoV46462_=labAtualizarInfo_;
+labAtualizarInfo_=function(){
+    labAtualizarInfoV46462_();
+    labCompactarPainelMesaV46462_();
+};
+
+// Selecionar mapa já carrega automaticamente.
+const labSelecionarMapaSalvoV46462_=window.labSelecionarMapaSalvo_;
+window.labSelecionarMapaSalvo_=function(id){
+    labSelecionarMapaSalvoV46462_(id);
+    if(String(id||''))setTimeout(()=>labCarregarMapaBanco_(),0);
+};
+
+// ---------- Armas coerentes com a perícia ----------
+const batalhaEquipamentosV46462_=batalhaEquipamentos_;
+batalhaEquipamentos_=function(char,pericia,selecionado=''){
+    const lista=batalhaEquipamentosV46462_(char,pericia,selecionado);
+    if(!pericia)return lista;
+    // Se a perícia é de ataque à distância, armas corpo a corpo nunca entram,
+    // mesmo com penalidade de compatibilidade.
+    return lista.filter(op=>{
+        if(!op?.item)return true;
+        return equipamentoCompativelComPericia_(op.item,pericia);
+    });
+};
+
+// ---------- Oficina: escala visual verdadeira ----------
+function gmOficinaV2Ppm_(){
+    return Math.max(18,Math.min(72,Number(gmOficinaEstado_.escalaPxM||32)));
+}
+function gmOficinaV2InstalarEscala_(){
+    if(document.getElementById('gmOficinaV2Scale'))return;
+    const size=document.getElementById('gmOficinaV2Size')?.parentElement;
+    if(!size)return;
+    size.insertAdjacentHTML('afterend',`
+      <label style="margin:0"><small>Escala</small>
+        <select id="gmOficinaV2Scale" onchange="gmOficinaV2Escala_(this.value)" style="margin:3px 0 0">
+          <option value="24">24 px/m</option>
+          <option value="32">32 px/m</option>
+          <option value="40">40 px/m</option>
+          <option value="48">48 px/m</option>
+          <option value="60">60 px/m</option>
+        </select>
+      </label>`);
+}
+window.gmOficinaV2Escala_=function(v){
+    gmOficinaEstado_.escalaPxM=Math.max(18,Math.min(72,Number(v)||32));
+    gmOficinaPersistir_();gmOficinaRender_();
+};
+
+const gmOficinaV2DesenharCanvasV46462_=gmOficinaV2DesenharCanvas_;
+gmOficinaV2DesenharCanvas_=function(){
+    const cv=document.getElementById('gmOficinaV2Canvas');if(!cv)return;
+    const old=gmOficinaEstado_.escalaPxM;
+    // A função anterior usa 32 fixo; renderizamos com escala convertendo
+    // temporariamente as coordenadas para manter o mesmo motor.
+    const ppm=gmOficinaV2Ppm_(),w=Math.round(gmOficinaEstado_.larguraM*ppm),h=Math.round(gmOficinaEstado_.alturaM*ppm);
+    if(cv.width!==w)cv.width=w;if(cv.height!==h)cv.height=h;
+    const ctx=cv.getContext('2d');ctx.clearRect(0,0,w,h);ctx.lineCap='round';ctx.lineJoin='round';
+    for(const st of (gmOficinaEstado_.desenhos||[])){
+        const pts=Array.isArray(st.pts)?st.pts:[];if(!pts.length)continue;
+        const tool=st.tool||st.ferramenta||'traco';
+        const size=Math.max(1,Number(st.size||st.esp||7));
+        const color=st.color||st.cor||'#ffcf4d';
+        const opacity=Math.max(.02,Math.min(1,Number(st.opacity??st.opacidade??1)));
+        const brush=st.brush||st.pincel||'redondo';
+        const texture=st.texture||st.textura||'solida';
+        ctx.save();
+        if(tool==='borracha'){
+            ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.strokeStyle='#000';ctx.lineWidth=size;
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);
+            for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
+            if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);
+            ctx.stroke();ctx.restore();continue;
+        }
+        ctx.globalAlpha=opacity;ctx.strokeStyle=color;ctx.fillStyle=color;
+        if(texture!=='solida'){
+            labDesenhoAplicarTextura_(ctx,texture,pts,0,size,color,ppm,brush);
+        }else if(brush==='spray'){
+            for(let j=0;j<pts.length;j++){
+                const p=pts[j],dots=Math.max(5,Math.round(size*.85));
+                for(let k=0;k<dots;k++){
+                    const a=labDesenhoRand_(j*97+k*13)*Math.PI*2;
+                    const rr0=Math.sqrt(labDesenhoRand_(j*193+k*29))*size*.82;
+                    const rr=Math.max(.7,size*(.05+.07*labDesenhoRand_(j*71+k*41)));
+                    ctx.beginPath();ctx.arc(p.x*ppm+Math.cos(a)*rr0,p.y*ppm+Math.sin(a)*rr0,rr,0,Math.PI*2);ctx.fill();
+                }
+            }
+        }else if(brush==='quadrado'){
+            for(const p of pts)ctx.fillRect(p.x*ppm-size/2,p.y*ppm-size/2,size,size);
+        }else if(brush==='irregular'){
+            ctx.lineWidth=size;ctx.beginPath();
+            pts.forEach((p,j)=>{
+                const wob=size*.7;
+                const x=p.x*ppm+(labDesenhoRand_(j*151+3)-.5)*wob;
+                const y=p.y*ppm+(labDesenhoRand_(j*211+9)-.5)*wob;
+                j?ctx.lineTo(x,y):ctx.moveTo(x,y);
+            });
+            ctx.stroke();
+        }else{
+            ctx.lineWidth=brush==='caligrafico'?Math.max(1,size*.42):size;
+            ctx.lineCap=brush==='caligrafico'?'butt':'round';
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);
+            for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
+            if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+};
+
+const gmOficinaV2RenderObjetosV46462_=gmOficinaV2RenderObjetos_;
+gmOficinaV2RenderObjetos_=function(){
+    const layer=document.getElementById('gmOficinaV2Objects');if(!layer)return;
+    const ppm=gmOficinaV2Ppm_();
+    layer.innerHTML=(gmOficinaEstado_.objetos||[]).map(o=>{
+        const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(o.modeloId)),img=o.imagem||m?.imagem||'';
+        const w=Math.max(18,Number(o.larguraM||1)*ppm),h=Math.max(18,Number(o.alturaM||1)*ppm);
+        return `<div data-of2="${escaparHtmlInventario_(o.id)}" onpointerdown="gmOficinaV2ArrastarObjeto_(event,'${String(o.id).replace(/'/g,"\\'")}')" style="position:absolute;left:${o.x*ppm-w/2}px;top:${o.y*ppm-h/2}px;width:${w}px;height:${h}px;z-index:8;cursor:${gmOficinaV2Cfg_.ativo?'default':'grab'};touch-action:none;pointer-events:auto">${img?`<img src="${img}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none">`:'🧱'}</div>`;
+    }).join('');
+};
+
+const gmOficinaRenderV46462_=window.gmOficinaRender_;
+window.gmOficinaRender_=function(){
+    if(!document.getElementById('gmOficinaV2Map'))gmOficinaV2ConstruirUI_();
+    gmOficinaV2InstalarEscala_();
+    const ppm=gmOficinaV2Ppm_(),map=document.getElementById('gmOficinaV2Map');
+    if(!map)return;
+    const w=Math.round(gmOficinaEstado_.larguraM*ppm),h=Math.round(gmOficinaEstado_.alturaM*ppm);
+    map.style.width=`${w}px`;map.style.height=`${h}px`;
+    map.style.backgroundColor=gmOficinaEstado_.fundo||'#d7d7d7';
+    map.style.backgroundImage=gmOficinaV2Background_();
+    map.style.backgroundSize=`${ppm}px ${ppm}px`;
+    const cv=document.getElementById('gmOficinaV2Canvas');
+    if(cv){cv.style.width=`${w}px`;cv.style.height=`${h}px`;cv.style.pointerEvents=gmOficinaV2Cfg_.ativo?'auto':'none';}
+    const layer=document.getElementById('gmOficinaV2Objects');
+    if(layer){layer.style.width=`${w}px`;layer.style.height=`${h}px`;}
+    gmOficinaV2DesenharCanvas_();gmOficinaV2RenderObjetos_();gmOficinaV2PopularObjetos_();gmOficinaV2SyncUI_();gmOficinaV2Status_();
+    const sc=document.getElementById('gmOficinaV2Scale');if(sc)sc.value=String(gmOficinaV2Ppm_());
+};
+
+window.gmOficinaV2PointerDown_=function(ev){
+    if(!gmOficinaV2Cfg_.ativo||ev.button===2)return;
+    ev.preventDefault();ev.stopPropagation();gmOficinaV2Historico_();
+    const cv=document.getElementById('gmOficinaV2Canvas'),rect=cv.getBoundingClientRect(),ppm=gmOficinaV2Ppm_();
+    const ponto=e=>({x:Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-rect.left)/ppm)),y:Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-rect.top)/ppm))});
+    gmOficinaV2Stroke_={tool:gmOficinaV2Cfg_.ferramenta,color:gmOficinaV2Cfg_.cor,size:gmOficinaV2Cfg_.tamanho,opacity:gmOficinaV2Cfg_.opacidade,brush:gmOficinaV2Cfg_.pincel,texture:gmOficinaV2Cfg_.texturaTraco,pts:[ponto(ev)]};
+    gmOficinaEstado_.desenhos.push(gmOficinaV2Stroke_);
+    const move=e=>{
+        const p=ponto(e),ant=gmOficinaV2Stroke_.pts[gmOficinaV2Stroke_.pts.length-1];
+        const dx=(p.x-ant.x)*ppm,dy=(p.y-ant.y)*ppm;
+        if(dx*dx+dy*dy<2.25)return;
+        gmOficinaV2Stroke_.pts.push(p);
+        if(!gmOficinaV2Raf_)gmOficinaV2Raf_=requestAnimationFrame(()=>{gmOficinaV2Raf_=0;gmOficinaV2DesenharCanvas_();});
+    };
+    const up=()=>{window.removeEventListener('pointermove',move);if(gmOficinaV2Raf_){cancelAnimationFrame(gmOficinaV2Raf_);gmOficinaV2Raf_=0;}gmOficinaV2Stroke_=null;gmOficinaPersistir_();gmOficinaV2DesenharCanvas_();gmOficinaV2Status_();};
+    window.addEventListener('pointermove',move,{passive:false});window.addEventListener('pointerup',up,{once:true});
+};
+window.gmOficinaV2ArrastarObjeto_=function(ev,id){
+    if(gmOficinaV2Cfg_.ativo)return;
+    ev.preventDefault();ev.stopPropagation();gmOficinaV2Historico_();
+    const o=(gmOficinaEstado_.objetos||[]).find(x=>String(x.id)===String(id)),map=document.getElementById('gmOficinaV2Map');
+    if(!o||!map)return;const rect=map.getBoundingClientRect(),ppm=gmOficinaV2Ppm_(),node=map.querySelector(`[data-of2="${CSS.escape(String(id))}"]`);
+    const move=e=>{o.x=Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-rect.left)/ppm));o.y=Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-rect.top)/ppm));if(node){const w=node.offsetWidth,h=node.offsetHeight;node.style.left=`${o.x*ppm-w/2}px`;node.style.top=`${o.y*ppm-h/2}px`;}}; 
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();gmOficinaV2Status_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+
+// Salvar/publicar preserva a escala escolhida.
+const gmOficinaSalvarComoMapaV46462_=window.gmOficinaSalvarComoMapa_;
+window.gmOficinaSalvarComoMapa_=async function(){
+    if(!batalhaEhMestre_())return;
+    const nome=prompt('Nome do mapa preparado:','');if(nome==null||!String(nome).trim())return;
+    let id=labMapaSlug_(nome),base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
+    const dados={id,nome:String(nome).trim(),larguraM:gmOficinaEstado_.larguraM,alturaM:gmOficinaEstado_.alturaM,pxPorMetro:gmOficinaV2Ppm_(),fundo:gmOficinaEstado_.fundo,corGrade:gmOficinaEstado_.corGrade,gradeVisivel:gmOficinaEstado_.gradeVisivel!==false,textura:gmOficinaEstado_.textura||'nenhuma',desenhos:JSON.parse(JSON.stringify(gmOficinaEstado_.desenhos||[])),objetos:JSON.parse(JSON.stringify(gmOficinaEstado_.objetos||[])),criadoPor:currentUserUid||'',atualizadoEm:new Date().toISOString()};
+    try{const salvo=await labMapaSalvarFirestore_(dados,0);mapasDB.push(salvo);labAtualizarSelectMapas_();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();notificar_(`Mapa “${dados.nome}” salvo na biblioteca.`,'sucesso',3000);}catch(e){console.error(e);notificar_('Não foi possível salvar o mapa preparado.','erro');}
+};
+const gmOficinaPublicarMesaV46462_=window.gmOficinaPublicarMesa_;
+window.gmOficinaPublicarMesa_=function(){
+    labEstado_.pxPorMetro=gmOficinaV2Ppm_();
+    return gmOficinaPublicarMesaV46462_();
+};
+
+// Mapa da Mesa passa a respeitar escala gravada no mapa salvo.
+const labCarregarMapaBancoV46462_=window.labCarregarMapaBanco_;
+window.labCarregarMapaBanco_=async function(){
+    const id=String(labMapaSelecionado_||'');
+    const m0=(mapasDB||[]).find(x=>String(x.id)===id);
+    await labCarregarMapaBancoV46462_();
+    if(m0?.pxPorMetro){
+        labEstado_.pxPorMetro=Math.max(24,Math.min(96,Number(m0.pxPorMetro)||48));
+        const z=document.getElementById('labZoom');if(z&&[...z.options].some(o=>Number(o.value)===Number(labEstado_.pxPorMetro)))z.value=String(labEstado_.pxPorMetro);
+        labSalvarLocal_();labRender_();
+    }
+};
+
+// ---------- Laser: agenda somente depois que o DOM do mapa estabiliza ----------
+let labLaserTimerV46462_=null;
+let labLaserAgendadoIdV46462_='';
+labRenderEfeitoVisualAtaque_=function(){
+    const fx=labEstado_.efeitoVisualLab;if(!fx)return;
+    const id=String(fx.id||'');if(!id||id===labUltimoEfeitoVisualId_||id===labLaserAgendadoIdV46462_)return;
+    if(Date.now()-Number(fx.ts||0)>4000){labUltimoEfeitoVisualId_=id;return;}
+    labLaserAgendadoIdV46462_=id;
+    clearTimeout(labLaserTimerV46462_);
+    labLaserTimerV46462_=setTimeout(()=>{
+        const atual=labEstado_.efeitoVisualLab,map=document.getElementById('labMetricMap');
+        if(!atual||String(atual.id)!==id||!map){labLaserAgendadoIdV46462_='';return;}
+        const ppm=Number(labEstado_.pxPorMetro||48);
+        const x1=Number(atual.x1||0)*ppm,y1=Number(atual.y1||0)*ppm,x2=Number(atual.x2||0)*ppm,y2=Number(atual.y2||0)*ppm;
+        const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI,cor=atual.cor||'#ff2d2d';
+        const beam=document.createElement('div');
+        beam.className='lab-laser-beam';
+        beam.style.left=`${x1}px`;beam.style.top=`${y1}px`;beam.style.width=`${len}px`;beam.style.transform=`rotate(${ang}deg)`;beam.style.background=cor;beam.style.color=cor;
+        beam.innerHTML='<div class="lab-laser-core"></div>';
+        const impact=document.createElement('div');
+        impact.className='lab-laser-impact';impact.style.left=`${x2}px`;impact.style.top=`${y2}px`;impact.style.color=cor;impact.style.borderColor=cor;
+        map.appendChild(beam);map.appendChild(impact);
+        labUltimoEfeitoVisualId_=id;labLaserAgendadoIdV46462_='';
+        setTimeout(()=>{beam.remove();impact.remove();},700);
+    },70);
+};
+
+// ---------- Evita que o mapa "pule" na página ao aparecer/desaparecer painel ----------
+const labRenderV46462_=labRender_;
+labRender_=function(){
+    const sy=window.scrollY,sx=window.scrollX;
+    const map=document.getElementById('labMetricMap');
+    const estavaVisivel=!!map && map.getBoundingClientRect().bottom>0 && map.getBoundingClientRect().top<window.innerHeight;
+    const r=labRenderV46462_();
+    labCompactarPainelMesaV46462_();
+    if(estavaVisivel){
+        requestAnimationFrame(()=>window.scrollTo(sx,sy));
+    }
+    return r;
+};
+window.labRender_=labRender_;
+window.labAtualizarStatusCombate_=labAtualizarStatusCombate_;
+window.labAtualizarInfo_=labAtualizarInfo_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -18615,6 +18915,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.46.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.46.2: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
