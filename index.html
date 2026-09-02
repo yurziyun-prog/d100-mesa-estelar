@@ -375,6 +375,7 @@
             border-radius:12px;
         }
 
+.skill-help{position:relative;cursor:help;}.skill-help::after{content:attr(data-skill-tip);position:absolute;left:10px;top:calc(100% + 7px);width:min(380px,72vw);padding:10px 12px;border-radius:9px;background:rgba(8,12,28,.98);border:1px solid rgba(0,212,255,.62);color:#eefaff;font-size:.82rem;line-height:1.35;white-space:normal;box-shadow:0 10px 30px rgba(0,0,0,.38);z-index:9999;opacity:0;visibility:hidden;transform:translateY(-3px);transition:opacity .12s ease,transform .12s ease;pointer-events:none}.skill-help:hover::after{opacity:1;visibility:visible;transform:translateY(0)}.db-campaign-off{opacity:.58}.db-availability{min-width:116px}
 </style>
 
 <style id="lab-ui-polish-v46360">
@@ -414,7 +415,7 @@
 </style>
 
 <style id="lab-ui-fix-v46430">
-/* v46.44.3 — selects sem recorte e contraste de ações Psi */
+/* v46.44.4 — selects sem recorte e contraste de ações Psi */
 #laboratorio-combate #labParticipanteSelect,
 #laboratorio-combate #labMapaSalvoSelect,
 #laboratorio-combate #labZoom,
@@ -1693,6 +1694,41 @@
     </div>
 
     <!-- MODAL DO BANCO DE ITENS -->
+    <div class="modal-overlay" id="dbSkillModal">
+        <div class="modal-content" style="max-width:980px;max-height:92vh;overflow:auto;">
+            <span class="close-modal" onclick="fecharSkillBancoModal_()">&times;</span>
+            <h3 id="dbSkillModalTitulo">Editar Perícia</h3>
+            <input type="hidden" id="dbSkillOrigId"><input type="hidden" id="dbSkillKind" value="pericias">
+            <div class="form-row">
+                <div class="form-group"><label>Nome (PT):</label><input id="dbSkillNome" type="text"></div>
+                <div class="form-group"><label>Name (EN):</label><input id="dbSkillNomeEn" type="text"></div>
+                <div class="form-group"><label>名称 (中文):</label><input id="dbSkillNomeZh" type="text"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label>Categoria / Família principal:</label><input id="dbSkillCategoria" type="text"></div>
+                <div class="form-group"><label>Tipo:</label><input id="dbSkillTipo" type="text"></div>
+                <div class="form-group"><label>Fórmula:</label><input id="dbSkillFormula" type="text"></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group" id="dbSkillUsoBox"><label>Uso:</label><input id="dbSkillUso" type="text"></div>
+                <div class="form-group" id="dbSkillPenBox"><label>Penalidade de Armadura:</label><input id="dbSkillPen" type="number" step="0.5"></div>
+                <div class="form-group"><label>Disponibilidade na campanha:</label><label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:600;"><input id="dbSkillDisponivel" type="checkbox"> Disponível para jogadores</label></div>
+            </div>
+            <div id="dbSkillPericiaExtra">
+                <div class="form-row">
+                    <div class="form-group"><label style="display:flex;align-items:center;gap:8px;"><input id="dbSkillExigeEscola" type="checkbox"> Exige escola / especialização</label></div>
+                    <div class="form-group" style="flex:2;"><label>Escolas permitidas (uma por linha ou separadas por |):</label><textarea id="dbSkillEscolas" rows="3"></textarea></div>
+                </div>
+                <div class="form-group"><label>Famílias relacionadas (uma por linha ou separadas por |):</label><textarea id="dbSkillFamilias" rows="2"></textarea></div>
+            </div>
+            <h4 style="margin-top:18px;color:#00d4ff;">Descrição mostrada ao jogador</h4>
+            <div class="form-group"><label>Descrição (PT):</label><textarea id="dbSkillDescricao" rows="5"></textarea></div>
+            <div class="form-group"><label>Description (EN):</label><textarea id="dbSkillDescricaoEn" rows="5"></textarea></div>
+            <div class="form-group"><label>说明 (中文):</label><textarea id="dbSkillDescricaoZh" rows="5"></textarea></div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px;"><button class="btn-small" onclick="fecharSkillBancoModal_()">Cancelar</button><button class="btn-save" onclick="salvarSkillBancoModal_()" style="width:auto;">💾 Salvar</button></div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="dbItemModal">
         <div class="modal-content" style="max-width:900px;">
             <h3 id="dbItemModalTitulo">Item do Sistema</h3>
@@ -5727,7 +5763,7 @@ const reformaPericiasV4644_ = {
   mecanica:{familias:['Tecnologia'],exigeEscola:true,escolas:['Veículos','Naves','Industrial','Mecatrônica','Máquinas Exóticas'],sinergias:{robotica:.20,eletronica:.10}},
   eletronica:{familias:['Tecnologia'],exigeEscola:true,escolas:['Sistemas gerais','Comunicações','Sensores','Controle','Potência'],sinergias:{robotica:.20,cibernetica:.10}},
   computadores:{nome:'Computação',nome_en:'Computing',nome_zh:'计算技术',formula:'INT*2',familias:['Tecnologia'],sinergias:{ciberseguranca:.20,robotica:.10}},
-  ciberseguranca:{formula:'INT*2',familias:['Tecnologia'],sinergias:{computadores:.20}},
+  ciber_seguranca:{nome:'Cibersegurança',nome_en:'Cybersecurity',nome_zh:'网络安全',formula:'INT*2',familias:['Tecnologia'],sinergias:{computadores:.20}},
   logistica:{formula:'INT*2',familias:['Estratégica'],sinergias:{tatica:.20,estrategia:.20,lideranca:.20}},
   tatica:{familias:['Estratégica'],sinergias:{estrategia:.20,logistica:.20,lideranca:.20}},
   estrategia:{formula:'INT+POD',familias:['Estratégica'],sinergias:{tatica:.20,logistica:.20,lideranca:.20}},
@@ -5754,7 +5790,7 @@ const reformaPericiasV4644_ = {
   seguranca:{nome:'Segurança',nome_en:'Security',nome_zh:'安保技术',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Infiltração'],exigeEscola:true,escolas:['Cofres e Fechaduras','Alarmes','Controle de Acesso','Vigilância']}
 };
 
-// Migração segura v46.44.3.
+// Migração segura v46.44.4.
 // Mantém investimentos antigos intactos e converte referências legadas sem usar o Total antigo.
 const migracaoPericiasV46441_ = {
   // Renomes 1:1 preservam o ID para não quebrar personagens/carreiras.
@@ -5811,7 +5847,7 @@ function migrarPersonagemPericiasV46441_(char){
     const d=char.pericias[p.id];
     if(d&&totalTreinoPericia_(d)>0&&!d.escola){d.escola=escolaPadraoPericia_(p);alterado=true;}
   }
-  if(char.migracaoPericiasVersao!=='46.44.3'){char.migracaoPericiasVersao='46.44.3';alterado=true;}
+  if(char.migracaoPericiasVersao!=='46.44.4'){char.migracaoPericiasVersao='46.44.4';alterado=true;}
   return {alterado,char};
 }
 
@@ -5819,7 +5855,7 @@ async function persistirMigracaoPersonagemV46441_(char){
   const r=migrarPersonagemPericiasV46441_(char);
   if(!r.alterado)return false;
   try{
-    await setDoc(doc(db,'personagens',char.id),{pericias:char.pericias,migracaoPericiasVersao:'46.44.3'},{merge:true});
+    await setDoc(doc(db,'personagens',char.id),{pericias:char.pericias,migracaoPericiasVersao:'46.44.4'},{merge:true});
     return true;
   }catch(err){console.warn('Migração de perícias não pôde ser persistida para',char.id,err);return false;}
 }
@@ -5828,12 +5864,12 @@ function aplicarMetadadosReformaPericias_(lista){
   const mapa=new Map((lista||[]).map(x=>[x.id,x]));
   for(const [id,meta] of Object.entries(reformaPericiasV4644_)){
     if(mapa.has(id)) Object.assign(mapa.get(id),meta);
-    else mapa.set(id,{id,especializavel:!!meta.exigeEscola,penalidadeArmadura:0,...meta});
+    else if(String(meta?.nome||'').trim()) mapa.set(id,{id,especializavel:!!meta.exigeEscola,penalidadeArmadura:0,...meta});
   }
-  return garantirDefinicoesLegadasInvestidas_([...mapa.values()]).filter(p=>p.disponivelCampanha!==false || userData?.role==='mestre');
+  return garantirDefinicoesLegadasInvestidas_([...mapa.values()]).filter(p=>String(p?.nome||p?.nome_en||p?.nome_zh||'').trim()).filter(p=>p.disponivelCampanha!==false || userData?.role==='mestre');
 }
 function escolaPadraoPericia_(p){return Array.isArray(p?.escolas)&&p.escolas.length?p.escolas[0]:'';}
-window.definirEscolaPericia_=(id,valor)=>{const c=userCharacters.find(x=>x.id===currentCharId);if(!c)return;const d=rascunhoPericiasChar_(c);d.pericias[id]={...(d.pericias[id]||{}),escola:String(valor||'')};d.sujo=true;renderizarPericias(c);};
+window.definirEscolaPericia_=(id,valor)=>{const c=userCharacters.find(x=>x.id===currentCharId);if(!c)return;if(personagemCriacaoConcluida_(c)&&userData?.role!=='mestre'){notificar_('Após concluir a ficha, somente o mestre pode alterar a especialização.','aviso',3600);renderizarPericias(c);return;}const d=rascunhoPericiasChar_(c);d.pericias[id]={...(d.pericias[id]||{}),escola:String(valor||'')};d.sujo=true;renderizarPericias(c);};
 
 const origensPadrao = [
     { id: 'urbano', nome: 'Urbano (Metrópole)', nome_en: 'Urban (Metropolis)', nome_zh: '城市', periciasBasicas: ['costumes', 'dissimulacao', 'conduzir', 'influencia', 'intuicao', 'regiao', 'percepcao'] },
@@ -8692,7 +8728,7 @@ function labMicroPainelHtml_(alvoVisual,ppm,d){
     const podePS=ps&&labFeridasTrataveis_(alvoVisual).length>0&&(ehProprio||labDistanciaEntre_(ator,alvoVisual)<=1.5);
     return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${topBaixo}px;transform:translateX(-50%);z-index:20;padding:4px;border-radius:8px;background:rgba(10,13,30,.95);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:310px;">
       ${!ehProprio?`<button class="btn-small btn-select" onclick="labMicroModoSelecionar_('ataque');labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">⚔️ ${escaparHtmlInventario_(ataqueNome)}</button>`:''}
-      ${psi?psiCtx.map(p=>`<button class="btn-small lab-psi-action" onclick="labAbrirPsiContextual_('${String(p.id).replace(/'/g,"\\'")}','${String(alvoVisual.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 ${escaparHtmlInventario_(getNome(p))}</button>`).join(''):''}
+      ${psi?psiCtx.map(p=>`<button class="btn-small lab-psi-action" onclick="${labPsiEhCura_(p)?`labAbrirPsiContextual_('${String(p.id).replace(/'/g,"\'")}','${String(alvoVisual.id).replace(/'/g,"\'")}')`:`labUsarPsiContextualRapido_('${String(p.id).replace(/'/g,"\'")}','${String(alvoVisual.id).replace(/'/g,"\'")}')`}" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 ${escaparHtmlInventario_(getNome(p))}</button>`).join(''):''}
       ${podePS?`<button class="btn-small ${modo==='socorros'?'btn-select':''}" onclick="labMicroModoSelecionar_('socorros')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🩹 1º socorros</button>${modo==='socorros'?`<button class="btn-small btn-select" onclick="labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">🩹 ${escaparHtmlInventario_(labMicroNomeAcao_(ator))}</button>`:''}`:''}
     </div>`;
 }
@@ -12112,7 +12148,9 @@ function renderizarPericias(char) {
     const rascunho=rascunhoPericiasChar_(char);
     const pericias = rascunho?.pericias || periciasSalvas;
     const especializacoes = rascunho?.especializacoes || especializacoesSalvas;
-    const visao = String(document.getElementById('periciasEtapa').value || 'origem').toLowerCase();
+    const seletorVisao=document.getElementById('periciasEtapa');
+    if(personagemCriacaoConcluida_(char)&&userData?.role!=='mestre'&&seletorVisao)seletorVisao.value='todas';
+    const visao = String(seletorVisao?.value || 'origem').toLowerCase();
     const origem = origensDB.find(o => o.id === char.origem);
     const carreira = carreirasDB.find(c => c.id === char.carreira);
     const isMaster = userData && userData.role === 'mestre';
@@ -12147,6 +12185,8 @@ function renderizarPericias(char) {
         periciasDisponiveis = periciasDB.filter(p => p.tipo === 'Básica' || totalTreinoPericia_(pericias[p.id]) > 0);
         especializacoesDisponiveis = especializacoesDB.filter(e => totalTreinoPericia_(especializacoes[e.id]) > 0);
     }
+    periciasDisponiveis = periciasDisponiveis.filter(p => isMaster || p.disponivelCampanha!==false || totalTreinoPericia_(pericias[p.id])>0);
+    especializacoesDisponiveis = especializacoesDisponiveis.filter(e => isMaster || e.disponivelCampanha!==false || totalTreinoPericia_(especializacoes[e.id])>0);
 
     const calcularFormula = (formula, valores) => {
         try {
@@ -12209,8 +12249,9 @@ function renderizarPericias(char) {
             ? `<span>${treinoTotal}</span>`
             : `<input type="number" value="${treinoVisao}" min="0" max="${maxTreinoCategoria}" oninput="atualizarTreinoPericia('${p.id}', this.value, '${p.tipo}', '${visao}')">`;
         const escolaAtual=dados.escola||'';
-        const seletorEscola=(p.exigeEscola&&treinoTotal>0)?`<div style="margin-top:5px"><select onchange="definirEscolaPericia_('${p.id}',this.value)" style="max-width:220px"><option value="">— escolher escola —</option>${(p.escolas||[]).map(x=>`<option value="${x}" ${x===escolaAtual?'selected':''}>${x}</option>`).join('')}</select></div>`:'';
-        const dica=p.descricao?` title="${String(p.descricao).replace(/"/g,'&quot;')}"`:'';
+        const escolaBloqueada=personagemCriacaoConcluida_(char)&&!isMaster;
+        const seletorEscola=(p.exigeEscola&&treinoTotal>0)?`<div style="margin-top:5px"><select onchange="definirEscolaPericia_('${p.id}',this.value)" ${escolaBloqueada?'disabled title="Após concluir a ficha, somente o mestre pode alterar esta especialização."':''} style="max-width:220px"><option value="">— escolher escola —</option>${(p.escolas||[]).map(x=>`<option value="${x}" ${x===escolaAtual?'selected':''}>${x}</option>`).join('')}</select></div>`:'';
+        const desc=getDescricao(p)||'';const dica=desc?` class="skill-help" data-skill-tip="${escaparBanco_(desc)}"`:'';
         return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td${dica}>${getNome(p)}${seletorEscola}</td><td>${formatarFormulaIdioma_(p.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
 
@@ -12223,7 +12264,8 @@ function renderizarPericias(char) {
         const input = somenteLeitura
             ? `<span>${treinoTotal}</span>`
             : `<input type="number" value="${treinoVisao}" min="0" max="${maxTreinoCategoria}" oninput="atualizarTreinoEspecializacao('${e.id}', this.value, '${visao}')">`;
-        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td>${getNome(e)}</td><td>${e.tipo} - ${formatarFormulaIdioma_(e.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
+        const desc=getDescricao(e)||'';const dica=desc?` class="skill-help" data-skill-tip="${escaparBanco_(desc)}"`:'';
+        return `<tr class="${treinoTotal > 0 ? 'skill-invested' : ''}"><td${dica}>${getNome(e)}</td><td>${e.tipo} - ${formatarFormulaIdioma_(e.formula)}</td><td>${base}</td><td>${input}</td><td class="skill-total">${total}</td></tr>`;
     };
 
     const estaInvestidaSalvaNestaVisao = (dados) => {
@@ -12598,20 +12640,9 @@ function tabelaBancoNomes_(cabecalhos, linhas) {
 }
 
 function renderizarBancoPericias() {
-    const el = document.getElementById('listaBancoPericias');
-    if (!el) return;
-    const linhas = [...periciasDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt')).map(p => `
-        <tr>
-            <td>${escaparBanco_(p.nome || '')}</td>
-            <td>${escaparBanco_(p.nome_en || '')}</td>
-            <td>${escaparBanco_(p.nome_zh || '')}</td>
-            <td>${escaparBanco_(p.categoria || '')}</td>
-            <td>${escaparBanco_(p.tipo || '')}</td>
-            <td>${escaparBanco_(p.formula || '')}</td>
-            <td>${escaparBanco_(p.penalidadeArmadura ?? '')}</td>
-            <td class="actions"><button class="btn-small btn-select" onclick="editarPericia('${escaparBanco_(p.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerPericia('${escaparBanco_(p.id)}')">Remover</button></td>
-        </tr>`);
-    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Categoria','Tipo','Fórmula','Pen. Armadura','Ações'], linhas);
+    const el=document.getElementById('listaBancoPericias');if(!el)return;
+    const linhas=[...periciasDB].filter(p=>String(p?.nome||p?.nome_en||p?.nome_zh||'').trim()).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt')).map(p=>{const disp=p.disponivelCampanha!==false;return `<tr class="${disp?'':'db-campaign-off'}"><td>${escaparBanco_(p.nome||'')}</td><td>${escaparBanco_(p.nome_en||'')}</td><td>${escaparBanco_(p.nome_zh||'')}</td><td>${escaparBanco_(p.categoria||'')}</td><td>${escaparBanco_(p.tipo||'')}</td><td>${escaparBanco_(p.formula||'')}</td><td>${escaparBanco_(p.penalidadeArmadura??'')}</td><td><button class="btn-small db-availability ${disp?'btn-select':''}" onclick="alternarDisponibilidadeBanco_('pericias','${escaparBanco_(p.id)}')">${disp?'✅ Disponível':'⛔ Guardada'}</button></td><td class="actions"><button class="btn-small btn-select" onclick="editarPericia('${escaparBanco_(p.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerPericia('${escaparBanco_(p.id)}')">Remover</button></td></tr>`;});
+    el.innerHTML=tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Categoria','Tipo','Fórmula','Pen. Armadura','Campanha','Ações'],linhas);
 }
 
 function renderizarBancoOrigens() {
@@ -12645,19 +12676,9 @@ function renderizarBancoCarreiras() {
 }
 
 function renderizarBancoEspecializacoes() {
-    const el = document.getElementById('listaBancoEspecializacoes');
-    if (!el) return;
-    const linhas = [...especializacoesDB].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt')).map(e => `
-        <tr>
-            <td>${escaparBanco_(e.nome || '')}</td>
-            <td>${escaparBanco_(e.nome_en || '')}</td>
-            <td>${escaparBanco_(e.nome_zh || '')}</td>
-            <td>${escaparBanco_(e.tipo || '')}</td>
-            <td>${escaparBanco_(e.formula || '')}</td>
-            <td>${escaparBanco_(e.uso || '')}</td>
-            <td class="actions"><button class="btn-small btn-select" onclick="editarEspecializacao('${escaparBanco_(e.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerEspecializacao('${escaparBanco_(e.id)}')">Remover</button></td>
-        </tr>`);
-    el.innerHTML = tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Tipo','Fórmula','Uso','Ações'], linhas);
+    const el=document.getElementById('listaBancoEspecializacoes');if(!el)return;
+    const linhas=[...especializacoesDB].filter(e=>String(e?.nome||e?.nome_en||e?.nome_zh||'').trim()).sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt')).map(e=>{const disp=e.disponivelCampanha!==false;return `<tr class="${disp?'':'db-campaign-off'}"><td>${escaparBanco_(e.nome||'')}</td><td>${escaparBanco_(e.nome_en||'')}</td><td>${escaparBanco_(e.nome_zh||'')}</td><td>${escaparBanco_(e.tipo||'')}</td><td>${escaparBanco_(e.formula||'')}</td><td>${escaparBanco_(e.uso||'')}</td><td><button class="btn-small db-availability ${disp?'btn-select':''}" onclick="alternarDisponibilidadeBanco_('especializacoes','${escaparBanco_(e.id)}')">${disp?'✅ Disponível':'⛔ Guardada'}</button></td><td class="actions"><button class="btn-small btn-select" onclick="editarEspecializacao('${escaparBanco_(e.id)}')">Editar</button> <button class="btn-small btn-delete" onclick="removerEspecializacao('${escaparBanco_(e.id)}')">Remover</button></td></tr>`;});
+    el.innerHTML=tabelaBancoNomes_(['Nome (PT)','Name (EN)','名称 (中文)','Tipo','Fórmula','Uso','Campanha','Ações'],linhas);
 }
 
 function renderizarBancoPoderesPsi() {
@@ -13500,15 +13521,7 @@ function pedirNomeMultilingue_(atual = {}) {
     return { nome: nome.trim(), nome_en: String(nome_en).trim(), nome_zh: String(nome_zh).trim() };
 }
 
-window.adicionarPericia = async () => {
-    const nomes = pedirNomeMultilingue_(); if (!nomes) return;
-    const formula = prompt('Fórmula (ex: FOR+DES):'); if (!formula) return;
-    const tipo = prompt('Tipo (Básica/Profissional):', 'Profissional') || 'Profissional';
-    const categoria = prompt('Categoria:', 'Geral') || 'Geral';
-    const id = slugId_(nomes.nome);
-    const nova = { id, ...nomes, formula, tipo, categoria, especializavel: true, penalidadeArmadura: 0 };
-    await setDoc(doc(db, 'pericias', id), nova); await carregarBancosDeDados();
-};
+window.adicionarPericia=async()=>abrirSkillBancoModal_('pericias',{tipo:'Profissional',categoria:'Geral',formula:'INT*2',disponivelCampanha:true});
 
 window.adicionarOrigem = async () => {
     const nomes = pedirNomeMultilingue_(); if (!nomes) return;
@@ -13533,24 +13546,12 @@ window.adicionarCarreira = async () => {
     await setDoc(doc(db, 'carreiras', id), nova); await carregarBancosDeDados(); popularSelects();
 };
 
-window.adicionarEspecializacao = async () => {
-    const nomes = pedirNomeMultilingue_(); if (!nomes) return;
-    const formula = prompt('Fórmula:'); if (!formula) return;
-    const tipo = prompt('Tipo:', 'Combate') || 'Combate';
-    const uso = prompt('Uso (Teste/Corpo a corpo/Distância/Defesa ou combinações):', 'Teste') || 'Teste';
-    const id = slugId_(nomes.nome);
-    const nova = { id, ...nomes, formula, tipo, uso };
-    await setDoc(doc(db, 'especializacoes', id), nova); await carregarBancosDeDados();
-};
+window.adicionarEspecializacao=async()=>abrirSkillBancoModal_('especializacoes',{tipo:'Combate',uso:'Teste',formula:'DES+INT',disponivelCampanha:true});
 
-window.editarPericia = async (id) => {
-    const p = periciasDB.find(x=>x.id===id); if (!p) return;
-    const nomes = pedirNomeMultilingue_(p); if (!nomes) return;
-    const formula = prompt('Fórmula:', p.formula) ?? p.formula;
-    const tipo = prompt('Tipo:', p.tipo) ?? p.tipo;
-    const categoria = prompt('Categoria:', p.categoria || 'Geral') ?? p.categoria;
-    await setDoc(doc(db,'pericias',id), {...p,...nomes,formula,tipo,categoria}); await carregarBancosDeDados();
-};
+function listaCampoSkill_(v){return (Array.isArray(v)?v:String(v||'').split(/[|\n]/)).map(x=>String(x).trim()).filter(Boolean);}
+function abrirSkillBancoModal_(kind,obj){const set=(id,v)=>{const e=document.getElementById(id);if(e)e.value=v??'';};document.getElementById('dbSkillKind').value=kind;set('dbSkillOrigId',obj?.id||'');set('dbSkillNome',obj?.nome||'');set('dbSkillNomeEn',obj?.nome_en||'');set('dbSkillNomeZh',obj?.nome_zh||'');set('dbSkillCategoria',obj?.categoria||'');set('dbSkillTipo',obj?.tipo||'');set('dbSkillFormula',obj?.formula||'');set('dbSkillUso',obj?.uso||'');set('dbSkillPen',obj?.penalidadeArmadura??0);set('dbSkillEscolas',(obj?.escolas||[]).join('\n'));set('dbSkillFamilias',(obj?.familias||[]).join('\n'));set('dbSkillDescricao',obj?.descricao||'');set('dbSkillDescricaoEn',obj?.descricao_en||'');set('dbSkillDescricaoZh',obj?.descricao_zh||'');document.getElementById('dbSkillDisponivel').checked=obj?.disponivelCampanha!==false;document.getElementById('dbSkillExigeEscola').checked=!!obj?.exigeEscola;const per=kind==='pericias';document.getElementById('dbSkillPericiaExtra').style.display=per?'':'none';document.getElementById('dbSkillPenBox').style.display=per?'':'none';document.getElementById('dbSkillUsoBox').style.display=per?'none':'';document.getElementById('dbSkillModalTitulo').textContent=(per?'Editar Perícia':'Editar Especialização')+(obj?.nome?` — ${obj.nome}`:'');document.getElementById('dbSkillModal').classList.add('active');}
+window.fecharSkillBancoModal_=()=>document.getElementById('dbSkillModal')?.classList.remove('active');
+window.editarPericia=async id=>{const p=periciasDB.find(x=>x.id===id);if(p)abrirSkillBancoModal_('pericias',p);};
 
 window.editarOrigem = async (id) => {
     const o = origensDB.find(x=>x.id===id); if (!o) return;
@@ -13574,14 +13575,9 @@ window.editarCarreira = async (id) => {
     await carregarBancosDeDados(); popularSelects();
 };
 
-window.editarEspecializacao = async (id) => {
-    const e = especializacoesDB.find(x=>x.id===id); if (!e) return;
-    const nomes = pedirNomeMultilingue_(e); if (!nomes) return;
-    const formula = prompt('Fórmula:',e.formula) ?? e.formula;
-    const tipo = prompt('Tipo:',e.tipo) ?? e.tipo;
-    const uso = prompt('Uso:',e.uso) ?? e.uso;
-    await setDoc(doc(db,'especializacoes',id), {...e,...nomes,formula,tipo,uso}); await carregarBancosDeDados();
-};
+window.editarEspecializacao=async id=>{const e=especializacoesDB.find(x=>x.id===id);if(e)abrirSkillBancoModal_('especializacoes',e);};
+window.salvarSkillBancoModal_=async function(){if(userData?.role!=='mestre')return;const val=id=>String(document.getElementById(id)?.value||'').trim(),kind=val('dbSkillKind')||'pericias',idOriginal=val('dbSkillOrigId'),nome=val('dbSkillNome');if(!nome){notificar_('Informe o nome da perícia/especialização.','aviso');return;}const id=idOriginal||slugId_(nome),base=(kind==='pericias'?periciasDB:especializacoesDB).find(x=>x.id===idOriginal)||{};const obj={...base,id,nome,nome_en:val('dbSkillNomeEn'),nome_zh:val('dbSkillNomeZh'),tipo:val('dbSkillTipo'),formula:val('dbSkillFormula'),descricao:val('dbSkillDescricao'),descricao_en:val('dbSkillDescricaoEn'),descricao_zh:val('dbSkillDescricaoZh'),disponivelCampanha:!!document.getElementById('dbSkillDisponivel')?.checked};if(kind==='pericias'){obj.categoria=val('dbSkillCategoria')||'Geral';obj.penalidadeArmadura=Number(document.getElementById('dbSkillPen')?.value)||0;obj.exigeEscola=!!document.getElementById('dbSkillExigeEscola')?.checked;obj.especializavel=obj.exigeEscola||!!base.especializavel;obj.escolas=listaCampoSkill_(val('dbSkillEscolas'));obj.familias=listaCampoSkill_(val('dbSkillFamilias'));}else obj.uso=val('dbSkillUso')||'Teste';await setDoc(doc(db,kind,id),obj,{merge:false});fecharSkillBancoModal_();await carregarBancosDeDados();notificar_('Registro salvo no banco.','sucesso',2200);};
+window.alternarDisponibilidadeBanco_=async function(kind,id){if(userData?.role!=='mestre')return;const banco=kind==='especializacoes'?especializacoesDB:periciasDB,obj=banco.find(x=>x.id===id);if(!obj)return;const novo=obj.disponivelCampanha===false;await setDoc(doc(db,kind,id),{disponivelCampanha:novo},{merge:true});obj.disponivelCampanha=novo;if(kind==='especializacoes')renderizarBancoEspecializacoes();else renderizarBancoPericias();};
 
 // Remover
 window.removerPericia = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "pericias", id)); periciasDB = periciasDB.filter(p => p.id !== id); renderizarBancoPericias(); };
@@ -13631,6 +13627,9 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             tipo: String(bruto.tipo || 'Profissional').trim(),
             formula: String(bruto.formula || '').trim(),
             especializavel: parseBoolean_(bruto.especializavel),
+            exigeEscola: parseBoolean_(bruto.exigeEscola || bruto.exige_escola),
+            escolas: listaIds_(bruto.escolas), familias: listaIds_(bruto.familias),
+            disponivelCampanha: bruto.disponivelCampanha===''||bruto.disponivelCampanha===undefined ? true : parseBoolean_(bruto.disponivelCampanha),
             penalidadeArmadura: parseNumero_(bruto.penalidadeArmadura, 0),
             descricao: String(bruto.descricao || '').trim(),
             descricao_en: String(bruto.descricao_en || '').trim(),
@@ -13656,6 +13655,7 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             tipo: String(bruto.tipo || 'Combate').trim(),
             uso: String(bruto.uso || bruto.usoCombate || 'Teste').trim(),
             formula: String(bruto.formula || '').trim(),
+            disponivelCampanha: bruto.disponivelCampanha===''||bruto.disponivelCampanha===undefined ? true : parseBoolean_(bruto.disponivelCampanha),
             descricao: String(bruto.descricao || '').trim(),
             descricao_en: String(bruto.descricao_en || '').trim(),
             descricao_zh: String(bruto.descricao_zh || '').trim()
@@ -13924,11 +13924,12 @@ function dadosExportacaoBanco_(tipo) {
     const configs = {
         pericias: {
             dados: periciasDB,
-            cabecalhos: ['id','nome','nome_en','nome_zh','categoria','tipo','formula','especializavel','penalidadeArmadura','descricao','descricao_en','descricao_zh'],
+            cabecalhos: ['id','nome','nome_en','nome_zh','categoria','tipo','formula','especializavel','exigeEscola','escolas','familias','disponivelCampanha','penalidadeArmadura','descricao','descricao_en','descricao_zh'],
             map: p => ({
                 id:p.id||'', nome:p.nome||'', nome_en:p.nome_en||'', nome_zh:p.nome_zh||'',
                 categoria:p.categoria||'', tipo:p.tipo||'', formula:p.formula||'',
-                especializavel:!!p.especializavel,
+                especializavel:!!p.especializavel, exigeEscola:!!p.exigeEscola,
+                escolas:(p.escolas||[]).join('|'), familias:(p.familias||[]).join('|'), disponivelCampanha:p.disponivelCampanha!==false,
                 penalidadeArmadura:p.penalidadeArmadura ?? 0,
                 descricao:p.descricao||'', descricao_en:p.descricao_en||'', descricao_zh:p.descricao_zh||''
             })
@@ -13957,10 +13958,10 @@ function dadosExportacaoBanco_(tipo) {
         },
         especializacoes: {
             dados: especializacoesDB,
-            cabecalhos: ['id','nome','nome_en','nome_zh','tipo','uso','formula','descricao','descricao_en','descricao_zh'],
+            cabecalhos: ['id','nome','nome_en','nome_zh','tipo','uso','formula','disponivelCampanha','descricao','descricao_en','descricao_zh'],
             map: e => ({
                 id:e.id||'', nome:e.nome||'', nome_en:e.nome_en||'', nome_zh:e.nome_zh||'',
-                tipo:e.tipo||'', uso:e.uso||'', formula:e.formula||'',
+                tipo:e.tipo||'', uso:e.uso||'', formula:e.formula||'', disponivelCampanha:e.disponivelCampanha!==false,
                 descricao:e.descricao||'', descricao_en:e.descricao_en||'', descricao_zh:e.descricao_zh||''
             })
         },
@@ -16987,6 +16988,6 @@ window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.44.3: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.44.4: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
