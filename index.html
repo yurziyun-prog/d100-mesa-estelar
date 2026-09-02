@@ -414,7 +414,7 @@
 </style>
 
 <style id="lab-ui-fix-v46430">
-/* v46.44.1 — selects sem recorte e contraste de ações Psi */
+/* v46.44.3 — selects sem recorte e contraste de ações Psi */
 #laboratorio-combate #labParticipanteSelect,
 #laboratorio-combate #labMapaSalvoSelect,
 #laboratorio-combate #labZoom,
@@ -508,6 +508,7 @@
                               <select id="labParticipanteSelect"><option value="">— personagem / NPC / criatura —</option></select>
                             </label>
                             <button class="btn-small btn-select" onclick="labAdicionarParticipanteSelecionado_()">➕ Colocar na mesa</button>
+                            <button class="btn-small" onclick="labRetirarParticipanteSelecionado_()" title="Retira da grid apenas o participante atualmente selecionado; não apaga a ficha">➖ Retirar selecionado</button>
                             <button class="btn-small" onclick="labAdicionarBoneco_()">🎯 Boneco de treino</button>
                             <button class="btn-small" onclick="labPosicoesAleatorias_()">🎲 Posições aleatórias</button>
                             <button class="btn-small" id="labStartBtn" onclick="labIniciarCombate_()">⚡ Iniciar combate</button>
@@ -5753,7 +5754,7 @@ const reformaPericiasV4644_ = {
   seguranca:{nome:'Segurança',nome_en:'Security',nome_zh:'安保技术',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Infiltração'],exigeEscola:true,escolas:['Cofres e Fechaduras','Alarmes','Controle de Acesso','Vigilância']}
 };
 
-// Migração segura v46.44.1.
+// Migração segura v46.44.3.
 // Mantém investimentos antigos intactos e converte referências legadas sem usar o Total antigo.
 const migracaoPericiasV46441_ = {
   // Renomes 1:1 preservam o ID para não quebrar personagens/carreiras.
@@ -5810,7 +5811,7 @@ function migrarPersonagemPericiasV46441_(char){
     const d=char.pericias[p.id];
     if(d&&totalTreinoPericia_(d)>0&&!d.escola){d.escola=escolaPadraoPericia_(p);alterado=true;}
   }
-  if(char.migracaoPericiasVersao!=='46.44.1'){char.migracaoPericiasVersao='46.44.1';alterado=true;}
+  if(char.migracaoPericiasVersao!=='46.44.3'){char.migracaoPericiasVersao='46.44.3';alterado=true;}
   return {alterado,char};
 }
 
@@ -5818,7 +5819,7 @@ async function persistirMigracaoPersonagemV46441_(char){
   const r=migrarPersonagemPericiasV46441_(char);
   if(!r.alterado)return false;
   try{
-    await setDoc(doc(db,'personagens',char.id),{pericias:char.pericias,migracaoPericiasVersao:'46.44.1'},{merge:true});
+    await setDoc(doc(db,'personagens',char.id),{pericias:char.pericias,migracaoPericiasVersao:'46.44.3'},{merge:true});
     return true;
   }catch(err){console.warn('Migração de perícias não pôde ser persistida para',char.id,err);return false;}
 }
@@ -7697,9 +7698,36 @@ function labResultadoPrivadoDoUsuario_(){
     const atual=labTokenAtual_();return meus.find(t=>String(t.id)===String(atual?.id))||meus.find(t=>t.ultimoResultadoProprioLab||t.ultimoResultadoRecebidoLab)||meus[0];
 }
 let labUltimoResultadoNotificado_='';
-function labRenderResultadoPrivado_(){const el=document.getElementById('labPlayerPrivateResult');if(!el)return;if(batalhaEhMestre_()){el.style.display='none';el.innerHTML='';return;}const t=labResultadoPrivadoDoUsuario_();const txt=t?.ultimoResultadoProprioLab||t?.ultimoResultadoRecebidoLab||'';if(!txt){el.style.display='none';el.innerHTML='';return;}el.style.display='block';el.innerHTML=`<b>🎲 Seu último resultado:</b> ${escaparHtmlInventario_(txt)}`;if(txt!==labUltimoResultadoNotificado_){labUltimoResultadoNotificado_=txt;notificar_(`🎲 ${txt}`,'info',6500);}}
+let labResultadoPrivadoInicializado_=false;
+function labRenderResultadoPrivado_(){
+    const el=document.getElementById('labPlayerPrivateResult');if(!el)return;
+    if(batalhaEhMestre_()){el.style.display='none';el.innerHTML='';return;}
+    const t=labResultadoPrivadoDoUsuario_();
+    const proprio=String(t?.ultimoResultadoProprioLab||''),recebido=String(t?.ultimoResultadoRecebidoLab||'');
+    const txt=proprio||recebido||'';
+    const ts=proprio?Number(t?.ultimoResultadoProprioTsLab||0):Number(t?.ultimoResultadoRecebidoTsLab||0);
+    const assinatura=`${proprio?'P':'R'}|${ts}|${txt}`;
+    if(!txt){
+        el.style.display='none';el.innerHTML='';
+        if(!labResultadoPrivadoInicializado_)labResultadoPrivadoInicializado_=true;
+        return;
+    }
+    el.style.display='block';
+    el.innerHTML=`<b>🎲 Seu último resultado:</b> ${escaparHtmlInventario_(txt)}`;
+    // Ao carregar/recarregar a página, apenas mostra o último resultado salvo.
+    // Toast só é disparado para um resultado novo surgido durante esta sessão.
+    if(!labResultadoPrivadoInicializado_){
+        labResultadoPrivadoInicializado_=true;
+        labUltimoResultadoNotificado_=assinatura;
+        return;
+    }
+    if(assinatura!==labUltimoResultadoNotificado_){
+        labUltimoResultadoNotificado_=assinatura;
+        notificar_(`🎲 ${txt}`,'info',6500);
+    }
+}
 function labRegistrarResultadoProprio_(t,texto){
-    if(!t)return;const msg=String(texto||'');t.ultimoResultadoProprioLab=msg;
+    if(!t)return;const msg=String(texto||'');t.ultimoResultadoProprioLab=msg;t.ultimoResultadoProprioTsLab=Date.now();
     t.historicoPrivadoLab=Array.isArray(t.historicoPrivadoLab)?t.historicoPrivadoLab:[];
     if(msg)t.historicoPrivadoLab.unshift({ts:new Date().toLocaleTimeString(),texto:msg});
     if(t.historicoPrivadoLab.length>60)t.historicoPrivadoLab.length=60;
@@ -8240,7 +8268,7 @@ window.labRolarDano_=function(){
     labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:labEstado_.ultimoResultadoLab});
     labEstado_.logLab=labEstado_.logLab.slice(0,20);
     labEstado_.danoPendenteLab=null;
-    if(ap.final>0){defensor.ultimoResultadoRecebidoLab=`Você sofreu ${ap.final} de dano em ${ap.local}${ap.pa?` (PA ${ap.pa})`:''}.`;labAdicionarFloat_(defensor,-ap.final,'dano');}
+    if(ap.final>0){defensor.ultimoResultadoRecebidoLab=`Você sofreu ${ap.final} de dano em ${ap.local}${ap.pa?` (PA ${ap.pa})`:''}.`;defensor.ultimoResultadoRecebidoTsLab=Date.now();labAdicionarFloat_(defensor,-ap.final,'dano');}
     labSalvarLocal_();labRender_();
     labAutoAvancarSeSemAcoes_();
 };
@@ -8392,7 +8420,7 @@ function labRenderActionPanel_(){
     }
 
     if(t.acaoAuxLab?.tipo==='psiquismo'){
-        const contexto=labPsiAlvoPorId_(t.acaoAuxLab.alvoId),todosPsi=labPsiPoderes_(t),poderes=contexto?todosPsi.filter(px=>labPsiAlvos_(t,px).some(x=>String(x.id)===String(contexto.id))):todosPsi,p=poderes.find(x=>x.id===t.acaoAuxLab.poderId)||poderes[0];if(!p){t.acaoAuxLab=null;labSalvarLocal_();labRender_();return;}
+        const contexto=labPsiAlvoPorId_(t.acaoAuxLab.alvoId),todosPsi=labPsiPoderes_(t),poderes=todosPsi,p=poderes.find(x=>x.id===t.acaoAuxLab.poderId)||poderes[0];if(!p){t.acaoAuxLab=null;labSalvarLocal_();labRender_();return;}
         const alvosPsi=labPsiAlvos_(t,p);if(!alvosPsi.some(x=>String(x.id)===String(t.acaoAuxLab.alvoId)))t.acaoAuxLab.alvoId=String(alvosPsi[0]?.id||t.id);
         t.acaoAuxLab.poderId=p.id;const alvos=alvosPsi,alvo=labPsiAlvoPorId_(t.acaoAuxLab.alvoId)||alvosPsi[0]||t,feridas=labPsiEhObjeto_(alvo)?[]:labFeridasTrataveis_(alvo);
         if(labPsiEhCura_(p)){labPsiAjustarCura_(t);}
@@ -8594,14 +8622,16 @@ window.labMicroModoSelecionar_=function(modo){
         t.acaoAuxLab=null;
     }else if(modo==='psi'){
         if(t.acaoAuxLab?.tipo!=='psiquismo'){
-            const alvoCtx=labTokenPorId_(labEstado_.selecionadoId)||labObjetoPorId_(labEstado_.objetoSelecionadoId)||t,poderes=labPsiPoderesParaAlvo_(t,alvoCtx);
-            if(!poderes.length){notificar_('Nenhum dos poderes psíquicos disponíveis pode ser usado neste alvo.','aviso');t.microModoLab='ataque';return;}
-            const salvo=t.psiSelecaoLab;
-            if(salvo?.tipo==='psiquismo'&&poderes.some(p=>p.id===salvo.poderId)){
-                t.acaoAuxLab=JSON.parse(JSON.stringify(salvo));t.acaoAuxLab.alvoId=String(alvoCtx.id);
-            }else{
-                const p=poderes[0];t.acaoAuxLab={tipo:'psiquismo',poderId:p.id,alvoId:String(alvoCtx.id),custo:p.id==='mover_objeto'&&labPsiEhObjeto_(alvoCtx)?labPsiMoverCustoKg_(p,alvoCtx):Math.max(0,Number(p.custo||0)),local:''};
-            }
+            const alvoCtx=labTokenPorId_(labEstado_.selecionadoId)||labObjetoPorId_(labEstado_.objetoSelecionadoId)||t;
+            const salvo=t.psiSelecaoLab,p=labPsiPoderSelecionado_(t);
+            if(!p){notificar_('Este participante não possui poder psíquico disponível.','aviso');t.microModoLab='ataque';return;}
+            const alvos=labPsiAlvos_(t,p);
+            const alvoEscolhido=alvos.some(x=>String(x.id)===String(alvoCtx?.id))?alvoCtx:(alvos[0]||null);
+            if(!alvoEscolhido){notificar_('O poder psíquico selecionado não possui alvo válido neste momento.','aviso');t.microModoLab='ataque';return;}
+            if(salvo?.tipo==='psiquismo'&&String(salvo.poderId)===String(p.id))t.acaoAuxLab=JSON.parse(JSON.stringify(salvo));
+            else t.acaoAuxLab={tipo:'psiquismo',poderId:p.id,alvoId:String(alvoEscolhido.id),custo:Math.max(0,Number(p.custo||0)),local:''};
+            t.acaoAuxLab.alvoId=String(alvoEscolhido.id);
+            if(p.id==='mover_objeto'&&labPsiEhObjeto_(alvoEscolhido))t.acaoAuxLab.custo=Math.max(Number(t.acaoAuxLab.custo||0),labPsiMoverCustoKg_(p,alvoEscolhido));
             labPsiAjustarCura_(t);
         }
     }else if(modo==='socorros'){
@@ -9143,6 +9173,37 @@ function labTokenDeCharDireto_(c,origemId,i=0){
         modoMovimento:mov.terra>0?'terrestre':mov.voo>0?'voo':mov.nat>0?'natacao':'imovel',alcanceAtaqueMax:labAlcanceMax_(c),iniciativaLab:null,
         iniciativaBonus:Math.floor((Number(c?.atributos?.INT||10)+Number(c?.atributos?.DES||10))/2),combateLab:labCriarSnapshotCombate_(c),charLab:labSnapshotChar_(c),psiGastosLab:Math.max(0,Math.floor(Number(c?.pontosMagiaGastos||0)))};
 }
+
+window.labRetirarParticipanteSelecionado_=function(){
+    if(!batalhaEhMestre_())return;
+    const id=String(labEstado_.selecionadoId||'');
+    const t=labTokenPorId_(id);
+    if(!t){notificar_('Selecione primeiro o jogador, NPC ou criatura que deseja retirar da grid.','aviso');return;}
+    if(!confirm(`Retirar “${t.nome}” da grid? A ficha não será apagada.`))return;
+    const atorAntes=labTokenAtual_();
+    const eraAtual=String(atorAntes?.id||'')===String(t.id);
+    labEstado_.tokens=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id));
+    labEstado_.ordemIniciativa=(labEstado_.ordemIniciativa||[]).filter(x=>String(x)!==String(t.id));
+    for(const x of (labEstado_.tokens||[])){if(String(x.alvoLab||'')===String(t.id))x.alvoLab='';}
+    labEstado_.selecionadoId='';
+    if(labEstado_.fase==='combate'){
+        if(!labEstado_.ordemIniciativa.length){
+            labEstado_.turnoIndex=0;
+        }else if(eraAtual){
+            labEstado_.turnoIndex=Math.min(Number(labEstado_.turnoIndex||0),labEstado_.ordemIniciativa.length-1);
+        }else{
+            const atualId=String(atorAntes?.id||'');
+            const novoIdx=labEstado_.ordemIniciativa.findIndex(x=>String(x)===atualId);
+            if(novoIdx>=0)labEstado_.turnoIndex=novoIdx;
+            else labEstado_.turnoIndex=Math.min(Number(labEstado_.turnoIndex||0),labEstado_.ordemIniciativa.length-1);
+        }
+    }
+    labEstado_.ultimoResultadoLab=`${t.nome} foi retirado da grid.`;
+    labEstado_.logLab=Array.isArray(labEstado_.logLab)?labEstado_.logLab:[];
+    labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:`${t.nome} foi retirado da grid.`});
+    labParticipanteSelectSig_='';
+    labSalvarLocal_();labRender_();
+};
 window.labAdicionarParticipanteSelecionado_=function(){
     if(!batalhaEhMestre_())return;const v=String(document.getElementById('labParticipanteSelect')?.value||'');if(!v){notificar_('Escolha um personagem, NPC ou criatura.','aviso');return;}
     const [tipo,id]=v.split(':',2);let c=null;
@@ -16608,7 +16669,25 @@ window.labAdicionarObjetoSelecionado_=function(){
 };
 function labObjetoPorId_(id){return (labEstado_.objetosLab||[]).find(o=>String(o.id)===String(id))||null;}
 function labObjetoModelo_(o){return (objetosMapaDB||[]).find(m=>String(m.id)===String(o?.modeloId||''))||null;}
-function labPsiPoderesParaAlvo_(ator,alvo){return labPsiPoderes_(ator).filter(p=>labPsiAlvos_(ator,p).some(x=>String(x.id)===String(alvo?.id)));}
+function labPsiPoderSelecionado_(ator){
+    const todos=labPsiPoderes_(ator);
+    const id=String(ator?.acaoAuxLab?.tipo==='psiquismo'?ator.acaoAuxLab.poderId:(ator?.psiSelecaoLab?.poderId||''));
+    return todos.find(p=>String(p.id)===id)||todos[0]||null;
+}
+function labPsiPoderAplicavelAoAlvo_(ator,p,alvo){
+    return !!p&&!!alvo&&labPsiAlvos_(ator,p).some(x=>String(x.id)===String(alvo.id));
+}
+function labPsiPoderesParaAlvo_(ator,alvo){
+    if(!ator||!alvo)return [];
+    const todos=labPsiPoderes_(ator),out=[],add=p=>{if(p&&labPsiPoderAplicavelAoAlvo_(ator,p,alvo)&&!out.some(x=>String(x.id)===String(p.id)))out.push(p);};
+    // Regra principal: o botão contextual acompanha o poder escolhido no painel superior.
+    add(labPsiPoderSelecionado_(ator));
+    // Exceção contextual realmente útil: Mover Objeto quando o alvo é um objeto.
+    if(labPsiEhObjeto_(alvo))add(todos.find(p=>p.id==='mover_objeto'));
+    // Exceção contextual realmente útil: Cura quando o alvo corporal está ferido.
+    if(!labPsiEhObjeto_(alvo)&&labFeridasTrataveis_(alvo).length>0)add(todos.find(p=>labPsiEhCura_(p)));
+    return out;
+}
 window.labAbrirPsiContextual_=function(poderId,alvoId){
     const t=labTokenAtual_(),alvo=labPsiAlvoPorId_(alvoId);if(!t||!alvo||!labPodeControlarToken_(t))return;
     const p=labPsiPoderesParaAlvo_(t,alvo).find(x=>String(x.id)===String(poderId));if(!p)return;
@@ -16908,6 +16987,6 @@ window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.44.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.44.3: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
