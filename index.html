@@ -383,6 +383,32 @@
 .lab-laser-core{position:absolute;left:0;right:0;top:1px;height:2px;background:#fff;border-radius:999px;opacity:.96}
 .lab-laser-impact{position:absolute;width:18px;height:18px;border:2px solid currentColor;border-radius:50%;pointer-events:none;z-index:156;animation:labLaserImpact .38s ease-out forwards;box-shadow:0 0 10px currentColor,0 0 22px currentColor}
 
+
+@keyframes labLaserBodyBeamV3{
+  0%{opacity:0;filter:brightness(3)}
+  8%{opacity:1}
+  68%{opacity:1}
+  100%{opacity:0}
+}
+@keyframes labLaserBodyImpactV3{
+  0%{transform:translate(-50%,-50%) scale(.2);opacity:1}
+  100%{transform:translate(-50%,-50%) scale(2.8);opacity:0}
+}
+.lab-laser-body-v3{
+  position:fixed; height:5px; transform-origin:0 50%; border-radius:999px;
+  pointer-events:none; z-index:2147483000;
+  animation:labLaserBodyBeamV3 .48s ease-out forwards;
+}
+.lab-laser-body-v3::after{
+  content:""; position:absolute; left:0; right:0; top:1px; height:3px;
+  background:#fff; border-radius:999px; opacity:.95;
+}
+.lab-laser-impact-body-v3{
+  position:fixed; width:22px; height:22px; border:3px solid currentColor;
+  border-radius:50%; pointer-events:none; z-index:2147483001;
+  animation:labLaserBodyImpactV3 .52s ease-out forwards;
+}
+
 </style>
 
 <style id="lab-ui-polish-v46360">
@@ -17232,7 +17258,7 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 
 
 // ============================================================
-// V46.46.2 — XP PSI, respostas flutuantes, resistências e Oficina completa
+// V46.46.3 — XP PSI, respostas flutuantes, resistências e Oficina completa
 // ============================================================
 // Um minuto de manutenção Psi equivale provisoriamente a 10 turnos de combate.
 const PSI_TURNOS_POR_MINUTO_=10;
@@ -17299,7 +17325,7 @@ const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_
 
 
 // ============================================================
-// V46.46.2 — estabilização Psi, testes no mapa e Oficina avançada
+// V46.46.3 — estabilização Psi, testes no mapa e Oficina avançada
 // ============================================================
 
 // ---------- Identificação robusta de PJ real ----------
@@ -17654,7 +17680,7 @@ labRender_=function(){
 
 
 // ============================================================
-// V46.46.2 — Teletransporte por clique e teletransportes caóticos
+// V46.46.3 — Teletransporte por clique e teletransportes caóticos
 // ============================================================
 function labPsiPosicaoAleatoriaValida_(alvo){
     const raio=Math.max(.3,Number(alvo?.diametroM||.9)/2);
@@ -17769,7 +17795,7 @@ labOverlayMovimentoHtml_=function(t,ppm){
 
 
 // ============================================================
-// V46.46.2 — roteamento de resistência Psi + nomes sempre retos
+// V46.46.3 — roteamento de resistência Psi + nomes sempre retos
 // ============================================================
 
 // Qualquer token com donoUid é tratado como controlado por uma conta real.
@@ -17964,7 +17990,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.46.2',e);}
+    }catch(e){console.warn('v46.46.3',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -17974,7 +18000,7 @@ window.labPsiRenderModalMestre_=labPsiRenderModalMestre_;
 
 
 // ============================================================
-// V46.46.2 — Oficina avançada + laser + perícias + Mimetismo
+// V46.46.3 — Oficina avançada + laser + perícias + Mimetismo
 // ============================================================
 
 // ---------- Testes de perícia gerais no Mapa da Mesa ----------
@@ -18228,7 +18254,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.46.2 — correções reais: Força Bruta, laser e Oficina V2
+// V46.46.3 — correções reais: Força Bruta, laser e Oficina V2
 // ============================================================
 
 // ---------- 1) Força Bruta sempre disponível para mover objetos ----------
@@ -18603,7 +18629,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.46.2 — painel compacto, escala da Oficina, armas corretas,
+// V46.46.3 — painel compacto, escala da Oficina, armas corretas,
 //             mapa estável e laser realmente visível
 // ============================================================
 
@@ -18900,6 +18926,119 @@ window.labRender_=labRender_;
 window.labAtualizarStatusCombate_=labAtualizarStatusCombate_;
 window.labAtualizarInfo_=labAtualizarInfo_;
 
+
+
+// ============================================================
+// V46.46.3 — Laser em camada global, independente do rerender do mapa
+// ============================================================
+let labLaserBodyUltimoIdV3_='';
+let labLaserBodyTimersV3_=[];
+
+function labLaserElementoTokenV3_(id){
+    if(!id)return null;
+    try{
+        return document.querySelector(`#labMetricMap .lab-token[data-id="${CSS.escape(String(id))}"]`);
+    }catch(_){return null;}
+}
+function labLaserCentroRectV3_(el){
+    if(!el)return null;
+    const r=el.getBoundingClientRect();
+    if(!r.width||!r.height)return null;
+    return {x:r.left+r.width/2,y:r.top+r.height/2,w:r.width,h:r.height};
+}
+function labLaserCriarBodyV3_(fx){
+    if(!fx||!fx.id||String(fx.id)===labLaserBodyUltimoIdV3_)return false;
+    const a=labLaserCentroRectV3_(labLaserElementoTokenV3_(fx.atacanteId));
+    const b=labLaserCentroRectV3_(labLaserElementoTokenV3_(fx.alvoId));
+    if(!a||!b)return false;
+
+    let x2=b.x,y2=b.y;
+    // Em falha, o disparo continua visível, mas passa ligeiramente ao lado do alvo.
+    if(fx.acertou===false){
+        const dx=b.x-a.x,dy=b.y-a.y,len=Math.max(1,Math.hypot(dx,dy));
+        const nx=-dy/len,ny=dx/len;
+        const off=Math.max(18,Math.min(42,b.w*.75));
+        x2+=nx*off;y2+=ny*off;
+    }
+
+    const dx=x2-a.x,dy=y2-a.y,len=Math.hypot(dx,dy);
+    const ang=Math.atan2(dy,dx)*180/Math.PI;
+    const cor=fx.cor||'#ff3131';
+
+    const beam=document.createElement('div');
+    beam.className='lab-laser-body-v3';
+    beam.style.left=`${a.x}px`;
+    beam.style.top=`${a.y-2.5}px`;
+    beam.style.width=`${len}px`;
+    beam.style.transform=`rotate(${ang}deg)`;
+    beam.style.background=cor;
+    beam.style.color=cor;
+    beam.style.boxShadow=`0 0 5px ${cor},0 0 14px ${cor},0 0 28px ${cor}`;
+
+    const impact=document.createElement('div');
+    impact.className='lab-laser-impact-body-v3';
+    impact.style.left=`${x2}px`;
+    impact.style.top=`${y2}px`;
+    impact.style.color=cor;
+    impact.style.borderColor=cor;
+    impact.style.boxShadow=`0 0 10px ${cor},0 0 24px ${cor}`;
+
+    document.body.appendChild(beam);
+    document.body.appendChild(impact);
+    labLaserBodyUltimoIdV3_=String(fx.id);
+
+    const tm=setTimeout(()=>{beam.remove();impact.remove();},700);
+    labLaserBodyTimersV3_.push(tm);
+    if(labLaserBodyTimersV3_.length>8){
+        const old=labLaserBodyTimersV3_.shift();clearTimeout(old);
+    }
+    return true;
+}
+
+function labLaserAgendarBodyV3_(fx, tentativas=8){
+    if(!fx?.id||String(fx.id)===labLaserBodyUltimoIdV3_)return;
+    let n=0;
+    const tentar=()=>{
+        if(String(fx.id)===labLaserBodyUltimoIdV3_)return;
+        if(labLaserCriarBodyV3_(fx))return;
+        n++;
+        if(n<tentativas)setTimeout(tentar,80);
+    };
+    setTimeout(tentar,80);
+}
+
+// Substitui de vez a função de disparo: guarda IDs, não só coordenadas.
+labDispararEfeitoVisualAtaque_=function(atacante,alvo,item,acertou,grau){
+    if(!labTipoVisualArma_(item)||!atacante||!alvo)return;
+    const fx={
+      id:`fx3:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
+      tipo:'laser',
+      atacanteId:String(atacante.id||''),
+      alvoId:String(alvo.id||''),
+      x1:Number(atacante.x||0),y1:Number(atacante.y||0),
+      x2:Number(alvo.x||0),y2:Number(alvo.y||0),
+      cor:labCorVisualArma_(item),
+      acertou:!!acertou,grau:String(grau||''),ts:Date.now()
+    };
+    labEstado_.efeitoVisualLab=fx;
+    labSalvarLocal_();labAgendarSyncRemoto_();
+    labLaserAgendarBodyV3_(fx);
+};
+
+// Para clientes remotos: ao receber o novo estado, a mesma animação é disparada.
+const labRenderV46463_=labRender_;
+labRender_=function(){
+    const r=labRenderV46463_();
+    try{
+        const fx=labEstado_.efeitoVisualLab;
+        if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
+            labLaserAgendarBodyV3_(fx);
+        }
+    }catch(e){console.warn('laser v46.46.3',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -18915,6 +19054,6 @@ window.labAtualizarInfo_=labAtualizarInfo_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.46.2: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.46.3: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
