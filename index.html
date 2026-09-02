@@ -2504,62 +2504,100 @@ function getDescricao(item) {
     return item.descricao || '';
 }
 
+async function inicializarSessaoAutenticada_(user) {
+    currentUserUid = user.uid;
+    // Mostra o aplicativo imediatamente após o Firebase autenticar. Carregamentos
+    // auxiliares não podem mais deixar a pessoa presa na tela de login.
+    document.getElementById('loginScreen')?.classList.add('hidden');
+    document.getElementById('appScreen')?.classList.remove('hidden');
+    const currentUserEl=document.getElementById('currentUser');
+    if(currentUserEl) currentUserEl.textContent=user.email||'';
+
+    try {
+        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
+        userData = userDoc.exists() ? userDoc.data() : {
+            email:user.email||'',
+            nome:String(user.email||'').split('@')[0],
+            role:String(user.email||'').toLowerCase()==='yurziyun@gmail.com' ? 'mestre' : 'jogador'
+        };
+    } catch (erro) {
+        console.error('Erro ao carregar perfil do usuário:', erro);
+        userData = {
+            email:user.email||'',
+            nome:String(user.email||'').split('@')[0],
+            role:String(user.email||'').toLowerCase()==='yurziyun@gmail.com' ? 'mestre' : 'jogador'
+        };
+    }
+
+    const t = traducoes[idiomaAtual];
+    const roleEl=document.getElementById('userRole');
+    if(roleEl) roleEl.textContent = userData.role === 'mestre' ? t.mestre : t.jogador;
+    const configBtn=document.getElementById('configTabBtn');
+    if(configBtn?.style) configBtn.style.display = userData.role === 'mestre' ? 'block' : 'none';
+    document.getElementById('bancoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
+    document.getElementById('escudoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
+    document.getElementById('laboratorioTabBtn')?.classList.remove('hidden');
+    document.getElementById('batalhaTabBtn')?.classList.add('hidden');
+
+    // Nenhum carregamento secundário pode cancelar um login já concluído.
+    try { await carregarConfiguracoes(); } catch (erro) { console.error('Erro ao carregar configurações:', erro); }
+    try { await carregarBancosDeDados(); } catch (erro) { console.error('Erro parcial ao carregar bancos:', erro); }
+    try { await carregarRegras(); } catch (erro) { console.error('Erro ao carregar regras:', erro); }
+    try { await carregarEscudo(); } catch (erro) { console.error('Erro ao carregar escudo:', erro); }
+    try { await carregarPersonagens(); } catch (erro) {
+        console.error('Erro ao carregar personagens:', erro);
+        notificar_?.('Login realizado, mas houve erro ao carregar os personagens. Recarregue a página ou informe o erro ao mestre.','erro',7000);
+    }
+    try { iniciarMercadoLocal_(); } catch(e){console.error(e);}
+    try { iniciarCampanhaPublica_(); } catch(e){console.error(e);}
+    try { iniciarBatalhaCompartilhada_(); } catch(e){console.error(e);}
+    try { iniciarMapaMesaCompartilhado_(); } catch(e){console.error(e);}
+}
+
 onAuthStateChanged(auth, async (user) => {
     if (user) {
-        currentUserUid = user.uid;
-        document.getElementById('currentUser').textContent = user.email;
-        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-        if (userDoc.exists()) {
-            userData = userDoc.data();
-            const t = traducoes[idiomaAtual];
-            document.getElementById('userRole').textContent = userData.role === 'mestre' ? t.mestre : t.jogador;
-            document.getElementById('configTabBtn')?.style && (document.getElementById('configTabBtn').style.display = userData.role === 'mestre' ? 'block' : 'none');
-            document.getElementById('bancoTabBtn')?.classList.toggle('hidden', userData.role !== 'mestre');
-            document.getElementById('escudoTabBtn').classList.toggle('hidden', userData.role !== 'mestre');
-            document.getElementById('laboratorioTabBtn')?.classList.remove('hidden');
-            document.getElementById('batalhaTabBtn')?.classList.add('hidden');
-            // Configurações globais também afetam jogadores (recursos iniciais e modo de combate).
-            // A aba continua escondida para jogadores; eles apenas leem os valores.
-            await carregarConfiguracoes();
+        try { await inicializarSessaoAutenticada_(user); }
+        catch (erro) {
+            console.error('Falha inesperada ao iniciar sessão:', erro);
+            const msgDiv=document.getElementById('loginMessage');
+            if(msgDiv) msgDiv.innerHTML='<div class="message error">Login realizado, mas ocorreu um erro ao iniciar o aplicativo. Recarregue a página.</div>';
         }
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('appScreen').classList.remove('hidden');
-        try { await carregarBancosDeDados(); } catch (erro) { console.error('Erro parcial ao carregar bancos:', erro); }
-        try { await carregarRegras(); } catch (erro) { console.error('Erro ao carregar regras:', erro); }
-        try { await carregarEscudo(); } catch (erro) { console.error('Erro ao carregar escudo:', erro); }
-        await carregarPersonagens();
-        iniciarMercadoLocal_();
-        iniciarCampanhaPublica_();
-        iniciarBatalhaCompartilhada_();
-        iniciarMapaMesaCompartilhado_();
     } else {
         if(mercadoLocalUnsub_){mercadoLocalUnsub_();mercadoLocalUnsub_=null;}
         if(campanhaPublicaUnsub_){campanhaPublicaUnsub_();campanhaPublicaUnsub_=null;}
         if(labMapaMesaUnsub_){labMapaMesaUnsub_();labMapaMesaUnsub_=null;}
         currentUserUid = null; userData = null; userCharacters = []; currentCharId = null;
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('appScreen').classList.add('hidden');
+        document.getElementById('loginScreen')?.classList.remove('hidden');
+        document.getElementById('appScreen')?.classList.add('hidden');
     }
 });
 
 window.fazerLogin = async () => {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
-    const msgDiv = document.getElementById('loginMessage'); msgDiv.innerHTML = '';
-    try { await signInWithEmailAndPassword(auth, email, password); }
-    catch (error) { msgDiv.innerHTML = `<div class="message error">${traducoes[idiomaAtual].loginError}</div>`; }
+    const msgDiv = document.getElementById('loginMessage');
+    const botao=document.querySelector('.btn-login[onclick="fazerLogin()"]');
+    if(msgDiv) msgDiv.innerHTML = '<div class="message">Entrando...</div>';
+    if(botao) botao.disabled=true;
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        if(msgDiv) msgDiv.innerHTML='';
+    } catch (error) {
+        console.error('Erro de login Firebase:', error);
+        if(msgDiv) msgDiv.innerHTML = `<div class="message error">${traducoes[idiomaAtual].loginError} <small>${String(error?.code||'')}</small></div>`;
+    } finally { if(botao) botao.disabled=false; }
 };
 
 window.fazerRegistro = async () => {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
-    const msgDiv = document.getElementById('loginMessage'); msgDiv.innerHTML = '';
-    if (password.length < 6) { msgDiv.innerHTML = `<div class="message error">${traducoes[idiomaAtual].passwordPlaceholder}</div>`; return; }
+    const msgDiv = document.getElementById('loginMessage'); if(msgDiv) msgDiv.innerHTML = '';
+    if (password.length < 6) { if(msgDiv) msgDiv.innerHTML = `<div class="message error">${traducoes[idiomaAtual].passwordPlaceholder}</div>`; return; }
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const isMaster = email === 'yurziyun@gmail.com';
         await setDoc(doc(db, "usuarios", userCredential.user.uid), { email: email, nome: email.split('@')[0], role: isMaster ? 'mestre' : 'jogador' });
-    } catch (error) { msgDiv.innerHTML = `<div class="message error">${traducoes[idiomaAtual].registerError}</div>`; }
+    } catch (error) { if(msgDiv) msgDiv.innerHTML = `<div class="message error">${traducoes[idiomaAtual].registerError}</div>`; }
 };
 
 window.fazerLogout = () => signOut(auth);
@@ -16609,5 +16647,6 @@ window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 <!-- Mesa Estelar v46.39.0: correções de PJ/PM, XP explícito, Psi na mesa, resultados privados e UX -->
 <!-- Mesa Estelar v46.40.0: lote de objetos, peso/kg, repetir ao lado, Psi/Intuição e resultados privados -->
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
+<!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 </body>
 </html>
