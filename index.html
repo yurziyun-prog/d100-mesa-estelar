@@ -8082,7 +8082,7 @@ window.labRolarAtaque_=function(){
     let danoAutomatico=false;
     if(r.sucesso&&labEhAlvoObjeto_(alvo)){
         const expr=String(item?.dano||item?.damage||'').trim(),dr=expr?rolarExpressaoDanoCombate_(expr):null;
-        if(dr){const bruto=Math.max(0,Number(dr.total||0)),duro=Math.max(0,Number(alvo.dureza||0)),final=Math.max(0,bruto-duro);alvo.pvAtual=Math.max(0,Number(alvo.pvAtual??alvo.pvMax||0)-final);if(alvo.pvAtual<=0)alvo.destruido=true;t.ultimoResultadoProprioLab=`Ataque: ${getNome(per)} ${roll}/${valor} → ${r.grau}. Dano ${bruto} - Dureza ${duro} = ${final} em ${alvo.nome}.${alvo.destruido?' Objeto destruído.':''}`;labEstado_.ultimoResultadoLab=`${t.nome} atingiu ${alvo.nome}: ${final} de dano${alvo.destruido?' · 💥 destruído':''}.`;labAdicionarFloat_(alvo,-final,'dano');}
+        if(dr){const bruto=Math.max(0,Number(dr.total||0)),duro=Math.max(0,Number(alvo.dureza||0)),final=Math.max(0,bruto-duro);alvo.pvAtual=Math.max(0,Number(alvo.pvAtual??alvo.pvMax??0)-final);if(alvo.pvAtual<=0)alvo.destruido=true;t.ultimoResultadoProprioLab=`Ataque: ${getNome(per)} ${roll}/${valor} → ${r.grau}. Dano ${bruto} - Dureza ${duro} = ${final} em ${alvo.nome}.${alvo.destruido?' Objeto destruído.':''}`;labEstado_.ultimoResultadoLab=`${t.nome} atingiu ${alvo.nome}: ${final} de dano${alvo.destruido?' · 💥 destruído':''}.`;labAdicionarFloat_(alvo,-final,'dano');}
         else labEstado_.ultimoResultadoLab=`${t.nome} acertou ${alvo.nome}, mas o dano da arma não pôde ser interpretado.`;
         labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();return;
     }
@@ -16608,6 +16608,6 @@ window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.41.4: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.41.5: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
