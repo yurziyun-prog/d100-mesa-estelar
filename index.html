@@ -414,7 +414,7 @@
 </style>
 
 <style id="lab-ui-fix-v46430">
-/* v46.44.0 — selects sem recorte e contraste de ações Psi */
+/* v46.44.1 — selects sem recorte e contraste de ações Psi */
 #laboratorio-combate #labParticipanteSelect,
 #laboratorio-combate #labMapaSalvoSelect,
 #laboratorio-combate #labZoom,
@@ -2802,6 +2802,8 @@ function renderizarBancoDados() {
     renderizarBancoMapas_();
 }
 
+function limparRascunhosMigradosV46441_(){ rascunhoPericias_={}; }
+
 async function carregarPersonagens() {
     let querySnapshot;
     if (userData && userData.role === 'mestre') {
@@ -2816,6 +2818,11 @@ async function carregarPersonagens() {
     querySnapshot.forEach((docSnap) => {
         userCharacters.push({ id: docSnap.id, ...docSnap.data() });
     });
+
+    // Migração automática e idempotente das perícias antigas. Cada dono grava apenas suas fichas;
+    // o mestre também consegue migrar as fichas às quais suas regras concedem escrita.
+    for (const char of userCharacters) { await persistirMigracaoPersonagemV46441_(char); }
+    limparRascunhosMigradosV46441_();
 
     // Para o mestre, mantém as próprias fichas primeiro; depois jogadores/NPCs em ordem alfabética.
     userCharacters.sort((a,b) => {
@@ -5741,9 +5748,80 @@ const reformaPericiasV4644_ = {
   cibernetica:{nome:'Cibernética',nome_en:'Cybernetics',nome_zh:'控制论与义体',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Medicina'],exigeEscola:true,escolas:['Próteses','Implantes neurais','Interfaces homem-máquina','Órgãos artificiais'],sinergias:{eletronica:.10,medicina:.10}},
   comunicacoes:{nome:'Comunicações',nome_en:'Communications',nome_zh:'通信',formula:'INT+CAR',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia'],exigeEscola:true,escolas:['Rádio','Comunicações espaciais','Redes táticas','Interferência e contramedidas']},
   sensoriamento:{nome:'Sensoriamento',nome_en:'Sensor Operations',nome_zh:'传感器操作',formula:'INT*2',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Espacial'],exigeEscola:true,escolas:['Radar/Lidar','Espectroscopia','Varredura espacial','Sensores planetários']},
+  sistemas_escudo:{nome:'Sistemas Defensivos [Legado]',nome_en:'Defensive Systems [Legacy]',nome_zh:'防御系统[旧]',formula:'INT+DES',familias:['Tecnologia','Espacial'],descricao:'Registro legado preservado para não perder investimentos antigos. Novos personagens usam Sistemas Defensivos e Sensoriamento.'},
   sistemas_defensivos:{nome:'Sistemas Defensivos',nome_en:'Defensive Systems',nome_zh:'防御系统',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Espacial'],exigeEscola:true,escolas:['Escudos','Contramedidas','Defesa eletrônica','Defesa de ponto']},
   seguranca:{nome:'Segurança',nome_en:'Security',nome_zh:'安保技术',formula:'INT+DES',tipo:'Profissional',categoria:'Técnica',familias:['Tecnologia','Infiltração'],exigeEscola:true,escolas:['Cofres e Fechaduras','Alarmes','Controle de Acesso','Vigilância']}
 };
+
+// Migração segura v46.44.1.
+// Mantém investimentos antigos intactos e converte referências legadas sem usar o Total antigo.
+const migracaoPericiasV46441_ = {
+  // Renomes 1:1 preservam o ID para não quebrar personagens/carreiras.
+  dissimulacao:{id:'dissimulacao'}, computadores:{id:'computadores'}, conduzir:{id:'conduzir'},
+  costumes:{id:'costumes'}, comando:{id:'comando'}, saber:{id:'saber'}, submundo:{id:'submundo'},
+  // Antigas perícias que agora representam escolas. O ID legado é preservado como escola virtual,
+  // pois personagens antigos podem ter investimento simultâneo no tronco e na escola.
+  sobrevivencia_espacial:{id:'sobrevivencia_espacial',parentId:'sobrevivencia',escola:'Espacial'},
+  genealogia:{id:'genealogia',parentId:'historia',escola:'Genealogia'},
+  heraldismo:{id:'heraldismo',parentId:'historia',escola:'Heraldismo'},
+  transe:{id:'transe',parentId:'meditacao',escola:'Transe'}
+};
+
+function definicoesLegadasEscolas_(){
+  return [
+    {id:'sobrevivencia_espacial',nome:'Sobrevivência [Espacial]',nome_en:'Survival [Space]',nome_zh:'生存[太空]',categoria:'Sobrevivência',tipo:'Profissional',formula:'INT+CON',especializavel:false,penalidadeArmadura:.5,parentId:'sobrevivencia',escola:'Espacial',familias:['Exploração'],legadoEscola:true,sinergias:{rastrear:.20}},
+    {id:'genealogia',nome:'História [Genealogia]',nome_en:'History [Genealogy]',nome_zh:'历史[谱系学]',categoria:'Acadêmica',tipo:'Profissional',formula:'INT*2',especializavel:false,penalidadeArmadura:0,parentId:'historia',escola:'Genealogia',familias:['Acadêmica'],legadoEscola:true},
+    {id:'heraldismo',nome:'História [Heraldismo]',nome_en:'History [Heraldry]',nome_zh:'历史[纹章学]',categoria:'Acadêmica',tipo:'Profissional',formula:'INT*2',especializavel:false,penalidadeArmadura:0,parentId:'historia',escola:'Heraldismo',familias:['Acadêmica'],legadoEscola:true},
+    {id:'transe',nome:'Meditação [Transe]',nome_en:'Meditation [Trance]',nome_zh:'冥想[入定]',categoria:'Mental',tipo:'Profissional',formula:'CON+POD',especializavel:false,penalidadeArmadura:0,parentId:'meditacao',escola:'Transe',familias:['Mental','Psi'],legadoEscola:true}
+  ];
+}
+
+function garantirDefinicoesLegadasInvestidas_(lista){
+  const mapa=new Map((lista||[]).map(p=>[p.id,p]));
+  for(const p of definicoesLegadasEscolas_()) if(!mapa.has(p.id)) mapa.set(p.id,p);
+  return [...mapa.values()];
+}
+
+function normalizarRegistroTreinoMigracao_(dados){
+  const d={...(dados||{})};
+  const inv=obterInvestimentosPericia_(d);
+  d.investimentos={origem:Number(inv.origem||0),carreira:Number(inv.carreira||0),hobbie:Number(inv.hobbie||0),xp:Number(inv.xp||0)};
+  d.treinoTotal=d.investimentos.origem+d.investimentos.carreira+d.investimentos.hobbie+d.investimentos.xp;
+  return d;
+}
+
+function migrarPersonagemPericiasV46441_(char){
+  if(!char)return {alterado:false,char};
+  let alterado=false;
+  char.pericias=char.pericias||{};
+  // Converte apenas a estrutura do registro e anota a escola. Nunca recalcula nem grava Total.
+  for(const [id,meta] of Object.entries(migracaoPericiasV46441_)){
+    if(!char.pericias[id])continue;
+    const antes=JSON.stringify(char.pericias[id]);
+    const d=normalizarRegistroTreinoMigracao_(char.pericias[id]);
+    if(meta.escola){d.escola=meta.escola;d.parentId=meta.parentId;d.legadoEscola=true;}
+    char.pericias[id]=d;
+    if(JSON.stringify(d)!==antes)alterado=true;
+  }
+  // Escolas obrigatórias já investidas recebem a primeira opção somente quando não existe
+  // uma escola explícita. Isso segue a regra definida para personagens antigos.
+  for(const p of (periciasDB||[])){
+    if(!p?.exigeEscola)continue;
+    const d=char.pericias[p.id];
+    if(d&&totalTreinoPericia_(d)>0&&!d.escola){d.escola=escolaPadraoPericia_(p);alterado=true;}
+  }
+  if(char.migracaoPericiasVersao!=='46.44.1'){char.migracaoPericiasVersao='46.44.1';alterado=true;}
+  return {alterado,char};
+}
+
+async function persistirMigracaoPersonagemV46441_(char){
+  const r=migrarPersonagemPericiasV46441_(char);
+  if(!r.alterado)return false;
+  try{
+    await setDoc(doc(db,'personagens',char.id),{pericias:char.pericias,migracaoPericiasVersao:'46.44.1'},{merge:true});
+    return true;
+  }catch(err){console.warn('Migração de perícias não pôde ser persistida para',char.id,err);return false;}
+}
 
 function aplicarMetadadosReformaPericias_(lista){
   const mapa=new Map((lista||[]).map(x=>[x.id,x]));
@@ -5751,7 +5829,7 @@ function aplicarMetadadosReformaPericias_(lista){
     if(mapa.has(id)) Object.assign(mapa.get(id),meta);
     else mapa.set(id,{id,especializavel:!!meta.exigeEscola,penalidadeArmadura:0,...meta});
   }
-  return [...mapa.values()].filter(p=>p.disponivelCampanha!==false || userData?.role==='mestre');
+  return garantirDefinicoesLegadasInvestidas_([...mapa.values()]).filter(p=>p.disponivelCampanha!==false || userData?.role==='mestre');
 }
 function escolaPadraoPericia_(p){return Array.isArray(p?.escolas)&&p.escolas.length?p.escolas[0]:'';}
 window.definirEscolaPericia_=(id,valor)=>{const c=userCharacters.find(x=>x.id===currentCharId);if(!c)return;const d=rascunhoPericiasChar_(c);d.pericias[id]={...(d.pericias[id]||{}),escola:String(valor||'')};d.sujo=true;renderizarPericias(c);};
@@ -16830,6 +16908,6 @@ window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.44.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.44.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
