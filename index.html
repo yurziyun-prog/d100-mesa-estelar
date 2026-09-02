@@ -812,6 +812,7 @@
                             </table>
 
 
+                            <div id="xpPendingPanel" class="hidden" style="margin-top:20px;"></div>
                             <div id="psiPanel" class="hidden" style="margin-top:28px;padding:20px;border:1px solid rgba(166,91,255,.35);border-radius:14px;background:rgba(96,45,150,.16);">
                                 <div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin-bottom:14px;">
                                     <h3 style="margin:0;color:#d8b4ff;" data-i18n="psychismTitle">🔮 Psiquismo</h3>
@@ -821,7 +822,6 @@
                                 <div id="psiPowersContainer"></div>
                             </div>
 
-                            <div id="xpPendingPanel" class="hidden" style="margin-top:20px;"></div>
                             <button class="btn-save" id="saveSkillsBtn" onclick="salvarPericias()" style="margin-top: 20px;" data-i18n="saveSkills">💾 Salvar Perícias</button>
                         </div>
                     </div>
@@ -1306,8 +1306,13 @@
                             <label style="margin:0"><small>Fundo</small><input id="gmOficinaFundo" type="color" value="#d7d7d7" onchange="gmOficinaCor_('fundo',this.value)" style="width:64px;height:42px;margin:3px 0 0;padding:3px"></label>
                             <label style="margin:0"><small>Grade</small><input id="gmOficinaGrade" type="color" value="#777777" onchange="gmOficinaCor_('corGrade',this.value)" style="width:64px;height:42px;margin:3px 0 0;padding:3px"></label>
                             <button id="gmOficinaDesenharBtn" class="btn-small" onclick="gmOficinaAlternarDesenho_()" style="height:42px">✏️ Desenhar</button>
+                            <button class="btn-small" onclick="gmOficinaFerramenta_('borracha')" style="height:42px">🧽 Borracha</button>
+                            <label style="margin:0"><small>Ferramenta</small><select id="gmOficinaFerramenta" onchange="gmOficinaFerramenta_(this.value)" style="margin:3px 0 0"><option value="traco">Traço</option><option value="textura">Textura</option><option value="borracha">Borracha</option></select></label>
                             <label style="margin:0"><small>Traço</small><input id="gmOficinaCorTraco" type="color" value="#ffcf4d" onchange="gmOficinaCorTraco_=this.value" style="width:64px;height:42px;margin:3px 0 0;padding:3px"></label>
-                            <label style="margin:0"><small>Espessura</small><input id="gmOficinaEsp" type="range" min="1" max="18" value="4" oninput="gmOficinaEspessura_=Number(this.value)" style="width:120px;margin:10px 0"></label>
+                            <label style="margin:0"><small>Espessura</small><input id="gmOficinaEsp" type="range" min="2" max="48" value="7" oninput="gmOficinaEspessura_=Number(this.value)" style="width:120px;margin:10px 0"></label>
+                            <label style="margin:0"><small>Opacidade</small><input id="gmOficinaOpacidade" type="range" min="5" max="100" step="5" value="100" oninput="gmOficinaOpacidade_=Number(this.value)/100" style="width:100px;margin:10px 0"></label>
+                            <label style="margin:0"><small>Pincel</small><select id="gmOficinaPincel" onchange="gmOficinaPincel_=this.value" style="margin:3px 0 0"><option value="redondo">Redondo</option><option value="quadrado">Quadrado</option><option value="spray">Spray</option><option value="irregular">Irregular</option><option value="caligrafico">Caligráfico</option></select></label>
+                            <label style="margin:0"><small>Textura do traço</small><select id="gmOficinaTexturaTraco" onchange="gmOficinaTexturaTraco_=this.value" style="margin:3px 0 0"><option value="solida">Sólida</option><option value="pontilhada">Pontilhada</option><option value="giz">Giz</option><option value="ranhura">Ranhura</option><option value="areia">Areia</option><option value="cascalho">Cascalho</option><option value="grama">Grama</option><option value="folhas">Folhas</option><option value="neve">Neve</option><option value="fumaca">Fumaça</option></select></label>
                             <select id="gmOficinaObjetoSelect" style="min-width:230px;margin:0"></select><button class="btn-small" onclick="gmOficinaAdicionarObjeto_()" style="height:42px">➕ Objeto</button>
                             <button class="btn-small" onclick="gmOficinaDesfazer_()" style="height:42px">↶ Desfazer traço</button>
                         </div>
@@ -6046,7 +6051,20 @@ function nivelMaxAcessoPersonagem_(char){
 }
 function acessoPermitidoItem_(char,item){
     const max=({Livre:0,Restrito:1,Militar:2})[nivelMaxAcessoPersonagem_(char)]??0;
-    return rankAcesso_(item)<=max;
+    const rank=rankAcesso_(item);
+    if(rank<=max)return true;
+    // Autorizações profissionais são específicas: não transformam uma carreira em passe universal para itens Restritos.
+    const pessoa=normalizarAcesso_(textoPersonagemAcesso_(char));
+    const itemTxt=normalizarAcesso_(`${getNome(item)||''} ${item?.categoria||''} ${item?.tipo||''} ${item?.descricao||''} ${item?.acessoProfissional||item?.acessosProfissionais||''}`);
+    const medico=/\b(medic|medico|medica|cirurg|paramedic|enferm)\b/.test(pessoa);
+    if(medico&&/\b(medic|antidoto|nanogel|farmac|cirurg|kit medico|primeiros socorros)\b/.test(itemTxt)&&rank<=1)return true;
+    const detetive=/\b(detetiv|investigador|investigacao)\b/.test(pessoa);
+    if(detetive&&rank<=1){
+        const armaCurta=/\b(pistola|revolver|blaster de palma|arma curta|laser leve|incapacit|stun|atordo)\b/.test(itemTxt);
+        const policial=/\b(algema|scanner|investig|forense|comunicador|gravador)\b/.test(itemTxt);
+        if(armaCurta||policial)return true;
+    }
+    return false;
 }
 function badgeAcesso_(item,permitido=true){
     const n=nivelAcessoNormalizado_(item);
@@ -12608,10 +12626,8 @@ function renderizarPsiquismo_(char) {
         const cards = poderes.map(p => {
             const custo = Math.max(0, Number(p.custo || 0));
             const obs = getObservacaoPsi_(p);
-            return `<div style="padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.04);margin:8px 0;display:grid;grid-template-columns:minmax(160px,1fr) 90px auto;gap:10px;align-items:center;">
-                <div><strong style="color:#fff;">${escaparBanco_(getNome(p))}</strong><div style="color:#aaa;font-size:.88em;margin-top:4px;">Arco ${Number(p.arco||1)} · ${escaparBanco_(obs)}</div></div>
-                <input type="number" id="psiCost_${escaparBanco_(p.id)}" min="${custo}" step="1" value="${custo}" title="PP a gastar" style="width:82px;text-align:center;">
-                <button class="btn-small btn-select" onclick="usarPoderPsi('${escaparBanco_(p.id)}')">${tr_('useBtn')}</button>
+            return `<div style="padding:12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.04);margin:8px 0;">
+                <div><strong style="color:#fff;">${escaparBanco_(getNome(p))}</strong><div style="color:#aaa;font-size:.88em;margin-top:4px;">Arco ${Number(p.arco||1)} · custo mínimo ${custo} PP · ${escaparBanco_(obs)}</div></div>
             </div>`;
         }).join('');
         return `<div style="margin:16px 0 20px;"><h4 style="color:#d8b4ff;margin:0 0 8px;">${esfera} · Treino ${treino} · Arco ${arco}</h4>${cards || '<div style="color:#888;">Nenhum poder disponível no banco.</div>'}</div>`;
@@ -17206,6 +17222,71 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 
 
 
+// ============================================================
+// V46.45.1 — XP PSI, respostas flutuantes, resistências e Oficina completa
+// ============================================================
+// Um minuto de manutenção Psi equivale provisoriamente a 10 turnos de combate.
+const PSI_TURNOS_POR_MINUTO_=10;
+
+// XP fica sempre visível antes do catálogo Psi; o catálogo é somente leitura.
+const renderizarPsiquismoV46451_=renderizarPsiquismo_;
+renderizarPsiquismo_=function(char){
+    renderizarPsiquismoV46451_(char);
+    try{renderizarXpPendente_(char);}catch(_){}
+};
+
+// Mensagens Psi informacionais aparecem como janela flutuante ao mestre.
+function labPsiModalMestre_(){
+    let d=document.getElementById('labPsiModalMestre');
+    if(!d){d=document.createElement('div');d.id='labPsiModalMestre';d.style.cssText='display:none;position:fixed;right:22px;bottom:22px;z-index:100000;width:min(520px,calc(100vw - 36px));max-height:72vh;overflow:auto;padding:15px;border:1px solid rgba(216,180,255,.65);border-radius:14px;background:rgba(25,14,45,.97);box-shadow:0 16px 50px rgba(0,0,0,.55);color:white';document.body.appendChild(d);}return d;
+}
+function labPsiRenderModalMestre_(){
+    const d=labPsiModalMestre_();if(!batalhaEhMestre_()){d.style.display='none';return;}
+    const m=(labEstado_.psiMensagensMestreLab||[]).find(x=>!x.respondida);
+    const q=labEstado_.psiTestePendenteLab,alvo=q&&labTokenPorId_(q.alvoId),npc=q&&alvo&&!q.alvoUid;
+    if(npc){
+        const per=labPsiPericiaPorId_(alvo,q.skillId)||labPsiPericiaPorId_(alvo,q.skillId==='percepcao'?'Percepção':'Força de Vontade');
+        d.style.display='block';d.innerHTML=`<div style="font-size:1.05em;font-weight:800;color:#ffd8ff">🛡️ Resistência exigida</div><div style="margin:7px 0 10px"><b>${escaparHtmlInventario_(alvo.nome)}</b> precisa resistir a um efeito oculto.</div><div style="color:#bbb;margin-bottom:10px">Perícia sugerida: <b>${escaparHtmlInventario_(per?getNome(per):(q.skillId||'Força de Vontade'))}</b>${per?` (${labValorTeste_(alvo,per)}%)`:''}</div><button class="btn-small btn-select" onclick="labPsiResolverNpcPendente_()">🎲 Rolar resistência</button>`;return;
+    }
+    if(!m){d.style.display='none';d.innerHTML='';return;}
+    d.style.display='block';d.innerHTML=`<div style="font-size:1.05em;font-weight:800;color:#d8b4ff">🔮 ${escaparHtmlInventario_(m.poderNome)}</div><div style="margin:6px 0"><b>${escaparHtmlInventario_(m.atorNome)}</b> obteve margem <b>${Number(m.margem||0)}</b>.</div><div style="font-size:.88em;color:#cbb9dd;margin-bottom:9px">${escaparHtmlInventario_(m.texto||'Interprete o resultado e responda ao jogador.')}</div><textarea id="labPsiModalResposta" rows="3" placeholder="Resposta privada ao jogador..." style="width:100%;margin:0 0 8px"></textarea><button class="btn-small btn-select" onclick="labPsiResponderFlutuante_('${String(m.id).replace(/'/g,"\\'")}')">Enviar resposta privada</button>`;
+}
+window.labPsiResponderFlutuante_=function(id){const ta=document.getElementById('labPsiModalResposta'),txt=String(ta?.value||'').trim();if(!txt)return;const m=(labEstado_.psiMensagensMestreLab||[]).find(x=>String(x.id)===String(id));if(!m)return;const t=labTokenPorId_(m.atorId);if(t){labRegistrarResultadoProprio_(t,`🔮 ${m.poderNome}: ${txt}`);t.ultimoResultadoRecebidoLab=txt;t.ultimoResultadoRecebidoTsLab=Date.now();}m.respondida=true;m.resposta=txt;m.respondidaEm=new Date().toISOString();labSalvarLocal_();labAgendarSyncRemoto_();labRender_();notificar_('Resposta Psi enviada ao jogador.','sucesso',2600);};
+window.labPsiResolverNpcPendente_=function(){const q=labEstado_.psiTestePendenteLab,alvo=q&&labTokenPorId_(q.alvoId);if(!q||!alvo||q.alvoUid)return;const per=labPsiPericiaPorId_(alvo,q.skillId)||labPsiPericiaPorId_(alvo,q.skillId==='percepcao'?'Percepção':'Força de Vontade');const valor=Math.max(1,per?labValorTeste_(alvo,per):labPsiValorResistencia_(alvo,q.skillId)||1),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll),def={grau:r.grau,sucesso:r.sucesso,margem:r.sucesso?labMargemSucesso_(valor,roll):0};labPsiFinalizarResistencia_(q,def);labSalvarLocal_();labRender_();};
+
+// NPCs/PMs não resolvem mais resistências silenciosamente: o mestre recebe a janela flutuante e rola por eles.
+labPsiSolicitarResistencia_=function(atk,alvo,p,ataque,skill='forca_vontade'){
+    const dono=String(alvo.donoUid||''),ehPJ=!!dono&&!String(alvo.id).startsWith('dummy:');
+    const q={id:`psi-test:${Date.now()}:${Math.random().toString(36).slice(2,5)}`,atacanteId:String(atk.id),alvoId:String(alvo.id),alvoUid:ehPJ?dono:'',poderId:String(p.id),skillId:skill,ataqueGrau:ataque.grau,ataqueMargem:ataque.margem,criadoEm:Date.now()};
+    if(labEstado_.psiTestePendenteLab){labEstado_.psiTestesFilaLab=Array.isArray(labEstado_.psiTestesFilaLab)?labEstado_.psiTestesFilaLab:[];labEstado_.psiTestesFilaLab.push(q);}else labEstado_.psiTestePendenteLab=q;
+    return ehPJ?'Aguardando resistência secreta do alvo.':'Aguardando o mestre rolar a resistência do alvo.';
+};
+
+// Crânio de Aço e Mimetismo: manutenção provisória de 1 PP/minuto = 10 turnos.
+const labPsiAplicarDiretoV46451_=labPsiAplicarDireto_;
+labPsiAplicarDireto_=function(t,p,alvo,gasto,r,margem){
+    const id=String(p?.id||'');
+    if(id==='ocultar_mente'){t.cranioAcoLab={ativo:true,ppPorMinuto:1,turnosRestantes:PSI_TURNOS_POR_MINUTO_};return 'Crânio de Aço ativo por 1 minuto (10 turnos); renovar custa 1 PP.';}
+    if(id==='mimetismo_psi'){t.mimetismoPsiLab={fonteId:String(alvo?.id||''),nome:alvo?.nome||'',imagem:alvo?.imagem||labObjetoModelo_(alvo)?.imagem||'',margem,turnosRestantes:PSI_TURNOS_POR_MINUTO_,ppPorMinuto:1};return `Mimetismo Psi: aparência copiada de ${alvo?.nome||'alvo'} por 1 minuto (10 turnos); renovar custa 1 PP.`;}
+    return labPsiAplicarDiretoV46451_(t,p,alvo,gasto,r,margem);
+};
+
+// Oficina: mantém o estado privado, mas ganha o vocabulário de pincéis/texturas da Mesa.
+let gmOficinaFerramentaAtual_='traco',gmOficinaOpacidade_=1,gmOficinaPincel_='redondo',gmOficinaTexturaTraco_='solida';
+window.gmOficinaFerramenta_=function(v){gmOficinaFerramentaAtual_=String(v||'traco');gmOficinaDesenhando_=true;const s=document.getElementById('gmOficinaFerramenta');if(s)s.value=gmOficinaFerramentaAtual_;gmOficinaRender_();};
+function gmOficinaDash_(t){return t==='pontilhada'?'2 9':t==='giz'?'7 5':t==='ranhura'?'12 5':t==='areia'||t==='cascalho'||t==='folhas'||t==='neve'?'1 7':t==='grama'?'5 4':t==='fumaca'?'14 9':'';}
+const gmOficinaRenderV46451_=gmOficinaRender_;
+gmOficinaRender_=function(){gmOficinaRenderV46451_();const svg=document.querySelector('#gmOficinaCanvas svg');if(svg){svg.innerHTML=(gmOficinaEstado_.desenhos||[]).map(d=>{const pts=(d.pts||[]).map(p=>`${p.x*28},${p.y*28}`).join(' '),erase=d.ferramenta==='borracha',cor=erase?gmOficinaEstado_.fundo:(d.cor||'#ffcf4d'),cap=d.pincel==='quadrado'?'square':d.pincel==='caligrafico'?'butt':'round',dash=gmOficinaDash_(d.textura||'solida');return `<polyline points="${pts}" fill="none" stroke="${cor}" stroke-opacity="${Number(d.opacidade??1)}" stroke-width="${d.esp||7}" stroke-linecap="${cap}" stroke-linejoin="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;}).join('');}labPsiRenderModalMestre_();};window.gmOficinaRender_=gmOficinaRender_;
+window.gmOficinaPointerDown_=function(ev){if(!gmOficinaDesenhando_||ev.button===2||ev.target!==ev.currentTarget)return;ev.preventDefault();const el=ev.currentTarget,r=el.getBoundingClientRect(),ppm=28;const pt=e=>({x:Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-r.left)/ppm)),y:Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-r.top)/ppm))});gmOficinaTraçoAtual_={cor:gmOficinaCorTraco_,esp:gmOficinaEspessura_,opacidade:gmOficinaOpacidade_,pincel:gmOficinaPincel_,textura:gmOficinaTexturaTraco_,ferramenta:gmOficinaFerramentaAtual_,pts:[pt(ev)]};gmOficinaEstado_.desenhos.push(gmOficinaTraçoAtual_);const mv=e=>{gmOficinaTraçoAtual_.pts.push(pt(e));gmOficinaRender_();};const up=()=>{window.removeEventListener('pointermove',mv);gmOficinaTraçoAtual_=null;gmOficinaPersistir_();gmOficinaRender_();};window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});};
+
+// O mapa salvo pela Oficina usa o mesmo formato da biblioteca da Mesa e pode ser carregado pelo seletor "Mapas salvos".
+const gmOficinaSalvarComoMapaV46451_=gmOficinaSalvarComoMapa_;
+gmOficinaSalvarComoMapa_=async function(){await gmOficinaSalvarComoMapaV46451_();labAtualizarSelectMapas_();};
+
+// Render principal também atualiza a janela Psi, sem polling adicional.
+const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_();try{labPsiRenderModalMestre_();}catch(_){}return r;};window.labRender_=labRender_;
+
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -17221,6 +17302,6 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.45.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.45.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
