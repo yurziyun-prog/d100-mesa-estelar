@@ -490,6 +490,7 @@
                             <button class="btn-small" id="labStartBtn" onclick="labIniciarCombate_()">⚡ Iniciar combate</button>
                             <button class="btn-small hidden" id="labNextBtn" onclick="labEncerrarOportunidade_()">⏭ Encerrar oportunidade</button>
                             <button class="btn-small hidden" id="labStopBtn" onclick="labVoltarPreparacao_()">🧭 Voltar à preparação</button>
+                            <button class="btn-small" onclick="labRestaurarParticipantes_()" title="Restaura PV, PP, Sorte, AÇ, fadiga, estados e munição dos participantes atuais">♻️ Restaurar participantes</button>
                             <button class="btn-small" onclick="labLimpar_()">🧹 Limpar mesa</button>
                         </div>
                         <div id="labMasterMapLoader" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -1117,6 +1118,9 @@
                             <button class="btn-template" onclick="selecionarImportacaoBanco_('importItemsFile', true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('itens')">📄 Baixar Template</button>
                             <button class="btn-template" onclick="exportarBancoCSV('itens')">📤 Exportar CSV</button>
+                            <input id="importItensImagensLote" type="file" accept="image/*" multiple style="display:none" onchange="importarBancoImagensLote_('itens',event)">
+                            <button class="btn-template" onclick="document.getElementById('importItensImagensLote').click()">🖼️ Importar várias imagens</button>
+                            <span id="importItensImagensStatus" style="color:#9ee7ff"></span>
                         </div>
                         <div id="listaBancoItens"></div>
                         <button class="btn-save" onclick="adicionarItemBanco()" style="margin-top:15px;">➕ Adicionar Item</button>
@@ -1145,6 +1149,9 @@
                             <button class="btn-template" onclick="selecionarImportacaoBanco_('importNPCsFile',true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                             <button class="btn-template" onclick="baixarTemplate('npcs')">📄 Baixar Template</button>
                             <button class="btn-template" onclick="exportarBancoCSV('npcs')">📤 Exportar CSV</button>
+                            <input id="importNpcsImagensLote" type="file" accept="image/*" multiple style="display:none" onchange="importarBancoImagensLote_('npcs',event)">
+                            <button class="btn-template" onclick="document.getElementById('importNpcsImagensLote').click()">🖼️ Importar várias imagens</button>
+                            <span id="importNpcsImagensStatus" style="color:#9ee7ff"></span>
                         </div>
                         <div id="listaBancoNPCs"></div>
                         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:15px;">
@@ -1160,7 +1167,11 @@
                         <button class="btn-import" onclick="selecionarImportacaoBanco_('importCriaturasFile',false)">📥 Importar/Atualizar CSV</button>
                         <button class="btn-template" onclick="selecionarImportacaoBanco_('importCriaturasFile',true)" style="border-color:#e67e22;color:#ffd3a6;">♻️ Substituir pelo CSV</button>
                         <button class="btn-template" onclick="baixarTemplate('criaturas')">📄 Baixar Template</button>
-                        <button class="btn-template" onclick="exportarBancoCSV('criaturas')">📤 Exportar CSV</button><small style="display:block;margin-top:7px;color:#8ea7c8;">CSV de criaturas aceita fórmulas por atributo (FOR_formula, CON_formula...), alcances, habilidades e propriedades de ataque.</small>
+                        <button class="btn-template" onclick="exportarBancoCSV('criaturas')">📤 Exportar CSV</button>
+                        <input id="importCriaturasImagensLote" type="file" accept="image/*" multiple style="display:none" onchange="importarBancoImagensLote_('criaturas',event)">
+                        <button class="btn-template" onclick="document.getElementById('importCriaturasImagensLote').click()">🖼️ Importar várias imagens</button>
+                        <span id="importCriaturasImagensStatus" style="color:#9ee7ff"></span>
+                        <small style="display:block;margin-top:7px;color:#8ea7c8;">CSV de criaturas aceita fórmulas por atributo (FOR_formula, CON_formula...), alcances, habilidades e propriedades de ataque.</small>
                       </div>
                       <div id="listaBancoCriaturas"></div>
                       <button class="btn-save" onclick="adicionarCriaturaBanco_()" style="margin-top:15px">➕ Adicionar Criatura</button>
@@ -1586,6 +1597,8 @@
           <label class="btn-template" style="cursor:pointer;margin:0;">📤 Fazer upload
             <input id="crImagemArquivo" type="file" accept="image/*" style="display:none" onchange="handleDbCreatureImageUpload_(event)">
           </label>
+          <button class="btn-small" type="button" onclick="removerFundoBancoImagem_('criatura')">✂️ Remover fundo</button>
+          <label style="display:flex;align-items:center;gap:6px;margin:0;">Tolerância <input id="crBgTol" type="range" min="8" max="90" value="38" style="width:110px;margin:0"></label>
         </div>
       </div>
       <label>Descrição<textarea id="crDescricao" rows="3"></textarea></label>
@@ -1642,6 +1655,8 @@
             <label class="btn-template" style="cursor:pointer;margin:0;">📤 Fazer upload
               <input id="dbNPCImagemArquivo" type="file" accept="image/*" style="display:none" onchange="handleDbNPCImageUpload_(event)">
             </label>
+            <button class="btn-small" type="button" onclick="removerFundoBancoImagem_('npc')">✂️ Remover fundo</button>
+            <label style="display:flex;align-items:center;gap:6px;margin:0;">Tolerância <input id="dbNPCBgTol" type="range" min="8" max="90" value="38" style="width:110px;margin:0"></label>
           </div>
         </div>
         <label>Descrição<textarea id="dbNPCDescricao" rows="4"></textarea></label>
@@ -1700,6 +1715,7 @@
                 <div>
                     <div class="form-group"><label>Imagem (URL, opcional):</label><input type="text" id="dbItemImagem" oninput="atualizarPreviewItemBanco()"></div>
                     <div class="form-group"><label data-i18n="orUpload">Ou fazer upload:</label><input type="file" id="dbItemImagemArquivo" accept="image/*" onchange="handleDbItemImageUpload(event)"></div>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:7px 0;"><button class="btn-small" type="button" onclick="removerFundoBancoImagem_('item')">✂️ Remover fundo</button><label style="display:flex;align-items:center;gap:6px;margin:0;">Tolerância <input id="dbItemBgTol" type="range" min="8" max="90" value="38" style="width:110px;margin:0"></label></div>
                     <small style="color:#aaa;">A imagem ficará vinculada ao item e poderá ser usada automaticamente no inventário e no futuro Mercado.</small>
                 </div>
             </div>
@@ -2622,7 +2638,7 @@ async function carregarBancosDeDados() {
             mapasDB.sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
         }catch(e){console.warn('Banco de mapas indisponível. Verifique as regras Firestore de /mapas.',e);mapasDB=[];}
     }
-    if(userData?.role==='mestre'){
+    if(currentUserUid){
         try{
             const dObj=await getDoc(doc(db,'configuracoes','objetosMapa'));
             const idx=dObj.exists()?dObj.data():{};
@@ -6845,7 +6861,13 @@ function labIniciarEscutaComandosJogadores_(){
 function labEstadoPublico_(){
     const clone=JSON.parse(JSON.stringify(labEstado_||{}));
     clone.tokens=(clone.tokens||[]).map(t=>{const x={...t};delete x.charLab;delete x.municaoLab;delete x.attrs;delete x.psiSelecaoLab;delete x.psSelecaoLab;return x;});
+    clone.objetosLab=(clone.objetosLab||[]).map(o=>{const x={...o};delete x.imagem;return x;});
     clone.objetoSelecionadoId='';clone.selecionadoId='';clone.modoCriacaoMapa=false;return clone;
+}
+async function labCarregarModelosObjetosFaltantes_(objetos){
+    if(!currentUserUid)return;const conhecidos=new Set((objetosMapaDB||[]).map(x=>String(x.id))),ids=[...new Set((objetos||[]).map(o=>String(o.modeloId||'')).filter(Boolean))].filter(id=>!conhecidos.has(id));if(!ids.length)return;let mudou=false;
+    for(const id of ids){try{const ds=await getDoc(doc(db,'configuracoes',objetoMapaDocId_(id)));if(ds.exists()){objetosMapaDB.push({id,...ds.data()});mudou=true;}}catch(e){console.warn('Modelo de objeto remoto indisponível',id,e);}}
+    if(mudou&&document.getElementById('laboratorio-combate')?.classList.contains('active'))labRender_();
 }
 function labAgendarSyncRemoto_(){
     if(!batalhaEhMestre_()||labAplicandoRemoto_)return;clearTimeout(labSyncTimer_);labSyncTimer_=setTimeout(async()=>{try{await setDoc(LAB_MAPA_MESA_REF_(),{estado:labEstadoPublico_(),atualizadoEm:new Date().toISOString()},{merge:false});}catch(e){console.warn('Sincronização da Mapa da Mesa:',e);}},320);
@@ -6874,6 +6896,7 @@ window.iniciarMapaMesaCompartilhado_=function(){
         if(batalhaEhMestre_()){if(!snap.exists())labAgendarSyncRemoto_();return;}
         if(!snap.exists())return;const remoto=snap.data()?.estado;if(!remoto||typeof remoto!=='object')return;
         labAplicandoRemoto_=true;labEstado_={...labEstado_,...remoto,tokens:Array.isArray(remoto.tokens)?remoto.tokens:[],objetosLab:Array.isArray(remoto.objetosLab)?remoto.objetosLab:[]};labAplicandoRemoto_=false;
+        labCarregarModelosObjetosFaltantes_(labEstado_.objetosLab);
         if(document.getElementById('laboratorio-combate')?.classList.contains('active'))labRender_();
     },e=>console.warn('Mapa da Mesa compartilhado indisponível:',e));
 };
@@ -7255,6 +7278,9 @@ function labPericiaPorToken_(t,token){
     }
     return p;
 }
+function labAlvosAtaque_(t){return [...(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t?.id)),...(labEstado_.objetosLab||[]).filter(o=>o.destrutivel!==false&&!o.destruido)];}
+function labAlvoAtaquePorId_(id){return labTokenPorId_(id)||labObjetoPorId_(id)||null;}
+function labEhAlvoObjeto_(a){return !!a&&String(a.id||'').startsWith('obj:');}
 function labGarantirPrefsAtaque_(t){
     if(!t)return;
     const c=labCharToken_(t),skills=labPericiasAtaque_(t);
@@ -7263,7 +7289,7 @@ function labGarantirPrefsAtaque_(t){
     const per=labPericiaPorToken_(t,t.periciaLab);
     const eq=batalhaEquipamentos_(c,per,t.equipamentoLab);
     if(!eq.some(x=>x.valor===t.equipamentoLab))t.equipamentoLab=eq[0]?.valor||'';
-    const alvos=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id));
+    const alvos=labAlvosAtaque_(t);
     if(!alvos.some(x=>String(x.id)===String(t.alvoLab)))t.alvoLab=alvos[0]?.id||'';
 }
 function labItemSelecionado_(t){
@@ -7390,7 +7416,7 @@ window.labMudarAtaquePref_=function(campo,v){
 window.labSelecionarAlvo_=function(v){
     const t=labTokenAtual_();if(!t)return;
     t.alvoLab=String(v||'');
-    const alvo=(labEstado_.tokens||[]).find(x=>String(x.id)===String(t.alvoLab));
+    const alvo=labAlvoAtaquePorId_(t.alvoLab);
     labApontarPara_(t,alvo);
     if(batalhaEhMestre_())labSalvarLocal_();labRender_();
 };
@@ -8034,7 +8060,7 @@ window.labRolarAtaque_=function(){
     if(Number(t.acoesAtuaisLab||0)<=0){notificar_('Sem AÇ restantes.','aviso');return;}
     labGarantirPrefsAtaque_(t);
     const per=labPericiaPorToken_(t,t.periciaLab),item=labItemSelecionado_(t);
-    const alvo=(labEstado_.tokens||[]).find(x=>String(x.id)===String(t.alvoLab));
+    const alvo=labAlvoAtaquePorId_(t.alvoLab);
     if(!per||!item||!alvo){notificar_('Selecione perícia, ataque/arma e alvo.','aviso');return;}
     labApontarPara_(t,alvo);
     const dist=labDistanciaEntre_(t,alvo),alc=labAlcanceAtaque_(t,item);
@@ -8054,6 +8080,12 @@ window.labRolarAtaque_=function(){
     const base=`${t.nome} → ${alvo.nome}: ${getNome(per)} ${roll}/${valor} → ${r.grau} · ${dist.toFixed(2)} m · ${getNome(item)}.`;
     t.ultimoResultadoProprioLab=`Ataque: ${getNome(per)} ${roll}/${valor} → ${r.grau}${bonusInt?` · Intuição +${bonusInt}%`:''}.`;
     let danoAutomatico=false;
+    if(r.sucesso&&labEhAlvoObjeto_(alvo)){
+        const expr=String(item?.dano||item?.damage||'').trim(),dr=expr?rolarExpressaoDanoCombate_(expr):null;
+        if(dr){const bruto=Math.max(0,Number(dr.total||0)),duro=Math.max(0,Number(alvo.dureza||0)),final=Math.max(0,bruto-duro);alvo.pvAtual=Math.max(0,Number(alvo.pvAtual??alvo.pvMax||0)-final);if(alvo.pvAtual<=0)alvo.destruido=true;t.ultimoResultadoProprioLab=`Ataque: ${getNome(per)} ${roll}/${valor} → ${r.grau}. Dano ${bruto} - Dureza ${duro} = ${final} em ${alvo.nome}.${alvo.destruido?' Objeto destruído.':''}`;labEstado_.ultimoResultadoLab=`${t.nome} atingiu ${alvo.nome}: ${final} de dano${alvo.destruido?' · 💥 destruído':''}.`;labAdicionarFloat_(alvo,-final,'dano');}
+        else labEstado_.ultimoResultadoLab=`${t.nome} acertou ${alvo.nome}, mas o dano da arma não pôde ser interpretado.`;
+        labSalvarLocal_();labRender_();labAutoAvancarSeSemAcoes_();return;
+    }
     if(r.sucesso){
         const pend={id:`lab_${Date.now()}`,atacanteId:String(t.id),defensorId:String(alvo.id),grauAtaque:r.grau,
             rolagemAtaque:roll,valorAtaque:valor,pericia:getNome(per),item:JSON.parse(JSON.stringify(item)),distancia:dist,alcance:alc};
@@ -8224,7 +8256,7 @@ function labRenderActionPanel_(){
 
     labGarantirPrefsAtaque_(t);
     const skills=labPericiasAtaque_(t),per=labPericiaPorToken_(t,t.periciaLab),eq=batalhaEquipamentos_(c,per,t.equipamentoLab);
-    const alvos=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id));
+    const alvos=labAlvosAtaque_(t);
     const alvo=alvos.find(x=>String(x.id)===String(t.alvoLab)),item=labItemSelecionado_(t);
     const dist=alvo?labDistanciaEntre_(t,alvo):Infinity,alc=item?labAlcanceAtaque_(t,item):0;
     el.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px;">
@@ -8246,7 +8278,7 @@ function labRenderActionPanel_(){
         ${labPrimeirosSocorrosPericia_(t)?`<button class="btn-small" onclick="labAbrirPrimeirosSocorros_()" ${!labPodePrimeirosSocorros_(t)||Number(t.acoesAtuaisLab||0)<=0||!(labEstado_.tokens||[]).some(x=>labFeridasTrataveis_(x).length&&!labGarantirSnapshotCombate_(x)?.morto)?'disabled':''} title="Escolha paciente e localização ferida. Iniciar custa 1 AÇ e encerra a oportunidade." style="height:44px;min-width:210px;font-size:.96em;">🩹 Primeiros Socorros</button>`:''}
       </div>
       ${t?labResumoPVHtml_(t,'SEUS PV'):''}
-      ${alvo?labEstadoPublicoAlvoHtml_(alvo):''}
+      ${alvo?(labEhAlvoObjeto_(alvo)?`<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.045);color:#cfe7ff;">🧱 <b>${escaparHtmlInventario_(alvo.nome||'Objeto')}</b> · PV ${Number(alvo.pvAtual??alvo.pvMax??0)}/${Number(alvo.pvMax||0)} · Dureza ${Number(alvo.dureza||0)} · ${Number(alvo.pesoKg||0).toFixed(1)} kg</div>`:labEstadoPublicoAlvoHtml_(alvo)):''}
       ${t?.ultimoResultadoProprioLab?`<div style="margin-top:7px;padding:6px 8px;border-radius:7px;background:rgba(255,255,255,.05);">${escaparHtmlInventario_(t.ultimoResultadoProprioLab)}</div>`:''}`;
 }
 function labBackgroundImage_(){
@@ -8870,7 +8902,7 @@ function labAdicionarFloat_(t,valor,tipo='dano'){
     setTimeout(()=>{labEstado_.floatsLab=(labEstado_.floatsLab||[]).filter(x=>x.id!==id);document.querySelector(`[data-lab-float="${id}"]`)?.remove();},1450);
 }
 function labFloatHtml_(f,ppm){
-    const t=labTokenPorId_(f.tokenId);if(!t)return '';
+    const t=labTokenPorId_(f.tokenId)||labObjetoPorId_(f.tokenId);if(!t)return '';
     const cura=f.tipo==='cura'||Number(f.valor)>0,txt=`${cura?'+':'−'}${Math.abs(Number(f.valor))}`;
     return `<div data-lab-float="${f.id}" style="position:absolute;left:${t.x*ppm}px;top:${t.y*ppm-8}px;transform:translate(-50%,-50%);z-index:40;pointer-events:none;font-size:25px;font-weight:900;color:${cura?'#56f08a':'#ff5252'};text-shadow:0 2px 5px #000;animation:labFloatUp 1.4s ease-out forwards;">${txt}</div>`;
 }
@@ -16166,6 +16198,37 @@ window.calicoAplicarAoCenario_=async function(){
 document.addEventListener('DOMContentLoaded',()=>renderizarRolagensCalico_());
 
 // ============================================================
+// v46.41 — IMPORTAÇÃO VISUAL EM LOTE + REMOÇÃO DE FUNDO
+// ============================================================
+function bancoNomeDeArquivo_(nome){return String(nome||'imagem').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').replace(/\s+/g,' ').trim()||'Novo registro';}
+function bancoIdUnico_(base,lista){let id=slugId_(base)||`registro_${Date.now()}`,b=id,n=2;while((lista||[]).some(x=>String(x.id)===id))id=`${b}_${n++}`;return id;}
+function bancoStatusLoteId_(tipo){return tipo==='itens'?'importItensImagensStatus':tipo==='npcs'?'importNpcsImagensStatus':'importCriaturasImagensStatus';}
+async function importarBancoUmaImagem_(tipo,file){
+    const nome=bancoNomeDeArquivo_(file.name),lista=tipo==='itens'?itensDB:tipo==='npcs'?npcsDB:criaturasDB,id=bancoIdUnico_(nome,lista),pasta=tipo==='itens'?'banco-itens':tipo==='npcs'?'banco-npcs':'banco-criaturas',imagem=await uploadImagemBanco_(file,pasta);
+    let reg;
+    if(tipo==='itens')reg={id,nome,nome_en:'',nome_zh:'',categoria:'Diversos',peso:0,preco:0,pa:0,pv:1,alcance:'',dano:'',penetracao:0,municao:'',uso:0,qualidade:'Básica',material:'',unidade:'',destino:'',locaisProtegidos:'',imagem,descricao:'',descricao_en:'',descricao_zh:''};
+    else if(tipo==='npcs')reg={id,nome,nome_en:'',nome_zh:'',tipo:'NPC',raca:'',origem:'',idade:'',sexo:'',altura:'',tamanho:'Médio',pesoCorporal:'',sociedade:'',carreira:'',conceito:'',classeSocial:'',recursos:'',FOR:10,CON:10,TAM:10,DES:10,INT:10,POD:10,CAR:10,atributosRolados:false,formulasAtributos:{},motivacao:'',valorMotivacao:0,periciasTexto:'',especializacoesTexto:'',armasTexto:'',alcancesAtaques:'',habilidadesTexto:'',equipamentoBaseTexto:'',inventarioTexto:'',selecionavelCombate:false,imagem,descricao:''};
+    else reg={id,nome,tipo:'Criatura',especie:'',habitat:'',comportamento:'',altura:'',tamanho:'Médio',pesoCorporal:'',FOR:10,CON:10,TAM:10,DES:10,INT:5,POD:10,CAR:5,atributosRolados:false,formulasAtributos:{},periciasTexto:'',especializacoesTexto:'',armasTexto:'',alcancesAtaques:'',habilidadesTexto:'',armaduraNatural:0,acoesMaxEspecial:0,movimentoTerrestre:3,movimentoVoo:0,movimentoNatacao:0,vinculosAtaquesPericias:'',equipamentoBaseTexto:'',propriedadesAtaques:'',imagem,descricao:'',selecionavelCombate:false,estadoCombate:null};
+    await setDoc(doc(db,tipo,id),reg,{merge:false});lista.push(reg);return reg;
+}
+window.importarBancoImagensLote_=async function(tipo,ev){
+    if(userData?.role!=='mestre')return;const files=[...(ev?.target?.files||[])].filter(f=>String(f.type||'').startsWith('image/'));if(!files.length)return;const st=document.getElementById(bancoStatusLoteId_(tipo));let feitos=0,falhas=0,idx=0;
+    const worker=async()=>{while(idx<files.length){const i=idx++,f=files[i];if(st)st.textContent=`⏳ ${feitos+falhas}/${files.length} · ${f.name}`;try{await importarBancoUmaImagem_(tipo,f);feitos++;}catch(e){falhas++;console.error('Importação visual',tipo,f.name,e);}}};
+    await Promise.all(Array.from({length:Math.min(3,files.length)},worker));
+    if(tipo==='itens')renderizarBancoItens();else if(tipo==='npcs'){renderizarBancoNPCs_();renderizarFichasEntidadesMestre_();}else{renderizarBancoCriaturas_();renderizarFichasEntidadesMestre_();}
+    if(st)st.textContent='';if(ev?.target)ev.target.value='';notificar_(`🖼️ ${feitos} ${tipo} criado(s) em lote${falhas?` · ${falhas} falha(s)`:''}.`,'sucesso',5000);
+};
+function bancoRemoverFundoCanvas_(im,tol){
+    const c=document.createElement('canvas');c.width=im.naturalWidth||im.width;c.height=im.naturalHeight||im.height;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(im,0,0,c.width,c.height);const img=ctx.getImageData(0,0,c.width,c.height),d=img.data,w=c.width,h=c.height,refs=[];
+    for(const [x,y] of [[0,0],[w-1,0],[0,h-1],[w-1,h-1],[Math.floor(w/2),0],[Math.floor(w/2),h-1],[0,Math.floor(h/2)],[w-1,Math.floor(h/2)]]){const i=(y*w+x)*4;if(d[i+3]>0)refs.push([d[i],d[i+1],d[i+2]]);}if(!refs.length)return c;
+    const seen=new Uint8Array(w*h),qx=new Int32Array(w*h),qy=new Int32Array(w*h);let head=0,tail=0;const perto=i=>refs.some(r=>Math.hypot(d[i]-r[0],d[i+1]-r[1],d[i+2]-r[2])<=tol);const add=(x,y)=>{if(x<0||y<0||x>=w||y>=h)return;const n=y*w+x;if(seen[n])return;const i=n*4;if(!perto(i))return;seen[n]=1;qx[tail]=x;qy[tail]=y;tail++;};for(let x=0;x<w;x++){add(x,0);add(x,h-1)}for(let y=0;y<h;y++){add(0,y);add(w-1,y)}while(head<tail){const x=qx[head],y=qy[head++],i=(y*w+x)*4;d[i+3]=0;add(x+1,y);add(x-1,y);add(x,y+1);add(x,y-1)}ctx.putImageData(img,0,0);return c;
+}
+window.removerFundoBancoImagem_=async function(tipo){
+    if(userData?.role!=='mestre')return;const cfg=tipo==='item'?{campo:'dbItemImagem',tol:'dbItemBgTol',pasta:'banco-itens',preview:'atualizarPreviewItemBanco'}:tipo==='npc'?{campo:'dbNPCImagem',tol:'dbNPCBgTol',pasta:'banco-npcs',preview:'atualizarPreviewNPCBanco_'}:{campo:'crImagem',tol:'crBgTol',pasta:'banco-criaturas',preview:'atualizarPreviewCriaturaBanco_'};const campo=document.getElementById(cfg.campo),src=String(campo?.value||'').trim();if(!src){notificar_('Carregue ou informe uma imagem primeiro.','aviso');return;}notificar_('✂️ Removendo fundo...','info',1800);
+    try{const im=new Image();im.crossOrigin='anonymous';await new Promise((res,rej)=>{im.onload=res;im.onerror=rej;im.src=src;});const c=bancoRemoverFundoCanvas_(im,Math.max(1,Number(document.getElementById(cfg.tol)?.value||38)));const blob=await new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('Falha ao gerar PNG')),'image/png'));const file=new File([blob],`sem_fundo_${Date.now()}.png`,{type:'image/png'}),url=await uploadImagemBanco_(file,cfg.pasta);campo.value=url;if(typeof window[cfg.preview]==='function')window[cfg.preview]();notificar_('Fundo removido. Confira a prévia e salve o registro.','sucesso',3200);}catch(e){console.error('Remover fundo banco',e);notificar_('Não foi possível ler os pixels desta imagem. Se ela veio de um site externo, baixe o arquivo e faça upload antes de remover o fundo.','erro',6500);}
+};
+
+// ============================================================
 // v46.31 — OBJETOS DE MAPA
 // Modelos no Banco de Dados + instâncias destrutíveis na mesa.
 // ============================================================
@@ -16320,13 +16383,21 @@ window.labAdicionarObjetoSelecionado_=function(){
     labEstado_.objetosLab.push(inst);labEstado_.objetoSelecionadoId=inst.id;labEstado_.selecionadoId='';labGuardarUltimaConstrucao_('objeto',inst);labSalvarLocal_();labRender_();
 };
 function labObjetoPorId_(id){return (labEstado_.objetosLab||[]).find(o=>String(o.id)===String(id))||null;}
+function labObjetoModelo_(o){return (objetosMapaDB||[]).find(m=>String(m.id)===String(o?.modeloId||''))||null;}
 function labObjetoHtml_(o,ppm){
     const w=Math.max(18,Number(o.larguraM||1)*ppm),h=Math.max(18,Number(o.alturaM||1)*ppm),cfg=labDesenhoConfig_(),sel=!!labEstado_.modoCriacaoMapa&&!cfg.ativo&&String(o.id)===String(labEstado_.objetoSelecionadoId),dead=!!o.destruido;
-    const img=o.imagem?`<img src="${o.imagem}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none">`:`<span style="font-size:28px">🧱</span>`;
-    return `<div class="lab-map-object" data-id="${escaparHtmlInventario_(o.id)}" title="${escaparHtmlInventario_(o.nome||'Objeto')} · PV ${Number((o.pvAtual??o.pvMax)||0)}/${Number(o.pvMax||0)} · Dureza ${Number(o.dureza||0)}" style="position:absolute;left:${o.x*ppm-w/2}px;top:${o.y*ppm-h/2}px;width:${w}px;height:${h}px;transform:rotate(${Number(o.angulo||0)}deg);transform-origin:center;z-index:${sel?14:10};display:flex;align-items:center;justify-content:center;cursor:grab;opacity:${dead ? .42 : 1};filter:${dead?'grayscale(.8)':''};outline:${sel?'3px solid #56f08a':'none'};outline-offset:2px;touch-action:none" onpointerdown="labObjetoPointerDown_(event,'${String(o.id).replace(/'/g,"\\'")}')" onclick="labSelecionarObjeto_('${String(o.id).replace(/'/g,"\\'")}')">${img}${dead?'<span style="position:absolute;font-size:26px">💥</span>':''}</div>`;
+    const at=labTokenAtual_(),alvoCombate=!!at&&String(at.alvoLab||'')===String(o.id),modelo=labObjetoModelo_(o),imagem=o.imagem||modelo?.imagem||'';
+    const img=imagem?`<img src="${imagem}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none">`:`<span style="font-size:28px">🧱</span>`;
+    const outline=sel?'3px solid #56f08a':alvoCombate?'4px solid #ff5b66':'none';
+    return `<div class="lab-map-object" data-id="${escaparHtmlInventario_(o.id)}" title="${escaparHtmlInventario_(o.nome||modelo?.nome||'Objeto')} · PV ${Number((o.pvAtual??o.pvMax)||0)}/${Number(o.pvMax||0)} · Dureza ${Number(o.dureza||0)} · ${Number(o.pesoKg||modelo?.pesoKg||0).toFixed(1)} kg" style="position:absolute;left:${o.x*ppm-w/2}px;top:${o.y*ppm-h/2}px;width:${w}px;height:${h}px;transform:rotate(${Number(o.angulo||0)}deg);transform-origin:center;z-index:${sel?14:alvoCombate?13:10};display:flex;align-items:center;justify-content:center;cursor:${batalhaEhMestre_()?'grab':'crosshair'};opacity:${dead ? .42 : 1};filter:${dead?'grayscale(.8)':''};outline:${outline};outline-offset:2px;touch-action:none" onpointerdown="labObjetoPointerDown_(event,'${String(o.id).replace(/'/g,"\'")}')" onclick="labSelecionarObjeto_('${String(o.id).replace(/'/g,"\'")}')">${img}${dead?'<span style="position:absolute;font-size:26px">💥</span>':''}</div>`;
 }
 window.labObjetoHtml_=labObjetoHtml_;
-window.labSelecionarObjeto_=function(id){if(!batalhaEhMestre_())return;labEstado_.objetoSelecionadoId=String(id||'');labEstado_.selecionadoId='';labSalvarLocal_();labRenderObjetoPainel_();};
+window.labSelecionarObjeto_=function(id){
+    const o=labObjetoPorId_(id);if(!o)return;
+    if(!batalhaEhMestre_()){const at=labTokenAtual_();if(at&&labPodeControlarToken_(at)){at.alvoLab=String(id);labEstado_.selecionadoId='';labEstado_.objetoSelecionadoId='';labRender_();notificar_(`Alvo: ${o.nome||'objeto'}.`,'info',1800);}return;}
+    if(labEstado_.fase==='combate'&&!labEstado_.modoCriacaoMapa){const at=labTokenAtual_();if(at){at.alvoLab=String(id);labApontarPara_(at,o);labEstado_.objetoSelecionadoId='';labSalvarLocal_();labRender_();return;}}
+    labEstado_.objetoSelecionadoId=String(id||'');labEstado_.selecionadoId='';labSalvarLocal_();labRenderObjetoPainel_();
+};
 window.labObjetoPointerDown_=function(ev,id){
     if(!batalhaEhMestre_())return;ev.preventDefault();ev.stopPropagation();const o=labObjetoPorId_(id),map=document.getElementById('labMetricMap');if(!o||!map)return;
     labEstado_.objetoSelecionadoId=String(id);labEstado_.selecionadoId='';const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);
@@ -16441,6 +16512,16 @@ function popularControlesProgressaoMestre_(){
     popularXpPermitidosMestre_();
 }
 
+async function labRestaurarCharPersistente_(c){
+    if(!c?.id)return;c.combate=c.combate||{};c.pontosMagiaGastos=0;c.pontosSorte=pontosSorteMax_(c);c.pontosSorteDerivadoV15=true;c.combate.fadiga='Fresh';c.combate.hitLocations={...pvMaxLocais_(c)};c.combate.pvGlobalAtual=calcularPVGlobalMax_(c);c.combate.municao=[];c.combate.inconsciente=false;c.combate.incapacitado=false;c.combate.morto=false;c.combate.sangramentoAtivo=false;c.combate.caido=false;c.combate.ferimentos={};await setDoc(doc(db,'personagens',c.id),{pontosMagiaGastos:0,pontosSorte:c.pontosSorte,pontosSorteDerivadoV15:true,combate:c.combate},{merge:true});
+}
+window.labRestaurarParticipantes_=async function(){
+    if(!batalhaEhMestre_())return;if(!confirm('Restaurar PV, PP, Sorte, AÇ, fadiga, estados e munição de todos os participantes atuais da mesa?'))return;const ids=new Set();
+    for(const t of labEstado_.tokens||[]){const cid=String(t.origemId||'');if(cid)ids.add(cid);t.psiGastosLab=0;t.municaoLab={};t.acoesAtuaisLab=Number(t.acoesMaxLab||t.acoesMax||2);t.movimentoGratisDisponivel=true;t.movimentoBonusLab=0;t.primeirosSocorrosLab=null;t.saltoPsiPendenteLab=0;t.bonusIntuicaoPendenteLab=0;const c=labCharToken_(t);if(c){try{t.combateLab=labCriarSnapshotCombate_(c);}catch(_){ }t.charLab={...(t.charLab||{}),...labSnapshotChar_(c),pontosMagiaGastos:0};}else if(t.combateLab){for(const k of Object.keys(t.combateLab.hitLocations||{})){const v=Number(t.combateLab.hitLocations[k]);if(v<0)t.combateLab.hitLocations[k]=Math.abs(v);}t.combateLab.morto=false;t.combateLab.inconsciente=false;t.combateLab.incapacitado=false;t.combateLab.sangrando=false;t.combateLab.derrubado=false;}}
+    for(const id of ids){const c=(userCharacters||[]).find(x=>String(x.id)===id);if(c)try{await labRestaurarCharPersistente_(c);}catch(e){console.warn('Restaurar personagem',id,e);}}
+    labSalvarLocal_();labAgendarSyncRemoto_();labRender_();notificar_('♻️ Participantes restaurados: PV, PP, Sorte, AÇ, fadiga, estados e munição.','sucesso',4500);
+};
+
 async function aplicarAjusteUm_(c,tipo,valor,local){
     c.combate=c.combate||{};
     if(tipo==='pv_total'){if(modoCombateAtual_()==='simplificado'){c.combate.pvGlobalAtual=calcularPVGlobalMax_(c);}else{const ms=pvMaxLocais_(c);c.combate.hitLocations={...ms};}return {combate:c.combate};}
@@ -16464,7 +16545,7 @@ function sincronizarAjusteCampanhaNaMesa_(c,tipo){
 window.aplicarAjusteCampanha_=async function(todos=false){
     if(userData?.role!=='mestre')return;const tipo=document.getElementById('gmAjusteTipo')?.value||'pv',valor=Math.floor(Number(document.getElementById('gmAjusteValor')?.value)||0),local=document.getElementById('gmAjusteLocal')?.value||'PV Global';
     let alvos=(userCharacters||[]).filter(c=>String(c.tipo||'pc').toLowerCase()==='pc');if(!todos){const id=document.getElementById('gmAjusteAlvo')?.value;alvos=alvos.filter(c=>c.id===id);}if(!alvos.length){notificar_('Escolha um personagem.','aviso');return;}
-    for(const c of alvos){const patch=await aplicarAjusteUm_(c,tipo,valor,local);await setDoc(doc(db,'personagens',c.id),patch,{merge:true});sincronizarAjusteCampanhaNaMesa_(c,tipo);}
+    for(let i=0;i<alvos.length;i++){let c=alvos[i];try{const ds=await getDoc(doc(db,'personagens',c.id));if(ds.exists()){const vivo={id:ds.id,...ds.data()};Object.assign(c,vivo);}}catch(_){}const patch=await aplicarAjusteUm_(c,tipo,valor,local);await setDoc(doc(db,'personagens',c.id),patch,{merge:true});sincronizarAjusteCampanhaNaMesa_(c,tipo);}
     if(batalhaEhMestre_()){labSalvarLocal_();labAgendarSyncRemoto_();}
     const atual=obterPersonagemAtual_();if(atual){atualizarVisualizacao(atual);renderizarCombate(atual);}renderizarBatalhaCompartilhada_();notificar_(`Ajuste aplicado a ${alvos.length} personagem(ns).`,'sucesso',3200);
 };
@@ -16527,5 +16608,6 @@ window.fecharTutorialCriacao_=fecharTutorialCriacao_;
 <!-- Mesa Estelar v46.35.1: drag rápido sem rerender por frame, texturas corrigidas, seleção de objetos discreta e controles padronizados -->
 <!-- Mesa Estelar v46.39.0: correções de PJ/PM, XP explícito, Psi na mesa, resultados privados e UX -->
 <!-- Mesa Estelar v46.40.0: lote de objetos, peso/kg, repetir ao lado, Psi/Intuição e resultados privados -->
+<!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 </body>
 </html>
