@@ -376,6 +376,13 @@
         }
 
 .skill-help{position:relative;cursor:help;}.skill-help::after{content:attr(data-skill-tip);position:absolute;left:10px;top:calc(100% + 7px);width:min(380px,72vw);padding:10px 12px;border-radius:9px;background:rgba(8,12,28,.98);border:1px solid rgba(0,212,255,.62);color:#eefaff;font-size:.82rem;line-height:1.35;white-space:normal;box-shadow:0 10px 30px rgba(0,0,0,.38);z-index:9999;opacity:0;visibility:hidden;transform:translateY(-3px);transition:opacity .12s ease,transform .12s ease;pointer-events:none}.skill-help:hover::after{opacity:1;visibility:visible;transform:translateY(0)}.db-campaign-off{opacity:.58}.db-availability{min-width:116px}
+
+@keyframes labLaserPulse{0%{opacity:0;filter:brightness(2.6)}10%{opacity:1}72%{opacity:.98}100%{opacity:0}}
+@keyframes labLaserImpact{0%{transform:translate(-50%,-50%) scale(.22);opacity:1}100%{transform:translate(-50%,-50%) scale(2.5);opacity:0}}
+.lab-laser-beam{position:absolute;height:4px;transform-origin:0 50%;border-radius:999px;pointer-events:none;z-index:155;animation:labLaserPulse .34s ease-out forwards;box-shadow:0 0 5px currentColor,0 0 13px currentColor,0 0 25px currentColor}
+.lab-laser-core{position:absolute;left:0;right:0;top:1px;height:2px;background:#fff;border-radius:999px;opacity:.96}
+.lab-laser-impact{position:absolute;width:18px;height:18px;border:2px solid currentColor;border-radius:50%;pointer-events:none;z-index:156;animation:labLaserImpact .38s ease-out forwards;box-shadow:0 0 10px currentColor,0 0 22px currentColor}
+
 </style>
 
 <style id="lab-ui-polish-v46360">
@@ -8395,6 +8402,7 @@ window.labRolarAtaque_=function(){
     const bonusInt=Math.max(0,Number(t.bonusIntuicaoPendenteLab||0)),bonusMente=Number(t.menteAceleradaCargasLab||0)>0&&/INT/.test(String(per.formula||''))?Math.max(0,Number(t.menteAceleradaBonusLab||20)):0,valor=labValorPericiaAtaque_(c,per,alvo,item)+bonusMente,roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);if(bonusInt>0)t.bonusIntuicaoPendenteLab=0;if(bonusMente>0)t.menteAceleradaCargasLab=Math.max(0,Number(t.menteAceleradaCargasLab||0)-1);if(t.bonusDificuldadeFacilPsiLab)t.bonusDificuldadeFacilPsiLab=0;
     labConsumirMunicao_(t,item,1);
     labSomAtaque_(item,r.grau);
+    labDispararEfeitoVisualAtaque_(t,alvo,item,r.sucesso,r.grau);
     t.acoesAtuaisLab=Math.max(0,Number(t.acoesAtuaisLab||0)-1);if(r.grau==='Crítico')t.acoesAtuaisLab=Math.min(Number(t.acoesMaxLab||0)+6,Number(t.acoesAtuaisLab||0)+1);else if(r.grau==='Fiasco'){if(Number(t.acoesAtuaisLab||0)>0)t.acoesAtuaisLab--;else t.penalidadeAcaoProximaLab=Math.max(1,Number(t.penalidadeAcaoProximaLab||0));}
     const base=`${t.nome} → ${alvo.nome}: ${getNome(per)} ${roll}/${valor} → ${r.grau} · ${dist.toFixed(2)} m · ${getNome(item)}.`;
     labRegistrarResultadoProprio_(t,`Ataque: ${getNome(per)} ${roll}/${valor} → ${r.grau}${bonusInt?` · Intuição +${bonusInt}%`:''}.`);
@@ -17224,7 +17232,7 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 
 
 // ============================================================
-// V46.45.3 — XP PSI, respostas flutuantes, resistências e Oficina completa
+// V46.46.0 — XP PSI, respostas flutuantes, resistências e Oficina completa
 // ============================================================
 // Um minuto de manutenção Psi equivale provisoriamente a 10 turnos de combate.
 const PSI_TURNOS_POR_MINUTO_=10;
@@ -17291,7 +17299,7 @@ const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_
 
 
 // ============================================================
-// V46.45.3 — estabilização Psi, testes no mapa e Oficina avançada
+// V46.46.0 — estabilização Psi, testes no mapa e Oficina avançada
 // ============================================================
 
 // ---------- Identificação robusta de PJ real ----------
@@ -17646,7 +17654,7 @@ labRender_=function(){
 
 
 // ============================================================
-// V46.45.3 — Teletransporte por clique e teletransportes caóticos
+// V46.46.0 — Teletransporte por clique e teletransportes caóticos
 // ============================================================
 function labPsiPosicaoAleatoriaValida_(alvo){
     const raio=Math.max(.3,Number(alvo?.diametroM||.9)/2);
@@ -17758,6 +17766,465 @@ labOverlayMovimentoHtml_=function(t,ppm){
     return labOverlayMovimentoHtmlV46453_(t,ppm);
 };
 
+
+
+// ============================================================
+// V46.46.0 — roteamento de resistência Psi + nomes sempre retos
+// ============================================================
+
+// Qualquer token com donoUid é tratado como controlado por uma conta real.
+// Não dependemos da lista userCharacters do navegador do mestre.
+function labPsiUidControlador_(t){
+    return String(t?.donoUid||t?.dono||'').trim();
+}
+function labPsiAlvoControladoPorUsuario_(t){
+    return !!labPsiUidControlador_(t);
+}
+
+// Cria resistência:
+// - alvo com donoUid -> somente a conta daquele jogador recebe a solicitação;
+// - alvo sem donoUid -> resistência é resolvida automaticamente e em segredo.
+labPsiSolicitarResistencia_=function(atk,alvo,p,ataque,skill='forca_vontade'){
+    const dono=labPsiUidControlador_(alvo);
+    if(dono){
+        const q={
+          id:`psi-test:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,
+          atacanteId:String(atk.id),alvoId:String(alvo.id),alvoUid:dono,
+          poderId:String(p.id),skillId:skill,ataqueGrau:ataque.grau,
+          ataqueMargem:ataque.margem,criadoEm:Date.now()
+        };
+        if(labEstado_.psiTestePendenteLab){
+            labEstado_.psiTestesFilaLab=Array.isArray(labEstado_.psiTestesFilaLab)?labEstado_.psiTestesFilaLab:[];
+            labEstado_.psiTestesFilaLab.push(q);
+        }else labEstado_.psiTestePendenteLab=q;
+        labSalvarLocal_();labAgendarSyncRemoto_();
+        return 'Aguardando resistência secreta do alvo.';
+    }
+
+    // NPC/criatura sem conta controladora: resolve secretamente, sem modal do mestre.
+    const valor=labPsiValorResistenciaSeguro_(alvo,skill);
+    const roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
+    const def={grau:r.grau,sucesso:r.sucesso,margem:r.sucesso?labMargemSucesso_(valor,roll):0};
+    labPsiFinalizarResistencia_(
+      {atacanteId:atk.id,alvoId:alvo.id,poderId:p.id,ataqueGrau:ataque.grau,ataqueMargem:ataque.margem},
+      def
+    );
+    return 'A resistência do alvo foi resolvida secretamente.';
+};
+
+// Corrige pendências antigas criadas por versões anteriores sem alvoUid.
+// Se o token hoje possui donoUid, a pendência é redirecionada para essa conta.
+function labPsiNormalizarPendenciaAtual_(){
+    const q=labEstado_.psiTestePendenteLab;if(!q)return false;
+    const alvo=labTokenPorId_(q.alvoId);if(!alvo)return false;
+    const dono=labPsiUidControlador_(alvo);
+    if(dono&&String(q.alvoUid||'')!==dono){
+        q.alvoUid=dono;
+        labSalvarLocal_();labAgendarSyncRemoto_();
+        return true;
+    }
+    return false;
+}
+
+// Jogador alvo: mostra sempre a resistência, independentemente de quem está no turno.
+// Mestre nunca recebe modal para uma resistência que pertence a uma conta de jogador.
+const labRenderActionPanelV46454_=labRenderActionPanel_;
+labRenderActionPanel_=function(){
+    labPsiNormalizarPendenciaAtual_();
+
+    const q=labEstado_.psiTestePendenteLab;
+    const alvo=q&&labTokenPorId_(q.alvoId);
+    const uid=String(currentUserUid||currentUser?.uid||'');
+    const pertenceAoJogador=!!q&&!!alvo&&!!uid&&String(q.alvoUid||'')===uid;
+
+    if(!batalhaEhMestre_()&&pertenceAoJogador){
+        const el=document.getElementById('labActionPanel');if(!el)return;
+        const per=labPsiPericiaPorId_(alvo,q.skillId)||
+          labPsiPericiaPorId_(alvo,q.skillId==='percepcao'?'Percepção':'Força de Vontade');
+        el.style.display='block';
+        el.innerHTML=`<div>
+          <strong style="color:#ffcfef">◈ Algo exige uma reação sua.</strong>
+          <div style="margin-top:8px;color:#cfc5de">
+            Faça o teste indicado. Você não sabe a origem nem verá o resultado, salvo em uma resistência crítica.
+          </div>
+          <div style="display:flex;gap:8px;align-items:end;margin-top:9px;flex-wrap:wrap">
+            <label style="margin:0"><small>Perícia obrigatória</small>
+              <select disabled style="min-width:260px;margin:3px 0 0">
+                <option>${escaparHtmlInventario_(getNome(per)||q.skillId)}</option>
+              </select>
+            </label>
+            <button class="btn-small btn-select" onclick="labPsiResolverTestePendente_()"
+              style="height:48px;min-width:180px">🎲 Fazer teste</button>
+          </div>
+        </div>`;
+        return;
+    }
+
+    labRenderActionPanelV46454_();
+};
+
+// Nunca mostrar resistência de PJ/PM controlado por usuário no navegador do mestre.
+// O modal do mestre fica reservado a mensagens informacionais/Telepatia.
+const labPsiRenderModalMestreV46454_=labPsiRenderModalMestre_;
+labPsiRenderModalMestre_=function(){
+    if(!batalhaEhMestre_())return labPsiRenderModalMestreV46454_();
+
+    labPsiNormalizarPendenciaAtual_();
+    const q=labEstado_.psiTestePendenteLab;
+    const alvo=q&&labTokenPorId_(q.alvoId);
+
+    if(q&&alvo&&labPsiUidControlador_(alvo)){
+        // Há uma resistência pertencente a jogador: não revelar nem oferecer rolagem ao mestre.
+        const d=labPsiModalMestre_();
+        // Ainda pode haver uma mensagem informacional pendente; renderizamos apenas essa parte.
+        const m=(labEstado_.psiMensagensMestreLab||[]).find(x=>!x.respondida);
+        if(!m){d.style.display='none';d.innerHTML='';return;}
+        if(m.tipo==='telepatia'){
+            d.style.display='block';
+            d.innerHTML=`<div style="font-size:1.05em;font-weight:800;color:#d8b4ff">🧠 Telepatia</div>
+              <div style="margin:6px 0"><b>${escaparHtmlInventario_(m.atorNome)}</b> → <b>${escaparHtmlInventario_(m.alvoNome)}</b></div>
+              <div style="font-size:.86em;color:#cbb9dd;margin-bottom:6px">Mensagem proposta pelo emissor:</div>
+              <div style="padding:8px;border-radius:8px;background:rgba(255,255,255,.06);margin-bottom:8px">${escaparHtmlInventario_(m.rascunho||'')}</div>
+              <textarea id="labPsiModalResposta" rows="3" style="width:100%;margin:0 0 8px">${escaparHtmlInventario_(m.rascunho||'')}</textarea>
+              <button class="btn-small btn-select" onclick="labPsiResponderFlutuante_('${String(m.id).replace(/'/g,"\\'")}')">Transmitir ao alvo</button>`;
+            return;
+        }
+        d.style.display='block';
+        d.innerHTML=`<div style="font-size:1.05em;font-weight:800;color:#d8b4ff">🔮 ${escaparHtmlInventario_(m.poderNome)}</div>
+          <div style="margin:6px 0"><b>${escaparHtmlInventario_(m.atorNome)}</b> obteve margem <b>${Number(m.margem||0)}</b>.</div>
+          <div style="font-size:.88em;color:#cbb9dd;margin-bottom:9px">${escaparHtmlInventario_(m.texto||'Interprete o resultado e responda ao jogador.')}</div>
+          <textarea id="labPsiModalResposta" rows="3" placeholder="Resposta privada ao jogador..." style="width:100%;margin:0 0 8px"></textarea>
+          <button class="btn-small btn-select" onclick="labPsiResponderFlutuante_('${String(m.id).replace(/'/g,"\\'")}')">Enviar resposta privada</button>`;
+        return;
+    }
+
+    // NPC sem conta não deve abrir uma janela manual; resolve sozinho se uma
+    // pendência antiga desse tipo ainda existir.
+    if(q&&alvo&&!labPsiUidControlador_(alvo)){
+        const valor=labPsiValorResistenciaSeguro_(alvo,q.skillId);
+        const roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
+        const def={grau:r.grau,sucesso:r.sucesso,margem:r.sucesso?labMargemSucesso_(valor,roll):0};
+        labPsiFinalizarResistencia_(q,def);
+        labSalvarLocal_();labAgendarSyncRemoto_();
+    }
+
+    return labPsiRenderModalMestreV46454_();
+};
+
+// Ao concluir a resistência, sincroniza imediatamente para que a fila avance
+// também nos demais navegadores.
+const labPsiFinalizarResistenciaV46454_=labPsiFinalizarResistencia_;
+labPsiFinalizarResistencia_=function(pend,defesa){
+    const r=labPsiFinalizarResistenciaV46454_(pend,defesa);
+    labSalvarLocal_();labAgendarSyncRemoto_();
+    return r;
+};
+
+// ---------- Atordoado/caído: só a imagem gira; nome, seta e controles ficam retos ----------
+const labRenderPsiVisuaisV46454_=labRenderPsiVisuais_;
+labRenderPsiVisuais_=function(){
+    labRenderPsiVisuaisV46454_();
+    const map=document.getElementById('labMetricMap');if(!map)return;
+    for(const t of (labEstado_.tokens||[])){
+        const n=map.querySelector(`.lab-token[data-id="${CSS.escape(String(t.id))}"]`);
+        if(!n)continue;
+
+        // Remove rotação indevida aplicada por versões anteriores.
+        n.style.transform='';
+        n.style.transformOrigin='';
+
+        const img=n.querySelector(':scope > img');
+        if(t.caidoPsiLab){
+            if(img){
+                img.style.transform='rotate(90deg)';
+                img.style.transformOrigin='50% 50%';
+                img.style.filter=(img.style.filter?img.style.filter+' ':'')+'saturate(.65)';
+            }
+            if(!n.querySelector('.lab-psi-stunned-badge')){
+                const b=document.createElement('div');
+                b.className='lab-psi-stunned-badge';
+                b.textContent='💫';
+                b.style.cssText='position:absolute;right:-10px;top:-12px;font-size:18px;z-index:40;pointer-events:none;filter:drop-shadow(0 1px 3px #000)';
+                n.appendChild(b);
+            }
+        }else{
+            if(img){img.style.transform='';img.style.transformOrigin='';}
+            n.querySelector('.lab-psi-stunned-badge')?.remove();
+        }
+    }
+};
+
+// Render final: garante que a pendência seja roteada e que o jogador receba
+// o painel sem depender de estar selecionando o token ou de ser sua oportunidade.
+const labRenderV46454_=labRender_;
+labRender_=function(){
+    const r=labRenderV46454_();
+    try{
+        labPsiNormalizarPendenciaAtual_();
+        labRenderActionPanel_();
+        labPsiRenderModalMestre_();
+        labRenderPsiVisuais_();
+    }catch(e){console.warn('v46.46.0',e);}
+    return r;
+};
+window.labRender_=labRender_;
+window.labRenderActionPanel_=labRenderActionPanel_;
+window.labPsiRenderModalMestre_=labPsiRenderModalMestre_;
+
+
+
+// ============================================================
+// V46.46.0 — Oficina avançada + laser + perícias + Mimetismo
+// ============================================================
+
+// ---------- Testes de perícia gerais no Mapa da Mesa ----------
+// O botão "Teste" não usa especializações de combate: elas já possuem
+// o painel próprio. Mostra básicas e profissionais investidas.
+labPericiasTeste_=function(t){
+    const c=labCharToken_(t);if(!c)return [];
+    const usados=new Set(),out=[];
+    for(const p of (periciasDB||[])){
+        if(!p?.id||p.disponivelCampanha===false)continue;
+        const nome=normalizarTextoCombate_(`${p.id||''} ${getNome(p)||''}`);
+        if(/primeiros socorros|first aid|急救/.test(nome))continue;
+        const treino=totalTreinoPericia_(c?.pericias?.[p.id]);
+        const tipo=String(p.tipo||'').toLowerCase();
+        const basica=tipo.includes('bás')||tipo.includes('basic');
+        if(!basica&&treino<=0)continue;
+        // Especializações/estilos de combate ficam fora deste seletor.
+        if(tipo.includes('combate')||tipo.includes('combat'))continue;
+        usados.add(String(p.id));out.push(p);
+    }
+    // NPCs podem possuir uma perícia narrativa salva que ainda não exista
+    // no banco global; preserva esses casos.
+    for(const [id,reg] of Object.entries(c?.pericias||{})){
+        if(usados.has(String(id))||totalTreinoPericia_(reg)<=0)continue;
+        const nome=String(reg?.nomeOriginal||reg?.nome||id).replace(/_/g,' ');
+        if(/primeiros socorros/i.test(nome))continue;
+        out.push({id,nome,nome_en:nome,nome_zh:nome,tipo:'Profissional',formula:String(reg?.formula||'INT+POD')});
+    }
+    return out.sort((a,b)=>getNome(a).localeCompare(getNome(b),'pt'));
+};
+
+// ---------- Mimetismo Psi e Crânio de Aço: duração real ----------
+function labPsiPassarDuracoesDoAtor_(t){
+    if(!t)return;
+    if(t.mimetismoPsiLab){
+        let n=Number(t.mimetismoPsiLab.turnosRestantes);
+        if(!Number.isFinite(n)||n<=0)n=PSI_TURNOS_POR_MINUTO_;
+        n--;
+        if(n<=0){
+            t.mimetismoPsiLab=null;
+            labEstado_.logLab=Array.isArray(labEstado_.logLab)?labEstado_.logLab:[];
+            labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:`${t.nome}: Mimetismo Psi terminou; sua aparência voltou ao normal.`});
+            if(labEstado_.logLab.length>120)labEstado_.logLab.length=120;
+        }else t.mimetismoPsiLab.turnosRestantes=n;
+    }
+    if(t.cranioAcoLab?.ativo){
+        let n=Number(t.cranioAcoLab.turnosRestantes);
+        if(!Number.isFinite(n)||n<=0)n=PSI_TURNOS_POR_MINUTO_;
+        n--;
+        if(n<=0)t.cranioAcoLab=null;
+        else t.cranioAcoLab.turnosRestantes=n;
+    }
+}
+const labEncerrarOportunidadeV46460_=window.labEncerrarOportunidade_;
+window.labEncerrarOportunidade_=function(){
+    const t=labTokenAtual_();
+    labPsiPassarDuracoesDoAtor_(t);
+    const r=labEncerrarOportunidadeV46460_();
+    labSalvarLocal_();labAgendarSyncRemoto_();
+    return r;
+};
+
+// ---------- Oficina de Mapas: motor detalhado ----------
+let gmOficinaUndoV46460_=[],gmOficinaRedoV46460_=[];
+function gmOficinaSnapshotV46460_(){
+    return JSON.parse(JSON.stringify({desenhos:gmOficinaEstado_.desenhos||[],objetos:gmOficinaEstado_.objetos||[]}));
+}
+function gmOficinaHistoricoV46460_(){
+    gmOficinaUndoV46460_.push(gmOficinaSnapshotV46460_());
+    if(gmOficinaUndoV46460_.length>80)gmOficinaUndoV46460_.shift();
+    gmOficinaRedoV46460_=[];
+}
+window.gmOficinaDesfazer_=function(){
+    if(!gmOficinaUndoV46460_.length)return;
+    gmOficinaRedoV46460_.push(gmOficinaSnapshotV46460_());
+    const x=gmOficinaUndoV46460_.pop();gmOficinaEstado_.desenhos=x.desenhos;gmOficinaEstado_.objetos=x.objetos;
+    gmOficinaPersistir_();gmOficinaRender_();
+};
+window.gmOficinaRefazer_=function(){
+    if(!gmOficinaRedoV46460_.length)return;
+    gmOficinaUndoV46460_.push(gmOficinaSnapshotV46460_());
+    const x=gmOficinaRedoV46460_.pop();gmOficinaEstado_.desenhos=x.desenhos;gmOficinaEstado_.objetos=x.objetos;
+    gmOficinaPersistir_();gmOficinaRender_();
+};
+window.gmOficinaAlternarGrade_=function(){
+    gmOficinaEstado_.gradeVisivel=gmOficinaEstado_.gradeVisivel===false;
+    gmOficinaPersistir_();gmOficinaRender_();
+};
+window.gmOficinaLimparPintura_=function(){
+    if(!(gmOficinaEstado_.desenhos||[]).length)return;
+    gmOficinaHistoricoV46460_();gmOficinaEstado_.desenhos=[];gmOficinaPersistir_();gmOficinaRender_();
+};
+window.gmOficinaCorRgb_=function(v){
+    const m=String(v||'').match(/(\d{1,3})\D+(\d{1,3})\D+(\d{1,3})/);if(!m)return;
+    const q=n=>Math.max(0,Math.min(255,Number(n)||0)).toString(16).padStart(2,'0');
+    gmOficinaCorTraco_=`#${q(m[1])}${q(m[2])}${q(m[3])}`;
+    const e=document.getElementById('gmOficinaCorTraco');if(e)e.value=gmOficinaCorTraco_;
+};
+window.gmOficinaAtualizarValores_=function(){
+    const a=document.getElementById('gmOficinaEspValor'),b=document.getElementById('gmOficinaOpValor');
+    if(a)a.textContent=String(Math.round(gmOficinaEspessura_));
+    if(b)b.textContent=`${Math.round(gmOficinaOpacidade_*100)}%`;
+};
+window.gmOficinaRepetirAoLado_=function(){
+    const objs=gmOficinaEstado_.objetos||[],ds=gmOficinaEstado_.desenhos||[];
+    if(!objs.length&&!ds.length){notificar_('Nada para repetir na Oficina.','aviso');return;}
+    gmOficinaHistoricoV46460_();
+    if(objs.length){
+        const cp=JSON.parse(JSON.stringify(objs[objs.length-1]));cp.id=`ofobj:${Date.now()}`;
+        cp.x=Math.min(gmOficinaEstado_.larguraM,Number(cp.x||0)+1);objs.push(cp);
+    }else{
+        const cp=JSON.parse(JSON.stringify(ds[ds.length-1]));
+        cp.pts=(cp.pts||[]).map(p=>({x:Math.min(gmOficinaEstado_.larguraM,p.x+1),y:p.y}));ds.push(cp);
+    }
+    gmOficinaPersistir_();gmOficinaRender_();
+};
+
+function gmOficinaInstalarControlesV46460_(){
+    const root=document.getElementById('gm-sub-oficina-mapas');if(!root)return;
+    const bar=root.querySelector('div[style*="align-items:end"]');if(!bar)return;
+    const mk=html=>{const x=document.createElement('span');x.innerHTML=html.trim();return x.firstElementChild;};
+
+    if(!document.getElementById('gmOficinaGradeBtn')){
+        const grade=mk('<button id="gmOficinaGradeBtn" class="btn-small" style="height:42px" onclick="gmOficinaAlternarGrade_()"># Grade</button>');
+        document.getElementById('gmOficinaGrade')?.parentElement?.after(grade);
+    }
+    if(!document.getElementById('gmOficinaRgb')){
+        const rgb=mk('<label style="margin:0"><small>RGB</small><input id="gmOficinaRgb" type="text" value="255/207/77" placeholder="93/93/93" oninput="gmOficinaCorRgb_(this.value)" style="width:92px;margin:3px 0 0;padding:7px"></label>');
+        document.getElementById('gmOficinaCorTraco')?.parentElement?.after(rgb);
+    }
+    const undo=[...bar.querySelectorAll('button')].find(b=>/Desfazer/.test(b.textContent||''));
+    if(undo&&!document.getElementById('gmOficinaRefazerBtn')){
+        undo.textContent='↶ Desfazer';
+        undo.insertAdjacentHTML('afterend','<button id="gmOficinaRefazerBtn" class="btn-small" style="height:42px" onclick="gmOficinaRefazer_()">↷ Refazer</button>');
+    }
+    if(!document.getElementById('gmOficinaLimparPinturaBtn')){
+        const objBtn=[...bar.querySelectorAll('button')].find(b=>/Objeto/.test(b.textContent||''));
+        objBtn?.insertAdjacentHTML('afterend','<button class="btn-small" style="height:42px" onclick="gmOficinaRepetirAoLado_()">⧉ Repetir ao lado</button><button id="gmOficinaLimparPinturaBtn" class="btn-small" style="height:42px" onclick="gmOficinaLimparPintura_()">🗑️ Limpar pintura</button>');
+    }
+    const esp=document.getElementById('gmOficinaEsp');
+    if(esp){esp.setAttribute('oninput','gmOficinaEspessura_=Number(this.value);gmOficinaAtualizarValores_()');if(!document.getElementById('gmOficinaEspValor'))esp.insertAdjacentHTML('afterend','<span id="gmOficinaEspValor" style="font-size:.78em;color:#bbb">7</span>');}
+    const op=document.getElementById('gmOficinaOpacidade');
+    if(op){op.setAttribute('oninput','gmOficinaOpacidade_=Number(this.value)/100;gmOficinaAtualizarValores_()');if(!document.getElementById('gmOficinaOpValor'))op.insertAdjacentHTML('afterend','<span id="gmOficinaOpValor" style="font-size:.78em;color:#bbb">100%</span>');}
+    const gb=document.getElementById('gmOficinaGradeBtn');if(gb)gb.classList.toggle('btn-select',gmOficinaEstado_.gradeVisivel!==false);
+    gmOficinaAtualizarValores_();
+}
+
+// Mesma lógica de pincéis e texturas usada pela Mesa principal.
+function gmOficinaRenderDesenhosV46460_(){
+    const cv=document.getElementById('gmOficinaDrawCanvas');if(!cv)return;
+    const ppm=28,w=Math.round(gmOficinaEstado_.larguraM*ppm),h=Math.round(gmOficinaEstado_.alturaM*ppm);
+    cv.width=w;cv.height=h;cv.style.width=`${w}px`;cv.style.height=`${h}px`;
+    const ctx=cv.getContext('2d');ctx.clearRect(0,0,w,h);ctx.lineCap='round';ctx.lineJoin='round';
+    for(const st of gmOficinaEstado_.desenhos||[]){
+        const pts=Array.isArray(st.pts)?st.pts:[];if(!pts.length)continue;
+        const tool=st.tool||st.ferramenta||'traco',size=Math.max(1,Number(st.size||st.esp||6)),color=st.color||st.cor||'#ffcf4d';
+        const opacity=Math.max(.02,Math.min(1,Number(st.opacity??st.opacidade??1)));
+        const brush=st.brush||st.pincel||'redondo',texture=st.texture||st.textura||'solida';
+        ctx.save();
+        if(tool==='borracha'){
+            ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.strokeStyle='#000';ctx.lineWidth=size;
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);ctx.stroke();ctx.restore();continue;
+        }
+        ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.strokeStyle=color;
+        if(texture!=='solida')labDesenhoAplicarTextura_(ctx,texture,pts,0,size,color,ppm,brush);
+        else if(brush==='spray'){
+            for(let j=0;j<pts.length;j++){const p=pts[j],cx=p.x*ppm,cy=p.y*ppm,dots=Math.max(5,Math.round(size*.85));for(let k=0;k<dots;k++){const a=labDesenhoRand_(j*97+k*13)*Math.PI*2,r=Math.sqrt(labDesenhoRand_(j*193+k*29))*size*.82,rr=Math.max(.7,size*(.05+.07*labDesenhoRand_(j*71+k*41)));ctx.beginPath();ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r,rr,0,Math.PI*2);ctx.fill();}}
+        }else if(brush==='quadrado'){for(const p of pts)ctx.fillRect(p.x*ppm-size/2,p.y*ppm-size/2,size,size);}
+        else if(brush==='irregular'){
+            ctx.lineWidth=size;ctx.beginPath();pts.forEach((p,j)=>{const wob=size*.7,x=p.x*ppm+(labDesenhoRand_(j*151+3)-.5)*wob,y=p.y*ppm+(labDesenhoRand_(j*211+9)-.5)*wob;j?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+        }else{
+            ctx.lineWidth=brush==='caligrafico'?Math.max(1,size*.42):size;ctx.lineCap=brush==='caligrafico'?'butt':'round';
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+
+window.gmOficinaRender_=function(){
+    if(!batalhaEhMestre_())return;
+    gmOficinaInstalarControlesV46460_();gmOficinaPopularObjetos_();
+    const box=document.getElementById('gmOficinaMapa');if(!box)return;
+    const ppm=28,w=gmOficinaEstado_.larguraM*ppm,h=gmOficinaEstado_.alturaM*ppm,g=gmOficinaEstado_.corGrade;
+    const objs=(gmOficinaEstado_.objetos||[]).map(o=>{const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(o.modeloId)),img=o.imagem||m?.imagem||'',ow=Math.max(18,Number(o.larguraM||1)*ppm),oh=Math.max(18,Number(o.alturaM||1)*ppm);return `<div data-gm-of-obj="${escaparHtmlInventario_(o.id)}" onpointerdown="gmOficinaArrastarObjeto_(event,'${String(o.id).replace(/'/g,"\\'")}')" style="position:absolute;left:${o.x*ppm-ow/2}px;top:${o.y*ppm-oh/2}px;width:${ow}px;height:${oh}px;cursor:grab;touch-action:none;z-index:5">${img?`<img src="${img}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none">`:'🧱'}</div>`;}).join('');
+    const grid=gmOficinaEstado_.gradeVisivel===false?'none':`linear-gradient(to right,${g} 1px,transparent 1px),linear-gradient(to bottom,${g} 1px,transparent 1px)`;
+    box.innerHTML=`<div id="gmOficinaCanvas" onpointerdown="gmOficinaPointerDown_(event)" style="position:relative;width:${w}px;height:${h}px;background-color:${gmOficinaEstado_.fundo};background-image:${grid};background-size:${ppm}px ${ppm}px;overflow:hidden;touch-action:none;"><canvas id="gmOficinaDrawCanvas" style="position:absolute;inset:0;z-index:2;pointer-events:none"></canvas>${objs}</div>`;
+    gmOficinaRenderDesenhosV46460_();
+    const b=document.getElementById('gmOficinaDesenharBtn');if(b)b.classList.toggle('btn-select',gmOficinaDesenhando_);
+    const bg=document.getElementById('gmOficinaFundo'),gr=document.getElementById('gmOficinaGrade');if(bg)bg.value=gmOficinaEstado_.fundo;if(gr)gr.value=gmOficinaEstado_.corGrade;
+    const st=document.getElementById('gmOficinaStatus');if(st)st.textContent=`Rascunho privado · ${(gmOficinaEstado_.desenhos||[]).length} traços · ${(gmOficinaEstado_.objetos||[]).length} objetos`;
+};
+
+window.gmOficinaPointerDown_=function(ev){
+    if(!gmOficinaDesenhando_||ev.button===2||ev.target!==ev.currentTarget)return;
+    ev.preventDefault();gmOficinaHistoricoV46460_();
+    const el=ev.currentTarget,r=el.getBoundingClientRect(),ppm=28;
+    const pt=e=>({x:Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-r.left)/ppm)),y:Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-r.top)/ppm))});
+    gmOficinaTraçoAtual_={tool:gmOficinaFerramentaAtual_,color:gmOficinaCorTraco_,size:gmOficinaEspessura_,opacity:gmOficinaOpacidade_,brush:gmOficinaPincel_,texture:gmOficinaTexturaTraco_,pts:[pt(ev)]};
+    gmOficinaEstado_.desenhos.push(gmOficinaTraçoAtual_);
+    let raf=0;
+    const mv=e=>{gmOficinaTraçoAtual_.pts.push(pt(e));if(!raf)raf=requestAnimationFrame(()=>{raf=0;gmOficinaRenderDesenhosV46460_();});};
+    const up=()=>{window.removeEventListener('pointermove',mv);if(raf)cancelAnimationFrame(raf);gmOficinaTraçoAtual_=null;gmOficinaPersistir_();gmOficinaRender_();};
+    window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+
+// Acrescenta histórico ao inserir/arrastar objeto sem substituir a lógica atual.
+const gmOficinaAdicionarObjetoV46460_=window.gmOficinaAdicionarObjeto_;
+window.gmOficinaAdicionarObjeto_=function(){gmOficinaHistoricoV46460_();return gmOficinaAdicionarObjetoV46460_();};
+const gmOficinaArrastarObjetoV46460_=window.gmOficinaArrastarObjeto_;
+window.gmOficinaArrastarObjeto_=function(ev,id){gmOficinaHistoricoV46460_();return gmOficinaArrastarObjetoV46460_(ev,id);};
+
+// ---------- Laser ----------
+let labUltimoEfeitoVisualId_='';
+function labTipoVisualArma_(item){
+    const txt=normalizarTextoCombate_([item?.id,item?.nome,item?.nome_en,item?.categoria,item?.tipo,item?.municao].filter(Boolean).join(' '));
+    return /laser/.test(txt)?'laser':'';
+}
+function labCorVisualArma_(item){
+    const txt=normalizarTextoCombate_([item?.id,item?.nome,item?.nome_en].filter(Boolean).join(' '));
+    if(/pesad|heavy/.test(txt))return '#ff3030';
+    if(/rifle|carabina/.test(txt))return '#ff4545';
+    return '#ff2d2d';
+}
+function labDispararEfeitoVisualAtaque_(atacante,alvo,item,acertou,grau){
+    if(!labTipoVisualArma_(item)||!atacante||!alvo)return;
+    labEstado_.efeitoVisualLab={id:`fx:${Date.now()}:${Math.random().toString(36).slice(2,7)}`,
+      x1:Number(atacante.x||0),y1:Number(atacante.y||0),x2:Number(alvo.x||0),y2:Number(alvo.y||0),
+      cor:labCorVisualArma_(item),acertou:!!acertou,grau:String(grau||''),ts:Date.now()};
+    labSalvarLocal_();labAgendarSyncRemoto_();labRenderEfeitoVisualAtaque_();
+}
+function labRenderEfeitoVisualAtaque_(){
+    const fx=labEstado_.efeitoVisualLab,map=document.getElementById('labMetricMap');if(!fx||!map||String(fx.id)===labUltimoEfeitoVisualId_)return;
+    if(Date.now()-Number(fx.ts||0)>4000){labUltimoEfeitoVisualId_=String(fx.id);return;}
+    labUltimoEfeitoVisualId_=String(fx.id);
+    const ppm=Number(labEstado_.pxPorMetro||48),x1=Number(fx.x1||0)*ppm,y1=Number(fx.y1||0)*ppm,x2=Number(fx.x2||0)*ppm,y2=Number(fx.y2||0)*ppm;
+    const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy),ang=Math.atan2(dy,dx)*180/Math.PI,cor=fx.cor||'#ff2d2d';
+    const beam=document.createElement('div');beam.className='lab-laser-beam';beam.style.left=`${x1}px`;beam.style.top=`${y1}px`;beam.style.width=`${len}px`;beam.style.transform=`rotate(${ang}deg)`;beam.style.background=cor;beam.style.color=cor;beam.innerHTML='<div class="lab-laser-core"></div>';map.appendChild(beam);
+    const impact=document.createElement('div');impact.className='lab-laser-impact';impact.style.left=`${x2}px`;impact.style.top=`${y2}px`;impact.style.color=cor;impact.style.borderColor=cor;map.appendChild(impact);
+    setTimeout(()=>{beam.remove();impact.remove();},520);
+}
+
+// Garante que clientes remotos renderizem o disparo recebido por sincronização.
+const labRenderV46460_=labRender_;
+labRender_=function(){
+    const r=labRenderV46460_();
+    try{labRenderEfeitoVisualAtaque_();}catch(e){console.warn('laser fx',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -17773,6 +18240,6 @@ labOverlayMovimentoHtml_=function(t,ppm){
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.45.3: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.46.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
