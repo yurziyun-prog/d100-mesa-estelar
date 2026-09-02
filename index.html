@@ -5959,7 +5959,8 @@ const poderesPsiPadrao = [
     {"id": "amnesia", "nome": "Amnésia", "nome_en": "Amnesia", "nome_zh": "失忆", "esfera": "Mente", "arco": 2, "custo": 4, "observacao": "Faz esquecer um evento menor recente; eventos importantes podem custar o dobro", "observacao_en": "", "observacao_zh": ""},
     {"id": "controlar_mente", "nome": "Controlar Mente", "nome_en": "Control Mind", "nome_zh": "精神控制", "esfera": "Mente", "arco": 3, "custo": 10, "observacao": "Controla as ações de um ser inteligente; teste resistido contra Vontade", "observacao_en": "", "observacao_zh": ""},
     {"id": "medo", "nome": "Medo", "nome_en": "Fear", "nome_zh": "恐惧", "esfera": "Mente", "arco": 3, "custo": 10, "observacao": "Provoca terror intenso; alvo deve resistir com Vontade", "observacao_en": "", "observacao_zh": ""},
-    {"id": "telepatia", "nome": "Telepatia", "nome_en": "Telepathy", "nome_zh": "心灵感应", "esfera": "Mente", "arco": 3, "custo": 10, "observacao": "Envia uma mensagem mental simples; +5 PP por tipo adicional de informação", "observacao_en": "", "observacao_zh": ""},
+    {"id": "telepatia", "nome": "Telepatia", "nome_en": "Telepathy", "nome_zh": "心灵感应", "esfera": "Mente", "arco": 3, "custo": 2, "observacao": "Envia uma mensagem mental simples a um alvo; o mestre recebe a mensagem e pode filtrá-la antes da transmissão.", "observacao_en": "Sends a simple mental message to one target; the GM receives it and may filter it before transmission.", "observacao_zh": "向一个目标发送简单的心灵讯息；主持人会先收到讯息，并可在传递前进行筛选。"},
+    {"id": "teletransporte_caotico", "nome": "Teletransporte Caótico", "nome_en": "Chaotic Teleport", "nome_zh": "混沌瞬移", "esfera": "Matéria", "arco": 1, "custo": 2, "observacao": "Teletransporta o próprio usuário para uma posição aleatória válida do mapa.", "observacao_en": "Teleports the user to a random valid position on the map.", "observacao_zh": "将施术者瞬移到地图上的一个随机有效位置。"},
     {"id": "cura_psi", "nome": "Cura", "nome_en": "Healing", "nome_zh": "治疗", "esfera": "Matéria", "arco": 1, "custo": 1, "observacao": "Recupera 1 PV por PP; usos de cura física prolongada possuem custo especial", "observacao_en": "", "observacao_zh": ""},
     {"id": "localizar_psi", "nome": "Localizar", "nome_en": "Locate", "nome_zh": "定位", "esfera": "Matéria", "arco": 1, "custo": 2, "observacao": "Localiza mentalmente um objeto conhecido, como uma bússola", "observacao_en": "", "observacao_zh": ""},
     {"id": "mover_objeto", "nome": "Mover Objeto", "nome_en": "Move Object", "nome_zh": "移动物体", "esfera": "Matéria", "arco": 1, "custo": 3, "observacao": "Move objeto até aproximadamente tamanho humano; custo aumenta com a massa", "observacao_en": "", "observacao_zh": ""},
@@ -5969,6 +5970,7 @@ const poderesPsiPadrao = [
     {"id": "reflexos", "nome": "Reflexos", "nome_en": "Reflexes", "nome_zh": "反射", "esfera": "Matéria", "arco": 2, "custo": 5, "observacao": "Reflexos extremamente rápidos; permite ações adicionais e reação contra disparos; custo por rodada", "observacao_en": "", "observacao_zh": ""},
     {"id": "atordoar_psi", "nome": "Atordoar", "nome_en": "Stun", "nome_zh": "震慑", "esfera": "Matéria", "arco": 2, "custo": 2, "observacao": "Forma focalizada do Grito Psíquico; 2 PP por pessoa afetada por rodada", "observacao_en": "", "observacao_zh": ""},
     {"id": "fluxo_marcial", "nome": "Fluxo Marcial", "nome_en": "Martial Flow", "nome_zh": "武流", "esfera": "Matéria", "arco": 2, "custo": 1, "observacao": "Após uma rolagem, gaste 1 PP por 1% para alterar o resultado em direção a um grau de sucesso melhor", "observacao_en": "", "observacao_zh": ""},
+    {"id": "banimento_caotico", "nome": "Banimento Caótico", "nome_en": "Chaotic Banishment", "nome_zh": "混沌放逐", "esfera": "Matéria", "arco": 3, "custo": 6, "observacao": "Após vencer a resistência do alvo, teletransporta-o para uma posição aleatória válida do mapa.", "observacao_en": "After overcoming the target's resistance, teleports it to a random valid position on the map.", "observacao_zh": "在击败目标的抵抗后，将其瞬移到地图上的一个随机有效位置。"},
     {"id": "agilidade_psi", "nome": "Agilidade", "nome_en": "Agility", "nome_zh": "敏捷强化", "esfera": "Matéria", "arco": 3, "custo": 5, "observacao": "Adiciona 10% em Atletismo, Acrobacia ou Combate Desarmado na rodada para cada 5 PP", "observacao_en": "", "observacao_zh": ""},
     {"id": "aceleracao", "nome": "Aceleração", "nome_en": "Acceleration", "nome_zh": "加速", "esfera": "Matéria", "arco": 3, "custo": 10, "observacao": "Movimento extremamente rápido, Movimento 30 por uma rodada", "observacao_en": "", "observacao_zh": ""},
     {"id": "doador_vida", "nome": "Doador da Vida", "nome_en": "Life Giver", "nome_zh": "生命赐予者", "esfera": "Matéria", "arco": 3, "custo": 12, "observacao": "Restaura 1 PV a um ser morto por causa não natural, até 2 minutos após a morte", "observacao_en": "", "observacao_zh": ""}
@@ -9407,7 +9409,6 @@ window.labPointerDown_=function(ev,id){
     const aplicar=()=>{
         raf=0;if(!pendente)return;let {clientX,clientY}=pendente;pendente=null;
         let x=(clientX-rect.left)/ppm,y=(clientY-rect.top)/ppm,dx=x-origem.x,dy=y-origem.y,dist=Math.hypot(dx,dy);
-        if(Number(t.teletransportePsiPendenteLab||0)>0){const rad=Number(t.angulo||0)*Math.PI/180,vx=Math.sin(rad),vy=-Math.cos(rad),proj=Math.max(0,Math.min(maxM,dx*vx+dy*vy));x=origem.x+vx*proj;y=origem.y+vy*proj;dx=x-origem.x;dy=y-origem.y;dist=Math.hypot(dx,dy);}
         if(!prep&&!(mestre&&(t.livreMestre||String(t.id).startsWith('dummy:')))&&dist>maxM&&dist>0){const f=maxM/dist;x=origem.x+dx*f;y=origem.y+dy*f;}
         t.x=Math.max(0,Math.min(labEstado_.larguraM,x));t.y=Math.max(0,Math.min(labEstado_.alturaM,y));
         if(node){node.style.left=`${t.x*ppm-d/2}px`;node.style.top=`${t.y*ppm-d/2}px`;}
@@ -17159,7 +17160,7 @@ labUsarPsiExecutar_=function(){
     else if(!r.sucesso)efeito='O poder falhou.';
     else {
         if(r.grau==='Crítico'&&!semAcao&&!['fluxo_marcial','reflexos'].includes(p.id))labPsiRestituirAcao_(t,1);
-        const resistidos=['amizade','atordoar_psi','medo','controlar_mente','influenciar_mente','amnesia'];
+        const resistidos=['amizade','atordoar_psi','medo','controlar_mente','influenciar_mente','amnesia','banimento_caotico'];
         if(resistidos.includes(p.id))efeito=labPsiSolicitarResistencia_(t,alvo,p,{grau:r.grau,margem},'forca_vontade');
         else if(p.id==='grito_psiquico'){
             const alvos=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id)&&labDistanciaEntre_(t,x)<=20);for(const x of alvos)labPsiSolicitarResistencia_(t,x,p,{grau:r.grau,margem},'forca_vontade');efeito=`Grito Psíquico lançado em área; ${alvos.length} alvo(s) elegível(is).`;
@@ -17223,7 +17224,7 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 
 
 // ============================================================
-// V46.45.1 — XP PSI, respostas flutuantes, resistências e Oficina completa
+// V46.45.3 — XP PSI, respostas flutuantes, resistências e Oficina completa
 // ============================================================
 // Um minuto de manutenção Psi equivale provisoriamente a 10 turnos de combate.
 const PSI_TURNOS_POR_MINUTO_=10;
@@ -17287,6 +17288,476 @@ gmOficinaSalvarComoMapa_=async function(){await gmOficinaSalvarComoMapaV46451_()
 const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_();try{labPsiRenderModalMestre_();}catch(_){}return r;};window.labRender_=labRender_;
 
 
+
+
+// ============================================================
+// V46.45.3 — estabilização Psi, testes no mapa e Oficina avançada
+// ============================================================
+
+// ---------- Identificação robusta de PJ real ----------
+function labTokenEhPJReal_(t){
+    if(!t)return false;
+    const origem=String(t.origemId||t.id||'');
+    return (userCharacters||[]).some(c=>String(c.id)===origem);
+}
+function labUsuarioControlaToken_(t){
+    if(!t)return false;
+    const uid=String(currentUserUid||currentUser?.uid||'');
+    return !!uid&&String(t.donoUid||'')===uid;
+}
+function labPsiValorResistenciaSeguro_(t,skillId){
+    const p=labPsiPericiaPorId_(t,skillId)||
+      labPsiPericiaPorId_(t,skillId==='percepcao'?'Percepção':'Força de Vontade');
+    if(p)return Math.max(1,labValorTeste_(t,p));
+    const c=labCharToken_(t)||t?.charLab||{},a=c?.atributos||t?.attrs||{};
+    if(skillId==='percepcao')return Math.max(1,Number(a.INT||10)+Number(a.POD||10));
+    return Math.max(1,Number(a.POD||10)*2);
+}
+
+// ---------- Testes de perícia no mapa ----------
+// Básicas sempre aparecem; profissionais/especializações, quando investidas.
+labPericiasTeste_=function(t){
+    const c=labCharToken_(t);if(!c)return [];
+    return (batalhaListaPericias_(c)||[]).filter(p=>{
+        if(p?.__especializacao)return totalTreinoPericia_(c?.especializacoes?.[p.id])>0;
+        const nome=normalizarTextoCombate_(`${p?.id||''} ${getNome(p)||''}`);
+        if(/primeiros socorros|first aid|急救/.test(nome))return false;
+        const treino=totalTreinoPericia_(c?.pericias?.[p.id]);
+        return String(p?.tipo||'').toLowerCase().includes('bás')||String(p?.tipo||'').toLowerCase().includes('basic')||treino>0;
+    }).sort((a,b)=>getNome(a).localeCompare(getNome(b)));
+};
+window.labAbrirTeste_=function(){
+    const t=labTokenAtual_();if(!t||t.primeirosSocorrosLab)return;
+    const ps=labPericiasTeste_(t);
+    if(!ps.length){notificar_('Nenhuma perícia disponível para teste neste participante.','aviso',2800);return;}
+    t.acaoAuxLab={tipo:'teste_pericia',periciaToken:batalhaTokenPericia_(ps[0])};
+    labSalvarLocal_();labRender_();
+};
+
+// ---------- Resistências Psi ----------
+labPsiSolicitarResistencia_=function(atk,alvo,p,ataque,skill='forca_vontade'){
+    const ehPJ=labTokenEhPJReal_(alvo);
+    const dono=ehPJ?String(alvo.donoUid||''):'';
+    const q={id:`psi-test:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,
+      atacanteId:String(atk.id),alvoId:String(alvo.id),alvoUid:dono,poderId:String(p.id),
+      skillId:skill,ataqueGrau:ataque.grau,ataqueMargem:ataque.margem,criadoEm:Date.now()};
+    if(labEstado_.psiTestePendenteLab){
+        labEstado_.psiTestesFilaLab=Array.isArray(labEstado_.psiTestesFilaLab)?labEstado_.psiTestesFilaLab:[];
+        labEstado_.psiTestesFilaLab.push(q);
+    }else labEstado_.psiTestePendenteLab=q;
+    labAgendarSyncRemoto_();
+    return ehPJ?'Aguardando resistência secreta do alvo.':'Aguardando o mestre rolar a resistência do alvo.';
+};
+window.labPsiResolverNpcPendente_=function(){
+    const q=labEstado_.psiTestePendenteLab,alvo=q&&labTokenPorId_(q.alvoId);
+    if(!q||!alvo||labTokenEhPJReal_(alvo))return;
+    const valor=labPsiValorResistenciaSeguro_(alvo,q.skillId);
+    const roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);
+    const def={grau:r.grau,sucesso:r.sucesso,margem:r.sucesso?labMargemSucesso_(valor,roll):0};
+    labPsiFinalizarResistencia_(q,def);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+};
+
+// Deixa o efeito visual do atordoamento/grito evidente no token.
+const labPsiAplicarEfeitoResistidoV46452_=labPsiAplicarEfeitoResistido_;
+labPsiAplicarEfeitoResistido_=function(atk,alvo,p,margem){
+    const txt=labPsiAplicarEfeitoResistidoV46452_(atk,alvo,p,margem);
+    if(['atordoar_psi','grito_psiquico'].includes(String(p?.id||''))){
+        alvo.caidoPsiLab=true;
+        alvo.caidoPsiAteRodadaLab=Number(labEstado_.rodada||0)+1;
+    }
+    return txt;
+};
+
+// ---------- Mensagem privada flutuante para quem recebe resposta Psi ----------
+function labPsiModalJogador_(){
+    let d=document.getElementById('labPsiModalJogador');
+    if(!d){
+        d=document.createElement('div');d.id='labPsiModalJogador';
+        d.style.cssText='display:none;position:fixed;left:22px;bottom:22px;z-index:100001;width:min(500px,calc(100vw - 36px));padding:15px;border:1px solid rgba(143,234,255,.65);border-radius:14px;background:rgba(10,27,45,.97);box-shadow:0 16px 50px rgba(0,0,0,.55);color:white';
+        document.body.appendChild(d);
+    }return d;
+}
+function labPsiTokenMensagemParaUsuario_(){
+    const uid=String(currentUserUid||currentUser?.uid||'');
+    const meus=(labEstado_.tokens||[]).filter(t=>String(t.donoUid||'')===uid&&t.psiMensagemRecebidaLab&&!t.psiMensagemRecebidaLab.lida);
+    if(meus.length)return meus[0];
+    if(batalhaEhMestre_()){
+        const atual=labTokenAtual_();
+        if(atual?.psiMensagemRecebidaLab&&!atual.psiMensagemRecebidaLab.lida)return atual;
+    }
+    return null;
+}
+function labPsiRenderModalJogador_(){
+    const d=labPsiModalJogador_(),t=labPsiTokenMensagemParaUsuario_();
+    if(!t){d.style.display='none';d.innerHTML='';return;}
+    const m=t.psiMensagemRecebidaLab;
+    d.style.display='block';
+    d.innerHTML=`<div style="font-size:1.06em;font-weight:800;color:#9ee7ff">🔮 ${escaparHtmlInventario_(m.titulo||'Mensagem psíquica')}</div>
+      <div style="margin:8px 0 12px;line-height:1.45">${escaparHtmlInventario_(m.texto||'')}</div>
+      <button class="btn-small btn-select" onclick="labPsiFecharMensagemJogador_('${String(t.id).replace(/'/g,"\\'")}')">Entendido</button>`;
+}
+window.labPsiFecharMensagemJogador_=function(id){
+    const t=labTokenPorId_(id);if(!t?.psiMensagemRecebidaLab)return;
+    t.psiMensagemRecebidaLab.lida=true;labSalvarLocal_();labAgendarSyncRemoto_();labPsiRenderModalJogador_();
+};
+
+// ---------- Telepatia: barata, filtrada pelo mestre ----------
+function labPsiEnfileirarTelepatia_(ator,alvo,poder,margem,texto){
+    labEstado_.psiMensagensMestreLab=Array.isArray(labEstado_.psiMensagensMestreLab)?labEstado_.psiMensagensMestreLab:[];
+    labEstado_.psiMensagensMestreLab.unshift({
+      id:`psi-msg:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,tipo:'telepatia',
+      atorId:String(ator.id),atorNome:ator.nome,alvoId:String(alvo.id),alvoNome:alvo.nome,
+      poderId:String(poder.id),poderNome:getNome(poder),margem:Number(margem||0),
+      texto:`Mensagem mental proposta para ${alvo.nome}. O mestre pode filtrar ou reescrever antes de transmitir.`,
+      rascunho:String(texto||''),respondida:false,ts:new Date().toISOString()
+    });
+    labEstado_.psiMensagensMestreLab=labEstado_.psiMensagensMestreLab.slice(0,40);
+    labAgendarSyncRemoto_();
+}
+window.labTelepatiaRascunho_=function(v){
+    const t=labTokenAtual_();if(t)t.telepatiaRascunhoLab=String(v||'');
+};
+
+// ---------- Círculo de Proteção: área fixa e impermeável nas duas direções ----------
+labPsiBloqueadoPorCirculo_=function(ator,alvo){
+    if(!ator||!alvo||String(ator.id)===String(alvo.id))return false;
+    for(const z of (labEstado_.tokens||[])){
+        const c=z.circuloProtecaoPsiLab,r=Number(c?.raio||0);if(r<=0)continue;
+        const cx=Number(c.x??z.x),cy=Number(c.y??z.y);
+        const da=Math.hypot(Number(ator.x||0)-cx,Number(ator.y||0)-cy);
+        const db=Math.hypot(Number(alvo.x||0)-cx,Number(alvo.y||0)-cy);
+        if((da<=r+.001)!==(db<=r+.001))return true;
+    }return false;
+};
+
+// ---------- Teletransporte: alcance adicional ao movimento normal ----------
+labPsiTeletransportarPreparar_=function(t,gasto,minimo){
+    const mov=labMovimentoPorAcao_(t)||0;
+    const extra=10+Math.max(0,Number(gasto||0)-Number(minimo||0))*4;
+    t.teletransportePsiPendenteLab=Math.max(2,mov+extra);
+    t.saltoPsiPendenteLab=t.teletransportePsiPendenteLab;
+    t.teletransporteCliqueLab=true;
+    return `Teletransporte preparado: clique em qualquer ponto do mapa a até ${t.teletransportePsiPendenteLab.toFixed(1)} m. O alcance inclui ${extra.toFixed(0)} m além do movimento normal.`;
+};
+
+// ---------- Oficina de Mapas: renderização real de pincéis/texturas ----------
+function gmOficinaRenderDesenhos_(){
+    const cv=document.getElementById('gmOficinaDrawCanvas');if(!cv)return;
+    const ppm=28,w=Math.round(gmOficinaEstado_.larguraM*ppm),h=Math.round(gmOficinaEstado_.alturaM*ppm);
+    cv.width=w;cv.height=h;cv.style.width=`${w}px`;cv.style.height=`${h}px`;
+    const ctx=cv.getContext('2d');ctx.clearRect(0,0,w,h);ctx.lineJoin='round';
+    for(const st of gmOficinaEstado_.desenhos||[]){
+        const pts=Array.isArray(st.pts)?st.pts:[];if(!pts.length)continue;
+        const tool=st.ferramenta||st.tool||'traco',size=Math.max(1,Number(st.esp||st.size||7)),color=st.cor||st.color||'#ffcf4d';
+        const opacity=Math.max(.02,Math.min(1,Number(st.opacidade??st.opacity??1)));
+        const brush=st.pincel||st.brush||'redondo',texture=st.textura||st.texture||'solida';
+        ctx.save();
+        if(tool==='borracha'){
+            ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.strokeStyle='black';ctx.lineWidth=size;ctx.lineCap='round';
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);ctx.stroke();ctx.restore();continue;
+        }
+        ctx.globalAlpha=opacity;ctx.strokeStyle=color;ctx.fillStyle=color;
+        if(texture!=='solida'){labDesenhoAplicarTextura_(ctx,texture,pts,0,size,color,ppm,brush);}
+        else if(brush==='spray'){
+            for(let j=0;j<pts.length;j++){const p=pts[j],dots=Math.max(5,Math.round(size*.9));for(let k=0;k<dots;k++){const a=labDesenhoRand_(j*97+k*13)*Math.PI*2,r=Math.sqrt(labDesenhoRand_(j*193+k*29))*size*.8,rr=Math.max(.7,size*.06);ctx.beginPath();ctx.arc(p.x*ppm+Math.cos(a)*r,p.y*ppm+Math.sin(a)*r,rr,0,Math.PI*2);ctx.fill();}}
+        }else if(brush==='quadrado'){for(const p of pts)ctx.fillRect(p.x*ppm-size/2,p.y*ppm-size/2,size,size);}
+        else if(brush==='irregular'){
+            ctx.lineWidth=size;ctx.lineCap='round';ctx.beginPath();
+            pts.forEach((p,j)=>{const wob=size*.7,x=p.x*ppm+(labDesenhoRand_(j*151+3)-.5)*wob,y=p.y*ppm+(labDesenhoRand_(j*211+9)-.5)*wob;j?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.stroke();
+        }else{
+            ctx.lineWidth=brush==='caligrafico'?Math.max(1,size*.42):size;ctx.lineCap=brush==='caligrafico'?'butt':'round';
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);ctx.stroke();
+        }
+        ctx.restore();
+    }
+}
+const gmOficinaRenderV46452_=gmOficinaRender_;
+gmOficinaRender_=function(){
+    gmOficinaRenderV46452_();
+    const c=document.getElementById('gmOficinaCanvas');if(c){
+        const svg=c.querySelector('svg');if(svg)svg.remove();
+        let cv=document.getElementById('gmOficinaDrawCanvas');
+        if(!cv){cv=document.createElement('canvas');cv.id='gmOficinaDrawCanvas';cv.style.cssText='position:absolute;inset:0;z-index:2;pointer-events:none';c.prepend(cv);}
+        gmOficinaRenderDesenhos_();
+    }
+    labPsiRenderModalMestre_();labPsiRenderModalJogador_();
+};window.gmOficinaRender_=gmOficinaRender_;
+
+window.gmOficinaPointerDown_=function(ev){
+    if(!gmOficinaDesenhando_||ev.button===2||ev.target!==ev.currentTarget)return;
+    ev.preventDefault();const el=ev.currentTarget,r=el.getBoundingClientRect(),ppm=28;
+    const pt=e=>({x:Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-r.left)/ppm)),y:Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-r.top)/ppm))});
+    gmOficinaTraçoAtual_={cor:gmOficinaCorTraco_,esp:gmOficinaEspessura_,opacidade:gmOficinaOpacidade_,pincel:gmOficinaPincel_,textura:gmOficinaTexturaTraco_,ferramenta:gmOficinaFerramentaAtual_,pts:[pt(ev)]};
+    gmOficinaEstado_.desenhos.push(gmOficinaTraçoAtual_);
+    let raf=0;
+    const mv=e=>{gmOficinaTraçoAtual_.pts.push(pt(e));if(!raf)raf=requestAnimationFrame(()=>{raf=0;gmOficinaRenderDesenhos_();});};
+    const up=()=>{window.removeEventListener('pointermove',mv);if(raf)cancelAnimationFrame(raf);gmOficinaTraçoAtual_=null;gmOficinaPersistir_();gmOficinaRender_();};
+    window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+
+// ---------- Efeitos Psi: Círculo, Anoitecer, Mimetismo, Grito ----------
+const labPsiAplicarDiretoV46452_=labPsiAplicarDireto_;
+labPsiAplicarDireto_=function(t,p,alvo,gasto,r,margem){
+    const id=String(p?.id||''),min=Math.max(0,Number(p?.custo||0));
+    if(id==='defesa_mental'||id==='circulo_protecao'){
+        const raio=Math.max(2.5,2.5+Math.max(0,gasto-min)*2.5);
+        t.circuloProtecaoPsiLab={x:Number(t.x||0),y:Number(t.y||0),raio,duracaoTurnos:Math.max(2,2+Math.max(0,gasto-min)*2)};
+        return `Círculo de Proteção fixado neste ponto: raio ${raio.toFixed(1)} m por ${t.circuloProtecaoPsiLab.duracaoTurnos} turno(s). Efeitos Psi não atravessam a fronteira em nenhuma direção.`;
+    }
+    if(id==='anoitecer'){
+        const extra=Math.max(0,gasto-min),raio=Math.max(3,3+Math.floor(Math.max(0,margem)/5)+extra*3);
+        t.anoitecerPsiLab={x:Number(t.x||0),y:Number(t.y||0),raio,ppTurno:1+extra,autorUid:String(t.donoUid||'')};
+        return `Anoitecer: raio ${raio} m. Manutenção ${1+extra} PP/turno; a margem e PP extras ampliam a zona.`;
+    }
+    if(id==='telepatia'){
+        const texto=String(t.telepatiaRascunhoLab||'').trim();
+        if(!texto)return 'Telepatia teve sucesso, mas nenhuma mensagem foi escrita.';
+        labPsiEnfileirarTelepatia_(t,alvo,p,margem,texto);t.telepatiaRascunhoLab='';
+        return `Mensagem telepática enviada ao mestre para filtragem antes de chegar a ${alvo.nome}.`;
+    }
+    return labPsiAplicarDiretoV46452_(t,p,alvo,gasto,r,margem);
+};
+
+// Grito agora usa cone de 60° na direção da seta, com 20 m.
+function labPsiAlvosCone_(ator,alcance=20,aberturaGraus=60){
+    const ang0=((Number(ator.angulo||0)-90)*Math.PI/180),half=(aberturaGraus*Math.PI/180)/2;
+    return (labEstado_.tokens||[]).filter(x=>{
+        if(String(x.id)===String(ator.id))return false;
+        const dx=Number(x.x||0)-Number(ator.x||0),dy=Number(x.y||0)-Number(ator.y||0),d=Math.hypot(dx,dy);if(d>alcance||d<.001)return false;
+        const a=Math.atan2(dy,dx);let dif=Math.atan2(Math.sin(a-ang0),Math.cos(a-ang0));
+        return Math.abs(dif)<=half;
+    });
+}
+
+// Reimplementa execução apenas nos ramos que precisavam de correção.
+const labUsarPsiExecutarV46452_=labUsarPsiExecutar_;
+labUsarPsiExecutar_=function(){
+    const t=labTokenAtual_(),a=t?.acaoAuxLab;if(!t||a?.tipo!=='psiquismo')return;
+    const p=labPsiPoderes_(t).find(x=>x.id===a.poderId);
+    // Telepatia agora custa no máximo a nova base do banco; enquanto o banco antigo estiver carregado, força mínimo 2.
+    if(p?.id==='telepatia'&&Number(a.custo||0)>2)a.custo=2;
+    // Para Grito, usamos a execução-base, mas substituímos temporariamente a lista de alvos por um cone.
+    if(p?.id!=='grito_psiquico'){return labUsarPsiExecutarV46452_();}
+    if(Number(t.acoesAtuaisLab||0)<=0)return;
+    const alvo=labPsiAlvoPorId_(a.alvoId)||t,min=Math.max(0,Number(p.custo||0)),gasto=Math.max(min,Math.floor(Number(a.custo||min)));
+    if(gasto>labPsiRestantes_(t)){notificar_('PP insuficientes.','aviso');return;}
+    const valor=labPsiValor_(t,p),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll),margem=r.sucesso?labMargemSucesso_(valor,roll):0;
+    if(!labPsiConsumirAcao_(t))return;t.psiGastosLab=Math.max(0,Number(t.psiGastosLab||0))+gasto;let efeito='';
+    if(!r.sucesso)efeito='O poder falhou.';
+    else{
+        if(r.grau==='Crítico')labPsiRestituirAcao_(t,1);
+        const alvos=labPsiAlvosCone_(t,20,60);
+        for(const x of alvos)labPsiSolicitarResistencia_(t,x,p,{grau:r.grau,margem},'forca_vontade');
+        efeito=`Grito Psíquico lançado em cone de 60°/20 m; ${alvos.length} alvo(s) precisam resistir.`;
+    }
+    const resultado=`Psiquismo: ${getNome(p)} · ${p.esfera} A${Number(p.arco||1)} · ${roll}/${valor} → ${r.grau}${r.sucesso?` · margem ${margem}`:''} · gasto ${gasto} PP. ${efeito}`;
+    labRegistrarResultadoProprio_(t,resultado);labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:`${t.nome}: ${resultado}`});
+    labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+};
+
+// ---------- Painel Psi: campo de mensagem para Telepatia ----------
+const labRenderActionPanelV46452_=labRenderActionPanel_;
+labRenderActionPanel_=function(){
+    labRenderActionPanelV46452_();
+    const t=labTokenAtual_(),a=t?.acaoAuxLab;if(a?.tipo!=='psiquismo')return;
+    const p=labPsiPoderes_(t).find(x=>x.id===a.poderId);if(p?.id!=='telepatia')return;
+    const el=document.getElementById('labActionPanel');if(!el||document.getElementById('labTelepatiaTexto'))return;
+    const box=document.createElement('div');box.style.cssText='margin-top:9px;padding:9px;border:1px solid rgba(216,180,255,.22);border-radius:9px;background:rgba(35,18,55,.22)';
+    box.innerHTML=`<small style="color:#d8b4ff">Mensagem mental proposta — o mestre poderá filtrar antes do envio</small><textarea id="labTelepatiaTexto" rows="2" oninput="labTelepatiaRascunho_(this.value)" style="width:100%;margin:6px 0 0" placeholder="Escreva a mensagem...">${escaparHtmlInventario_(t.telepatiaRascunhoLab||'')}</textarea>`;
+    el.appendChild(box);
+};window.labRenderActionPanel_=labRenderActionPanel_;
+
+// ---------- Modal do mestre: prioridade para resistências de NPC e telepatia ----------
+labPsiRenderModalMestre_=function(){
+    const d=labPsiModalMestre_();if(!batalhaEhMestre_()){d.style.display='none';return;}
+    const q=labEstado_.psiTestePendenteLab,alvo=q&&labTokenPorId_(q.alvoId);
+    if(q&&alvo&&!labTokenEhPJReal_(alvo)){
+        const valor=labPsiValorResistenciaSeguro_(alvo,q.skillId);
+        d.style.display='block';d.innerHTML=`<div style="font-size:1.05em;font-weight:800;color:#ffd8ff">🛡️ Resistência Psi exigida</div>
+          <div style="margin:7px 0 10px"><b>${escaparHtmlInventario_(alvo.nome)}</b> precisa resistir a um efeito.</div>
+          <div style="color:#bbb;margin-bottom:10px">Teste: <b>${q.skillId==='percepcao'?'Percepção':'Força de Vontade'}</b> (${valor}%)</div>
+          <button class="btn-small btn-select" onclick="labPsiResolverNpcPendente_()">🎲 Rolar resistência</button>`;return;
+    }
+    const m=(labEstado_.psiMensagensMestreLab||[]).find(x=>!x.respondida);
+    if(!m){d.style.display='none';d.innerHTML='';return;}
+    if(m.tipo==='telepatia'){
+        d.style.display='block';d.innerHTML=`<div style="font-size:1.05em;font-weight:800;color:#d8b4ff">🧠 Telepatia</div>
+          <div style="margin:6px 0"><b>${escaparHtmlInventario_(m.atorNome)}</b> → <b>${escaparHtmlInventario_(m.alvoNome)}</b></div>
+          <div style="font-size:.86em;color:#cbb9dd;margin-bottom:6px">Mensagem proposta pelo emissor:</div>
+          <div style="padding:8px;border-radius:8px;background:rgba(255,255,255,.06);margin-bottom:8px">${escaparHtmlInventario_(m.rascunho||'')}</div>
+          <textarea id="labPsiModalResposta" rows="3" style="width:100%;margin:0 0 8px">${escaparHtmlInventario_(m.rascunho||'')}</textarea>
+          <button class="btn-small btn-select" onclick="labPsiResponderFlutuante_('${String(m.id).replace(/'/g,"\\'")}')">Transmitir ao alvo</button>`;return;
+    }
+    d.style.display='block';d.innerHTML=`<div style="font-size:1.05em;font-weight:800;color:#d8b4ff">🔮 ${escaparHtmlInventario_(m.poderNome)}</div>
+      <div style="margin:6px 0"><b>${escaparHtmlInventario_(m.atorNome)}</b> obteve margem <b>${Number(m.margem||0)}</b>.</div>
+      <div style="font-size:.88em;color:#cbb9dd;margin-bottom:9px">${escaparHtmlInventario_(m.texto||'Interprete o resultado e responda ao jogador.')}</div>
+      <textarea id="labPsiModalResposta" rows="3" placeholder="Resposta privada ao jogador..." style="width:100%;margin:0 0 8px"></textarea>
+      <button class="btn-small btn-select" onclick="labPsiResponderFlutuante_('${String(m.id).replace(/'/g,"\\'")}')">Enviar resposta privada</button>`;
+};
+window.labPsiResponderFlutuante_=function(id){
+    const ta=document.getElementById('labPsiModalResposta'),txt=String(ta?.value||'').trim();if(!txt)return;
+    const m=(labEstado_.psiMensagensMestreLab||[]).find(x=>String(x.id)===String(id));if(!m)return;
+    const destino=m.tipo==='telepatia'?labTokenPorId_(m.alvoId):labTokenPorId_(m.atorId);
+    if(destino){
+        destino.psiMensagemRecebidaLab={id:`psi-recv:${Date.now()}`,titulo:m.tipo==='telepatia'?'Telepatia':m.poderNome,texto:txt,lida:false,ts:Date.now()};
+        labRegistrarResultadoProprio_(destino,`🔮 ${m.tipo==='telepatia'?'Telepatia':m.poderNome}: ${txt}`);
+    }
+    m.respondida=true;m.resposta=txt;m.respondidaEm=new Date().toISOString();
+    labSalvarLocal_();labAgendarSyncRemoto_();labRender_();notificar_('Mensagem Psi enviada.','sucesso',2200);
+};
+
+// ---------- Visuais: círculo fixo, anoitecer por usuário e estados ----------
+labRenderPsiVisuais_=function(){
+    const map=document.getElementById('labMetricMap');if(!map)return;
+    map.querySelectorAll('.lab-psi-zone-v4645,.lab-psi-zone-v46452').forEach(e=>e.remove());
+    const ppm=Number(labEstado_.pxPorMetro||48),uid=String(currentUserUid||currentUser?.uid||'');
+    for(const t of (labEstado_.tokens||[])){
+        if(t.circuloProtecaoPsiLab?.raio){
+            const c=t.circuloProtecaoPsiLab,r=Number(c.raio),cx=Number(c.x??t.x),cy=Number(c.y??t.y),d=document.createElement('div');
+            d.className='lab-psi-zone-v46452';d.style.cssText=`position:absolute;left:${(cx-r)*ppm}px;top:${(cy-r)*ppm}px;width:${r*2*ppm}px;height:${r*2*ppm}px;border:2px solid rgba(110,180,255,.82);background:rgba(80,120,255,.08);border-radius:50%;pointer-events:none;z-index:2;box-shadow:0 0 18px rgba(110,180,255,.25)`;map.appendChild(d);
+        }
+        if(t.anoitecerPsiLab?.raio){
+            const z=t.anoitecerPsiLab,r=Number(z.raio),cx=Number(z.x??t.x),cy=Number(z.y??t.y),autor=uid&&String(t.donoUid||'')===uid;
+            const alpha=autor?.48:(batalhaEhMestre_()?.84:.985),d=document.createElement('div');
+            d.className='lab-psi-zone-v46452';d.style.cssText=`position:absolute;left:${(cx-r)*ppm}px;top:${(cy-r)*ppm}px;width:${r*2*ppm}px;height:${r*2*ppm}px;border:1px solid rgba(160,120,220,.62);background:rgba(2,1,7,${alpha});border-radius:50%;pointer-events:none;z-index:22;box-shadow:inset 0 0 60px rgba(0,0,0,.75)`;map.appendChild(d);
+        }
+        if(t.mimetismoPsiLab?.imagem){const n=map.querySelector(`.lab-token[data-id="${CSS.escape(String(t.id))}"] img`);if(n)n.src=t.mimetismoPsiLab.imagem;}
+        if(t.caidoPsiLab){const n=map.querySelector(`.lab-token[data-id="${CSS.escape(String(t.id))}"]`);if(n){n.style.transform='rotate(90deg)';n.style.transformOrigin='50% 50%';}}
+    }
+};
+
+// Limpa "caído por Psi" após a rodada provisória.
+const labEncerrarOportunidadeV46452_=labEncerrarOportunidade_;
+labEncerrarOportunidade_=function(){
+    const r=labEncerrarOportunidadeV46452_();
+    for(const t of (labEstado_.tokens||[]))if(t.caidoPsiLab&&Number(labEstado_.rodada||0)>Number(t.caidoPsiAteRodadaLab||0))t.caidoPsiLab=false;
+    labSalvarLocal_();return r;
+};window.labEncerrarOportunidade_=labEncerrarOportunidade_;
+
+// Render geral atualiza também mensagens e visuais.
+const labRenderV46452_=labRender_;
+labRender_=function(){
+    const r=labRenderV46452_();
+    try{labPsiRenderModalMestre_();labPsiRenderModalJogador_();labRenderPsiVisuais_();}catch(e){console.warn(e);}
+    return r;
+};window.labRender_=labRender_;
+
+
+
+
+// ============================================================
+// V46.45.3 — Teletransporte por clique e teletransportes caóticos
+// ============================================================
+function labPsiPosicaoAleatoriaValida_(alvo){
+    const raio=Math.max(.3,Number(alvo?.diametroM||.9)/2);
+    const outros=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(alvo?.id));
+    for(let k=0;k<180;k++){
+        const x=raio+.25+Math.random()*Math.max(.2,Number(labEstado_.larguraM||24)-2*(raio+.25));
+        const y=raio+.25+Math.random()*Math.max(.2,Number(labEstado_.alturaM||14)-2*(raio+.25));
+        const livre=outros.every(o=>{
+            const ro=Math.max(.3,Number(o.diametroM||.9)/2);
+            return Math.hypot(x-Number(o.x||0),y-Number(o.y||0))>(raio+ro+.18);
+        });
+        if(livre)return {x:Math.round(x*100)/100,y:Math.round(y*100)/100};
+    }
+    return {
+        x:Math.round((.5+Math.random()*Math.max(1,Number(labEstado_.larguraM||24)-1))*100)/100,
+        y:Math.round((.5+Math.random()*Math.max(1,Number(labEstado_.alturaM||14)-1))*100)/100
+    };
+}
+function labPsiMoverAleatorio_(alvo){
+    const p=labPsiPosicaoAleatoriaValida_(alvo);
+    alvo.x=p.x;alvo.y=p.y;
+    alvo.teletransportePsiPendenteLab=0;alvo.saltoPsiPendenteLab=0;alvo.teletransporteCliqueLab=false;
+    return p;
+}
+
+// Alvos dos dois novos poderes.
+const labPsiAlvosV46453_=labPsiAlvos_;
+labPsiAlvos_=function(t,p){
+    if(p?.id==='teletransporte_caotico')return [t];
+    if(p?.id==='banimento_caotico')return (labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t.id));
+    return labPsiAlvosV46453_(t,p);
+};
+
+// Aplicação direta: teletransporte caótico do próprio usuário.
+const labPsiAplicarDiretoV46453_=labPsiAplicarDireto_;
+labPsiAplicarDireto_=function(t,p,alvo,gasto,r,margem){
+    if(p?.id==='teletransporte_caotico'){
+        const pos=labPsiMoverAleatorio_(t);
+        return `Teletransporte Caótico: você reapareceu em uma posição aleatória (${pos.x.toFixed(1)} m, ${pos.y.toFixed(1)} m).`;
+    }
+    return labPsiAplicarDiretoV46453_(t,p,alvo,gasto,r,margem);
+};
+
+// Aplicação resistida: banimento do alvo.
+const labPsiAplicarEfeitoResistidoV46453_=labPsiAplicarEfeitoResistido_;
+labPsiAplicarEfeitoResistido_=function(atk,alvo,p,margem){
+    if(p?.id==='banimento_caotico'){
+        const pos=labPsiMoverAleatorio_(alvo);
+        return `${alvo.nome} foi banido para uma posição aleatória do mapa (${pos.x.toFixed(1)} m, ${pos.y.toFixed(1)} m).`;
+    }
+    return labPsiAplicarEfeitoResistidoV46453_(atk,alvo,p,margem);
+};
+
+// Enquanto há um Teletransporte normal preparado, clicar no token não inicia arraste.
+// O jogador escolhe o destino clicando diretamente no chão.
+const labPointerDownV46453_=window.labPointerDown_;
+window.labPointerDown_=function(ev,id){
+    const t=labTokenPorId_(id);
+    if(t&&Number(t.teletransportePsiPendenteLab||0)>0&&labPodeControlarToken_(t)){
+        ev.preventDefault();ev.stopPropagation();
+        labEstado_.selecionadoId=String(t.id);
+        notificar_('Teletransporte preparado: clique no ponto de destino dentro do círculo de alcance.','info',2600);
+        labRender_();return;
+    }
+    return labPointerDownV46453_(ev,id);
+};
+
+// Clique no chão executa o Teletransporte normal.
+const labCliqueFundoMapaV46453_=window.labCliqueFundoMapa_;
+window.labCliqueFundoMapa_=function(ev){
+    const t=labTokenAtual_(),map=document.getElementById('labMetricMap');
+    if(t&&map&&labPodeControlarToken_(t)&&Number(t.teletransportePsiPendenteLab||0)>0){
+        const alvo=ev?.target;
+        if(alvo?.closest?.('.lab-token,.lab-map-object,.lab-micro-actions'))return;
+        ev.preventDefault();ev.stopPropagation();
+        const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48);
+        let x=(ev.clientX-rect.left)/ppm,y=(ev.clientY-rect.top)/ppm;
+        const ox=Number(t.x||0),oy=Number(t.y||0),dx=x-ox,dy=y-oy,dist=Math.hypot(dx,dy),max=Math.max(0,Number(t.teletransportePsiPendenteLab||0));
+        if(dist>max+.001){
+            notificar_(`Destino fora do alcance. Máximo: ${max.toFixed(1)} m.`,'aviso',3000);return;
+        }
+        x=Math.max(0,Math.min(Number(labEstado_.larguraM||0),x));
+        y=Math.max(0,Math.min(Number(labEstado_.alturaM||0),y));
+        if(!batalhaEhMestre_()){
+            labEnviarComandoJogador_('movimento',{x,y},t).then(ok=>{
+                if(ok)notificar_('Destino do Teletransporte enviado ao mestre.','info',1500);
+            });
+            return;
+        }
+        t.x=Math.round(x*100)/100;t.y=Math.round(y*100)/100;
+        t.teletransportePsiPendenteLab=0;t.saltoPsiPendenteLab=0;t.teletransporteCliqueLab=false;
+        labEstado_.selecionadoId=String(t.id);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+        notificar_('✨ Teletransporte concluído.','sucesso',1800);
+        return;
+    }
+    return labCliqueFundoMapaV46453_(ev);
+};
+
+// O processamento do comando de movimento já respeita o alcance salvo.
+// Após a execução, o modo especial é limpo e o token volta a ser arrastável normalmente.
+
+// Visual de alcance: reforça que agora se escolhe qualquer ponto dentro do círculo.
+const labOverlayMovimentoHtmlV46453_=labOverlayMovimentoHtml_;
+labOverlayMovimentoHtml_=function(t,ppm){
+    if(t&&Number(t.teletransportePsiPendenteLab||0)>0){
+        const r=Number(t.teletransportePsiPendenteLab||0);
+        return `<div style="position:absolute;left:${(Number(t.x)-r)*ppm}px;top:${(Number(t.y)-r)*ppm}px;width:${r*2*ppm}px;height:${r*2*ppm}px;border-radius:50%;border:2px dashed rgba(210,155,255,.9);background:rgba(143,80,220,.08);box-shadow:0 0 25px rgba(190,120,255,.2);pointer-events:none;z-index:1"></div>`;
+    }
+    return labOverlayMovimentoHtmlV46453_(t,ppm);
+};
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -17302,6 +17773,6 @@ const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.45.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.45.3: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
