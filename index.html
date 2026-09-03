@@ -17258,7 +17258,7 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 
 
 // ============================================================
-// V46.47.0 — XP PSI, respostas flutuantes, resistências e Oficina completa
+// V46.47.1 — XP PSI, respostas flutuantes, resistências e Oficina completa
 // ============================================================
 // Um minuto de manutenção Psi equivale provisoriamente a 10 turnos de combate.
 const PSI_TURNOS_POR_MINUTO_=10;
@@ -17325,7 +17325,7 @@ const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_
 
 
 // ============================================================
-// V46.47.0 — estabilização Psi, testes no mapa e Oficina avançada
+// V46.47.1 — estabilização Psi, testes no mapa e Oficina avançada
 // ============================================================
 
 // ---------- Identificação robusta de PJ real ----------
@@ -17680,7 +17680,7 @@ labRender_=function(){
 
 
 // ============================================================
-// V46.47.0 — Teletransporte por clique e teletransportes caóticos
+// V46.47.1 — Teletransporte por clique e teletransportes caóticos
 // ============================================================
 function labPsiPosicaoAleatoriaValida_(alvo){
     const raio=Math.max(.3,Number(alvo?.diametroM||.9)/2);
@@ -17795,7 +17795,7 @@ labOverlayMovimentoHtml_=function(t,ppm){
 
 
 // ============================================================
-// V46.47.0 — roteamento de resistência Psi + nomes sempre retos
+// V46.47.1 — roteamento de resistência Psi + nomes sempre retos
 // ============================================================
 
 // Qualquer token com donoUid é tratado como controlado por uma conta real.
@@ -17990,7 +17990,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.47.0',e);}
+    }catch(e){console.warn('v46.47.1',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -18000,7 +18000,7 @@ window.labPsiRenderModalMestre_=labPsiRenderModalMestre_;
 
 
 // ============================================================
-// V46.47.0 — Oficina avançada + laser + perícias + Mimetismo
+// V46.47.1 — Oficina avançada + laser + perícias + Mimetismo
 // ============================================================
 
 // ---------- Testes de perícia gerais no Mapa da Mesa ----------
@@ -18254,7 +18254,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.47.0 — correções reais: Força Bruta, laser e Oficina V2
+// V46.47.1 — correções reais: Força Bruta, laser e Oficina V2
 // ============================================================
 
 // ---------- 1) Força Bruta sempre disponível para mover objetos ----------
@@ -18629,7 +18629,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.47.0 — painel compacto, escala da Oficina, armas corretas,
+// V46.47.1 — painel compacto, escala da Oficina, armas corretas,
 //             mapa estável e laser realmente visível
 // ============================================================
 
@@ -18929,7 +18929,7 @@ window.labAtualizarInfo_=labAtualizarInfo_;
 
 
 // ============================================================
-// V46.47.0 — Laser em camada global, independente do rerender do mapa
+// V46.47.1 — Laser em camada global, independente do rerender do mapa
 // ============================================================
 let labLaserBodyUltimoIdV3_='';
 let labLaserBodyTimersV3_=[];
@@ -19034,7 +19034,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.47.0',e);}
+    }catch(e){console.warn('laser v46.47.1',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19042,7 +19042,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.47.0 — painel universal de ação, Sorte, Agilidade Psi,
+// V46.47.1 — painel universal de ação, Sorte, Agilidade Psi,
 // combate desarmado, Anoitecer furtivo e FX por tipo de arma
 // ============================================================
 
@@ -19459,6 +19459,234 @@ labRender_=function(){
 };
 window.labRender_=labRender_;
 
+
+
+// ============================================================
+// V46.47.1 — compatibilidade de armas + XP de especializações
+// ============================================================
+
+// ---------- Compatibilidade de armas: plataforma + tecnologia ----------
+// A versão anterior classificava qualquer "blaster/phaser" apenas como
+// "energia". Isso apagava a informação essencial de que a arma era uma
+// pistola, rifle, carabina etc. Resultado: quase tudo recebia penalidade.
+function familiasArmaCompatV46471_(item){
+    const n=normalizarTextoCombate_([
+        item?.id,item?.nome,item?.nome_en,item?.nome_zh,item?.descricao,
+        item?.categoria,item?.tipo,item?.familia,item?.subtipo
+    ].filter(Boolean).join(' '));
+    const f=new Set();
+
+    if(/escudo|shield/.test(n))f.add('escudo');
+    if(/granada|grenade|arremesso|throw/.test(n))f.add('arremesso');
+    if(/arco|bow/.test(n))f.add('arco');
+    if(/escopeta|shotgun/.test(n))f.add('escopeta');
+    if(/submetralhadora|submachine|smg/.test(n))f.add('submetralhadora');
+    if(/sniper|precisao|precision|anti.?material/.test(n))f.add('precisao');
+
+    const energia=/laser|blaster|phaser|faser|disrupt|disintegr|plasma|sonic|energia|energy/.test(n);
+    if(energia)f.add('energia');
+    if(/laser/.test(n))f.add('laser');
+
+    if(/pesad|heavy|canhao|cannon|launcher/.test(n))f.add('pesada');
+
+    // "Blaster de Palma" conta como arma curta/pistola.
+    if(/pistola|pistol|revolver|handgun|palma|palm/.test(n))f.add('pistola');
+    if(/rifle|fuzil|carabina|carbine/.test(n))f.add('rifle');
+
+    if(f.has('pistola')&&energia)f.add('energia_pistola');
+    if(f.has('rifle')&&energia)f.add('energia_rifle');
+    if(f.has('pesada')&&energia)f.add('energia_pesada');
+
+    if(/plasma|vibro/.test(n) && /espada|sword|blade|lamina/.test(n))f.add('plasma_vibro');
+    if(/lanca|alabarda|spear|halberd|polearm/.test(n))f.add('haste');
+    if(/faca|adaga|dagger|knife/.test(n))f.add('branca_curta');
+    if(/espada|sabre|saber|machado|sword|axe/.test(n))f.add('branca_longa');
+    if(itemEhCorpoACorpo_(item)&&![...f].some(x=>['branca_curta','branca_longa','haste','plasma_vibro'].includes(x)))f.add('improvisada');
+
+    return f;
+}
+
+familiaArmaCompat_=function(item){
+    const f=familiasArmaCompatV46471_(item);
+    // Mantém compatibilidade com código antigo que ainda peça uma família única.
+    for(const k of ['precisao','energia_pesada','energia_pistola','energia_rifle','pesada','pistola','rifle','escopeta','submetralhadora','arremesso','arco','plasma_vibro','haste','branca_curta','branca_longa','escudo','improvisada','energia'])
+        if(f.has(k))return k;
+    return 'desconhecida';
+};
+
+penalidadeCompatibilidadeArma_=function(pericia,item){
+    if(!pericia||!item||['esquiva','combate_desarmado','briga_pugilismo'].includes(pericia.id))return 0;
+    const f=familiasArmaCompatV46471_(item);
+    const id=String(pericia.id||'');
+
+    // Armas brancas.
+    if(id==='armas_brancas_curtas')return f.has('branca_curta')?0:(f.has('plasma_vibro')?1:2);
+    if(id==='armas_brancas_longas')return f.has('branca_longa')?0:(f.has('plasma_vibro')?1:2);
+    if(id==='armas_haste')return f.has('haste')?0:(f.has('plasma_vibro')?1:2);
+    if(id==='armas_improvisadas')return f.has('improvisada')?0:2;
+    if(id==='esgrima_plasma_vibro')return f.has('plasma_vibro')?0:((f.has('branca_curta')||f.has('branca_longa')||f.has('haste'))?1:2);
+
+    // Armas convencionais.
+    if(id==='pistolas_revolveres')return f.has('pistola')&&!f.has('energia')?0:(f.has('pistola')?1:(f.has('submetralhadora')?1:2));
+    if(id==='fuzis_carabinas')return f.has('rifle')&&!f.has('energia')?0:(f.has('rifle')?1:(f.has('precisao')?1:2));
+    if(id==='escopetas')return f.has('escopeta')?0:2;
+    if(id==='submetralhadoras')return f.has('submetralhadora')?0:(f.has('pistola')&&!f.has('energia')?1:2);
+    if(id==='armas_pesadas')return f.has('pesada')&&!f.has('energia')?0:(f.has('pesada')?1:2);
+    if(id==='armas_arremesso')return f.has('arremesso')?0:2;
+    if(id==='arqueiro')return f.has('arco')?0:2;
+
+    // Atirador de Elite treina o uso preciso de armas longas.
+    // Sniper/precisão = 0; qualquer rifle/carabina = +1; demais = +2.
+    if(id==='atirador_elite')return f.has('precisao')?0:(f.has('rifle')?1:2);
+
+    // Energia por PLATAFORMA. Pistola Blaster/Phaser não deve parecer
+    // uma arma completamente diferente de Pistola Laser.
+    if(id==='combate_pistola_laser'||id==='pistolas_laser'){
+        if(f.has('energia_pistola'))return 0;
+        if(f.has('pistola')&&!f.has('energia'))return 1;
+        if(f.has('energia'))return 1;
+        return 2;
+    }
+    if(id==='rifles_laser'){
+        if(f.has('energia_rifle'))return 0;
+        if(f.has('rifle')&&!f.has('energia'))return 1;
+        if(f.has('energia_pesada'))return 1;
+        return 2;
+    }
+    if(id==='arma_laser_pesada'){
+        if(f.has('energia_pesada'))return 0;
+        if(f.has('energia_rifle')||f.has('energia'))return 1;
+        return 2;
+    }
+
+    // Armas de Energia é a perícia ampla da tecnologia energética.
+    // Qualquer arma energética usa 0 graus; armas convencionais similares +1.
+    if(id==='armas_energia'){
+        if(f.has('energia'))return 0;
+        if(f.has('pistola')||f.has('rifle')||f.has('pesada'))return 1;
+        return 2;
+    }
+
+    // Especializações futuras: tenta inferir pelo próprio nome/ID.
+    const pn=normalizarTextoCombate_(`${id} ${getNome(pericia)||''}`);
+    if(/pistola/.test(pn))return f.has('pistola')?0:2;
+    if(/rifle|fuzil|carabina/.test(pn))return f.has('rifle')?0:2;
+    if(/pesad/.test(pn))return f.has('pesada')?0:2;
+
+    return 2;
+};
+
+// ---------- XP: salvar novas especializações sem risco de estado local velho ----------
+function substituirCharLocalV46471_(fresco){
+    if(!fresco?.id)return fresco;
+    const i=(userCharacters||[]).findIndex(x=>String(x.id)===String(fresco.id));
+    if(i>=0){
+        // Preserva a identidade do objeto quando possível, pois outras telas
+        // podem ter referência para ele.
+        Object.keys(userCharacters[i]).forEach(k=>delete userCharacters[i][k]);
+        Object.assign(userCharacters[i],fresco);
+        return userCharacters[i];
+    }
+    userCharacters.push(fresco);
+    return fresco;
+}
+function sincronizarXpCharNaMesaV46471_(char){
+    if(!char)return;
+    for(const t of (labEstado_?.tokens||[])){
+        if(String(t.origemId||t.id)===String(char.id)){
+            t.charLab={...(t.charLab||{}),...labSnapshotChar_(char)};
+        }
+    }
+}
+
+window.investirXpPendente_=async function(grantId){
+    const local=(userCharacters||[]).find(c=>c.id===currentCharId);if(!local)return;
+    const ins=[...document.querySelectorAll(`.xp-alloc[data-grant="${CSS.escape(String(grantId))}"]`)];
+    const alocs=ins.map(i=>({
+        tipo:String(i.dataset.tipo||''),
+        id:String(i.dataset.id||''),
+        q:Math.max(0,Math.floor(Number(i.value)||0))
+    })).filter(x=>x.id&&x.q>0);
+    const total=alocs.reduce((s,x)=>s+x.q,0);
+    if(total<=0){notificar_('Informe quantos pontos deseja investir.','aviso');return;}
+
+    try{
+        // Busca a ficha mais recente do Firestore antes de modificar. Isso evita
+        // que uma ficha local antiga apague uma especialização recém-criada.
+        const snap=await getDoc(doc(db,'personagens',local.id));
+        if(!snap.exists())throw new Error('Ficha não encontrada.');
+        const char={id:snap.id,...snap.data()};
+        const grants=Array.isArray(char.xpPendentes)?char.xpPendentes:[];
+        const g=grants.find(x=>String(x.id)===String(grantId));
+        if(!g){notificar_('Esta concessão de XP já não está disponível. Atualizei a ficha.','aviso',4000);substituirCharLocalV46471_(char);renderizarPericias(char);return;}
+        if(total>Number(g.restantes||0)){notificar_('O investimento excede o XP disponível nesta concessão.','aviso');return;}
+
+        const permitidos=new Set((g.permitidos||[]).map(a=>`${String(a.tipo)}:${String(a.id)}`));
+        for(const a of alocs){
+            if(!permitidos.has(`${a.tipo}:${a.id}`)){
+                throw new Error(`Investimento não autorizado: ${a.id}`);
+            }
+        }
+
+        char.pericias=char.pericias||{};
+        char.especializacoes=char.especializacoes||{};
+
+        for(const a of alocs){
+            const ehEsp=a.tipo==='especializacao';
+            const colecao=ehEsp?char.especializacoes:char.pericias;
+            const d={...(colecao[a.id]||{})};
+            const inv=obterInvestimentosPericia_(d);
+            inv.xp=Math.max(0,Number(inv.xp||0))+a.q;
+            d.investimentos=inv;
+            d.treinoTotal=Number(inv.origem||0)+Number(inv.carreira||0)+Number(inv.hobbie||0)+Number(inv.xp||0);
+
+            // Guarda metadados mínimos em novas especializações. Mesmo que o
+            // banco seja recarregado mais tarde, o investimento não vira órfão.
+            if(ehEsp){
+                const meta=(especializacoesDB||[]).find(e=>String(e.id)===String(a.id));
+                if(meta){
+                    d.nomeOriginal=d.nomeOriginal||getNome(meta);
+                    d.tipoOriginal=d.tipoOriginal||meta.tipo||'Combate';
+                }
+            }
+            colecao[a.id]=d;
+        }
+
+        g.restantes=Math.max(0,Number(g.restantes||0)-total);
+        char.xpPendentes=grants.filter(x=>Number(x.restantes||0)>0);
+
+        await setDoc(doc(db,'personagens',char.id),{
+            pericias:char.pericias,
+            especializacoes:char.especializacoes,
+            xpPendentes:char.xpPendentes
+        },{merge:true});
+
+        // Confirma lendo de volta. Não mostra "salvo" antes de verificar.
+        const check=await getDoc(doc(db,'personagens',char.id));
+        if(!check.exists())throw new Error('Não consegui confirmar a gravação.');
+        const fresco={id:check.id,...check.data()};
+
+        for(const a of alocs.filter(x=>x.tipo==='especializacao')){
+            if(totalTreinoPericia_(fresco.especializacoes?.[a.id]||{})<=0)
+                throw new Error(`A especialização ${a.id} não permaneceu gravada.`);
+        }
+
+        const atualizado=substituirCharLocalV46471_(fresco);
+        limparRascunhoPericias_(atualizado.id);
+        sincronizarXpCharNaMesaV46471_(atualizado);
+        labSalvarLocal_();labAgendarSyncRemoto_();
+
+        renderizarPericias(atualizado);
+        renderizarAvisosProgressao_(atualizado);
+        try{renderizarCombate(atualizado);}catch(_){}
+        somSalvar_();
+        notificar_(`⭐ ${total} ponto(s) de XP investidos e confirmados no banco de dados.`,'sucesso',4200);
+    }catch(e){
+        console.error('Falha ao investir XP',e);
+        notificar_(`Não consegui salvar o investimento de XP: ${e?.message||e}`,'erro',6500);
+    }
+};
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -19474,6 +19702,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.47.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.47.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
