@@ -424,6 +424,10 @@
  background:radial-gradient(circle,#fff 0 12%,#ffe16b 13% 30%,#ff7a22 31% 58%,rgba(255,30,0,.25) 59% 75%,transparent 76%);
  box-shadow:0 0 20px #ffcf4d,0 0 48px #ff5a22;animation:labExplosionV2 .62s ease-out forwards}
 
+
+@keyframes labFirePulse481{0%,100%{transform:translate(-50%,0) scale(.92);opacity:.78}50%{transform:translate(-50%,-5px) scale(1.12);opacity:1}}
+.lab-fire-overlay-481{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);z-index:80;pointer-events:none;font-size:26px;filter:drop-shadow(0 0 6px #ff7a00);animation:labFirePulse481 .38s ease-in-out infinite}
+
 </style>
 
 <style id="lab-ui-polish-v46360">
@@ -18020,7 +18024,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.48.0',e);}
+    }catch(e){console.warn('v46.48.1',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19064,7 +19068,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.48.0',e);}
+    }catch(e){console.warn('laser v46.48.1',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19915,6 +19919,208 @@ window.labEncerrarOportunidade_=function(){
     return r;
 };
 
+
+
+// ============================================================
+// V46.48.1 — lâminas de energia, alcance melee, som/FX e fogo
+// ============================================================
+
+// Reconhecimento explícito: "Espada de Força" é uma lâmina de energia,
+// mesmo que seu nome não contenha laser/plasma/vibro.
+function labEhLaminaEnergia481_(item){
+    if(!item)return false;
+    const txt=normalizarTextoCombate_([
+      item.id,item.nome,item.nome_en,item.nome_zh,item.categoria,item.tipo,
+      item.familiaArma,item.plataforma,item.tecnologia,item.propriedades,item.tags
+    ].filter(Boolean).join(' '));
+    const lamina=/espada|sabre|saber|sword|blade|lamina|lâmina|vibro/.test(txt);
+    const energia=/forca|força|force|energia|energy|laser|plasma|phaser|faser|luz|light|vibro/.test(txt);
+    return lamina&&energia;
+}
+
+// Substitui o detector legado usado pelas versões anteriores.
+labItemEnergiaCorpoACorpoV247_=labEhLaminaEnergia481_;
+
+const itemEhCorpoACorpo481Base_=itemEhCorpoACorpo_;
+itemEhCorpoACorpo_=function(item){
+    if(labEhLaminaEnergia481_(item))return true;
+    return itemEhCorpoACorpo481Base_(item);
+};
+
+const labAtaqueEhDistancia481Base_=labAtaqueEhDistancia_;
+labAtaqueEhDistancia_=function(item){
+    if(labEhLaminaEnergia481_(item))return false;
+    return labAtaqueEhDistancia481Base_(item);
+};
+
+const labAlcanceAtaque481Base_=labAlcanceAtaque_;
+labAlcanceAtaque_=function(t,item){
+    if(labEhLaminaEnergia481_(item))return 2.2;
+    // Faca/adaga/espada corpo a corpo nunca herdam alcance de munição ou
+    // um alcanceMetros antigo incorreto.
+    const txt=normalizarTextoCombate_(`${item?.nome||''} ${item?.nome_en||''} ${item?.categoria||''}`);
+    if(itemEhCorpoACorpo_(item)){
+        if(/lanca|lança|spear|haste|polearm/.test(txt))return 3.0;
+        if(/espada|sabre|sword|machado|axe/.test(txt))return 2.1;
+        if(/faca|adaga|knife|dagger/.test(txt))return 1.8;
+    }
+    return labAlcanceAtaque481Base_(t,item);
+};
+
+// Compatibilidade: lâmina energética é +1 com Armas Brancas Longas e
+// 0 com Lâminas de Energia/Vibrolâminas.
+const familiasArmaCompat481Base_=familiasArmaCompatV46471_;
+familiasArmaCompatV46471_=function(item){
+    const f=familiasArmaCompat481Base_(item);
+    if(labEhLaminaEnergia481_(item)){
+        f.add('plasma_vibro');f.add('lamina_energia');f.add('branca_longa');f.add('energia');
+    }
+    return f;
+};
+const penalidadeCompatibilidadeArma481Base_=penalidadeCompatibilidadeArma_;
+penalidadeCompatibilidadeArma_=function(pericia,item){
+    const id=String(pericia?.id||'');
+    if(labEhLaminaEnergia481_(item)){
+        if(id==='esgrima_plasma_vibro'||id==='laminas_energia'||id==='laminas_energia_vibro')return 0;
+        if(id==='armas_brancas_longas')return 1;
+        if(id==='armas_brancas_curtas'||id==='armas_haste'||id==='armas_improvisadas')return 2;
+    }
+    return penalidadeCompatibilidadeArma481Base_(pericia,item);
+};
+
+// Som próprio de lâmina energética: zumbido + varredura.
+// É original/procedural e não usa áudio de franquias externas.
+function somLaminaEnergia481_(){
+    const ctx=obterAudioCtx_();if(!ctx)return;
+    const t=ctx.currentTime;
+
+    const hum=ctx.createOscillator(),hg=ctx.createGain();
+    hum.type='sawtooth';hum.frequency.setValueAtTime(92,t);hum.frequency.exponentialRampToValueAtTime(118,t+.24);
+    hg.gain.setValueAtTime(.001,t);hg.gain.linearRampToValueAtTime(.045,t+.025);hg.gain.exponentialRampToValueAtTime(.001,t+.30);
+    hum.connect(hg).connect(ctx.destination);hum.start(t);hum.stop(t+.31);
+
+    const sw=ctx.createOscillator(),sg=ctx.createGain(),flt=ctx.createBiquadFilter();
+    sw.type='triangle';sw.frequency.setValueAtTime(980,t+.035);sw.frequency.exponentialRampToValueAtTime(155,t+.24);
+    flt.type='bandpass';flt.frequency.value=720;flt.Q.value=.8;
+    sg.gain.setValueAtTime(.001,t+.03);sg.gain.linearRampToValueAtTime(.06,t+.055);sg.gain.exponentialRampToValueAtTime(.001,t+.27);
+    sw.connect(flt).connect(sg).connect(ctx.destination);sw.start(t+.03);sw.stop(t+.28);
+}
+const labSomAtaque481Base_=labSomAtaque_;
+labSomAtaque_=function(item,grau=''){
+    if(labEhLaminaEnergia481_(item)){
+        somLaminaEnergia481_();
+        if(String(grau).toLowerCase().includes('crít')||String(grau).toLowerCase().includes('crit')){
+            setTimeout(()=>{try{somCriticoArma_(item,getNome(item)||'');}catch(_){}},80);
+        }
+        return;
+    }
+    return labSomAtaque481Base_(item,grau);
+};
+
+// Visual corpo a corpo: força o arco luminoso para Espada de Força.
+const labDispararEfeitoVisualAtaque481Base_=labDispararEfeitoVisualAtaque_;
+labDispararEfeitoVisualAtaque_=function(atacante,alvo,item,acertou,grau){
+    if(labEhLaminaEnergia481_(item)){
+        const fx={
+          id:`slash481:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,
+          tipo:'energia_melee',atacanteId:String(atacante?.id||''),alvoId:String(alvo?.id||''),
+          itemId:String(item?.id||''),cor:labEnergyMeleeCorV247_(item),acertou:!!acertou,
+          grau:String(grau||''),ts:Date.now()
+        };
+        labEstado_.efeitoVisualLab=fx;
+        labSalvarLocal_();labAgendarSyncRemoto_();
+        setTimeout(()=>labMostrarGolpeEnergiaV247_(atacante,alvo,item,acertou),70);
+        labAplicarEfeitoObjetoEnergia481_(alvo,item,acertou,grau);
+        return;
+    }
+    const r=labDispararEfeitoVisualAtaque481Base_(atacante,alvo,item,acertou,grau);
+    labAplicarEfeitoObjetoEnergia481_(alvo,item,acertou,grau);
+    return r;
+};
+
+// Inflamabilidade 0–5. Se o banco já possuir o campo, ele é respeitado.
+// Caso contrário, há um fallback semântico provisório.
+function labInflamabilidadeObjeto481_(o){
+    const m=labObjetoModelo_(o);
+    const explicito=Number(o?.inflamabilidade??m?.inflamabilidade);
+    if(Number.isFinite(explicito))return Math.max(0,Math.min(5,Math.round(explicito)));
+    const txt=normalizarTextoCombate_(`${o?.nome||''} ${o?.material||''} ${m?.nome||''} ${m?.material||''} ${m?.descricao||''}`);
+    if(/combustivel|fuel|gasolina|alcool|óleo|oleo|palha|papel seco/.test(txt))return 5;
+    if(/galho seco|madeira seca|folha seca|papel|tecido/.test(txt))return 4;
+    if(/madeira|wood/.test(txt))return 3;
+    if(/arvore|árvore|tree|planta|folha/.test(txt))return 2;
+    return 0;
+}
+function labCalorArma481_(item){
+    const txt=normalizarTextoCombate_(`${getNome(item)||''} ${item?.nome_en||''} ${item?.propriedades||''} ${item?.tags||''}`);
+    if(/incendi|fogo|flame/.test(txt))return 5;
+    if(/plasma/.test(txt))return 4;
+    if(labEhLaminaEnergia481_(item)||/laser/.test(txt))return 3;
+    if(/blaster|phaser|faser/.test(txt))return 2;
+    return 0;
+}
+function labAlvoJaInerte481_(alvo){
+    if(!alvo)return false;
+    if(labEhAlvoObjeto_(alvo))return !!alvo.destruido||Number(alvo.pvAtual??alvo.pvMax??1)<=0;
+    if(alvo.morto===true||alvo.morta===true||alvo.derrotado===true)return true;
+    const c=labCharToken_(alvo);
+    if(c?.morto===true||c?.morta===true||c?.derrotado===true)return true;
+    return false;
+}
+function labAplicarEfeitoObjetoEnergia481_(alvo,item,acertou,grau){
+    if(!acertou||!labEhAlvoObjeto_(alvo)||labAlvoJaInerte481_(alvo))return;
+    const inflam=labInflamabilidadeObjeto481_(alvo),calor=labCalorArma481_(item);
+    if(inflam<=0||calor<=0)return;
+    const crit=batalhaResultadoGradeValor_(grau)>=3;
+    // Quanto mais inflamável, menor o calor necessário. Crítico soma 2.
+    const necessario=Math.max(1,6-inflam);
+    if(calor+(crit?2:0)>=necessario){
+        alvo.pegandoFogoLab=true;
+        alvo.inflamabilidadeLab=inflam;
+    }
+}
+
+// Alvos mortos/destruídos ainda podem receber dano, mas não geram novos
+// efeitos especiais.
+const labEfeitosDisponiveis481Base_=labEfeitosDisponiveis_;
+labEfeitosDisponiveis_=function(pend){
+    const alvo=labAlvoAtaquePorId_(pend?.defensorId)||labObjetoPorId_(pend?.defensorId);
+    if(labAlvoJaInerte481_(alvo))return [];
+    return labEfeitosDisponiveis481Base_(pend);
+};
+
+// Objetos destruídos continuam na lista de alvos para permitir dano excedente.
+const labAlvosAtaque481Base_=labAlvosAtaque_;
+labAlvosAtaque_=function(t){
+    const base=(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t?.id));
+    const objs=(labEstado_.objetosLab||[]).filter(o=>o.destrutivel!==false);
+    return [...base,...objs];
+};
+
+// Overlay de fogo robusto aplicado depois do render, sem depender de
+// substituição de HTML interno.
+function labRenderFogoObjetos481_(){
+    const map=document.getElementById('labMetricMap');if(!map)return;
+    for(const o of (labEstado_.objetosLab||[])){
+        let node=null;
+        try{node=map.querySelector(`.lab-map-object[data-id="${CSS.escape(String(o.id))}"]`);}catch(_){}
+        if(!node)continue;
+        node.querySelectorAll('.lab-fire-overlay-481').forEach(x=>x.remove());
+        if(o.pegandoFogoLab&&!o.destruido){
+            const f=document.createElement('div');f.className='lab-fire-overlay-481';f.textContent='🔥🔥';
+            node.appendChild(f);
+        }
+    }
+}
+
+const labRender481Base_=labRender_;
+labRender_=function(){
+    const r=labRender481Base_();
+    try{labRenderFogoObjetos481_();}catch(e){console.warn('fogo 481',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -19930,6 +20136,6 @@ window.labEncerrarOportunidade_=function(){
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.48.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.48.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
