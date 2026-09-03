@@ -13780,6 +13780,8 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             uso: String(bruto.uso || bruto.usoCombate || 'Teste').trim(),
             formula: String(bruto.formula || '').trim(),
             disponivelCampanha: bruto.disponivelCampanha===''||bruto.disponivelCampanha===undefined ? true : parseBoolean_(bruto.disponivelCampanha),
+            familiaArma: String(bruto.familiaArma || bruto.familia_arma || '').trim(),
+            grausOutrasArmas: Math.max(0, Math.trunc(parseNumero_(bruto.grausOutrasArmas ?? bruto.graus_outras_armas, 0))),
             descricao: String(bruto.descricao || '').trim(),
             descricao_en: String(bruto.descricao_en || '').trim(),
             descricao_zh: String(bruto.descricao_zh || '').trim()
@@ -13893,6 +13895,17 @@ function normalizarLinhaImportacao_(tipo, bruto) {
             nivelAcesso: String(bruto.nivelAcesso || bruto.acesso || '').trim(),
             material: String(bruto.material || '').trim(),
             unidade: String(bruto.unidade || '').trim(),
+            disponivelCampanha: bruto.disponivelCampanha===''||bruto.disponivelCampanha===undefined ? true : parseBoolean_(bruto.disponivelCampanha),
+            familiaArma: String(bruto.familiaArma || bruto.familia_arma || '').trim(),
+            plataforma: String(bruto.plataforma || '').trim(),
+            tecnologia: String(bruto.tecnologia || '').trim(),
+            alcanceMetros: parseNumero_(bruto.alcanceMetros ?? bruto.alcance_metros, 0),
+            municoesCompativeis: String(bruto.municoesCompativeis || bruto.municoes_compativeis || '').trim(),
+            consumoPorUso: parseNumero_(bruto.consumoPorUso ?? bruto.consumo_por_uso, 0),
+            perfilVisual: String(bruto.perfilVisual || bruto.perfil_visual || '').trim(),
+            perfilSom: String(bruto.perfilSom || bruto.perfil_som || '').trim(),
+            inflamabilidade: Math.max(0, Math.min(5, Math.trunc(parseNumero_(bruto.inflamabilidade, 0)))),
+            empuxo: Math.max(0, parseNumero_(bruto.empuxo, 0)),
             imagem: String(bruto.imagem || bruto.urlImagem || '').trim(),
             descricao: String(bruto.descricao || bruto.observacoes || '').trim(),
             descricao_en: String(bruto.descricao_en || '').trim(),
@@ -14082,10 +14095,11 @@ function dadosExportacaoBanco_(tipo) {
         },
         especializacoes: {
             dados: especializacoesDB,
-            cabecalhos: ['id','nome','nome_en','nome_zh','tipo','uso','formula','disponivelCampanha','descricao','descricao_en','descricao_zh'],
+            cabecalhos: ['id','nome','nome_en','nome_zh','tipo','uso','formula','disponivelCampanha','familiaArma','grausOutrasArmas','descricao','descricao_en','descricao_zh'],
             map: e => ({
                 id:e.id||'', nome:e.nome||'', nome_en:e.nome_en||'', nome_zh:e.nome_zh||'',
                 tipo:e.tipo||'', uso:e.uso||'', formula:e.formula||'', disponivelCampanha:e.disponivelCampanha!==false,
+                familiaArma:e.familiaArma||'', grausOutrasArmas:e.grausOutrasArmas??0,
                 descricao:e.descricao||'', descricao_en:e.descricao_en||'', descricao_zh:e.descricao_zh||''
             })
         },
@@ -14122,7 +14136,7 @@ function dadosExportacaoBanco_(tipo) {
         criaturas:{dados:criaturasDB,cabecalhos:['id','nome','nome_en','nome_zh','tipo','especie','habitat','comportamento','altura','tamanho','pesoCorporal','FOR','CON','TAM','DES','INT','POD','CAR','periciasTexto','especializacoesTexto','armasTexto','propriedadesAtaques','alcancesAtaques','habilidadesTexto','vinculosAtaquesPericias','acoesMaxEspecial','armaduraNatural','movimentoTerrestre','movimentoVoo','movimentoNatacao','selecionavelCombate','imagem','descricao'],map:n=>n},
         itens: {
             dados: itensDB,
-            cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','penetracao','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','imagem','descricao','descricao_en','descricao_zh'],
+            cabecalhos: ['id','nome','nome_en','nome_zh','categoria','peso','preco','pa','pv','alcance','dano','penetracao','municao','uso','destinoLocal','locaisProtegidos','nivelAcesso','material','unidade','disponivelCampanha','familiaArma','plataforma','tecnologia','alcanceMetros','municoesCompativeis','consumoPorUso','perfilVisual','perfilSom','inflamabilidade','empuxo','imagem','descricao','descricao_en','descricao_zh'],
             map: i => ({
                 id:i.id||'', nome:i.nome||'', nome_en:i.nome_en||'', nome_zh:i.nome_zh||'',
                 categoria:i.categoria||'Diversos',
@@ -14140,6 +14154,11 @@ function dadosExportacaoBanco_(tipo) {
                 nivelAcesso:i.nivelAcesso||i.acesso||'',
                 material:i.material||'',
                 unidade:i.unidade||'',
+                disponivelCampanha:i.disponivelCampanha!==false,
+                familiaArma:i.familiaArma||'', plataforma:i.plataforma||'', tecnologia:i.tecnologia||'',
+                alcanceMetros:i.alcanceMetros??'', municoesCompativeis:i.municoesCompativeis||'',
+                consumoPorUso:i.consumoPorUso??'', perfilVisual:i.perfilVisual||'', perfilSom:i.perfilSom||'',
+                inflamabilidade:i.inflamabilidade??0, empuxo:i.empuxo??0,
                 imagem:i.imagem||i.urlImagem||'',
                 descricao:i.descricao||i.observacoes||'',
                 descricao_en:i.descricao_en||'',
@@ -18024,7 +18043,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.48.1',e);}
+    }catch(e){console.warn('v46.48.2',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19068,7 +19087,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.48.1',e);}
+    }catch(e){console.warn('laser v46.48.2',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19922,7 +19941,7 @@ window.labEncerrarOportunidade_=function(){
 
 
 // ============================================================
-// V46.48.1 — lâminas de energia, alcance melee, som/FX e fogo
+// V46.48.2 — lâminas de energia, alcance melee, som/FX e fogo
 // ============================================================
 
 // Reconhecimento explícito: "Espada de Força" é uma lâmina de energia,
@@ -20136,6 +20155,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.48.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.48.2: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
