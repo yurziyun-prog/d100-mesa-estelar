@@ -429,7 +429,7 @@
 .lab-fire-overlay-481{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);z-index:80;pointer-events:none;font-size:26px;filter:drop-shadow(0 0 6px #ff7a00);animation:labFirePulse481 .38s ease-in-out infinite}
 
 
-/* ===== V46.50.2 ===== */
+/* ===== V46.51.0 ===== */
 @keyframes labFire490{0%,100%{transform:translate(-50%,0) scale(.92);opacity:.78}50%{transform:translate(-50%,-6px) scale(1.13);opacity:1}}
 .lab-fire-490{position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-size:27px;z-index:90;pointer-events:none;filter:drop-shadow(0 0 8px #ff7400);animation:labFire490 .36s ease-in-out infinite}
 .gm-vector-selected{filter:drop-shadow(0 0 5px #ffd54a)}
@@ -440,7 +440,7 @@
 #labAudioMesaFloat button{margin:0;padding:7px 10px}
 
 
-/* ===== V46.50.2 ===== */
+/* ===== V46.51.0 ===== */
 #gmResizeModal500{position:fixed;inset:0;z-index:2147483400;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px}
 #gmResizeModal500 .card{width:min(620px,94vw);background:#211638;border:1px solid rgba(126,231,255,.35);border-radius:14px;padding:18px;box-shadow:0 16px 50px rgba(0,0,0,.55)}
 #gmResizeModal500 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
@@ -451,10 +451,25 @@
 #labAudioStatus500{font-size:11px;color:#9fc6d8;margin-top:4px}
 
 
-/* ===== V46.50.2 ===== */
+/* ===== V46.51.0 ===== */
 #gmVetSelectToggle501{display:inline-flex;align-items:center;gap:6px;margin:0;padding:7px 10px;border-radius:7px;background:rgba(255,255,255,.08);cursor:pointer}
 #gmVetSelectToggle501 input{width:18px;height:18px;margin:0}
 .gm-fixed-badge-501{position:absolute;right:-7px;bottom:-7px;z-index:95;font-size:16px;filter:drop-shadow(0 1px 3px #000);pointer-events:none}
+
+
+/* ===== V46.51.0 ===== */
+.lab-fire-490,.lab-object-fire-v2{display:none!important}
+.lab-fire-real-510{position:absolute;left:50%;bottom:2%;width:58%;height:52%;transform:translateX(-50%);z-index:96;pointer-events:none;filter:drop-shadow(0 0 6px rgba(255,96,0,.85))}
+.lab-fire-real-510 .fl{position:absolute;bottom:0;border-radius:55% 45% 60% 40%;transform-origin:50% 100%;background:radial-gradient(ellipse at 50% 82%,#fff8b2 0 13%,#ffd52e 14% 34%,#ff7425 35% 67%,rgba(210,25,0,.25) 68% 80%,transparent 81%);clip-path:polygon(50% 0,72% 34%,96% 72%,72% 100%,27% 100%,4% 70%,27% 35%);animation:labFlame510 .46s ease-in-out infinite alternate}
+.lab-fire-real-510 .f1{left:7%;width:42%;height:76%;animation-delay:.04s}.lab-fire-real-510 .f2{left:31%;width:46%;height:100%;animation-delay:.17s}.lab-fire-real-510 .f3{right:3%;width:39%;height:69%;animation-delay:.28s}
+.lab-fire-real-510 .sm{position:absolute;left:44%;bottom:74%;width:16px;height:16px;border-radius:50%;background:rgba(55,55,55,.38);box-shadow:11px -14px 0 4px rgba(65,65,65,.27),-8px -27px 0 7px rgba(72,72,72,.18);animation:labSmoke510 1.35s linear infinite}
+@keyframes labFlame510{0%{transform:scaleX(.86) scaleY(.92) rotate(-3deg);opacity:.78}100%{transform:scaleX(1.12) scaleY(1.08) rotate(4deg);opacity:1}}
+@keyframes labSmoke510{0%{transform:translateY(0) scale(.7);opacity:.45}100%{transform:translateY(-35px) translateX(9px) scale(1.7);opacity:0}}
+.db-nav-510{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:6px 0 12px;padding:7px 9px;border:1px solid rgba(126,231,255,.2);border-radius:8px;background:rgba(0,0,0,.13)}
+.db-nav-510 .pos{color:#9fc6d8;font-size:12px;margin-left:auto}
+#banco-musicas .music-grid-510{display:grid;grid-template-columns:1.2fr 1fr 2fr 90px auto;gap:8px;align-items:end;margin-bottom:12px}
+#banco-musicas table{min-width:1000px}
+#gmMusica510 select{min-width:230px}
 
 </style>
 
@@ -1148,7 +1163,7 @@
                         <button class="tab-btn" onclick="mostrarBancoAba('especializacoes', this)">Especializações</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('poderesPsi', this)">Poderes Psi</button>
                         <button class="tab-btn" onclick="mostrarBancoAba('itens', this)">Itens</button>
-                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button><button class="tab-btn" onclick="mostrarBancoAba('criaturas', this)">Criaturas</button><button class="tab-btn" onclick="mostrarBancoAba('objetosMapa', this)">Objetos de Mapa</button><button class="tab-btn" onclick="mostrarBancoAba('mapas', this)">Mapas</button>
+                        <button class="tab-btn" onclick="mostrarBancoAba('cenarios', this)">Cenários</button><button class="tab-btn" onclick="mostrarBancoAba('npcs', this)">NPCs</button><button class="tab-btn" onclick="mostrarBancoAba('criaturas', this)">Criaturas</button><button class="tab-btn" onclick="mostrarBancoAba('objetosMapa', this)">Objetos de Mapa</button><button class="tab-btn" onclick="mostrarBancoAba('mapas', this)">Mapas</button><button class="tab-btn" onclick="mostrarBancoAba('musicas', this)">Músicas</button>
                     </div>
 
                     <div id="banco-pericias" class="tab-content active">
@@ -18073,7 +18088,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.50.2',e);}
+    }catch(e){console.warn('v46.51.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19117,7 +19132,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.50.2',e);}
+    }catch(e){console.warn('laser v46.51.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19972,7 +19987,7 @@ window.labEncerrarOportunidade_=function(){
 
 
 // ============================================================
-// V46.50.2 — lâminas de energia, alcance melee, som/FX e fogo
+// V46.51.0 — lâminas de energia, alcance melee, som/FX e fogo
 // ============================================================
 
 // Reconhecimento explícito: "Espada de Força" é uma lâmina de energia,
@@ -20174,7 +20189,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.50.2
+// V46.51.0
 // Alvos mortos, Restaurar total, fogo, Oficina vetorial/editável,
 // carregar mapas na Oficina e música compartilhada.
 // ============================================================
@@ -20816,7 +20831,7 @@ try{labAudioAtivado490_=localStorage.getItem('mesa_estelar_audio_ativado_v1')===
 
 
 // ============================================================
-// V46.50.2 — redimensionamento seguro da Oficina,
+// V46.51.0 — redimensionamento seguro da Oficina,
 // YouTube via IFrame API, áudio compacto e formas -> objeto.
 // ============================================================
 
@@ -21163,7 +21178,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.50.2 — Oficina híbrida, composição->objeto,
+// V46.51.0 — Oficina híbrida, composição->objeto,
 // ordenação de perícias, objeto fixo e fogo sincronizado.
 // ============================================================
 
@@ -21502,7 +21517,7 @@ labRender_=function(){
     try{
         gmVet501AtualizarCamadas_();
         gmVet501TrocarBotaoSelecao_();
-    }catch(e){console.warn('v46.50.2',e);}
+    }catch(e){console.warn('v46.51.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -21510,7 +21525,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.50.2 — áudio recolhido também quando desativado
+// V46.51.0 — áudio recolhido também quando desativado
 // ============================================================
 let labAudioAvisoExpandido502_=false;
 
@@ -21575,6 +21590,403 @@ labAudioFloat490_=function(){
     </div><div id="labAudioStatus500"></div>`;
 };
 
+
+
+// ============================================================
+// V46.51.0
+// Banco de músicas, playlists por momento, ordenação do painel,
+// navegação anterior/próximo, inflamabilidade persistente,
+// fogo sincronizado/visual e seleção estável.
+// ============================================================
+
+// ------------------------------------------------------------
+// 1) Armas: menor dificuldade primeiro; empate alfabético
+// ------------------------------------------------------------
+const batalhaEquipamentos510Base_=batalhaEquipamentos_;
+batalhaEquipamentos_=function(char,pericia,selecionado=''){
+    let out=(batalhaEquipamentos510Base_(char,pericia,selecionado)||[]).slice();
+
+    // Se a arma selecionada quebrou, ela continua visível/selecionada.
+    if(selecionado && !out.some(x=>String(x.valor)===String(selecionado)) && pericia){
+        const eq=obterItensEquipados_(char)||[];
+        eq.forEach((item,idx)=>{
+            const valor=batalhaValorEquip_(item,idx);
+            if(String(valor)!==String(selecionado)||!itemEhArmaOuEscudo_(item))return;
+            const graus=penalidadeCompatibilidadeArma_(pericia,item);
+            out.push({
+                valor,
+                rotulo:`${getNome(item)}${Number(item.pv||0)>0?` [PV ${Number(item.pvAtual??item.pv)}/${Number(item.pv)}]`:''}${itemCombateInutilizavel_(item)?' · QUEBRADA':''}${graus?` ⚠ +${graus} grau${graus>1?'s':''}`:''}`,
+                item,graus
+            });
+        });
+    }
+
+    out.sort((a,b)=>Number(a.graus||0)-Number(b.graus||0)
+        || String(getNome(a.item)||a.rotulo||'').localeCompare(String(getNome(b.item)||b.rotulo||''),'pt-BR',{sensitivity:'base'}));
+    return out;
+};
+
+// ------------------------------------------------------------
+// 2) Alvos: mais perto -> mais longe; seleção permanece até morte
+// ------------------------------------------------------------
+const labAlvosAtaque510Base_=labAlvosAtaque_;
+labAlvosAtaque_=function(t){
+    return (labAlvosAtaque510Base_(t)||[]).slice().sort((a,b)=>
+        labDistanciaEntre_(t,a)-labDistanciaEntre_(t,b)
+        || String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'})
+    );
+};
+
+const labUniversalAlvo510Base_=window.labUniversalAlvo_;
+window.labUniversalAlvo_=function(v){
+    const t=labTokenAtual_();
+    if(t&&t.universalModoLab==='combate'){
+        const a=labAlvoAtaquePorId_(v);
+        t._alvoMortoManual510=!!labAlvoInerte490_(a);
+    }
+    return labUniversalAlvo510Base_(v);
+};
+
+const labGarantirPrefsAtaque510Base_=labGarantirPrefsAtaque_;
+labGarantirPrefsAtaque_=function(t){
+    if(!t)return;
+    const antes=String(t.alvoLab||'');
+    labGarantirPrefsAtaque510Base_(t);
+
+    const alvos=labAlvosAtaque_(t);
+    let atual=labAlvoAtaquePorId_(t.alvoLab);
+    const inerte=labAlvoInerte490_(atual);
+
+    if(inerte && !t._alvoMortoManual510){
+        const vivo=alvos.find(a=>!labAlvoInerte490_(a));
+        if(vivo)t.alvoLab=String(vivo.id);
+    }
+    atual=labAlvoAtaquePorId_(t.alvoLab);
+    if(atual&&!labAlvoInerte490_(atual))t._alvoMortoManual510=false;
+};
+
+// Pré-seleciona a melhor perícia/psi apenas UMA vez; depois respeita escolha.
+labAutoSelecionarMelhor501_=function(t){
+    if(!t||labEstado_.fase!=='combate'||t._autoInicialFeito510)return;
+    const comb=labPericiasAtaque_(t),c=labCharToken_(t),melhorComb=comb[0]||null;
+    const valorComb=melhorComb?Number(labValorPericiaAtaque_(c,melhorComb,null,null)||0):-1;
+    const valorPsi=temPsiquismoInvestido_(c)?labPsiMelhorValor501_(t):-1;
+    if(valorPsi>valorComb){
+        t.universalModoLab='psi';
+        const ps=(labPsiPoderes_(t)||[]).slice().sort((a,b)=>labPsiValor_(t,b)-labPsiValor_(t,a));
+        if(ps.length)t.universalPsiPoderIdLab=ps[0].id;
+    }else if(melhorComb){
+        t.universalModoLab='combate';t.periciaLab=batalhaTokenPericia_(melhorComb);t.equipamentoLab='';
+        labGarantirPrefsAtaque_(t);
+    }
+    t._autoInicialFeito510=true;
+};
+
+// ------------------------------------------------------------
+// 3) Inflamabilidade: valor numérico é a autoridade e persiste
+// ------------------------------------------------------------
+const salvarObjetoMapaEditor510Base_=window.salvarObjetoMapaEditor_;
+window.salvarObjetoMapaEditor_=async function(){
+    const idAntes=String(document.getElementById('objMapaEditId')?.value||'');
+    const nomeAntes=String(document.getElementById('objMapaNome')?.value||'').trim();
+    const cb=!!document.getElementById('objMapaInflamavel')?.checked;
+    let grau=Math.max(0,Math.min(5,Math.trunc(Number(document.getElementById('objMapaInflamabilidade')?.value)||0)));
+    if(grau>0){
+        const el=document.getElementById('objMapaInflamavel');if(el)el.checked=true;
+    }else if(cb)grau=3;
+
+    await salvarObjetoMapaEditor510Base_();
+
+    const o=(objetosMapaDB||[]).find(x=>String(x.id)===idAntes)
+        || [...(objetosMapaDB||[])].reverse().find(x=>String(x.nome||'')===nomeAntes);
+    if(o){
+        o.inflamabilidade=grau;o.inflamavel=grau>0;
+        try{
+            await setDoc(doc(db,'configuracoes',objetoMapaDocId_(o.id)),{inflamabilidade:grau,inflamavel:grau>0},{merge:true});
+        }catch(e){console.warn('Persistência inflamabilidade',e);}
+    }
+};
+
+// ------------------------------------------------------------
+// 4) Fogo: renderiza também a partir do estado público remoto
+// ------------------------------------------------------------
+function labObjetoEmChamas510_(o){
+    const fx=labEstado_.efeitosObjetosLab?.[String(o?.id||'')];
+    return !!(o?.pegandoFogoLab || fx?.pegandoFogoLab) && !o?.destruido;
+}
+const labObjetoHtml510Base_=labObjetoHtml_;
+labObjetoHtml_=function(o,ppm){
+    let h=labObjetoHtml510Base_(o,ppm);
+    if(labObjetoEmChamas510_(o)&&!h.includes('lab-fire-real-510')){
+        h=h.replace(/<\/div>\s*$/i,`<span class="lab-fire-real-510"><i class="fl f1"></i><i class="fl f2"></i><i class="fl f3"></i><i class="sm"></i></span></div>`);
+    }
+    return h;
+};
+window.labObjetoHtml_=labObjetoHtml_;
+
+// ------------------------------------------------------------
+// 5) Banco de Músicas dedicado
+// ------------------------------------------------------------
+let musicaEditando510_='';
+
+function musicaBancoGarantirAba510_(){
+    const form=document.querySelector('#banco > .form-section')||document.querySelector('#banco .form-section');
+    if(!form||document.getElementById('banco-musicas'))return;
+    const d=document.createElement('div');d.id='banco-musicas';d.className='tab-content';
+    d.innerHTML=`<h4 style="color:#fff;margin-bottom:8px">🎵 Banco de Músicas / Trilha Sonora</h4>
+      <p style="color:#aaa">Cadastre as faixas aqui. O campo <b>Momento</b> agrupa músicas em playlists, como Batalha, Bar, Tempestade ou Suspense.</p>
+      <div class="music-grid-510">
+        <label>Nome<input id="mus510Nome" placeholder="Última Bateria"></label>
+        <label>Momento<input id="mus510Momento" placeholder="Bar"></label>
+        <label>Link YouTube / áudio<input id="mus510Url" placeholder="https://youtube.com/..."></label>
+        <label>Ordem<input id="mus510Ordem" type="number" min="0" step="1" value="0"></label>
+        <button class="btn-small btn-select" onclick="musicaBancoSalvar510_()">💾 Salvar</button>
+      </div>
+      <input id="mus510Id" type="hidden">
+      <div id="mus510Lista"></div>`;
+    form.appendChild(d);
+}
+function musicaBancoRender510_(){
+    musicaBancoGarantirAba510_();
+    const e=document.getElementById('mus510Lista');if(!e)return;
+    const list=[...(trilhasMesaDB490_||[])].sort((a,b)=>
+        String(a.categoria||'').localeCompare(String(b.categoria||''),'pt-BR',{sensitivity:'base'})
+        || Number(a.ordem||0)-Number(b.ordem||0)
+        || String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'})
+    );
+    e.innerHTML=list.length?`<div class="db-table-wrap"><table class="db-table">
+      <thead><tr><th>Momento</th><th>Ordem</th><th>Nome</th><th>Fonte</th><th>Ações</th></tr></thead><tbody>
+      ${list.map(t=>`<tr>
+        <td><b>${escaparHtmlInventario_(t.categoria||'—')}</b></td>
+        <td>${Number(t.ordem||0)}</td>
+        <td>${escaparHtmlInventario_(t.nome||'Trilha')}</td>
+        <td><small>${escaparHtmlInventario_(t.url||'')}</small></td>
+        <td>
+          <button class="btn-small" onclick="musicaBancoEditar510_('${String(t.id).replace(/'/g,"\\'")}')">Editar</button>
+          <button class="btn-small btn-select" onclick="gmMusicaTocarId510_('${String(t.id).replace(/'/g,"\\'")}')">▶ Ouvir</button>
+          <button class="btn-small btn-danger" onclick="musicaBancoExcluir510_('${String(t.id).replace(/'/g,"\\'")}')">Excluir</button>
+        </td></tr>`).join('')}
+      </tbody></table></div>`:'<div style="color:#888;padding:14px">Nenhuma música cadastrada.</div>';
+}
+window.musicaBancoEditar510_=function(id){
+    const t=(trilhasMesaDB490_||[]).find(x=>String(x.id)===String(id));if(!t)return;
+    musicaEditando510_=String(id);
+    document.getElementById('mus510Id').value=id;
+    document.getElementById('mus510Nome').value=t.nome||'';
+    document.getElementById('mus510Momento').value=t.categoria||'';
+    document.getElementById('mus510Url').value=t.url||'';
+    document.getElementById('mus510Ordem').value=Number(t.ordem||0);
+};
+window.musicaBancoSalvar510_=async function(){
+    const nome=String(document.getElementById('mus510Nome')?.value||'').trim();
+    const categoria=String(document.getElementById('mus510Momento')?.value||'').trim();
+    const url=String(document.getElementById('mus510Url')?.value||'').trim();
+    const ordem=Math.max(0,Math.trunc(Number(document.getElementById('mus510Ordem')?.value)||0));
+    if(!nome||!url){notificar_('Informe nome e link.','aviso');return;}
+    let t=(trilhasMesaDB490_||[]).find(x=>String(x.id)===String(musicaEditando510_));
+    if(t)Object.assign(t,{nome,categoria,url,ordem});
+    else{
+        t={id:`trilha:${Date.now()}`,nome,categoria,url,ordem,volume:.6};
+        trilhasMesaDB490_.push(t);
+    }
+    await labTrilhasSalvar490_();
+    musicaEditando510_='';
+    for(const id of ['mus510Nome','mus510Momento','mus510Url']){const x=document.getElementById(id);if(x)x.value='';}
+    const or=document.getElementById('mus510Ordem');if(or)or.value='0';
+    musicaBancoRender510_();gmMusicaSelectorRender510_();
+    notificar_('🎵 Música salva no banco.','sucesso',2200);
+};
+window.musicaBancoExcluir510_=async function(id){
+    if(!confirm('Excluir esta música do banco?'))return;
+    trilhasMesaDB490_=trilhasMesaDB490_.filter(x=>String(x.id)!==String(id));
+    await labTrilhasSalvar490_();musicaBancoRender510_();gmMusicaSelectorRender510_();
+};
+
+// Integração com a aba padrão do Banco.
+const mostrarBancoAba510Base_=window.mostrarBancoAba;
+window.mostrarBancoAba=function(abaId,btn){
+    if(abaId==='musicas')musicaBancoGarantirAba510_();
+    const r=mostrarBancoAba510Base_(abaId,btn);
+    if(abaId==='musicas'){
+        if(!(trilhasMesaDB490_||[]).length)labTrilhasCarregar490_().then(()=>musicaBancoRender510_());
+        else musicaBancoRender510_();
+    }
+    return r;
+};
+
+// ------------------------------------------------------------
+// 6) Painel do Mestre: apenas selecionar Música ou Momento
+// ------------------------------------------------------------
+function gmMusicaSelectorRender510_(){
+    const box=document.getElementById('gmMusica510');if(!box)return;
+    const list=[...(trilhasMesaDB490_||[])].sort((a,b)=>Number(a.ordem||0)-Number(b.ordem||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+    const momentos=[...new Set(list.map(x=>String(x.categoria||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    box.innerHTML=`<h3 style="margin-top:0">🎵 Música da Mesa</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+        <label style="margin:0"><small>Momento / playlist</small><select onchange="gmMusicaTocarMomento510_(this.value)" style="margin:3px 0 0"><option value="">— selecionar momento —</option>${momentos.map(m=>`<option>${escaparHtmlInventario_(m)}</option>`).join('')}</select></label>
+        <label style="margin:0"><small>Música única</small><select onchange="gmMusicaTocarId510_(this.value)" style="margin:3px 0 0"><option value="">— selecionar música —</option>${list.map(t=>`<option value="${escaparHtmlInventario_(t.id)}">${escaparHtmlInventario_(t.nome)}${t.categoria?` · ${escaparHtmlInventario_(t.categoria)}`:''}</option>`).join('')}</select></label>
+        <button class="btn-small" onclick="gmMusicaParar490_()">⏹ Parar</button>
+        <span style="color:#9fc6d8">Cadastro e organização ficam em Banco de Dados → Músicas.</span>
+      </div>`;
+}
+function gmMusicaInstalar510_(){
+    if(!batalhaEhMestre_())return;
+    const root=document.getElementById('gm-sub-campanha');if(!root)return;
+    document.getElementById('gmMusica490')?.remove();
+    let box=document.getElementById('gmMusica510');
+    if(!box){
+        box=document.createElement('div');box.id='gmMusica510';box.className='form-section';box.style.marginTop='14px';
+        root.appendChild(box);
+    }
+    gmMusicaSelectorRender510_();
+}
+labMusicaInstalar490_=gmMusicaInstalar510_;
+
+window.gmMusicaTocarId510_=function(id){
+    if(!id)return;
+    const t=(trilhasMesaDB490_||[]).find(x=>String(x.id)===String(id));if(!t)return;
+    labEstado_.audioMesaLab={...t,mode:'single',playlist:[{...t}],playlistIndex:0,playing:true,inicioTs:Date.now()};
+    labSalvarLocal_();labAudioUltimaChave490_='';labAudioAplicar490_();labAudioFloat490_();
+};
+window.gmMusicaTocarMomento510_=function(moment){
+    if(!moment)return;
+    const q=(trilhasMesaDB490_||[]).filter(x=>String(x.categoria||'')===String(moment))
+      .sort((a,b)=>Number(a.ordem||0)-Number(b.ordem||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+    if(!q.length){notificar_('Nenhuma música nesse momento.','aviso');return;}
+    const first=q[0];
+    labEstado_.audioMesaLab={...first,mode:'moment',momento:moment,playlist:q.map(x=>({...x})),playlistIndex:0,playing:true,inicioTs:Date.now()};
+    labSalvarLocal_();labAudioUltimaChave490_='';labAudioAplicar490_();labAudioFloat490_();
+};
+
+// ------------------------------------------------------------
+// 7) Player: avança a playlist e repete no final
+// ------------------------------------------------------------
+function labAudioTrackAtual510_(st){
+    const q=Array.isArray(st?.playlist)&&st.playlist.length?st.playlist:[st];
+    const ix=Math.max(0,Math.min(q.length-1,Number(st?.playlistIndex||0)));
+    return {q,ix,t:q[ix]};
+}
+function labAudioAvancar510_(){
+    const st=labEstado_.audioMesaLab;if(!st?.playing)return;
+    const {q,ix}=labAudioTrackAtual510_(st);
+    const next=(ix+1)%q.length,t=q[next];
+    st.playlistIndex=next;st.id=t.id;st.nome=t.nome;st.url=t.url;st.categoria=t.categoria;st.inicioTs=Date.now();
+    labAudioUltimaChave490_='';
+    if(batalhaEhMestre_())labSalvarLocal_();
+    labAudioAplicar490_();
+    labAudioFloat490_();
+}
+async function labAudioTocarYoutube510_(st,track,yid){
+    const YT=await labYTApi500_();labYTDestroy500_();
+    const mount=document.createElement('div');mount.id='labYTMount500';mount.style.cssText='position:fixed;left:-300px;bottom:-200px;width:200px;height:112px;opacity:.01;pointer-events:none;z-index:-1';document.body.appendChild(mount);
+    const offset=Math.max(0,Math.floor((Date.now()-Number(st.inicioTs||Date.now()))/1000));
+    labYTPlayer500_=new YT.Player('labYTMount500',{
+        width:'200',height:'112',videoId:yid,
+        playerVars:{autoplay:1,controls:0,disablekb:1,playsinline:1,start:offset,loop:0,origin:location.origin},
+        events:{
+            onReady(ev){try{ev.target.setVolume(labAudioVolume500_);ev.target.unMute();ev.target.playVideo();labAudioStatus500_('Tocando via YouTube.');}catch(_){}},
+            onStateChange(ev){if(ev.data===YT.PlayerState.ENDED)labAudioAvancar510_();},
+            onError(ev){labAudioStatus500_(`YouTube não permitiu reproduzir esta faixa (erro ${ev.data}).`);}
+        }
+    });
+}
+labAudioAplicar490_=function(){
+    const st=labEstado_.audioMesaLab;
+    const key=JSON.stringify(st||{});
+    if(key===labAudioUltimaChave490_)return;
+    labAudioUltimaChave490_=key;labAudioParar500_();
+    if(!labAudioAtivado490_||!st?.playing)return;
+    const {t}=labAudioTrackAtual510_(st);if(!t?.url)return;
+    const yid=labYoutubeId490_(t.url);
+    if(yid){labAudioTocarYoutube510_(st,t,yid).catch(e=>labAudioStatus500_(e.message||'Falha no YouTube.'));return;}
+    if(/\.(mp3|ogg|wav|m4a)(\?|$)/i.test(t.url)){
+        const a=document.createElement('audio');a.src=t.url;a.autoplay=true;a.volume=labAudioVolume500_/100;a.style.display='none';a.loop=false;
+        a.addEventListener('ended',labAudioAvancar510_);
+        document.body.appendChild(a);labAudioElemento490_=a;
+        const offset=Math.max(0,Math.floor((Date.now()-Number(st.inicioTs||Date.now()))/1000));
+        a.addEventListener('loadedmetadata',()=>{try{a.currentTime=Math.min(offset,a.duration||offset);a.play();}catch(_){}},{once:true});
+    }
+};
+
+// ------------------------------------------------------------
+// 8) Anterior / Próximo nos editores com modal/painel real
+// ------------------------------------------------------------
+let dbNav510_={kind:'',id:''};
+function dbNavCfg510_(kind){
+    const map={
+      item:{list:()=>itensDB,edit:id=>window.editarItemBanco(id),save:()=>window.salvarItemBancoModal(),host:'#dbItemModal .modal-content'},
+      objeto:{list:()=>objetosMapaDB,edit:id=>window.editarObjetoMapaBanco_(id),save:()=>window.salvarObjetoMapaEditor_(),host:'#editorObjetoMapaBanco'},
+      npc:{list:()=>npcsDB,edit:id=>window.editarNPCBanco_(id),save:()=>window.salvarNPCBanco_(),host:'#dbNPCModal .modal-content'},
+      criatura:{list:()=>criaturasDB,edit:id=>window.editarCriaturaBanco_(id),save:()=>window.salvarCriaturaBanco_(),host:'#dbCriaturaModal .modal-content'},
+      pericia:{list:()=>periciasDB,edit:id=>window.editarPericia(id),save:()=>window.salvarSkillBancoModal_(),host:'#dbSkillModal .modal-content'},
+      especializacao:{list:()=>especializacoesDB,edit:id=>window.editarEspecializacao(id),save:()=>window.salvarSkillBancoModal_(),host:'#dbSkillModal .modal-content'},
+      cenario:{list:()=>cenariosDB,edit:id=>window.editarCenarioBanco(id),save:()=>window.salvarCenarioBancoModal(),host:'#dbScenarioModal .modal-content'}
+    };
+    return map[kind];
+}
+function dbNavLista510_(kind){
+    const cfg=dbNavCfg510_(kind);return (cfg?.list?.()||[]).slice().sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR',{sensitivity:'base'}));
+}
+function dbNavRender510_(){
+    document.querySelectorAll('.db-nav-510').forEach(x=>x.remove());
+    const cfg=dbNavCfg510_(dbNav510_.kind);if(!cfg)return;
+    const host=document.querySelector(cfg.host);if(!host)return;
+    const list=dbNavLista510_(dbNav510_.kind),ix=list.findIndex(x=>String(x.id)===String(dbNav510_.id));
+    const bar=document.createElement('div');bar.className='db-nav-510';
+    bar.innerHTML=`<button class="btn-small" onclick="dbNavSalvarIr510_(-1)" ${ix<=0?'disabled':''}>💾 ◀ Salvar e anterior</button>
+      <button class="btn-small btn-select" onclick="dbNavSalvarIr510_(1)" ${ix<0||ix>=list.length-1?'disabled':''}>💾 Salvar e próximo ▶</button>
+      <span class="pos">${ix>=0?`${ix+1} / ${list.length}`:''}</span>`;
+    const h=host.querySelector('h3,h4');if(h)h.insertAdjacentElement('afterend',bar);else host.prepend(bar);
+}
+function dbNavAtivar510_(kind,id){dbNav510_={kind,id:String(id||'')};setTimeout(dbNavRender510_,0);}
+window.dbNavSalvarIr510_=async function(dir){
+    const cfg=dbNavCfg510_(dbNav510_.kind);if(!cfg)return;
+    const list=dbNavLista510_(dbNav510_.kind),ix=list.findIndex(x=>String(x.id)===String(dbNav510_.id)),next=list[ix+Number(dir)];
+    if(!next)return;
+    try{await cfg.save();}catch(e){console.warn('Salvar e navegar',e);}
+    setTimeout(()=>cfg.edit(next.id),120);
+};
+
+// Wrappers dos editores.
+const editarItemBanco510Base_=window.editarItemBanco;
+window.editarItemBanco=function(id){const r=editarItemBanco510Base_(id);dbNavAtivar510_('item',id);return r;};
+const editarObjetoMapaBanco510Base_=window.editarObjetoMapaBanco_;
+window.editarObjetoMapaBanco_=function(id){const r=editarObjetoMapaBanco510Base_(id);dbNavAtivar510_('objeto',id);return r;};
+const editarNPCBanco510Base_=window.editarNPCBanco_;
+window.editarNPCBanco_=function(id){const r=editarNPCBanco510Base_(id);dbNavAtivar510_('npc',id);return r;};
+const editarCriaturaBanco510Base_=window.editarCriaturaBanco_;
+window.editarCriaturaBanco_=function(id){const r=editarCriaturaBanco510Base_(id);dbNavAtivar510_('criatura',id);return r;};
+const editarPericia510Base_=window.editarPericia;
+window.editarPericia=function(id){const r=editarPericia510Base_(id);dbNavAtivar510_('pericia',id);return r;};
+const editarEspecializacao510Base_=window.editarEspecializacao;
+window.editarEspecializacao=function(id){const r=editarEspecializacao510Base_(id);dbNavAtivar510_('especializacao',id);return r;};
+const editarCenarioBanco510Base_=window.editarCenarioBanco;
+window.editarCenarioBanco=function(id){const r=editarCenarioBanco510Base_(id);dbNavAtivar510_('cenario',id);return r;};
+
+// ------------------------------------------------------------
+// 9) Garantir painel musical após render do Escudo do Mestre
+// ------------------------------------------------------------
+const renderizarCampanhaMestre510Base_=renderizarCampanhaMestre_;
+renderizarCampanhaMestre_=function(){
+    const r=renderizarCampanhaMestre510Base_();
+    setTimeout(async()=>{
+        try{
+            if(!(trilhasMesaDB490_||[]).length)await labTrilhasCarregar490_();
+            gmMusicaInstalar510_();
+        }catch(e){console.warn('painel musica',e);}
+    },0);
+    return r;
+};
+
+const labRender510Base_=labRender_;
+labRender_=function(){
+    try{labAplicarEfeitosObjetosPublicos501_();}catch(_){}
+    const r=labRender510Base_();
+    try{if(batalhaEhMestre_())gmMusicaInstalar510_();}catch(_){}
+    return r;
+};
+window.labRender_=labRender_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -21590,6 +22002,6 @@ labAudioFloat490_=function(){
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.50.2: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
