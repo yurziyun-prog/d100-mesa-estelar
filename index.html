@@ -471,6 +471,29 @@
 #banco-musicas table{min-width:1000px}
 #gmMusica510 select{min-width:230px}
 
+
+/* ===== V46.53.0 ===== */
+#labFreeEntryWrap530{
+    display:flex;align-items:center;gap:7px;padding:6px 9px;
+    border:1px solid rgba(86,240,138,.35);border-radius:8px;
+    background:rgba(86,240,138,.07);min-height:40px;box-sizing:border-box;
+}
+#labPlayerJoin530{
+    display:none;gap:8px;flex-wrap:wrap;align-items:center;
+    margin:8px 0;padding:9px 10px;border-radius:9px;
+    border:1px solid rgba(86,240,138,.28);background:rgba(86,240,138,.055)
+}
+#labPlayerJoin530 select{min-width:230px;min-height:38px}
+#gmVet490Inspector .opacity-group-530{
+    display:flex;gap:6px;align-items:end;flex-wrap:wrap;
+    padding:5px 7px;border-radius:7px;background:rgba(255,255,255,.035)
+}
+#gmMusicaStatus530{
+    display:inline-flex;align-items:center;gap:6px;color:#9fc6d8;
+    min-height:38px;padding:0 8px
+}
+#gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
+
 </style>
 
 <style id="lab-ui-polish-v46360">
@@ -20531,7 +20554,7 @@ function gmVet490PointerCanvas_(ev){
     if(gmVet490_.tool==='select'){
         gmVet490_.selectedId='';gmVet490Render_();return;
     }
-    if(!['linha','retangulo','quadrado','circulo','elipse','triangulo'].includes(gmVet490_.tool))return;
+    if(!['linha','retangulo','arredondado','quadrado','circulo','elipse','triangulo'].includes(gmVet490_.tool))return;
     ev.preventDefault();ev.stopPropagation();gmVet490Hist_();
     const svg=ev.currentTarget,r=svg.getBoundingClientRect(),ppm=gmVet490Ppm_();
     const pt=e=>({x:gmVet490Clamp_((e.clientX-r.left)/ppm,0,gmOficinaEstado_.larguraM),y:gmVet490Clamp_((e.clientY-r.top)/ppm,0,gmOficinaEstado_.alturaM)});
@@ -21989,7 +22012,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.52.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.53.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22145,6 +22168,363 @@ const labRender520Base_=labRender_;
 labRender_=function(){const r=labRender520Base_();try{const old=document.getElementById('gmVet501CompBtn');if(old){old.textContent='✂️ Recortar e transformar em objeto';old.setAttribute('onclick','gmRecorte520Iniciar_()');}}catch(_){}return r;};window.labRender_=labRender_;
 
 
+
+
+// ============================================================
+// V46.53.0
+// Oficina: retângulo arredondado + opacidades independentes
+// Música: estado Play/Stop visível
+// Mesa: entrada livre para jogadores
+// Incêndio: contato imediato, dano por rodada e restauração forte
+// ============================================================
+
+// ------------------------------------------------------------
+// 1) Oficina — retângulo arredondado e opacidades separadas
+// ------------------------------------------------------------
+function gmVet530Opacidades_(f){
+    const legado=Number(f?.opacity??.65);
+    return {
+        stroke:Math.max(0,Math.min(1,Number(f?.strokeOpacity??legado))),
+        fill:Math.max(0,Math.min(1,Number(f?.fillOpacity??legado)))
+    };
+}
+
+gmVet490SvgEl_=function(f,ppm){
+    const id=String(f.id).replace(/'/g,"\\'");
+    const stroke=f.stroke||'#00d4ff',fill=f.tipo==='linha'?'none':(f.fill||'transparent');
+    const op=gmVet530Opacidades_(f),sw=Number(f.strokeWidth||3);
+    const x=Number(f.x||0)*ppm,y=Number(f.y||0)*ppm,w=Number(f.w||0)*ppm,h=Number(f.h||0)*ppm;
+    const cx=(Number(f.x||0)+Number(f.w||0)/2)*ppm,cy=(Number(f.y||0)+Number(f.h||0)/2)*ppm;
+    const common=`stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${sw}" fill="${fill}" fill-opacity="${op.fill}" transform="rotate(${Number(f.rot||0)} ${cx} ${cy})" data-vet-id="${escaparHtmlInventario_(f.id)}" class="${String(f.id)===String(gmVet490_.selectedId)?'gm-vector-selected':''}" onpointerdown="gmVet490PointerForma_(event,'${id}')"`;
+    if(f.tipo==='linha')return `<line x1="${x}" y1="${y}" x2="${Number(f.x2??f.x)*ppm}" y2="${Number(f.y2??f.y)*ppm}" ${common}/>`;
+    if(f.tipo==='circulo'){
+        const d=Math.max(Math.abs(w),Math.abs(h));
+        return `<ellipse cx="${x+d/2}" cy="${y+d/2}" rx="${d/2}" ry="${d/2}" ${common}/>`;
+    }
+    if(f.tipo==='elipse')return `<ellipse cx="${x+w/2}" cy="${y+h/2}" rx="${Math.abs(w)/2}" ry="${Math.abs(h)/2}" ${common}/>`;
+    if(f.tipo==='triangulo')return `<polygon points="${x+w/2},${y} ${x+w},${y+h} ${x},${y+h}" ${common}/>`;
+    if(f.tipo==='arredondado'){
+        const rx=Math.max(2,Math.min(Math.abs(w),Math.abs(h))/2,Number(f.radius||.25)*ppm);
+        return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" rx="${Math.min(rx,Math.abs(w)/2,Math.abs(h)/2)}" ry="${Math.min(rx,Math.abs(w)/2,Math.abs(h)/2)}" ${common}/>`;
+    }
+    return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" ${common}/>`;
+};
+
+gmVet500SvgShape_=function(f,scale,b){
+    const shiftX=x=>(Number(x||0)-b.minX)*scale,shiftY=y=>(Number(y||0)-b.minY)*scale;
+    const stroke=f.stroke||'#00d4ff',fill=f.tipo==='linha'?'none':(f.fill||'transparent');
+    const op=gmVet530Opacidades_(f),sw=Math.max(1,Number(f.strokeWidth||3));
+    const x=shiftX(f.x),y=shiftY(f.y),w=Number(f.w||0)*scale,h=Number(f.h||0)*scale;
+    const cx=x+w/2,cy=y+h/2,rot=Number(f.rot||0);
+    const common=`stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${sw}" fill="${fill}" fill-opacity="${op.fill}" transform="rotate(${rot} ${cx} ${cy})"`;
+    if(f.tipo==='linha')return `<line x1="${x}" y1="${y}" x2="${shiftX(f.x2)}" y2="${shiftY(f.y2)}" ${common}/>`;
+    if(f.tipo==='circulo'){const d=Math.max(Math.abs(w),Math.abs(h));return `<ellipse cx="${x+d/2}" cy="${y+d/2}" rx="${d/2}" ry="${d/2}" ${common}/>`;}
+    if(f.tipo==='elipse')return `<ellipse cx="${x+w/2}" cy="${y+h/2}" rx="${Math.abs(w)/2}" ry="${Math.abs(h)/2}" ${common}/>`;
+    if(f.tipo==='triangulo')return `<polygon points="${x+w/2},${y} ${x+w},${y+h} ${x},${y+h}" ${common}/>`;
+    if(f.tipo==='arredondado'){
+        const rx=Math.max(2,Number(f.radius||.25)*scale);
+        return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" rx="${Math.min(rx,Math.abs(w)/2,Math.abs(h)/2)}" ry="${Math.min(rx,Math.abs(w)/2,Math.abs(h)/2)}" ${common}/>`;
+    }
+    return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" ${common}/>`;
+};
+
+gmVet490Inspector_=function(){
+    const box=document.getElementById('gmVet490Inspector');if(!box)return;
+    const f=gmVet490Sel_();
+    if(!f){box.innerHTML='<span style="color:#9fb4c8">Selecione uma forma para mover, redimensionar, girar ou recolorir.</span>';return;}
+    const op=gmVet530Opacidades_(f);
+    box.innerHTML=`
+      <strong style="color:#ffd54a">${escaparHtmlInventario_(f.tipo)}</strong>
+      <label><small>X m</small><input type="number" step=".1" value="${Number(f.x||0)}" onchange="gmVet490Prop_('x',this.value)"></label>
+      <label><small>Y m</small><input type="number" step=".1" value="${Number(f.y||0)}" onchange="gmVet490Prop_('y',this.value)"></label>
+      ${f.tipo==='linha'
+        ? `<label><small>X2 m</small><input type="number" step=".1" value="${Number(f.x2||0)}" onchange="gmVet490Prop_('x2',this.value)"></label>
+           <label><small>Y2 m</small><input type="number" step=".1" value="${Number(f.y2||0)}" onchange="gmVet490Prop_('y2',this.value)"></label>`
+        : `<label><small>Largura m</small><input type="number" min=".1" step=".1" value="${Number(f.w||1)}" onchange="gmVet490Prop_('w',this.value)"></label>
+           <label><small>Altura m</small><input type="number" min=".1" step=".1" value="${Number(f.h||1)}" onchange="gmVet490Prop_('h',this.value)"></label>
+           <label><small>Rotação°</small><input type="number" step="5" value="${Number(f.rot||0)}" onchange="gmVet490Prop_('rot',this.value)"></label>
+           ${f.tipo==='arredondado'?`<label><small>Raio canto (m)</small><input type="number" min=".05" step=".05" value="${Number(f.radius||.25)}" onchange="gmVet490Prop_('radius',this.value)"></label>`:''}`}
+      <label><small>Borda</small><input type="color" value="${f.stroke||'#00d4ff'}" onchange="gmVet490Prop_('stroke',this.value)"></label>
+      ${f.tipo==='linha'?'':`<label><small>Preenchimento</small><input type="color" value="${f.fill||'#34537a'}" onchange="gmVet490Prop_('fill',this.value)"></label>`}
+      <span class="opacity-group-530">
+        <label><small>Transp. borda</small><input type="number" min="0" max="1" step=".05" value="${op.stroke}" onchange="gmVet490Prop_('strokeOpacity',this.value)"></label>
+        ${f.tipo==='linha'?'':`<label><small>Transp. conteúdo</small><input type="number" min="0" max="1" step=".05" value="${op.fill}" onchange="gmVet490Prop_('fillOpacity',this.value)"></label>`}
+      </span>
+      <label><small>Borda px</small><input type="number" min="1" max="20" step="1" value="${Number(f.strokeWidth||3)}" onchange="gmVet490Prop_('strokeWidth',this.value)"></label>
+      <button class="btn-small" onclick="gmVet490Duplicar_()">⧉ Duplicar</button>
+      <button class="btn-small btn-danger" onclick="gmVet490Excluir_()">🗑 Excluir</button>`;
+};
+
+const gmVet490InstalarUI530Base_=gmVet490InstalarUI_;
+gmVet490InstalarUI_=function(){
+    gmVet490InstalarUI530Base_();
+    const row=document.getElementById('gmVet490Tools')?.querySelector('div');
+    if(row&&!document.getElementById('gmVetRounded530')){
+        const ref=[...row.querySelectorAll('button')].find(b=>(b.getAttribute('onclick')||'').includes("gmVet490Tool_('retangulo')"));
+        const b=document.createElement('button');b.id='gmVetRounded530';b.className='btn-small';b.textContent='▢ Retângulo arredondado';
+        b.setAttribute('onclick',"gmVet490Tool_('arredondado')");
+        if(ref)ref.insertAdjacentElement('afterend',b);else row.appendChild(b);
+    }
+};
+
+// ------------------------------------------------------------
+// 2) Música — seleção + botão que mostra claramente Play/Stop
+// ------------------------------------------------------------
+let gmMusicaSelecao530_={tipo:'',valor:''};
+
+window.gmMusicaSelecionar530_=function(tipo,valor){
+    gmMusicaSelecao530_={tipo:String(tipo||''),valor:String(valor||'')};
+    gmMusicaSelectorRender510_();
+};
+window.gmMusicaToggle530_=function(){
+    const st=labEstado_.audioMesaLab||{};
+    if(st.playing){gmMusicaParar490_();gmMusicaSelectorRender510_();return;}
+    const sel=gmMusicaSelecao530_;
+    if(sel.tipo==='momento'&&sel.valor)gmMusicaTocarMomento510_(sel.valor);
+    else if(sel.tipo==='musica'&&sel.valor)gmMusicaTocarId510_(sel.valor);
+    else{
+        const atual=String(st.id||'');
+        if(atual)gmMusicaTocarId510_(atual);
+        else notificar_('Selecione uma música ou um momento primeiro.','aviso',3000);
+    }
+    setTimeout(gmMusicaSelectorRender510_,80);
+};
+
+gmMusicaSelectorRender510_=function(){
+    const box=document.getElementById('gmMusica510');if(!box)return;
+    const list=[...(trilhasMesaDB490_||[])].sort((a,b)=>Number(a.ordem||0)-Number(b.ordem||0)||String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+    const momentos=[...new Set(list.map(x=>String(x.categoria||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    const st=labEstado_.audioMesaLab||{},playing=!!st.playing;
+    if(!gmMusicaSelecao530_.valor){
+        if(st.mode==='moment'&&st.momento)gmMusicaSelecao530_={tipo:'momento',valor:String(st.momento)};
+        else if(st.id)gmMusicaSelecao530_={tipo:'musica',valor:String(st.id)};
+    }
+    const sm=gmMusicaSelecao530_.tipo==='momento'?gmMusicaSelecao530_.valor:'';
+    const ss=gmMusicaSelecao530_.tipo==='musica'?gmMusicaSelecao530_.valor:'';
+    box.innerHTML=`<h3 style="margin-top:0">🎵 Música da Mesa</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+        <label style="margin:0"><small>Momento / playlist</small>
+          <select onchange="gmMusicaSelecionar530_('momento',this.value)" style="margin:3px 0 0">
+            <option value="">— selecionar momento —</option>${momentos.map(m=>`<option value="${escaparHtmlInventario_(m)}" ${m===sm?'selected':''}>${escaparHtmlInventario_(m)}</option>`).join('')}
+          </select></label>
+        <label style="margin:0"><small>Música única</small>
+          <select onchange="gmMusicaSelecionar530_('musica',this.value)" style="margin:3px 0 0">
+            <option value="">— selecionar música —</option>${list.map(t=>`<option value="${escaparHtmlInventario_(t.id)}" ${String(t.id)===ss?'selected':''}>${escaparHtmlInventario_(t.nome)}${t.categoria?` · ${escaparHtmlInventario_(t.categoria)}`:''}</option>`).join('')}
+          </select></label>
+        <button id="gmMusicaToggle530" class="btn-small ${playing?'playing':''}" onclick="gmMusicaToggle530_()">${playing?'■ Parar':'▶ Tocar'}</button>
+        <span id="gmMusicaStatus530">${playing?`● Tocando: ${escaparHtmlInventario_(st.nome||st.momento||'trilha')}`:'○ Parado'}</span>
+      </div>
+      <div style="margin-top:7px;color:#9fc6d8">Cadastro e organização ficam em Banco de Dados → Músicas.</div>`;
+};
+
+// ------------------------------------------------------------
+// 3) Entrada livre — checkbox do mestre + botão do jogador
+// ------------------------------------------------------------
+function labEntradaLivreInstalar530_(){
+    const edit=document.getElementById('labEditMapToggleWrap');
+    const controls=document.getElementById('labMasterGameControls');
+    if(edit&&controls&&!document.getElementById('labFreeEntryWrap530')){
+        const lab=document.createElement('label');lab.id='labFreeEntryWrap530';
+        lab.title='Quando ativo, jogadores podem colocar o próprio personagem nesta mesa sem o mestre adicioná-los manualmente.';
+        lab.innerHTML='<input id="labFreeEntry530" type="checkbox" onchange="labEntradaLivreToggle530_(this.checked)"> 🚪 Entrada livre';
+        edit.insertAdjacentElement('afterend',lab);
+    }
+    const toolbar=document.querySelector('#laboratorio-combate .lab-toolbar-row');
+    if(toolbar&&!document.getElementById('labPlayerJoin530')){
+        const d=document.createElement('div');d.id='labPlayerJoin530';
+        toolbar.insertAdjacentElement('afterend',d);
+    }
+}
+window.labEntradaLivreToggle530_=function(v){
+    if(!batalhaEhMestre_())return;
+    labEstado_.entradaLivreLab=!!v;
+    labSalvarLocal_();labAgendarSyncRemoto_();labEntradaLivreAtualizar530_();
+    notificar_(v?'🚪 Entrada livre ativada.':'🔒 Entrada livre desativada.',v?'sucesso':'info',2200);
+};
+function labEntradaLivreAtualizar530_(){
+    labEntradaLivreInstalar530_();
+    const cb=document.getElementById('labFreeEntry530');
+    const wrap=document.getElementById('labFreeEntryWrap530');
+    if(cb)cb.checked=!!labEstado_.entradaLivreLab;
+    if(wrap)wrap.style.display=batalhaEhMestre_()?'flex':'none';
+
+    const d=document.getElementById('labPlayerJoin530');if(!d)return;
+    if(batalhaEhMestre_()||!labEstado_.entradaLivreLab){d.style.display='none';return;}
+    const chars=(userCharacters||[]).filter(c=>String(c.dono||c.donoUid||'')===String(currentUserUid||'')&&String(c.tipo||'pc').toLowerCase()==='pc');
+    const emMesa=new Set((labEstado_.tokens||[]).map(t=>String(t.origemId||t.id)));
+    const disponiveis=chars.filter(c=>!emMesa.has(String(c.id)));
+    if(!disponiveis.length){d.style.display='flex';d.innerHTML='<span style="color:#9fc6d8">✅ Seu personagem já está nesta mesa.</span>';return;}
+    let escolhido=String(currentCharId||'');
+    if(!disponiveis.some(c=>String(c.id)===escolhido))escolhido=String(disponiveis[0].id);
+    d.style.display='flex';
+    d.innerHTML=`<strong style="color:#8ff0a8">🚪 Entrada livre</strong>
+      <select id="labPlayerJoinChar530">${disponiveis.map(c=>`<option value="${escaparHtmlInventario_(c.id)}" ${String(c.id)===escolhido?'selected':''}>${escaparHtmlInventario_(c.nome||'Personagem')}</option>`).join('')}</select>
+      <button class="btn-small btn-select" onclick="labPlayerJoin530_()">Entrar no mapa</button>`;
+}
+window.labPlayerJoin530_=async function(){
+    if(batalhaEhMestre_()||!labEstado_.entradaLivreLab)return;
+    const id=String(document.getElementById('labPlayerJoinChar530')?.value||currentCharId||'');
+    const c=(userCharacters||[]).find(x=>String(x.id)===id);
+    if(!c){notificar_('Escolha um personagem seu.','aviso');return;}
+    if((labEstado_.tokens||[]).some(t=>String(t.origemId||t.id)===id)){notificar_('Esse personagem já está no mapa.','info');return;}
+    try{
+        await setDoc(doc(db,'combatesAtivos','mapaMesa','acoes',id),{
+            personagemId:id,donoUid:String(currentUserUid||currentUser?.uid||''),tipo:'entrar_mapa',
+            payload:{personagemId:id},nonce:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+            status:'novo',criadoEm:new Date().toISOString()
+        },{merge:false});
+        notificar_('🚪 Pedido de entrada enviado para a Mesa.','sucesso',2500);
+    }catch(e){console.error(e);notificar_('Não foi possível entrar na Mesa.','erro',4500);}
+};
+
+const labProcessarComandoJogador530Base_=labProcessarComandoJogador_;
+labProcessarComandoJogador_=async function(personagemId,acao){
+    if(acao?.tipo!=='entrar_mapa')return labProcessarComandoJogador530Base_(personagemId,acao);
+    const chave=`join:${personagemId}:${acao?.nonce||''}`;
+    if(labMapaComandosEmProcessamento_.has(chave))return;
+    labMapaComandosEmProcessamento_.add(chave);
+    try{
+        if(!batalhaEhMestre_()||!labEstado_.entradaLivreLab)return;
+        const id=String(personagemId||acao?.payload?.personagemId||'');
+        if((labEstado_.tokens||[]).some(t=>String(t.origemId||t.id)===id))return;
+        let c=(userCharacters||[]).find(x=>String(x.id)===id);
+        if(!c){
+            try{const ds=await getDoc(doc(db,'personagens',id));if(ds.exists())c={id,...ds.data()};}catch(_){}
+        }
+        if(!c||String(c.dono||c.donoUid||'')!==String(acao?.donoUid||''))return;
+
+        const atorAntes=labTokenAtual_()?.id||'';
+        const t=labTokenDeCharDireto_(c,id,(labEstado_.tokens||[]).length);
+        if(labEstado_.fase==='combate')t.iniciativaLab=1+Math.floor(Math.random()*10)+Number(t.iniciativaBonus||0);
+        labEstado_.tokens.push(t);
+
+        if(labEstado_.fase==='combate'){
+            const ids=(labEstado_.ordemIniciativa||[]).filter(x=>(labEstado_.tokens||[]).some(t0=>String(t0.id)===String(x)));
+            ids.push(String(t.id));
+            ids.sort((ia,ib)=>{const a=labTokenPorId_(ia),b=labTokenPorId_(ib);return Number(b?.iniciativaLab||0)-Number(a?.iniciativaLab||0)||String(a?.nome||'').localeCompare(String(b?.nome||''));});
+            labEstado_.ordemIniciativa=ids;
+            const ix=ids.findIndex(x=>String(x)===String(atorAntes));if(ix>=0)labEstado_.turnoIndex=ix;
+        }
+        labEstado_.logLab=Array.isArray(labEstado_.logLab)?labEstado_.logLab:[];
+        labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:`${t.nome} entrou pela entrada livre${t.iniciativaLab!=null?` · INI ${t.iniciativaLab}`:''}.`});
+        labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+    }catch(e){console.error('Entrada livre',e);}
+    finally{
+        try{await deleteDoc(doc(db,'combatesAtivos','mapaMesa','acoes',String(personagemId)));}catch(_){}
+        labMapaComandosEmProcessamento_.delete(chave);
+    }
+};
+
+// ------------------------------------------------------------
+// 4) Fogo — contato de personagens realmente aplica dano
+// ------------------------------------------------------------
+function labFogoFonteMaisPerto530_(t){
+    const fontes=(labEstado_.objetosLab||[]).filter(o=>o.pegandoFogoLab&&!o.destruido);
+    let melhor=null,dist=Infinity;
+    for(const f of fontes){
+        const d=labFogoDistBordas520_(f,t);
+        if(d<dist){dist=d;melhor=f;}
+    }
+    return {fonte:melhor,dist};
+}
+function labFogoContatoToken530_(t,forcar=false){
+    if(!t||labEstado_.fase!=='combate')return false;
+    const st=labGarantirSnapshotCombate_(t);if(!st||st.morto)return false;
+    const rodada=Number(labEstado_.rodada||0),p=labFogoFonteMaisPerto530_(t);
+    if(!p.fonte||p.dist>.45)return false;
+
+    const chave=`${rodada}:${String(p.fonte.id)}`;
+    if(!forcar&&String(t.fogoContatoChave530||'')===chave)return false;
+
+    let dano=0;
+    if(p.dist<=.05)dano=2;                    // tocando/por cima do foco
+    else if(p.dist<=.22)dano=1;               // muito perto
+    else if(p.dist<=.45&&Math.random()<.45)dano=1;
+
+    t.fogoContatoChave530=chave;
+    if(dano>0){
+        labFogoDanoToken520_(t,dano);
+        labEstado_.logLab=Array.isArray(labEstado_.logLab)?labEstado_.logLab:[];
+        labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:`🔥 ${t.nome} sofreu ${dano} de dano por contato com o incêndio de ${p.fonte.nome||'um objeto'}.`});
+        labFogoSom520_(false);
+        return true;
+    }
+    return false;
+}
+function labFogoContatoImediato530_(){
+    if(!batalhaEhMestre_()||labEstado_.fase!=='combate')return;
+    let mudou=false;
+    for(const t of (labEstado_.tokens||[]))if(labFogoContatoToken530_(t,false))mudou=true;
+    if(mudou){labSalvarLocal_();labAgendarSyncRemoto_();}
+}
+
+function labProcessarFogoObjetos530_(){
+    if(labEstado_.fase!=='combate')return;
+    const rodada=Number(labEstado_.rodada||0);
+    let fontes=(labEstado_.objetosLab||[]).filter(o=>o.pegandoFogoLab&&!o.destruido);
+    if(!fontes.length)return;
+    let fogoMudou=false;
+
+    for(const o of fontes){
+        if(Number(o.fogoUltimaRodadaLab)===rodada)continue;
+        o.fogoUltimaRodadaLab=rodada;
+        labFogoDanoObjeto520_(o);
+        fogoMudou=true;
+    }
+
+    fontes=(labEstado_.objetosLab||[]).filter(o=>o.pegandoFogoLab&&!o.destruido);
+    if(fogoMudou&&fontes.length)labFogoPropagar520_(fontes);
+
+    for(const t of (labEstado_.tokens||[]))labFogoContatoToken530_(t,false);
+    if(fogoMudou)labFogoSom520_(false);
+}
+labProcessarFogoObjetosV247_=labProcessarFogoObjetos530_;
+
+// ------------------------------------------------------------
+// 5) Restaurar — limpa local, público e Firestore imediatamente
+// ------------------------------------------------------------
+window.labRestaurarParticipantes_=async function(){
+    if(!batalhaEhMestre_())return;
+    if(!confirm('Restaurar toda a Mesa de testes? PCs, NPCs, monstros, criaturas e objetos voltarão ao estado inicial de combate.'))return;
+
+    for(const t of labEstado_.tokens||[]){
+        labRestaurarTokenCompleto490_(t);
+        t.fogoContatoChave530='';
+    }
+    for(const o of labEstado_.objetosLab||[]){
+        o.pvAtual=Number(o.pvMax??o.pvAtual??0);
+        o.destruido=false;o.pegandoFogoLab=false;o.despedacadoLab=false;o.explodindoLab=false;
+        o.fogoUltimaRodadaLab=-1;o.sangrando=false;o.derrubado=false;o.atordoado=false;
+    }
+    labEstado_.efeitosObjetosLab={};
+    labEstado_.pendenciaLab=null;labEstado_.danoPendenteLab=null;
+
+    // Remove visual antigo imediatamente, antes mesmo do novo snapshot chegar.
+    document.querySelectorAll('.lab-fire-real-510,.lab-fire-overlay-481,.lab-object-fire-v2,.lab-fire-490').forEach(x=>x.remove());
+
+    labSalvarLocal_();labRender_();
+    try{
+        await setDoc(LAB_MAPA_MESA_REF_(),{estado:labEstadoPublico_(),atualizadoEm:new Date().toISOString()},{merge:false});
+    }catch(e){console.warn('Restauração remota da Mesa',e);labAgendarSyncRemoto_();}
+    notificar_('♻️ Mesa restaurada por completo, inclusive incêndios, PV e estados.','sucesso',3500);
+};
+
+// ------------------------------------------------------------
+// 6) Render final desta versão
+// ------------------------------------------------------------
+const labRender530Base_=labRender_;
+labRender_=function(){
+    const r=labRender530Base_();
+    try{
+        gmVet490InstalarUI_();
+        labEntradaLivreAtualizar530_();
+        if(batalhaEhMestre_())labFogoContatoImediato530_();
+        if(batalhaEhMestre_())gmMusicaSelectorRender510_();
+    }catch(e){console.warn('v46.53 render',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -22161,6 +22541,6 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.52.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.53.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
