@@ -429,7 +429,7 @@
 .lab-fire-overlay-481{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);z-index:80;pointer-events:none;font-size:26px;filter:drop-shadow(0 0 6px #ff7a00);animation:labFirePulse481 .38s ease-in-out infinite}
 
 
-/* ===== V46.49.0 ===== */
+/* ===== V46.50.0 ===== */
 @keyframes labFire490{0%,100%{transform:translate(-50%,0) scale(.92);opacity:.78}50%{transform:translate(-50%,-6px) scale(1.13);opacity:1}}
 .lab-fire-490{position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-size:27px;z-index:90;pointer-events:none;filter:drop-shadow(0 0 8px #ff7400);animation:labFire490 .36s ease-in-out infinite}
 .gm-vector-selected{filter:drop-shadow(0 0 5px #ffd54a)}
@@ -438,6 +438,17 @@
 #gmVet490Inspector input[type="color"]{width:48px;height:34px;margin:0;padding:2px}
 #labAudioMesaFloat{position:fixed;left:12px;bottom:12px;z-index:2147482500;max-width:390px;padding:9px 11px;border-radius:10px;background:rgba(16,12,35,.95);border:1px solid rgba(0,212,255,.45);box-shadow:0 4px 20px rgba(0,0,0,.4);color:#eee;font-size:13px}
 #labAudioMesaFloat button{margin:0;padding:7px 10px}
+
+
+/* ===== V46.50.0 ===== */
+#gmResizeModal500{position:fixed;inset:0;z-index:2147483400;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px}
+#gmResizeModal500 .card{width:min(620px,94vw);background:#211638;border:1px solid rgba(126,231,255,.35);border-radius:14px;padding:18px;box-shadow:0 16px 50px rgba(0,0,0,.55)}
+#gmResizeModal500 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+#gmResizeModal500 button{min-height:44px}
+#labAudioMesaFloat.audio-mini-500{width:44px;height:44px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:19px}
+#labAudioMesaFloat.audio-open-500{min-width:270px;max-width:390px}
+#labAudioMesaFloat input[type="range"]{width:110px;margin:0 4px}
+#labAudioStatus500{font-size:11px;color:#9fc6d8;margin-top:4px}
 
 </style>
 
@@ -18055,7 +18066,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.49.0',e);}
+    }catch(e){console.warn('v46.50.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19099,7 +19110,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.49.0',e);}
+    }catch(e){console.warn('laser v46.50.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19953,7 +19964,7 @@ window.labEncerrarOportunidade_=function(){
 
 
 // ============================================================
-// V46.49.0 — lâminas de energia, alcance melee, som/FX e fogo
+// V46.50.0 — lâminas de energia, alcance melee, som/FX e fogo
 // ============================================================
 
 // Reconhecimento explícito: "Espada de Força" é uma lâmina de energia,
@@ -20155,7 +20166,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.49.0
+// V46.50.0
 // Alvos mortos, Restaurar total, fogo, Oficina vetorial/editável,
 // carregar mapas na Oficina e música compartilhada.
 // ============================================================
@@ -20794,6 +20805,353 @@ window.labRender_=labRender_;
 // Estado inicial da preferência de áudio.
 try{labAudioAtivado490_=localStorage.getItem('mesa_estelar_audio_ativado_v1')==='1';}catch(_){}
 
+
+
+// ============================================================
+// V46.50.0 — redimensionamento seguro da Oficina,
+// YouTube via IFrame API, áudio compacto e formas -> objeto.
+// ============================================================
+
+// ------------------------------------------------------------
+// 1) Redimensionamento da Oficina sem deformar o desenho
+// ------------------------------------------------------------
+let gmResizePendente500_=null;
+
+function gmResizeAnchorFactors500_(anchor){
+    const a=String(anchor||'center');
+    const fx=/right/.test(a)?1:(/left/.test(a)?0:.5);
+    const fy=/bottom/.test(a)?1:(/top/.test(a)?0:.5);
+    return {fx,fy};
+}
+function gmResizeTransformar500_(oldW,oldH,newW,newH,modo,anchor){
+    const {fx,fy}=gmResizeAnchorFactors500_(anchor);
+    let sx=1,sy=1,dx=0,dy=0;
+
+    if(modo==='scale'){
+        const sc=Math.min(newW/Math.max(.001,oldW), newH/Math.max(.001,oldH));
+        sx=sy=sc;
+        const usedW=oldW*sc,usedH=oldH*sc;
+        dx=(newW-usedW)*fx;
+        dy=(newH-usedH)*fy;
+    }else{
+        dx=(newW-oldW)*fx;
+        dy=(newH-oldH)*fy;
+    }
+
+    const tx=x=>Number(x||0)*sx+dx, ty=y=>Number(y||0)*sy+dy;
+
+    for(const st of (gmOficinaEstado_.desenhos||[])){
+        if(Array.isArray(st.pts))st.pts=st.pts.map(p=>({x:tx(p.x),y:ty(p.y)}));
+        if(modo==='scale'){
+            if(Number.isFinite(Number(st.size)))st.size=Math.max(1,Number(st.size)*sx);
+            if(Number.isFinite(Number(st.esp)))st.esp=Math.max(1,Number(st.esp)*sx);
+        }
+    }
+
+    for(const o of (gmOficinaEstado_.objetos||[])){
+        o.x=tx(o.x);o.y=ty(o.y);
+        if(modo==='scale'){
+            if(Number.isFinite(Number(o.larguraM)))o.larguraM=Math.max(.05,Number(o.larguraM)*sx);
+            if(Number.isFinite(Number(o.alturaM)))o.alturaM=Math.max(.05,Number(o.alturaM)*sy);
+        }
+    }
+
+    for(const f of (gmOficinaEstado_.formas||[])){
+        f.x=tx(f.x);f.y=ty(f.y);
+        if(f.tipo==='linha'){
+            f.x2=tx(f.x2);f.y2=ty(f.y2);
+        }else{
+            f.w=Number(f.w||0)*sx;f.h=Number(f.h||0)*sy;
+        }
+        if(modo==='scale'&&Number.isFinite(Number(f.strokeWidth))){
+            f.strokeWidth=Math.max(1,Number(f.strokeWidth)*sx);
+        }
+    }
+}
+function gmResizeFechar500_(){
+    document.getElementById('gmResizeModal500')?.remove();
+    gmResizePendente500_=null;
+    gmOficinaV2SyncUI_();
+}
+window.gmResizeAplicar500_=function(modo){
+    const p=gmResizePendente500_;if(!p)return;
+    const anchor=document.getElementById('gmResizeAnchor500')?.value||'center';
+    gmOficinaV2Historico_?.();
+    gmResizeTransformar500_(p.oldW,p.oldH,p.newW,p.newH,modo,anchor);
+    gmOficinaEstado_.larguraM=p.newW;gmOficinaEstado_.alturaM=p.newH;
+    gmOficinaPersistir_();gmResizeFechar500_();gmOficinaRender_();
+};
+window.gmResizeCancelar500_=function(){gmResizeFechar500_();};
+
+window.gmOficinaV2Tamanho_=function(v){
+    const m=String(v||'').match(/^(\d+)x(\d+)$/);if(!m)return;
+    const newW=Number(m[1]),newH=Number(m[2]);
+    const oldW=Number(gmOficinaEstado_.larguraM||28),oldH=Number(gmOficinaEstado_.alturaM||14);
+    if(newW===oldW&&newH===oldH)return;
+    document.getElementById('gmResizeModal500')?.remove();
+    gmResizePendente500_={oldW,oldH,newW,newH};
+    const d=document.createElement('div');d.id='gmResizeModal500';
+    d.innerHTML=`<div class="card">
+      <h3 style="margin-top:0;color:#8ee7ff">📐 Redimensionar mapa</h3>
+      <div style="color:#c8d1df">De <b>${oldW} × ${oldH} m</b> para <b>${newW} × ${newH} m</b>.</div>
+      <label style="display:block;margin-top:12px">Âncora
+        <select id="gmResizeAnchor500" style="width:100%;margin-top:5px">
+          <option value="top-left">Superior esquerda</option>
+          <option value="top">Superior centro</option>
+          <option value="top-right">Superior direita</option>
+          <option value="left">Centro esquerda</option>
+          <option value="center" selected>Centro</option>
+          <option value="right">Centro direita</option>
+          <option value="bottom-left">Inferior esquerda</option>
+          <option value="bottom">Inferior centro</option>
+          <option value="bottom-right">Inferior direita</option>
+        </select>
+      </label>
+      <div class="opts">
+        <button class="btn-small btn-select" onclick="gmResizeAplicar500_('preserve')"><b>Preservar metros</b><br><small>Não deforma lago, caminhos, objetos ou formas. Só adiciona/corta área nas bordas.</small></button>
+        <button class="btn-small" onclick="gmResizeAplicar500_('scale')"><b>Escalar proporcionalmente</b><br><small>Aumenta/reduz todo o conteúdo sem alterar suas proporções.</small></button>
+      </div>
+      <button class="btn-small" onclick="gmResizeCancelar500_()">Cancelar</button>
+    </div>`;
+    document.body.appendChild(d);
+};
+
+// ------------------------------------------------------------
+// 2) Converter as formas da Oficina em objeto top-view
+// ------------------------------------------------------------
+function gmVet500Bounds_(){
+    const fs=gmVet490Formas_();if(!fs.length)return null;
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    for(const f of fs){
+        if(f.tipo==='linha'){
+            minX=Math.min(minX,Number(f.x||0),Number(f.x2||0));maxX=Math.max(maxX,Number(f.x||0),Number(f.x2||0));
+            minY=Math.min(minY,Number(f.y||0),Number(f.y2||0));maxY=Math.max(maxY,Number(f.y||0),Number(f.y2||0));
+        }else{
+            const x1=Number(f.x||0),y1=Number(f.y||0),x2=x1+Number(f.w||0),y2=y1+Number(f.h||0);
+            minX=Math.min(minX,x1,x2);maxX=Math.max(maxX,x1,x2);
+            minY=Math.min(minY,y1,y2);maxY=Math.max(maxY,y1,y2);
+        }
+    }
+    if(!Number.isFinite(minX))return null;
+    return {minX,minY,maxX,maxY,w:Math.max(.1,maxX-minX),h:Math.max(.1,maxY-minY)};
+}
+function gmVet500SvgShape_(f,scale,b){
+    const shiftX=x=>(Number(x||0)-b.minX)*scale,shiftY=y=>(Number(y||0)-b.minY)*scale;
+    const stroke=f.stroke||'#00d4ff',fill=f.tipo==='linha'?'none':(f.fill||'transparent');
+    const op=Number(f.opacity??.65),sw=Math.max(1,Number(f.strokeWidth||3));
+    const x=shiftX(f.x),y=shiftY(f.y),w=Number(f.w||0)*scale,h=Number(f.h||0)*scale;
+    const cx=x+w/2,cy=y+h/2,rot=Number(f.rot||0);
+    const common=`stroke="${stroke}" stroke-width="${sw}" fill="${fill}" opacity="${op}" transform="rotate(${rot} ${cx} ${cy})"`;
+    if(f.tipo==='linha')return `<line x1="${x}" y1="${y}" x2="${shiftX(f.x2)}" y2="${shiftY(f.y2)}" ${common}/>`;
+    if(f.tipo==='circulo'){const d=Math.max(Math.abs(w),Math.abs(h));return `<ellipse cx="${x+d/2}" cy="${y+d/2}" rx="${d/2}" ry="${d/2}" ${common}/>`;}
+    if(f.tipo==='elipse')return `<ellipse cx="${x+w/2}" cy="${y+h/2}" rx="${Math.abs(w)/2}" ry="${Math.abs(h)/2}" ${common}/>`;
+    if(f.tipo==='triangulo')return `<polygon points="${x+w/2},${y} ${x+w},${y+h} ${x},${y+h}" ${common}/>`;
+    return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" ${common}/>`;
+}
+async function gmVet500Rasterizar_(){
+    const b=gmVet500Bounds_();if(!b)return null;
+    const maxPx=320,scale=Math.min(100, maxPx/Math.max(b.w,b.h));
+    const w=Math.max(24,Math.ceil(b.w*scale)+16),h=Math.max(24,Math.ceil(b.h*scale)+16);
+    const shapes=gmVet490Formas_().map(f=>gmVet500SvgShape_(f,scale,{...b,minX:b.minX-8/scale,minY:b.minY-8/scale})).join('');
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${shapes}</svg>`;
+    const blob=new Blob([svg],{type:'image/svg+xml'}),url=URL.createObjectURL(blob);
+    try{
+        const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url;});
+        const c=document.createElement('canvas');c.width=w;c.height=h;
+        const ctx=c.getContext('2d');ctx.clearRect(0,0,w,h);ctx.drawImage(img,0,0);
+        let data=c.toDataURL('image/webp',.86);
+        if(data.length>95000)data=c.toDataURL('image/webp',.68);
+        return {data,wM:b.w,hM:b.h};
+    }finally{URL.revokeObjectURL(url);}
+}
+window.gmVet500SalvarObjeto_=async function(){
+    if(!batalhaEhMestre_())return;
+    if(!gmVet490Formas_().length){notificar_('Crie pelo menos uma forma antes de salvar como objeto.','aviso');return;}
+    const nome=prompt('Nome do novo objeto top-view:','Objeto desenhado');if(!nome||!String(nome).trim())return;
+    try{
+        const rr=await gmVet500Rasterizar_();if(!rr)throw new Error('Nada para rasterizar.');
+        garantirObjetosMapaPadrao_();
+        const lista=JSON.parse(JSON.stringify(objetosMapaDB||[]));
+        let id=labMapaSlug_(nome)||`objeto_${Date.now()}`,base=id,n=2;
+        while(lista.some(x=>String(x.id)===id))id=`${base}_${n++}`;
+        const o={id,nome:String(nome).trim(),imagem:rr.data,tipoVisual:'personalizado',
+          larguraM:Math.max(.1,rr.wM),alturaM:Math.max(.1,rr.hM),pvMax:10,dureza:2,pesoKg:10,
+          destrutivel:true,inflamavel:false,inflamabilidade:0,bloqueiaMovimento:true,bloqueiaVisao:false,rascunho:true};
+        await setDoc(doc(db,'configuracoes',objetoMapaDocId_(id)),o,{merge:false});
+        lista.push(o);
+        await setDoc(doc(db,'configuracoes','objetosMapa'),{formato:'docs-v1',ids:lista.map(x=>x.id),atualizadoEm:new Date().toISOString()},{merge:false});
+        objetosMapaDB=lista;renderizarBancoObjetosMapa_();gmOficinaV2PopularObjetos_?.();
+        notificar_(`🧩 “${o.nome}” criado no Banco de Objetos com fundo transparente.`,'sucesso',4200);
+    }catch(e){console.error(e);notificar_(`Não consegui criar o objeto: ${e?.message||e}`,'erro',6000);}
+};
+
+// Acrescenta botão ao painel vetorial já existente.
+const gmVet490InstalarUI500Base_=gmVet490InstalarUI_;
+gmVet490InstalarUI_=function(){
+    gmVet490InstalarUI500Base_();
+    const tools=document.getElementById('gmVet490Tools');if(!tools||document.getElementById('gmVet500ObjBtn'))return;
+    const row=tools.querySelector('div');
+    if(row)row.insertAdjacentHTML('beforeend','<button id="gmVet500ObjBtn" class="btn-small btn-select" onclick="gmVet500SalvarObjeto_()">🧩 Salvar formas como objeto</button>');
+};
+
+// ------------------------------------------------------------
+// 3) YouTube real via IFrame API + áudio compacto
+// ------------------------------------------------------------
+let labYTPlayer500_=null;
+let labYTReadyPromise500_=null;
+let labAudioExpandido500_=false;
+let labAudioVolume500_=Number(localStorage.getItem('mesa_estelar_audio_volume_v1')||60);
+
+function labYTApi500_(){
+    if(window.YT?.Player)return Promise.resolve(window.YT);
+    if(labYTReadyPromise500_)return labYTReadyPromise500_;
+    labYTReadyPromise500_=new Promise((resolve,reject)=>{
+        const old=window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady=function(){
+            try{if(typeof old==='function')old();}catch(_){}
+            resolve(window.YT);
+        };
+        if(!document.querySelector('script[src*="youtube.com/iframe_api"]')){
+            const sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';sc.async=true;
+            sc.onerror=()=>reject(new Error('Não foi possível carregar a API do YouTube.'));
+            document.head.appendChild(sc);
+        }
+        setTimeout(()=>{if(window.YT?.Player)resolve(window.YT);},1200);
+    });
+    return labYTReadyPromise500_;
+}
+function labYTDestroy500_(){
+    if(labYTPlayer500_){try{labYTPlayer500_.destroy();}catch(_){}labYTPlayer500_=null;}
+    document.getElementById('labYTMount500')?.remove();
+}
+function labAudioParar500_(){
+    labYTDestroy500_();
+    if(labAudioElemento490_){try{labAudioElemento490_.pause?.();labAudioElemento490_.remove();}catch(_){}labAudioElemento490_=null;}
+}
+function labAudioStatus500_(txt){
+    const e=document.getElementById('labAudioStatus500');if(e)e.textContent=String(txt||'');
+}
+async function labAudioTocarYoutube500_(st,yid){
+    const YT=await labYTApi500_();
+    labYTDestroy500_();
+    const mount=document.createElement('div');mount.id='labYTMount500';
+    mount.style.cssText='position:fixed;left:-300px;bottom:-200px;width:200px;height:112px;opacity:.01;pointer-events:none;z-index:-1';
+    document.body.appendChild(mount);
+    const offset=Math.max(0,Math.floor((Date.now()-Number(st.inicioTs||Date.now()))/1000));
+    labYTPlayer500_=new YT.Player('labYTMount500',{
+        width:'200',height:'112',videoId:yid,
+        playerVars:{autoplay:1,controls:0,disablekb:1,playsinline:1,start:offset,loop:1,playlist:yid,origin:location.origin},
+        events:{
+            onReady(ev){
+                try{
+                    ev.target.setVolume(Math.max(0,Math.min(100,labAudioVolume500_)));
+                    ev.target.unMute();ev.target.playVideo();
+                    labAudioStatus500_('Tocando via YouTube.');
+                }catch(e){labAudioStatus500_('Clique no alto-falante e em Retomar áudio.');}
+            },
+            onStateChange(ev){
+                if(ev.data===YT.PlayerState.PLAYING)labAudioStatus500_('Tocando via YouTube.');
+            },
+            onError(ev){
+                labAudioStatus500_(`YouTube não permitiu reproduzir esta faixa (erro ${ev.data}).`);
+            }
+        }
+    });
+}
+labAudioAplicar490_=function(){
+    const st=labEstado_.audioMesaLab;
+    const key=JSON.stringify(st||{});
+    if(key===labAudioUltimaChave490_)return;
+    labAudioUltimaChave490_=key;
+    labAudioParar500_();
+    if(!labAudioAtivado490_||!st?.playing||!st?.url)return;
+    const yid=labYoutubeId490_(st.url);
+    if(yid){
+        labAudioTocarYoutube500_(st,yid).catch(e=>{console.warn(e);labAudioStatus500_(e.message||'Falha no YouTube.');});
+        return;
+    }
+    if(/\.(mp3|ogg|wav|m4a)(\?|$)/i.test(st.url)){
+        const a=document.createElement('audio');a.src=st.url;a.autoplay=true;a.loop=true;a.volume=Math.max(0,Math.min(1,labAudioVolume500_/100));
+        a.style.display='none';document.body.appendChild(a);labAudioElemento490_=a;
+        const offset=Math.max(0,Math.floor((Date.now()-Number(st.inicioTs||Date.now()))/1000));
+        a.addEventListener('loadedmetadata',()=>{try{a.currentTime=Math.min(offset,a.duration||offset);a.play();labAudioStatus500_('Tocando áudio direto.');}catch(_){}},{once:true});
+    }else{
+        labAudioStatus500_('Formato não reconhecido. Use YouTube ou link direto MP3/OGG/WAV/M4A.');
+    }
+};
+window.labAudioAtivar490_=function(){
+    labAudioAtivado490_=true;labAudioExpandido500_=false;
+    localStorage.setItem('mesa_estelar_audio_ativado_v1','1');
+    // O clique do usuário também inicia o carregamento da API do YouTube.
+    labYTApi500_().catch(()=>{});
+    labAudioUltimaChave490_='';
+    labAudioAplicar490_();labAudioFloat490_();
+    notificar_('🔊 Áudio da Mesa ativado neste navegador.','sucesso',2200);
+};
+window.labAudioDesativar490_=function(){
+    labAudioAtivado490_=false;labAudioExpandido500_=false;
+    localStorage.removeItem('mesa_estelar_audio_ativado_v1');
+    labAudioParar500_();labAudioFloat490_();
+};
+window.labAudioTogglePainel500_=function(){
+    labAudioExpandido500_=!labAudioExpandido500_;labAudioFloat490_();
+};
+window.labAudioVolume500_=function(v){
+    labAudioVolume500_=Math.max(0,Math.min(100,Number(v)||0));
+    localStorage.setItem('mesa_estelar_audio_volume_v1',String(labAudioVolume500_));
+    try{labYTPlayer500_?.setVolume(labAudioVolume500_);}catch(_){}
+    if(labAudioElemento490_)labAudioElemento490_.volume=labAudioVolume500_/100;
+};
+window.labAudioRetomar500_=function(){
+    try{labYTPlayer500_?.unMute();labYTPlayer500_?.playVideo();}catch(_){}
+    try{labAudioElemento490_?.play();}catch(_){}
+};
+labAudioFloat490_=function(){
+    let d=document.getElementById('labAudioMesaFloat');
+    if(!d){d=document.createElement('div');d.id='labAudioMesaFloat';document.body.appendChild(d);}
+    const st=labEstado_.audioMesaLab;
+    if(!labAudioAtivado490_){
+        d.className='audio-open-500';
+        d.innerHTML=`<button class="btn-small btn-select" onclick="labAudioAtivar490_()">🔊 Ativar áudio da mesa</button>${st?.nome?` <span>${escaparHtmlInventario_(st.nome)}</span>`:''}`;
+        return;
+    }
+    if(!labAudioExpandido500_){
+        d.className='audio-mini-500';
+        d.title=st?.nome?`Áudio: ${st.nome}`:'Áudio da Mesa';
+        d.innerHTML='<span onclick="labAudioTogglePainel500_()" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">🔊</span>';
+        return;
+    }
+    d.className='audio-open-500';
+    d.innerHTML=`<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+      <button class="btn-small" onclick="labAudioTogglePainel500_()">◀</button>
+      <strong style="flex:1">${escaparHtmlInventario_(st?.nome||'Áudio da Mesa')}</strong>
+      <button class="btn-small" onclick="labAudioRetomar500_()">▶ Retomar</button>
+      <button class="btn-small" onclick="labAudioDesativar490_()">🔇</button>
+      <span>Vol.</span><input type="range" min="0" max="100" value="${labAudioVolume500_}" oninput="labAudioVolume500_(this.value)">
+    </div><div id="labAudioStatus500"></div>`;
+};
+
+// O master também deve conseguir ouvir imediatamente ao clicar "tocar".
+const gmMusicaTocar490Base500_=window.gmMusicaTocar490_;
+window.gmMusicaTocar490_=function(i){
+    gmMusicaTocar490Base500_(i);
+    if(labAudioAtivado490_){labAudioUltimaChave490_='';labAudioAplicar490_();}
+};
+
+// ------------------------------------------------------------
+// 4) Render final desta versão
+// ------------------------------------------------------------
+const labRender500Base_=labRender_;
+labRender_=function(){
+    const r=labRender500Base_();
+    try{
+        gmVet490InstalarUI_?.();
+        labAudioFloat490_();
+    }catch(e){console.warn('v46.50 render',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -20809,6 +21167,6 @@ try{labAudioAtivado490_=localStorage.getItem('mesa_estelar_audio_ativado_v1')===
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.49.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.50.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
