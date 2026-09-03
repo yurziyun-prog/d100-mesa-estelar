@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.55.6 ===== */
+/* ===== V46.56.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.55.6 ===== */
+/* ===== V46.56.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22045,7 +22045,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.6 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.56.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22204,7 +22204,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.55.6
+// V46.56.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22561,7 +22561,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.6
+// V46.56.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22846,7 +22846,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.6 — Oficina: estilos de traço exclusivos + prévia real
+// V46.56.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22922,7 +22922,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.55.6
+// V46.56.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23007,7 +23007,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.55.6 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.56.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23148,7 +23148,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.6 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.56.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23390,7 +23390,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.55.6 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.56.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23549,7 +23549,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.55.6 — Oficina simplificada
+// V46.56.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23894,7 +23894,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.55.6 — Oficina: objetos realmente opacos + painel de camadas
+// V46.56.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24064,6 +24064,239 @@ gmOficinaRender_=function(){
     return r;
 };
 
+
+
+// ============================================================
+// V46.56.0 — Oficina: composição real por ordem de adição
+// Arquitetura simplificada:
+//   raster/desenho = fundo
+//   formas + objetos = UM MESMO SVG, ordenados cronologicamente
+//   último elemento adicionado = topo
+// ============================================================
+
+function gm560TimestampId_(id){
+    const m=String(id||'').match(/(?:vet|ofobj|obj)[:_\-](\d{10,})/i);
+    return m ? Number(m[1]) : 0;
+}
+function gm560GarantirOrdem_(){
+    const itens=[];
+    for(const f of (gmVet490Formas_()||[])) itens.push({ref:f,t:gm560TimestampId_(f.id)});
+    for(const o of (gmOficinaEstado_.objetos||[])) itens.push({ref:o,t:gm560TimestampId_(o.id)});
+    let fallback=Date.now()-itens.length*10;
+    itens.sort((a,b)=>(a.t||0)-(b.t||0));
+    for(const it of itens){
+        if(!Number.isFinite(Number(it.ref.ordemOficina))){
+            it.ref.ordemOficina=it.t || fallback++;
+        }
+    }
+}
+function gm560Itens_(){
+    gm560GarantirOrdem_();
+    const a=[];
+    for(const f of (gmVet490Formas_()||[])) a.push({tipo:'forma',id:f.id,nome:f.tipo||'Forma',ref:f});
+    for(const o of (gmOficinaEstado_.objetos||[])) a.push({tipo:'objeto',id:o.id,nome:o.nome||'Objeto',ref:o});
+    return a.sort((x,y)=>Number(x.ref.ordemOficina||0)-Number(y.ref.ordemOficina||0));
+}
+function gm560Topo_(ref){
+    const all=gm560Itens_();
+    const mx=Math.max(Date.now(),...all.map(x=>Number(x.ref.ordemOficina||0)));
+    ref.ordemOficina=mx+1;
+}
+function gm560Esc_(x){ return escaparHtmlInventario_(String(x??'')); }
+
+function gm560ObjetoSvg_(o,ppm){
+    const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(o.modeloId));
+    const img=o.imagem||m?.imagem||'';
+    const w=Math.max(.05,Number(o.larguraM||1))*ppm;
+    const h=Math.max(.05,Number(o.alturaM||1))*ppm;
+    const x=Number(o.x||0)*ppm-w/2, y=Number(o.y||0)*ppm-h/2;
+    const cx=x+w/2,cy=y+h/2,rot=Number(o.angulo||0);
+    const sel=String(o.id)===String(gmOficinaObjSel553_);
+    const id=String(o.id).replace(/'/g,"\\'");
+    const shadow=gm553ShadowCss_(o);
+    // Sem filtro de "opacificar tudo": a opacidade do próprio objeto permanece 1.
+    // A transparência do arquivo PNG continua apenas onde a imagem realmente é transparente.
+    return `<g data-of2="${gm560Esc_(o.id)}" transform="rotate(${rot} ${cx} ${cy})"
+              onpointerdown="gmOficinaV2ArrastarObjeto_(event,'${id}')"
+              style="cursor:grab;pointer-events:auto;${shadow?`filter:${shadow};`:''}">
+        ${img?`<image href="${gm560Esc_(img)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" opacity="1"/>`
+              :`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#777"/>`}
+        ${sel?`<rect x="${x-2}" y="${y-2}" width="${w+4}" height="${h+4}" fill="none" stroke="#41d9f5" stroke-width="1.5" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" pointer-events="none"/>`:''}
+    </g>`;
+}
+
+function gm560RenderUnificado_(){
+    const svg=document.getElementById('gmOficinaVectorLayer');
+    if(!svg)return;
+    gm560GarantirOrdem_();
+    const ppm=gmOficinaV2Ppm_();
+    const html=gm560Itens_().map(it=>{
+        if(it.tipo==='forma') return gmVet490SvgEl_(it.ref,ppm);
+        return gm560ObjetoSvg_(it.ref,ppm);
+    }).join('');
+    svg.innerHTML=html;
+    svg.style.display='block';
+    svg.style.zIndex='12';
+    svg.style.pointerEvents='auto';
+
+    // A antiga camada HTML de objetos causava o problema: formas e objetos
+    // pertenciam a stacking contexts diferentes e não podiam intercalar.
+    const old=document.getElementById('gmOficinaV2Objects');
+    if(old){ old.innerHTML=''; old.style.display='none'; old.style.pointerEvents='none'; }
+
+    gm560RenderCamadas_();
+}
+
+// Render principal vetorial agora sempre termina na composição unificada.
+const gmVet490Render560Base_=gmVet490Render_;
+gmVet490Render_=function(){
+    // deixa rotinas antigas atualizarem inspector/estado, mas substitui o resultado visual
+    try{gmVet490Render560Base_();}catch(e){console.warn('render base vetorial',e);}
+    gm560RenderUnificado_();
+};
+
+// Não renderiza mais a camada HTML separada de objetos.
+gmOficinaV2RenderObjetos_=function(){
+    gm560RenderUnificado_();
+    try{gm553ObjInspector_();}catch(_){}
+};
+
+// Arraste de objeto diretamente dentro do SVG unificado.
+window.gmOficinaV2ArrastarObjeto_=function(ev,id){
+    if(gmOficinaV2Cfg_.ativo)return;
+    ev.preventDefault();ev.stopPropagation();
+    try{gmOficinaV2Historico_();}catch(_){}
+    const o=(gmOficinaEstado_.objetos||[]).find(x=>String(x.id)===String(id));
+    const map=document.getElementById('gmOficinaV2Map');
+    if(!o||!map)return;
+
+    gmOficinaObjSel553_=String(id);
+    gmVet490_.selectedId='';
+    const rect=map.getBoundingClientRect(),ppm=gmOficinaV2Ppm_();
+
+    const move=e=>{
+        o.x=Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-rect.left)/ppm));
+        o.y=Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-rect.top)/ppm));
+        gm560RenderUnificado_();
+    };
+    const up=()=>{
+        window.removeEventListener('pointermove',move);
+        gmOficinaPersistir_();
+        gm560RenderUnificado_();
+        try{gm553ObjInspector_();}catch(_){}
+    };
+    window.addEventListener('pointermove',move,{passive:true});
+    window.addEventListener('pointerup',up,{once:true});
+};
+
+// Selecionar uma forma continua permitindo arrastá-la, mas agora no mesmo plano.
+const gmVet490PointerForma560Base_=window.gmVet490PointerForma_;
+window.gmVet490PointerForma_=function(ev,id){
+    gmOficinaObjSel553_='';
+    return gmVet490PointerForma560Base_(ev,id);
+};
+
+// Último elemento criado vai automaticamente para o topo.
+// Objetos:
+const gmOficinaV2AddObjeto560Base_=window.gmOficinaV2AddObjeto_;
+window.gmOficinaV2AddObjeto_=function(){
+    const antes=new Set((gmOficinaEstado_.objetos||[]).map(o=>String(o.id)));
+    gmOficinaV2AddObjeto560Base_();
+    const novo=(gmOficinaEstado_.objetos||[]).find(o=>!antes.has(String(o.id)));
+    if(novo){gm560Topo_(novo);gmOficinaPersistir_();gm560RenderUnificado_();}
+};
+// Formas: detecta a nova forma na renderização e completa a ordem pelo timestamp do id.
+
+// Camadas manuais, sem alterar opacidade.
+window.gm560LayerMove_=function(tipo,id,delta){
+    const a=gm560Itens_();
+    const i=a.findIndex(x=>x.tipo===tipo&&String(x.id)===String(id));
+    if(i<0)return;
+    const j=Math.max(0,Math.min(a.length-1,i+Number(delta||0)));
+    if(i===j)return;
+    const oi=Number(a[i].ref.ordemOficina),oj=Number(a[j].ref.ordemOficina);
+    a[i].ref.ordemOficina=oj;a[j].ref.ordemOficina=oi;
+    gmOficinaPersistir_();gm560RenderUnificado_();
+};
+window.gm560LayerTop_=function(tipo,id){
+    const x=gm560Itens_().find(x=>x.tipo===tipo&&String(x.id)===String(id));if(!x)return;
+    gm560Topo_(x.ref);gmOficinaPersistir_();gm560RenderUnificado_();
+};
+window.gm560LayerBottom_=function(tipo,id){
+    const a=gm560Itens_(),x=a.find(x=>x.tipo===tipo&&String(x.id)===String(id));if(!x)return;
+    x.ref.ordemOficina=Math.min(...a.map(y=>Number(y.ref.ordemOficina||0)),Date.now())-1;
+    gmOficinaPersistir_();gm560RenderUnificado_();
+};
+window.gm560LayerSelect_=function(tipo,id){
+    if(tipo==='forma'){
+        gmVet490_.selectedId=String(id);gmOficinaObjSel553_='';
+        gm555ModoForma_();
+    }else{
+        gmOficinaObjSel553_=String(id);gmVet490_.selectedId='';
+    }
+    gm560RenderUnificado_();
+    try{gmVet490Inspector_();gm553ObjInspector_();}catch(_){}
+};
+
+function gm560RenderCamadas_(){
+    let box=document.getElementById('gm556Layers');
+    const tools=document.getElementById('gmVet490Tools');
+    if(!tools)return;
+    if(!box){
+        box=document.createElement('div');box.id='gm556Layers';
+        box.style.cssText='margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12)';
+        tools.appendChild(box);
+    }
+    const a=gm560Itens_().slice().reverse();
+    box.innerHTML=`<div style="font-weight:700;color:#d9edf7;margin-bottom:6px">🗂 Ordem dos elementos <span style="font-weight:400;color:#8fa7b8">• último adicionado fica no topo</span></div>
+    <div style="display:flex;flex-direction:column;gap:4px;max-height:220px;overflow:auto">
+    ${a.map(x=>{
+        const sel=x.tipo==='forma'?String(gmVet490_.selectedId)===String(x.id):String(gmOficinaObjSel553_)===String(x.id);
+        const iid=String(x.id).replace(/'/g,"\\'");
+        return `<div style="display:flex;gap:4px;align-items:center;padding:4px 5px;border-radius:6px;background:${sel?'rgba(65,217,245,.14)':'rgba(255,255,255,.035)'}">
+          <button class="btn-small" onclick="gm560LayerSelect_('${x.tipo}','${iid}')">${x.tipo==='forma'?'◇':'▣'}</button>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gm560Esc_(x.nome)}</span>
+          <button class="btn-small" title="Subir" onclick="gm560LayerMove_('${x.tipo}','${iid}',1)">↑</button>
+          <button class="btn-small" title="Descer" onclick="gm560LayerMove_('${x.tipo}','${iid}',-1)">↓</button>
+          <button class="btn-small" title="Topo" onclick="gm560LayerTop_('${x.tipo}','${iid}')">⇈</button>
+          <button class="btn-small" title="Fundo" onclick="gm560LayerBottom_('${x.tipo}','${iid}')">⇊</button>
+        </div>`;
+    }).join('')}</div>`;
+}
+
+// Remove controles antigos que davam a impressão de opacidade global.
+function gm560LimparUIAntiga_(){
+    const old=document.getElementById('gm553Plano');if(old)old.style.display='none';
+    const inspector=document.getElementById('gmObjInspector553');
+    if(inspector){
+        const lbl=[...inspector.querySelectorAll('label')].find(l=>(l.textContent||'').includes('Pixels visíveis opacos'));
+        if(lbl)lbl.style.display='none';
+    }
+}
+
+// O inspector de objeto deixa explícito que transparência é propriedade da imagem,
+// não da pilha de camadas.
+const gm553ObjInspector560Base_=gm553ObjInspector_;
+gm553ObjInspector_=function(){
+    gm553ObjInspector560Base_();
+    gm560LimparUIAntiga_();
+};
+
+// Render geral.
+const gmOficinaRender560Base_=gmOficinaRender_;
+gmOficinaRender_=function(){
+    const r=gmOficinaRender560Base_();
+    try{
+        gm560GarantirOrdem_();
+        gm560RenderUnificado_();
+        gm560LimparUIAntiga_();
+    }catch(e){console.warn('Oficina v46.56.0',e);}
+    return r;
+};
+
+// Garantia inicial/migração.
+setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnificado_();}catch(_){}},300);
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -24080,6 +24313,6 @@ gmOficinaRender_=function(){
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.55.6: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.56.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
