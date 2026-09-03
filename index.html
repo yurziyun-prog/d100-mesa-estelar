@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.55.4 ===== */
+/* ===== V46.55.6 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.55.4 ===== */
+/* ===== V46.55.6 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -18625,7 +18625,7 @@ function gmOficinaV2ConstruirUI_(){
         </div>
         <div style="display:flex;gap:7px;align-items:end;flex-wrap:wrap;padding:10px;border:1px solid rgba(126,231,255,.18);border-radius:10px;background:rgba(0,0,0,.13);margin-bottom:10px">
           <label style="margin:0"><small>Tamanho</small><select id="gmOficinaV2Size" onchange="gmOficinaV2Tamanho_(this.value)" style="margin:3px 0 0">
-            <option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option><option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option>
+            <option value="10x10">10 × 10 m</option><option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option><option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option><option value="50x40">50 × 40 m</option>
           </select></label>
           <label style="margin:0"><small>Fundo</small><input id="gmOficinaV2Fundo" type="color" onchange="gmOficinaV2Fundo_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
           <label style="margin:0"><small>Grade</small><input id="gmOficinaV2GradeCor" type="color" onchange="gmOficinaV2GradeCor_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
@@ -18640,7 +18640,7 @@ function gmOficinaV2ConstruirUI_(){
           <button class="btn-small" onclick="gmOficinaV2Redo_()" style="height:38px">↷</button>
           <label style="margin:0"><small>Ferramenta</small><select id="gmOficinaV2Tool" onchange="gmOficinaV2Tool_(this.value)" style="margin:3px 0 0"><option value="traco">Traço</option><option value="textura">Textura</option><option value="borracha">Borracha</option></select></label>
           <label style="margin:0"><small>Cor</small><input id="gmOficinaV2Color" type="color" onchange="gmOficinaV2Color_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
-          <label style="margin:0"><small>RGB</small><input id="gmOficinaV2Rgb" type="text" oninput="gmOficinaV2Rgb_(this.value)" style="width:92px;margin:3px 0 0;padding:6px 8px"></label>
+          <label style="margin:0"><small>RGB</small><input id="gmOficinaV2Rgb" type="text" oninput="gmOficinaV2Rgb_(this.value)" style="width:92px;margin:3px 0 0;padding:6px 8px"></label><label style="margin:0"><small>HEX</small><input id="gmOficinaV2HexInput555" type="text" maxlength="7" onchange="gm555DrawHex_(this.value)" style="width:86px;margin:3px 0 0;padding:6px 8px" placeholder="#35383A"></label>
           <span style="display:flex;gap:3px;align-items:center;padding-bottom:6px">
             ${['#ffffff','#111111','#ff5252','#ffcf4d','#56f08a','#45b7ff','#b56cff'].map(c=>`<button onclick="gmOficinaV2Color_('${c}')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:${c}"></button>`).join('')}
           </span>
@@ -22045,7 +22045,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.4 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.55.6 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22204,7 +22204,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.55.4
+// V46.55.6
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22561,7 +22561,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.4
+// V46.55.6
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22846,7 +22846,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.4 — Oficina: estilos de traço exclusivos + prévia real
+// V46.55.6 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22922,7 +22922,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.55.4
+// V46.55.6
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23007,7 +23007,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.55.4 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.55.6 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23148,7 +23148,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.4 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.55.6 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23390,7 +23390,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.55.4 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.55.6 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23546,6 +23546,524 @@ window.gmOficinaRender_=function(){
     return r;
 };
 
+
+
+// ============================================================
+// V46.55.6 — Oficina simplificada
+// - 10x10 e 50x40
+// - HEX no desenho
+// - Hexágono, Estrela e U
+// - rotação simples
+// - linha por comprimento/ângulo
+// - raio de canto funcional e intuitivo
+// - ferramentas trocam de modo automaticamente
+// - giz recupera textura estável ao mudar px/m
+// ============================================================
+
+function gm555Hex_(v,fb='#FFCF4D'){
+    let x=String(v||'').trim();
+    if(!x)return fb;
+    if(!x.startsWith('#'))x='#'+x;
+    if(/^#[0-9a-f]{3}$/i.test(x))x='#'+x[1]+x[1]+x[2]+x[2]+x[3]+x[3];
+    return /^#[0-9a-f]{6}$/i.test(x)?x.toUpperCase():fb;
+}
+window.gm555DrawHex_=function(v){
+    const raw=String(v||'').trim();
+    if(!/^#?[0-9a-fA-F]{6}$/.test(raw))return;
+    gmOficinaV2Cfg_.cor=gm555Hex_(raw,gmOficinaV2Cfg_.cor||'#FFCF4D');
+    gmOficinaV2SyncUI_();
+    try{gmOficinaV2Preview550_();}catch(_){}
+};
+
+const gmOficinaV2SyncUI555Base_=gmOficinaV2SyncUI_;
+gmOficinaV2SyncUI_=function(){
+    gmOficinaV2SyncUI555Base_();
+    const h=document.getElementById('gmOficinaV2HexInput555');
+    if(h && document.activeElement!==h)h.value=gm555Hex_(gmOficinaV2Cfg_.cor||'#FFCF4D');
+};
+
+// ---------------- Giz: mantém a aparência ao alterar o zoom ----------------
+function gm555Giz_(ctx,pts,sizeVisual,color,ppm,sizeBase){
+    if(!pts?.length)return;
+    const base=Math.max(2,Number(sizeBase||7));
+    const z=Math.max(.1,sizeVisual/base);
+    ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineCap='round';ctx.lineJoin='round';
+
+    // Corpo seco contínuo.
+    ctx.save();ctx.globalAlpha*=.25;ctx.lineWidth=sizeVisual*.72;
+    ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);
+    for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x*ppm,pts[i].y*ppm);
+    ctx.stroke();ctx.restore();
+
+    // Fibras no sentido do traço; a densidade depende do pincel salvo, não do zoom.
+    const fibras=Math.max(5,Math.min(14,Math.round(base*.58)));
+    for(let k=0;k<fibras;k++){
+        const off=((k/(Math.max(1,fibras-1)))-.5)*base*.72*z;
+        ctx.save();
+        ctx.globalAlpha*=.18+.25*labDesenhoRand_(k*31+7);
+        ctx.lineWidth=Math.max(.35*z,base*.025*z);
+        ctx.beginPath();let aberto=false;
+        for(let i=1;i<pts.length;i++){
+            if(labDesenhoRand_(i*83+k*47)<.09){aberto=false;continue;}
+            const p=pts[i],q=pts[i-1];
+            const dx=(p.x-q.x)*ppm,dy=(p.y-q.y)*ppm,L=Math.hypot(dx,dy)||1;
+            const nx=-dy/L,ny=dx/L;
+            const jitter=(labDesenhoRand_(i*61+k*19)-.5)*base*.07*z;
+            const x=p.x*ppm+nx*(off+jitter),y=p.y*ppm+ny*(off+jitter);
+            if(!aberto){ctx.moveTo(x,y);aberto=true;}else ctx.lineTo(x,y);
+        }
+        ctx.stroke();ctx.restore();
+    }
+
+    // Pouco pó lateral, para não virar spray.
+    for(let i=0;i<pts.length;i+=8){
+        const p=pts[i];
+        const n=Math.max(1,Math.min(3,Math.round(base*.1)));
+        for(let k=0;k<n;k++){
+            const a=labDesenhoRand_(i*17+k*29)*Math.PI*2;
+            const rr=base*(.28+.14*labDesenhoRand_(i*43+k*11))*z;
+            ctx.save();ctx.globalAlpha*=.08+.12*labDesenhoRand_(i*37+k*13);
+            ctx.beginPath();ctx.arc(p.x*ppm+Math.cos(a)*rr,p.y*ppm+Math.sin(a)*rr,Math.max(.3*z,base*.018*z),0,Math.PI*2);ctx.fill();ctx.restore();
+        }
+    }
+    ctx.restore();
+}
+
+gmOficinaV2DesenharCanvas_=function(){
+    const cv=document.getElementById('gmOficinaV2Canvas');if(!cv)return;
+    const ppm=gmOficinaV2Ppm_(),z=gm554Zoom_();
+    const w=Math.round(gmOficinaEstado_.larguraM*ppm),h=Math.round(gmOficinaEstado_.alturaM*ppm);
+    if(cv.width!==w)cv.width=w;if(cv.height!==h)cv.height=h;
+    const ctx=cv.getContext('2d');ctx.clearRect(0,0,w,h);ctx.lineCap='round';ctx.lineJoin='round';
+
+    for(const st of (gmOficinaEstado_.desenhos||[])){
+        const pts=Array.isArray(st.pts)?st.pts:[];if(!pts.length)continue;
+        const tool=st.tool||st.ferramenta||'traco';
+        const sizeBase=Math.max(.5,Number(st.size||st.esp||7)),size=sizeBase*z;
+        const color=st.color||st.cor||'#ffcf4d';
+        const opacity=Math.max(.02,Math.min(1,Number(st.opacity??st.opacidade??1)));
+        const brush=st.brush||st.pincel||'redondo';
+        const texture=st.texture||st.textura||'solida';
+
+        ctx.save();
+        if(tool==='borracha'){
+            ctx.globalCompositeOperation='destination-out';ctx.globalAlpha=1;ctx.strokeStyle='#000';ctx.lineWidth=size;
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);
+            for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
+            if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);
+            ctx.stroke();ctx.restore();continue;
+        }
+        ctx.globalAlpha=opacity;ctx.strokeStyle=color;ctx.fillStyle=color;
+        if(texture==='giz'){
+            gm555Giz_(ctx,pts,size,color,ppm,sizeBase);
+        }else if(texture!=='solida'){
+            labDesenhoAplicarTextura_(ctx,texture,pts,0,size,color,ppm,brush);
+        }else if(brush==='spray'){
+            for(let j=0;j<pts.length;j++){
+                const p=pts[j],dots=Math.max(5,Math.round(sizeBase*.85));
+                for(let k=0;k<dots;k++){
+                    const a=labDesenhoRand_(j*97+k*13)*Math.PI*2;
+                    const rr0=Math.sqrt(labDesenhoRand_(j*193+k*29))*size*.82;
+                    const rr=Math.max(.45*z,sizeBase*(.05+.07*labDesenhoRand_(j*71+k*41))*z);
+                    ctx.beginPath();ctx.arc(p.x*ppm+Math.cos(a)*rr0,p.y*ppm+Math.sin(a)*rr0,rr,0,Math.PI*2);ctx.fill();
+                }
+            }
+        }else if(brush==='quadrado'){
+            for(const p of pts)ctx.fillRect(p.x*ppm-size/2,p.y*ppm-size/2,size,size);
+        }else if(brush==='irregular'){
+            ctx.lineWidth=size;ctx.beginPath();
+            pts.forEach((p,j)=>{
+                const wob=sizeBase*.7*z;
+                const x=p.x*ppm+(labDesenhoRand_(j*151+3)-.5)*wob;
+                const y=p.y*ppm+(labDesenhoRand_(j*211+9)-.5)*wob;
+                j?ctx.lineTo(x,y):ctx.moveTo(x,y);
+            });ctx.stroke();
+        }else{
+            ctx.lineWidth=brush==='caligrafico'?Math.max(.5*z,size*.42):size;
+            ctx.lineCap=brush==='caligrafico'?'butt':'round';
+            ctx.beginPath();ctx.moveTo(pts[0].x*ppm,pts[0].y*ppm);
+            for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);
+            if(pts.length===1)ctx.lineTo(pts[0].x*ppm+.1,pts[0].y*ppm+.1);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+};
+
+// ---------------- Formas adicionais ----------------
+function gm555PolyHex_(x,y,w,h){
+    return [[.25,0],[.75,0],[1,.5],[.75,1],[.25,1],[0,.5]].map(p=>`${x+p[0]*w},${y+p[1]*h}`).join(' ');
+}
+function gm555PolyStar_(x,y,w,h){
+    const cx=x+w/2,cy=y+h/2,rx=Math.abs(w)/2,ry=Math.abs(h)/2,a=[];
+    for(let i=0;i<10;i++){
+        const ang=-Math.PI/2+i*Math.PI/5,r=i%2===0?1:.43;
+        a.push(`${cx+Math.cos(ang)*rx*r},${cy+Math.sin(ang)*ry*r}`);
+    }
+    return a.join(' ');
+}
+function gm555PolyU_(x,y,w,h){
+    const t=Math.max(1,Math.min(Math.abs(w),Math.abs(h))*.23);
+    return `${x},${y} ${x+t},${y} ${x+t},${y+h-t} ${x+w-t},${y+h-t} ${x+w-t},${y} ${x+w},${y} ${x+w},${y+h} ${x},${y+h}`;
+}
+
+const gmVet490SvgEl555Base_=gmVet490SvgEl_;
+gmVet490SvgEl_=function(f,ppm){
+    if(f.tipo==='arredondado'){
+        const c={...f};
+        // Corrige bug antigo: Math.max forçava sempre um semicírculo.
+        const id=String(c.id).replace(/'/g,"\\'");
+        const stroke=c.stroke||'#00d4ff',fill=c.fill||'transparent',op=gmVet530Opacidades_(c);
+        const sw=Number(c.strokeWidth??3)*gm554Zoom_();
+        const x=Number(c.x||0)*ppm,y=Number(c.y||0)*ppm,w=Number(c.w||0)*ppm,h=Number(c.h||0)*ppm;
+        const cx=x+w/2,cy=y+h/2;
+        const rx=Math.max(0,Math.min(Number(c.radius??.25)*ppm,Math.abs(w)/2,Math.abs(h)/2));
+        const sh=gm553ShadowCss_(c);
+        return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" rx="${rx}" ry="${rx}" stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${sw}" fill="${fill}" fill-opacity="${op.fill}" transform="rotate(${Number(c.rot||0)} ${cx} ${cy})" data-vet-id="${escaparHtmlInventario_(c.id)}" class="${String(c.id)===String(gmVet490_.selectedId)?'gm-vector-selected':''}" onpointerdown="gmVet490PointerForma_(event,'${id}')" ${sh?`style="filter:${sh}"`:''}/>`;
+    }
+    if(!['hexagono','estrela','u'].includes(String(f.tipo)))return gmVet490SvgEl555Base_(f,ppm);
+    const id=String(f.id).replace(/'/g,"\\'"),op=gmVet530Opacidades_(f);
+    const stroke=f.stroke||'#00d4ff',fill=f.fill||'transparent',sw=Number(f.strokeWidth??3)*gm554Zoom_();
+    const x=Number(f.x||0)*ppm,y=Number(f.y||0)*ppm,w=Number(f.w||0)*ppm,h=Number(f.h||0)*ppm,cx=x+w/2,cy=y+h/2;
+    const pts=f.tipo==='hexagono'?gm555PolyHex_(x,y,w,h):f.tipo==='estrela'?gm555PolyStar_(x,y,w,h):gm555PolyU_(x,y,w,h);
+    const sh=gm553ShadowCss_(f);
+    return `<polygon points="${pts}" stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${sw}" fill="${fill}" fill-opacity="${op.fill}" transform="rotate(${Number(f.rot||0)} ${cx} ${cy})" data-vet-id="${escaparHtmlInventario_(f.id)}" class="${String(f.id)===String(gmVet490_.selectedId)?'gm-vector-selected':''}" onpointerdown="gmVet490PointerForma_(event,'${id}')" ${sh?`style="filter:${sh}"`:''}/>`;
+};
+
+const gmVet500SvgShape555Base_=gmVet500SvgShape_;
+gmVet500SvgShape_=function(f,scale,b){
+    if(f.tipo==='arredondado'){
+        const op=gmVet530Opacidades_(f),stroke=f.stroke||'#00d4ff',fill=f.fill||'transparent';
+        const x=(Number(f.x||0)-b.minX)*scale,y=(Number(f.y||0)-b.minY)*scale,w=Number(f.w||0)*scale,h=Number(f.h||0)*scale;
+        const cx=x+w/2,cy=y+h/2,rx=Math.max(0,Math.min(Number(f.radius??.25)*scale,Math.abs(w)/2,Math.abs(h)/2));
+        return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" rx="${rx}" ry="${rx}" stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${Math.max(0,Number(f.strokeWidth??3))}" fill="${fill}" fill-opacity="${op.fill}" transform="rotate(${Number(f.rot||0)} ${cx} ${cy})"/>`;
+    }
+    if(!['hexagono','estrela','u'].includes(String(f.tipo)))return gmVet500SvgShape555Base_(f,scale,b);
+    const op=gmVet530Opacidades_(f),stroke=f.stroke||'#00d4ff',fill=f.fill||'transparent';
+    const x=(Number(f.x||0)-b.minX)*scale,y=(Number(f.y||0)-b.minY)*scale,w=Number(f.w||0)*scale,h=Number(f.h||0)*scale,cx=x+w/2,cy=y+h/2;
+    const pts=f.tipo==='hexagono'?gm555PolyHex_(x,y,w,h):f.tipo==='estrela'?gm555PolyStar_(x,y,w,h):gm555PolyU_(x,y,w,h);
+    return `<polygon points="${pts}" stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${Math.max(0,Number(f.strokeWidth??3))}" fill="${fill}" fill-opacity="${op.fill}" transform="rotate(${Number(f.rot||0)} ${cx} ${cy})"/>`;
+};
+
+// ---------------- Modo automático: sem ficar desligando "Desenhar" ----------------
+function gm555ModoForma_(){
+    gmOficinaV2Cfg_.ativo=false;
+    gmOficinaV2Stroke_=null;
+    gmVetSelectAtivo501_=true;
+    const cb=document.querySelector('#gmVetSelectToggle501 input');if(cb)cb.checked=true;
+    try{gmOficinaV2SyncUI_();gmVet501AtualizarCamadas_();}catch(_){}
+}
+const gmVet490Tool555Base_=gmVet490Tool_;
+gmVet490Tool_=function(tool){
+    gm555ModoForma_();
+    const r=gmVet490Tool555Base_(tool);
+    try{gmOficinaV2SyncUI_();gmVet501AtualizarCamadas_();}catch(_){}
+    return r;
+};
+window.gmVet490Tool_=gmVet490Tool_;
+
+// Ao terminar de desenhar uma forma, volta automaticamente para selecionar.
+// As novas formas usam o mesmo fluxo.
+const gmVet490PointerCanvas555Base_=gmVet490PointerCanvas_;
+gmVet490PointerCanvas_=function(ev){
+    if(!['hexagono','estrela','u'].includes(String(gmVet490_.tool)))return gmVet490PointerCanvas555Base_(ev);
+    ev.preventDefault();ev.stopPropagation();gmVet490Hist_();
+    const svg=ev.currentTarget,r=svg.getBoundingClientRect(),ppm=gmVet490Ppm_();
+    const pt=e=>({x:gmVet490Clamp_((e.clientX-r.left)/ppm,0,gmOficinaEstado_.larguraM),y:gmVet490Clamp_((e.clientY-r.top)/ppm,0,gmOficinaEstado_.alturaM)});
+    const p0=pt(ev),id=`vet:${Date.now()}:${Math.random().toString(36).slice(2,5)}`;
+    const f={id,tipo:gmVet490_.tool,x:p0.x,y:p0.y,w:.1,h:.1,rot:0,stroke:gmVet490_.stroke,fill:gmVet490_.fill,opacity:gmVet490_.opacity,strokeWidth:gmVet490_.strokeWidth,strokeOpacity:1,fillOpacity:1};
+    gmVet490Formas_().push(f);gmVet490Criando_=f;gmVet490_.selectedId=id;
+    const move=e=>{const p=pt(e);f.w=p.x-f.x;f.h=p.y-f.y;gmVet490Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmVet490Criando_=null;gmOficinaPersistir_();gmVet490_.tool='select';gmVet490Render_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+
+// Clicar numa forma seleciona e move; não exige botão "Selecionar" antes.
+const gmVet490PointerForma555Base_=gmVet490PointerForma_;
+gmVet490PointerForma_=function(ev,id){
+    if(gmVet490_.tool!=='select')gmVet490_.tool='select';
+    gm555ModoForma_();
+    return gmVet490PointerForma555Base_(ev,id);
+};
+window.gmVet490PointerForma_=gmVet490PointerForma_;
+
+// ---------------- Linhas por comprimento e ângulo ----------------
+function gm555Linha_(f){
+    const x1=Number(f.x||0),y1=Number(f.y||0),x2=Number(f.x2??x1),y2=Number(f.y2??y1),dx=x2-x1,dy=y2-y1;
+    return {cx:(x1+x2)/2,cy:(y1+y2)/2,len:Math.max(.01,Math.hypot(dx,dy)),ang:Math.atan2(dy,dx)*180/Math.PI};
+}
+window.gm555LinhaLen_=function(v){
+    const f=gmVet490Sel_();if(!f||f.tipo!=='linha')return;
+    gmVet490Hist_();const d=gm555Linha_(f),L=Math.max(.05,Number(v)||.05),a=d.ang*Math.PI/180,hx=Math.cos(a)*L/2,hy=Math.sin(a)*L/2;
+    f.x=d.cx-hx;f.y=d.cy-hy;f.x2=d.cx+hx;f.y2=d.cy+hy;gmOficinaPersistir_();gmVet490Render_();
+};
+window.gm555LinhaAng_=function(v){
+    const f=gmVet490Sel_();if(!f||f.tipo!=='linha')return;
+    gmVet490Hist_();const d=gm555Linha_(f),a=(Number(v)||0)*Math.PI/180,hx=Math.cos(a)*d.len/2,hy=Math.sin(a)*d.len/2;
+    f.x=d.cx-hx;f.y=d.cy-hy;f.x2=d.cx+hx;f.y2=d.cy+hy;gmOficinaPersistir_();gmVet490Render_();
+};
+window.gm555Girar_=function(delta){
+    const f=gmVet490Sel_();if(!f)return;
+    if(f.tipo==='linha')return gm555LinhaAng_(gm555Linha_(f).ang+Number(delta||0));
+    gmVet490Prop_('rot',(Number(f.rot||0)+Number(delta||0)+360)%360);
+};
+
+// ---------------- Inspector simplificado, sem X/Y ----------------
+gmVet490Inspector_=function(){
+    const box=document.getElementById('gmVet490Inspector');if(!box)return;
+    const f=gmVet490Sel_();
+    if(!f){box.innerHTML='<span style="color:#9fb4c8">Clique diretamente numa forma para editar. Arraste a própria forma para movê-la.</span>';return;}
+    const op=gmVet530Opacidades_(f);
+    const stroke=gmCor552Hex_(f.stroke,'#00D4FF'),fill=gmCor552Hex_(f.fill,'#34537A'),sr=gmCor552Rgb_(stroke),fr=gmCor552Rgb_(fill);
+    const cor=(k,label,h,rgb)=>`<span style="display:inline-flex;gap:4px;align-items:end;flex-wrap:wrap">
+      <label><small>${label}</small><input type="color" value="${h}" onchange="gmVet552CorHex_('${k}',this.value)" style="width:44px;height:32px;padding:2px"></label>
+      <label><small>HEX</small><input type="text" value="${h}" maxlength="7" onchange="gmVet552CorHex_('${k}',this.value)" style="width:78px"></label>
+      <label><small>R</small><input type="number" min="0" max="255" value="${rgb[0]}" onchange="gmVet552CorRgb_('${k}',0,this.value)" style="width:55px"></label>
+      <label><small>G</small><input type="number" min="0" max="255" value="${rgb[1]}" onchange="gmVet552CorRgb_('${k}',1,this.value)" style="width:55px"></label>
+      <label><small>B</small><input type="number" min="0" max="255" value="${rgb[2]}" onchange="gmVet552CorRgb_('${k}',2,this.value)" style="width:55px"></label>
+    </span>`;
+    let tamanho='';
+    if(f.tipo==='linha'){
+        const d=gm555Linha_(f);
+        tamanho=`<label><small>Comprimento (m)</small><input type="number" min=".05" step=".05" value="${d.len.toFixed(2)}" onchange="gm555LinhaLen_(this.value)"></label>
+                 <label><small>Ângulo</small><input type="number" step="5" value="${Math.round(d.ang)}" onchange="gm555LinhaAng_(this.value)"></label>`;
+    }else{
+        tamanho=`<label><small>Largura (m)</small><input type="number" min=".05" step=".05" value="${Math.abs(Number(f.w||1)).toFixed(2)}" onchange="gmVet490Prop_('w',Math.sign(Number(${f.w||1}))*(Number(this.value)||.05))"></label>
+                 <label><small>Altura (m)</small><input type="number" min=".05" step=".05" value="${Math.abs(Number(f.h||1)).toFixed(2)}" onchange="gmVet490Prop_('h',Math.sign(Number(${f.h||1}))*(Number(this.value)||.05))"></label>
+                 <label><small>Giro</small><input type="number" step="5" value="${Number(f.rot||0)}" onchange="gmVet490Prop_('rot',this.value)"></label>
+                 <button class="btn-small" onclick="gm555Girar_(-15)">↶ 15°</button><button class="btn-small" onclick="gm555Girar_(15)">↷ 15°</button>`;
+        if(f.tipo==='arredondado'){
+            const maxR=Math.max(.05,Math.min(Math.abs(Number(f.w||1)),Math.abs(Number(f.h||1)))/2);
+            tamanho+=`<label><small>Cantos redondos</small><input type="range" min="0" max="${maxR}" step=".05" value="${Math.min(maxR,Math.max(0,Number(f.radius??.25)))}" oninput="gmVet490Prop_('radius',this.value)" style="width:150px"><span style="font-size:.75em;color:#9fb4c8">${Number(f.radius??.25).toFixed(2)} m</span></label>`;
+        }
+    }
+    box.innerHTML=`<strong style="color:#ffd54a">${escaparHtmlInventario_(f.tipo)}</strong>
+      ${tamanho}
+      ${cor('stroke','Borda',stroke,sr)}
+      ${f.tipo==='linha'?'':cor('fill','Preenchimento',fill,fr)}
+      <label><small>Opac. borda</small><input type="number" min="0" max="1" step=".05" value="${op.stroke}" onchange="gmVet490Prop_('strokeOpacity',this.value)"></label>
+      ${f.tipo==='linha'?'':`<label><small>Opac. conteúdo</small><input type="number" min="0" max="1" step=".05" value="${op.fill}" onchange="gmVet490Prop_('fillOpacity',this.value)"></label>`}
+      <label><small>Borda px</small><input type="number" min="0" max="20" step="1" value="${Number(f.strokeWidth??3)}" onchange="gmVet490Prop_('strokeWidth',this.value)"></label>
+      <label><small>Sombra</small><select onchange="gm553FormaShadow_('sombraOficina',this.value)">${['nenhuma','suave','media','forte'].map(v=>`<option value="${v}" ${String(f.sombraOficina||'nenhuma')===v?'selected':''}>${v==='media'?'média':v}</option>`).join('')}</select></label>
+      <button class="btn-small" onclick="gm553FormaCamada_('frente')">⬆ Frente</button>
+      <button class="btn-small" onclick="gm553FormaCamada_('tras')">⬇ Trás</button>
+      <button class="btn-small" onclick="gmVet490Duplicar_()">⧉ Duplicar</button>
+      <button class="btn-small btn-danger" onclick="gmVet490Excluir_()">🗑 Excluir</button>`;
+};
+
+// ---------------- UI mais curta ----------------
+function gm555SimplificarUI_(){
+    const panel=document.getElementById('gmVet490Tools');if(!panel)return;
+    const row=panel.querySelector('div');
+    if(row && !document.getElementById('gm555HexBtn')){
+        const add=(id,txt,tool)=>{
+            if(document.getElementById(id))return;
+            const b=document.createElement('button');b.id=id;b.className='btn-small';b.textContent=txt;b.onclick=()=>gmVet490Tool_(tool);row.appendChild(b);
+        };
+        add('gm555HexBtn','⬡ Hexágono','hexagono');
+        add('gm555StarBtn','★ Estrela','estrela');
+        add('gm555UBtn','∪ U','u');
+    }
+
+    // "Selecionar formas" deixa de ser uma etapa obrigatória: fica oculto,
+    // pois a seleção agora é automática ao clicar na forma.
+    const sel=document.getElementById('gmVetSelectToggle501');
+    if(sel)sel.style.display='none';
+
+    // O botão Selecionar antigo também deixa de ser necessário.
+    if(row){
+        [...row.querySelectorAll('button')].forEach(b=>{
+            if((b.getAttribute('onclick')||'').includes("gmVet490Tool_('select')"))b.style.display='none';
+        });
+    }
+    try{gmVetSelectAtivo501_=true;gmVet501AtualizarCamadas_();}catch(_){}
+}
+
+const gmVet490InstalarUI555Base_=gmVet490InstalarUI_;
+gmVet490InstalarUI_=function(){
+    gmVet490InstalarUI555Base_();
+    gm555SimplificarUI_();
+};
+const gmOficinaRender555Base_=gmOficinaRender_;
+gmOficinaRender_=function(){
+    const r=gmOficinaRender555Base_();
+    try{gm555SimplificarUI_();gmOficinaV2SyncUI_();}catch(_){}
+    return r;
+};
+
+
+
+// ============================================================
+// V46.55.6 — Oficina: objetos realmente opacos + painel de camadas
+// ============================================================
+
+const gm556OpaqueCache_ = new Map();
+
+function gm556OpaqueSrc_(src){
+    if(!src) return src;
+    const cached = gm556OpaqueCache_.get(src);
+    if(cached) return cached;
+    if(gm556OpaqueCache_.get(src) === null) return src;
+
+    gm556OpaqueCache_.set(src, null);
+    const im = new Image();
+    im.crossOrigin = 'anonymous';
+    im.onload = () => {
+        try{
+            const cv = document.createElement('canvas');
+            cv.width = im.naturalWidth || im.width;
+            cv.height = im.naturalHeight || im.height;
+            const ctx = cv.getContext('2d', {willReadFrequently:true});
+            ctx.drawImage(im,0,0);
+            const data = ctx.getImageData(0,0,cv.width,cv.height);
+            // Mantém apenas transparência real do fundo. Qualquer pixel visível
+            // passa a 100% opaco, preservando sua cor.
+            for(let i=3;i<data.data.length;i+=4){
+                if(data.data[i] > 8) data.data[i] = 255;
+                else data.data[i] = 0;
+            }
+            ctx.putImageData(data,0,0);
+            const out = cv.toDataURL('image/png');
+            gm556OpaqueCache_.set(src,out);
+            requestAnimationFrame(()=>{ try{ gmOficinaV2RenderObjetos_(); }catch(_){} });
+        }catch(e){
+            console.warn('Não foi possível opacificar objeto:',e);
+            gm556OpaqueCache_.set(src,src);
+        }
+    };
+    im.onerror = () => gm556OpaqueCache_.set(src,src);
+    im.src = src;
+    return src;
+}
+
+// Ordem unificada simples entre objetos e formas.
+// Cada item recebe um campo camadaOficina inteiro.
+function gm556GarantirCamadas_(){
+    let n=10;
+    for(const f of (gmVet490Formas_()||[])){
+        if(!Number.isFinite(Number(f.camadaOficina))) f.camadaOficina=n++;
+    }
+    for(const o of (gmOficinaEstado_.objetos||[])){
+        if(!Number.isFinite(Number(o.camadaOficina))) o.camadaOficina=n++;
+    }
+}
+function gm556Todos_(){
+    gm556GarantirCamadas_();
+    const a=[];
+    for(const f of (gmVet490Formas_()||[])) a.push({tipo:'forma',id:f.id,nome:f.tipo||'Forma',ref:f});
+    for(const o of (gmOficinaEstado_.objetos||[])) a.push({tipo:'objeto',id:o.id,nome:o.nome||'Objeto',ref:o});
+    return a.sort((x,y)=>Number(x.ref.camadaOficina||0)-Number(y.ref.camadaOficina||0));
+}
+window.gm556MoverCamada_=function(tipo,id,delta){
+    const todos=gm556Todos_();
+    const i=todos.findIndex(x=>x.tipo===tipo && String(x.id)===String(id));
+    if(i<0)return;
+    const j=Math.max(0,Math.min(todos.length-1,i+Number(delta||0)));
+    if(j===i)return;
+    const a=todos[i].ref,b=todos[j].ref;
+    const ca=Number(a.camadaOficina||i), cb=Number(b.camadaOficina||j);
+    a.camadaOficina=cb;b.camadaOficina=ca;
+    gmOficinaPersistir_();gmOficinaRender_();
+};
+window.gm556TopoCamada_=function(tipo,id){
+    const todos=gm556Todos_(),alvo=todos.find(x=>x.tipo===tipo&&String(x.id)===String(id));if(!alvo)return;
+    alvo.ref.camadaOficina=Math.max(...todos.map(x=>Number(x.ref.camadaOficina||0)),0)+1;
+    gmOficinaPersistir_();gmOficinaRender_();
+};
+window.gm556FundoCamada_=function(tipo,id){
+    const todos=gm556Todos_(),alvo=todos.find(x=>x.tipo===tipo&&String(x.id)===String(id));if(!alvo)return;
+    alvo.ref.camadaOficina=Math.min(...todos.map(x=>Number(x.ref.camadaOficina||0)),0)-1;
+    gmOficinaPersistir_();gmOficinaRender_();
+};
+window.gm556SelecionarCamada_=function(tipo,id){
+    if(tipo==='forma'){
+        gmVet490_.selectedId=String(id);gmOficinaObjSel553_='';
+        gm555ModoForma_();
+        gmVet490Render_();
+    }else{
+        gmOficinaObjSel553_=String(id);gmVet490_.selectedId='';
+        gmOficinaV2RenderObjetos_();
+    }
+    gm556RenderCamadas_();
+};
+
+function gm556RenderCamadas_(){
+    let box=document.getElementById('gm556Layers');
+    const tools=document.getElementById('gmVet490Tools');
+    if(!tools)return;
+    if(!box){
+        box=document.createElement('div');box.id='gm556Layers';
+        box.style.cssText='margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.12)';
+        tools.appendChild(box);
+    }
+    const todos=gm556Todos_().slice().reverse(); // topo primeiro
+    box.innerHTML=`<div style="font-weight:700;color:#d9edf7;margin-bottom:6px">🗂 Camadas <span style="font-weight:400;color:#8fa7b8">(topo primeiro)</span></div>
+      <div style="display:flex;flex-direction:column;gap:4px;max-height:220px;overflow:auto">
+      ${todos.map(x=>{
+        const sel=x.tipo==='forma'?String(gmVet490_.selectedId)===String(x.id):String(gmOficinaObjSel553_)===String(x.id);
+        return `<div style="display:flex;gap:4px;align-items:center;padding:4px 5px;border-radius:6px;background:${sel?'rgba(90,180,220,.16)':'rgba(255,255,255,.035)'}">
+          <button class="btn-small" style="min-width:28px" onclick="gm556SelecionarCamada_('${x.tipo}','${String(x.id).replace(/'/g,"\\'")}')">${x.tipo==='forma'?'◇':'▣'}</button>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escaparHtmlInventario_(x.nome)}</span>
+          <button class="btn-small" title="Subir uma camada" onclick="gm556MoverCamada_('${x.tipo}','${String(x.id).replace(/'/g,"\\'")}',1)">↑</button>
+          <button class="btn-small" title="Descer uma camada" onclick="gm556MoverCamada_('${x.tipo}','${String(x.id).replace(/'/g,"\\'")}',-1)">↓</button>
+          <button class="btn-small" title="Trazer ao topo" onclick="gm556TopoCamada_('${x.tipo}','${String(x.id).replace(/'/g,"\\'")}')">⇈</button>
+          <button class="btn-small" title="Enviar ao fundo" onclick="gm556FundoCamada_('${x.tipo}','${String(x.id).replace(/'/g,"\\'")}')">⇊</button>
+        </div>`;
+      }).join('')}
+      </div>`;
+}
+
+// Objetos agora usam imagem realmente opacificada, quando a opção está ativa.
+// Também usa z-index individual de camada.
+gmOficinaV2RenderObjetos_=function(){
+    const layer=document.getElementById('gmOficinaV2Objects');if(!layer)return;
+    gm556GarantirCamadas_();
+    const ppm=gmOficinaV2Ppm_(),z=gm554Zoom_();
+    layer.innerHTML=(gmOficinaEstado_.objetos||[]).map((o,i)=>{
+        const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(o.modeloId));
+        const original=o.imagem||m?.imagem||'';
+        const img=(o.opacoOficina!==false)?gm556OpaqueSrc_(original):original;
+        const w=Math.max(2*z,Number(o.larguraM||1)*ppm),h=Math.max(2*z,Number(o.alturaM||1)*ppm);
+        const sel=String(o.id)===String(gmOficinaObjSel553_);
+        const copia={...o,sombraDist:Number(o.sombraDist||4)*z};
+        const sh=gm553ShadowCss_(copia);
+        const zidx=100+Number(o.camadaOficina||0);
+        return `<div class="${sel?'gm-oficina-object-selected-553':''}" data-of2="${escaparHtmlInventario_(o.id)}"
+          onpointerdown="gmOficinaV2ArrastarObjeto_(event,'${String(o.id).replace(/'/g,"\\'")}')"
+          style="position:absolute;left:${o.x*ppm-w/2}px;top:${o.y*ppm-h/2}px;width:${w}px;height:${h}px;z-index:${zidx};cursor:${gmOficinaV2Cfg_.ativo?'default':'grab'};touch-action:none;pointer-events:auto;transform:rotate(${Number(o.angulo||0)}deg);transform-origin:center">
+          ${img?`<img src="${img}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none;opacity:1;filter:${sh||'none'}">`:'🧱'}
+        </div>`;
+    }).join('');
+    gm553ObjInspector_();gm556RenderCamadas_();
+};
+
+// Formas: cada forma ganha z-order dentro do SVG pela ordem do array.
+// Reordenamos o array conforme camadaOficina antes de renderizar.
+const gmVet490Render556Base_=gmVet490Render_;
+gmVet490Render_=function(){
+    gm556GarantirCamadas_();
+    const arr=gmVet490Formas_();
+    if(Array.isArray(arr))arr.sort((a,b)=>Number(a.camadaOficina||0)-Number(b.camadaOficina||0));
+    const r=gmVet490Render556Base_();
+    gm556RenderCamadas_();
+    return r;
+};
+
+// Objetos e SVG ficam no mesmo plano visual geral; o SVG não deve ficar todo
+// acima ou todo abaixo dos objetos.
+function gm556CamadasDom_(){
+    const svg=document.getElementById('gmOficinaVectorLayer');
+    const objs=document.getElementById('gmOficinaV2Objects');
+    if(svg){svg.style.zIndex='100';svg.style.pointerEvents='auto';}
+    if(objs){objs.style.zIndex='100';}
+}
+const gmOficinaRender556Base_=gmOficinaRender_;
+gmOficinaRender_=function(){
+    const r=gmOficinaRender556Base_();
+    try{gm556CamadasDom_();gm556RenderCamadas_();}catch(_){}
+    return r;
+};
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -23562,6 +24080,6 @@ window.gmOficinaRender_=function(){
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.55.4: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.55.6: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
