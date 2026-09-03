@@ -409,6 +409,21 @@
   animation:labLaserBodyImpactV3 .52s ease-out forwards;
 }
 
+
+@keyframes labEnergySlashIn{0%{opacity:0;stroke-dashoffset:180}18%{opacity:1}75%{opacity:1}100%{opacity:0;stroke-dashoffset:0}}
+@keyframes labFireFlicker{0%,100%{transform:translateY(0) scale(1);opacity:.88}50%{transform:translateY(-4px) scale(1.12);opacity:1}}
+@keyframes labExplosionV2{0%{transform:translate(-50%,-50%) scale(.15);opacity:1}65%{opacity:.9}100%{transform:translate(-50%,-50%) scale(3.8);opacity:0}}
+.lab-object-fire-v2{position:absolute;left:50%;bottom:5%;transform:translateX(-50%);display:flex;gap:1px;z-index:45;pointer-events:none;filter:drop-shadow(0 0 5px #ff8a00)}
+.lab-object-fire-v2 span{display:block;font-size:18px;animation:labFireFlicker .42s ease-in-out infinite alternate}
+.lab-object-fire-v2 span:nth-child(2){font-size:23px;animation-delay:.11s}.lab-object-fire-v2 span:nth-child(3){animation-delay:.22s}
+.lab-object-crack-v2{position:absolute;inset:7%;pointer-events:none;z-index:42;opacity:.72;background:
+ linear-gradient(32deg,transparent 47%,rgba(255,255,255,.78) 48% 50%,transparent 51%),
+ linear-gradient(118deg,transparent 47%,rgba(255,255,255,.58) 48% 49%,transparent 50%),
+ linear-gradient(72deg,transparent 49%,rgba(20,20,20,.68) 50% 51%,transparent 52%)}
+.lab-object-explosion-v2{position:fixed;width:38px;height:38px;border-radius:50%;pointer-events:none;z-index:2147483200;
+ background:radial-gradient(circle,#fff 0 12%,#ffe16b 13% 30%,#ff7a22 31% 58%,rgba(255,30,0,.25) 59% 75%,transparent 76%);
+ box-shadow:0 0 20px #ffcf4d,0 0 48px #ff5a22;animation:labExplosionV2 .62s ease-out forwards}
+
 </style>
 
 <style id="lab-ui-polish-v46360">
@@ -17258,7 +17273,7 @@ const labRenderV4645PsiVisual_=labRender_;labRender_=function(){const r=labRende
 
 
 // ============================================================
-// V46.47.1 — XP PSI, respostas flutuantes, resistências e Oficina completa
+// V46.47.2 — XP PSI, respostas flutuantes, resistências e Oficina completa
 // ============================================================
 // Um minuto de manutenção Psi equivale provisoriamente a 10 turnos de combate.
 const PSI_TURNOS_POR_MINUTO_=10;
@@ -17325,7 +17340,7 @@ const labRenderV46451_=labRender_;labRender_=function(){const r=labRenderV46451_
 
 
 // ============================================================
-// V46.47.1 — estabilização Psi, testes no mapa e Oficina avançada
+// V46.47.2 — estabilização Psi, testes no mapa e Oficina avançada
 // ============================================================
 
 // ---------- Identificação robusta de PJ real ----------
@@ -17680,7 +17695,7 @@ labRender_=function(){
 
 
 // ============================================================
-// V46.47.1 — Teletransporte por clique e teletransportes caóticos
+// V46.47.2 — Teletransporte por clique e teletransportes caóticos
 // ============================================================
 function labPsiPosicaoAleatoriaValida_(alvo){
     const raio=Math.max(.3,Number(alvo?.diametroM||.9)/2);
@@ -17795,7 +17810,7 @@ labOverlayMovimentoHtml_=function(t,ppm){
 
 
 // ============================================================
-// V46.47.1 — roteamento de resistência Psi + nomes sempre retos
+// V46.47.2 — roteamento de resistência Psi + nomes sempre retos
 // ============================================================
 
 // Qualquer token com donoUid é tratado como controlado por uma conta real.
@@ -17990,7 +18005,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.47.1',e);}
+    }catch(e){console.warn('v46.47.2',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -18000,7 +18015,7 @@ window.labPsiRenderModalMestre_=labPsiRenderModalMestre_;
 
 
 // ============================================================
-// V46.47.1 — Oficina avançada + laser + perícias + Mimetismo
+// V46.47.2 — Oficina avançada + laser + perícias + Mimetismo
 // ============================================================
 
 // ---------- Testes de perícia gerais no Mapa da Mesa ----------
@@ -18254,7 +18269,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.47.1 — correções reais: Força Bruta, laser e Oficina V2
+// V46.47.2 — correções reais: Força Bruta, laser e Oficina V2
 // ============================================================
 
 // ---------- 1) Força Bruta sempre disponível para mover objetos ----------
@@ -18629,7 +18644,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.47.1 — painel compacto, escala da Oficina, armas corretas,
+// V46.47.2 — painel compacto, escala da Oficina, armas corretas,
 //             mapa estável e laser realmente visível
 // ============================================================
 
@@ -18929,7 +18944,7 @@ window.labAtualizarInfo_=labAtualizarInfo_;
 
 
 // ============================================================
-// V46.47.1 — Laser em camada global, independente do rerender do mapa
+// V46.47.2 — Laser em camada global, independente do rerender do mapa
 // ============================================================
 let labLaserBodyUltimoIdV3_='';
 let labLaserBodyTimersV3_=[];
@@ -19034,7 +19049,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.47.1',e);}
+    }catch(e){console.warn('laser v46.47.2',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19042,7 +19057,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.47.1 — painel universal de ação, Sorte, Agilidade Psi,
+// V46.47.2 — painel universal de ação, Sorte, Agilidade Psi,
 // combate desarmado, Anoitecer furtivo e FX por tipo de arma
 // ============================================================
 
@@ -19462,7 +19477,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.47.1 — compatibilidade de armas + XP de especializações
+// V46.47.2 — compatibilidade de armas + XP de especializações
 // ============================================================
 
 // ---------- Compatibilidade de armas: plataforma + tecnologia ----------
@@ -19687,6 +19702,204 @@ window.investirXpPendente_=async function(grantId){
     }
 };
 
+
+
+// ============================================================
+// V46.47.2 — alcance corpo a corpo energético + FX persistentes
+// ============================================================
+
+// ---------- Espadas/armas energéticas corpo a corpo não são ataques à distância ----------
+function labItemEnergiaCorpoACorpoV247_(item){
+    if(!item)return false;
+    const txt=normalizarTextoCombate_([
+      item.id,item.nome,item.nome_en,item.nome_zh,item.categoria,item.tipo,item.alcance,
+      item.propriedades,item.tags
+    ].filter(Boolean).join(' '));
+    const lamina=/espada|sabre|saber|blade|sword|vibro|lamina|lâmina/.test(txt);
+    const energia=/laser|plasma|phaser|faser|energia|energy|luz|light/.test(txt);
+    return lamina&&energia;
+}
+
+const itemEhCorpoACorpoV247_=itemEhCorpoACorpo_;
+itemEhCorpoACorpo_=function(item){
+    if(labItemEnergiaCorpoACorpoV247_(item))return true;
+    return itemEhCorpoACorpoV247_(item);
+};
+
+const labAtaqueEhDistanciaV247_=labAtaqueEhDistancia_;
+labAtaqueEhDistancia_=function(item){
+    if(labItemEnergiaCorpoACorpoV247_(item))return false;
+    return labAtaqueEhDistanciaV247_(item);
+};
+
+const labAlcanceAtaqueV247_=labAlcanceAtaque_;
+labAlcanceAtaque_=function(t,item){
+    if(labItemEnergiaCorpoACorpoV247_(item)){
+        // Um pouco mais que socos/garras, mas claramente menor que uma arma de haste.
+        return 2.2;
+    }
+    return labAlcanceAtaqueV247_(t,item);
+};
+
+// ---------- Arco luminoso para ataques corpo a corpo energéticos ----------
+let labEnergySlashUltimoV247_='';
+function labEnergyMeleeCorV247_(item){
+    const txt=normalizarTextoCombate_([item?.id,item?.nome,item?.nome_en,item?.propriedades].filter(Boolean).join(' '));
+    if(/phaser|faser/.test(txt))return '#bd6cff';
+    if(/plasma/.test(txt))return '#4be8ff';
+    if(/vibro/.test(txt))return '#f4f7ff';
+    if(/laser|luz|light/.test(txt))return '#ff4545';
+    return '#7fe8ff';
+}
+function labCentroAlvoV247_(id){
+    try{
+        const esc=CSS.escape(String(id));
+        const el=document.querySelector(`#labMetricMap .lab-token[data-id="${esc}"],#labMetricMap .lab-map-object[data-id="${esc}"]`);
+        if(!el)return null;
+        const r=el.getBoundingClientRect();
+        return {x:r.left+r.width/2,y:r.top+r.height/2,w:r.width,h:r.height};
+    }catch(_){return null;}
+}
+function labMostrarGolpeEnergiaV247_(atacante,alvo,item,acertou){
+    if(!labItemEnergiaCorpoACorpoV247_(item)||!atacante||!alvo)return;
+    const a=labCentroAlvoV247_(atacante.id),b=labCentroAlvoV247_(alvo.id);if(!a||!b)return;
+    const cor=labEnergyMeleeCorV247_(item);
+    let bx=b.x,by=b.y;
+    if(acertou===false){
+        const dx=b.x-a.x,dy=b.y-a.y,l=Math.max(1,Math.hypot(dx,dy));
+        bx+=(-dy/l)*Math.max(18,b.w*.65);by+=(dx/l)*Math.max(18,b.h*.65);
+    }
+    const mx=(a.x+bx)/2,my=(a.y+by)/2,dx=bx-a.x,dy=by-a.y,l=Math.max(1,Math.hypot(dx,dy));
+    const nx=-dy/l,ny=dx/l,curva=Math.max(22,Math.min(68,l*.25));
+    const cx=mx+nx*curva,cy=my+ny*curva;
+
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('viewBox',`0 0 ${window.innerWidth} ${window.innerHeight}`);
+    svg.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:2147483100;overflow:visible';
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',`M ${a.x} ${a.y} Q ${cx} ${cy} ${bx} ${by}`);
+    p.setAttribute('fill','none');p.setAttribute('stroke',cor);p.setAttribute('stroke-width','9');
+    p.setAttribute('stroke-linecap','round');p.setAttribute('pathLength','180');
+    p.style.cssText=`stroke-dasharray:180;stroke-dashoffset:180;filter:drop-shadow(0 0 4px ${cor}) drop-shadow(0 0 10px ${cor});animation:labEnergySlashIn .42s ease-out forwards`;
+    const core=p.cloneNode(true);core.setAttribute('stroke','#fff');core.setAttribute('stroke-width','3');
+    core.style.cssText='stroke-dasharray:180;stroke-dashoffset:180;animation:labEnergySlashIn .42s ease-out forwards';
+    svg.appendChild(p);svg.appendChild(core);document.body.appendChild(svg);
+
+    const impact=document.createElement('div');
+    impact.className='lab-laser-impact-body-v3';
+    impact.style.left=`${bx}px`;impact.style.top=`${by}px`;impact.style.color=cor;impact.style.borderColor=cor;
+    impact.style.boxShadow=`0 0 10px ${cor},0 0 24px ${cor}`;document.body.appendChild(impact);
+    setTimeout(()=>{svg.remove();impact.remove();},650);
+}
+
+// Disparo continua para armas à distância; armas energéticas corpo a corpo usam arco.
+const labDispararEfeitoVisualAtaqueV247_=labDispararEfeitoVisualAtaque_;
+labDispararEfeitoVisualAtaque_=function(atacante,alvo,item,acertou,grau){
+    if(labItemEnergiaCorpoACorpoV247_(item)){
+        const id=`slash:${Date.now()}:${Math.random().toString(36).slice(2,6)}`;
+        labEstado_.efeitoVisualLab={id,tipo:'energia_melee',atacanteId:String(atacante?.id||''),alvoId:String(alvo?.id||''),itemId:String(item?.id||''),cor:labEnergyMeleeCorV247_(item),acertou:!!acertou,ts:Date.now()};
+        labSalvarLocal_();labAgendarSyncRemoto_();
+        setTimeout(()=>labMostrarGolpeEnergiaV247_(atacante,alvo,item,acertou),60);
+        return;
+    }
+    return labDispararEfeitoVisualAtaqueV247_(atacante,alvo,item,acertou,grau);
+};
+
+// Clientes remotos também veem o arco de energia.
+const labRenderV247FX_=labRender_;
+labRender_=function(){
+    const r=labRenderV247FX_();
+    try{
+        const fx=labEstado_.efeitoVisualLab;
+        if(fx?.tipo==='energia_melee'&&String(fx.id)!==labEnergySlashUltimoV247_&&Date.now()-Number(fx.ts||0)<4000){
+            const atk=labTokenPorId_(fx.atacanteId),alvo=labAlvoAtaquePorId_(fx.alvoId),item=encontrarItemCombatePorId_(fx.itemId);
+            labEnergySlashUltimoV247_=String(fx.id);
+            if(atk&&alvo&&item)setTimeout(()=>labMostrarGolpeEnergiaV247_(atk,alvo,item,fx.acertou),70);
+        }
+    }catch(e){console.warn('FX energia melee',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
+// ---------- Objetos: fogo, rachaduras e explosão ----------
+function labObjetoInflamavelV247_(o){
+    const m=labObjetoModelo_(o);
+    if(o?.inflamavel===true||m?.inflamavel===true)return true;
+    const txt=normalizarTextoCombate_(`${o?.nome||''} ${o?.material||''} ${m?.nome||''} ${m?.material||''} ${m?.descricao||''}`);
+    return /arvore|tree|madeira|wood|papel|paper|tecido|cloth|planta|folha|folhas|inflam/.test(txt);
+}
+function labObjetoFragilV247_(o){
+    const m=labObjetoModelo_(o);
+    const txt=normalizarTextoCombate_(`${o?.nome||''} ${o?.material||''} ${m?.nome||''} ${m?.material||''} ${m?.descricao||''}`);
+    return /vidro|glass|cristal|crystal|ceram|porcel|rocha|rock|pedra|stone/.test(txt);
+}
+function labObjetoEnergiaIncendiariaV247_(item){
+    const txt=normalizarTextoCombate_(`${getNome(item)||''} ${item?.propriedades||''} ${item?.tags||''}`);
+    return /incendi|fogo|flame|plasma|laser|blaster/.test(txt);
+}
+function labExplosaoVisualObjetoV247_(o){
+    const el=(()=>{try{return document.querySelector(`#labMetricMap .lab-map-object[data-id="${CSS.escape(String(o.id))}"]`)}catch(_){return null}})();
+    if(!el)return;
+    const r=el.getBoundingClientRect(),d=document.createElement('div');
+    d.className='lab-object-explosion-v2';d.style.left=`${r.left+r.width/2}px`;d.style.top=`${r.top+r.height/2}px`;
+    document.body.appendChild(d);setTimeout(()=>d.remove(),750);
+}
+
+const labObjetoHtmlV247_=labObjetoHtml_;
+labObjetoHtml_=function(o,ppm){
+    let h=labObjetoHtmlV247_(o,ppm);
+    let extras='';
+    if(o?.pegandoFogoLab)extras+=`<div class="lab-object-fire-v2"><span>🔥</span><span>🔥</span><span>🔥</span></div>`;
+    if(o?.despedacadoLab)extras+=`<div class="lab-object-crack-v2"></div>`;
+    if(extras)h=h.replace(/<\/div>\s*$/i,extras+'</div>');
+    return h;
+};
+window.labObjetoHtml_=labObjetoHtml_;
+
+// Em objetos, ataque energético bem-sucedido pode incendiar; crítico também
+// pode despedaçar materiais frágeis. Nada de "Sangrando".
+const labDispararEfeitoVisualAtaqueV247Obj_=labDispararEfeitoVisualAtaque_;
+labDispararEfeitoVisualAtaque_=function(atacante,alvo,item,acertou,grau){
+    const r=labDispararEfeitoVisualAtaqueV247Obj_(atacante,alvo,item,acertou,grau);
+    if(acertou&&labEhAlvoObjeto_(alvo)){
+        const g=batalhaResultadoGradeValor_(grau);
+        if(labObjetoInflamavelV247_(alvo)&&labObjetoEnergiaIncendiariaV247_(item)){
+            // Em sucesso normal, só propriedades claramente incendiárias/plasma;
+            // laser/blaster precisam crítico para acender materiais comuns.
+            const txt=normalizarTextoCombate_(`${getNome(item)||''} ${item?.propriedades||''}`);
+            if(/incendi|fogo|flame|plasma/.test(txt)||g>=3)alvo.pegandoFogoLab=true;
+        }
+        if(g>=3&&labObjetoFragilV247_(alvo))alvo.despedacadoLab=true;
+        if(g>=4&&labObjetoFragilV247_(alvo)){
+            alvo.explodindoLab=true;
+            setTimeout(()=>labExplosaoVisualObjetoV247_(alvo),80);
+        }
+    }
+    return r;
+};
+
+// ---------- Dano simples de fogo: 1 PV por rodada ----------
+function labProcessarFogoObjetosV247_(){
+    if(labEstado_.fase!=='combate')return;
+    const rodada=Number(labEstado_.rodada||0);
+    for(const o of (labEstado_.objetosLab||[])){
+        if(!o.pegandoFogoLab||o.destruido)continue;
+        if(Number(o.fogoUltimaRodadaLab)===rodada)continue;
+        o.fogoUltimaRodadaLab=rodada;
+        const antes=Number(o.pvAtual??o.pvMax??0);
+        o.pvAtual=Math.max(0,antes-1);
+        labAdicionarFloat_(o,-1,'dano');
+        if(o.pvAtual<=0)o.destruido=true;
+    }
+}
+const labEncerrarOportunidadeV247_=window.labEncerrarOportunidade_;
+window.labEncerrarOportunidade_=function(){
+    const r=labEncerrarOportunidadeV247_();
+    labProcessarFogoObjetosV247_();
+    labSalvarLocal_();labAgendarSyncRemoto_();
+    return r;
+};
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -19702,6 +19915,6 @@ window.investirXpPendente_=async function(grantId){
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.47.1: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.47.2: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
