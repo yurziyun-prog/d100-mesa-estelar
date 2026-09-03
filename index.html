@@ -428,6 +428,17 @@
 @keyframes labFirePulse481{0%,100%{transform:translate(-50%,0) scale(.92);opacity:.78}50%{transform:translate(-50%,-5px) scale(1.12);opacity:1}}
 .lab-fire-overlay-481{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);z-index:80;pointer-events:none;font-size:26px;filter:drop-shadow(0 0 6px #ff7a00);animation:labFirePulse481 .38s ease-in-out infinite}
 
+
+/* ===== V46.49.0 ===== */
+@keyframes labFire490{0%,100%{transform:translate(-50%,0) scale(.92);opacity:.78}50%{transform:translate(-50%,-6px) scale(1.13);opacity:1}}
+.lab-fire-490{position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-size:27px;z-index:90;pointer-events:none;filter:drop-shadow(0 0 8px #ff7400);animation:labFire490 .36s ease-in-out infinite}
+.gm-vector-selected{filter:drop-shadow(0 0 5px #ffd54a)}
+#gmVet490Inspector{display:flex;gap:7px;flex-wrap:wrap;align-items:end;padding:8px;border-radius:8px;background:rgba(255,255,255,.045);margin-top:7px}
+#gmVet490Inspector input[type="number"]{width:74px;margin:0;padding:6px}
+#gmVet490Inspector input[type="color"]{width:48px;height:34px;margin:0;padding:2px}
+#labAudioMesaFloat{position:fixed;left:12px;bottom:12px;z-index:2147482500;max-width:390px;padding:9px 11px;border-radius:10px;background:rgba(16,12,35,.95);border:1px solid rgba(0,212,255,.45);box-shadow:0 4px 20px rgba(0,0,0,.4);color:#eee;font-size:13px}
+#labAudioMesaFloat button{margin:0;padding:7px 10px}
+
 </style>
 
 <style id="lab-ui-polish-v46360">
@@ -1275,6 +1286,7 @@
                             <label>PV<input id="objMapaPV" type="number" min="0" step="1" value="10"></label>
                             <label>Dureza<input id="objMapaDureza" type="number" min="0" step="1" value="2"></label>
                             <label>Peso (kg)<input id="objMapaPesoKg" type="number" min="0.1" step="0.1" value="10"></label>
+<label>Inflamabilidade (0–5)<input id="objMapaInflamabilidade" type="number" min="0" max="5" step="1" value="0" title="0 = não inflamável; 5 = pega fogo com extrema facilidade"></label>
                           </div>
                           <div style="display:flex;gap:14px;flex-wrap:wrap;margin:10px 0;">
                             <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaDestrutivel" type="checkbox" checked> Destrutível</label>
@@ -18043,7 +18055,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.48.2',e);}
+    }catch(e){console.warn('v46.49.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19087,7 +19099,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.48.2',e);}
+    }catch(e){console.warn('laser v46.49.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19941,7 +19953,7 @@ window.labEncerrarOportunidade_=function(){
 
 
 // ============================================================
-// V46.48.2 — lâminas de energia, alcance melee, som/FX e fogo
+// V46.49.0 — lâminas de energia, alcance melee, som/FX e fogo
 // ============================================================
 
 // Reconhecimento explícito: "Espada de Força" é uma lâmina de energia,
@@ -20140,6 +20152,648 @@ labRender_=function(){
 };
 window.labRender_=labRender_;
 
+
+
+// ============================================================
+// V46.49.0
+// Alvos mortos, Restaurar total, fogo, Oficina vetorial/editável,
+// carregar mapas na Oficina e música compartilhada.
+// ============================================================
+
+// ------------------------------------------------------------
+// 1) Mortos/destruídos: ainda recebem dano, mas sem novos efeitos
+// ------------------------------------------------------------
+function labAlvoInerte490_(alvo){
+    if(!alvo)return false;
+    if(labEhAlvoObjeto_(alvo)){
+        return !!alvo.destruido || Number(alvo.pvAtual??alvo.pvMax??1)<=0;
+    }
+    const st=alvo.combateLab || labGarantirSnapshotCombate_(alvo);
+    return !!(st?.morto || alvo.morto || alvo.morta || alvo.derrotado);
+}
+function labLimparEfeitosInerte490_(alvo){
+    if(!alvo)return;
+    if(labEhAlvoObjeto_(alvo)){
+        if(labAlvoInerte490_(alvo)){
+            alvo.pegandoFogoLab=false;
+            alvo.despedacadoLab=false;
+            alvo.explodindoLab=false;
+            alvo.sangrando=false;
+            alvo.derrubado=false;
+            alvo.atordoado=false;
+        }
+        return;
+    }
+    const st=alvo.combateLab || labGarantirSnapshotCombate_(alvo);
+    if(st?.morto){
+        st.sangrando=false;
+        st.sangramentoAtivo=false;
+        st.derrubado=false;
+        st.caido=false;
+        st.atordoado=false;
+        st.armaDanificada=false;
+    }
+}
+
+const labAplicarDanoLocal490Base_=labAplicarDanoLocal_;
+labAplicarDanoLocal_=function(defensor,total,item,opcoes={}){
+    const r=labAplicarDanoLocal490Base_(defensor,total,item,opcoes);
+    if(labAlvoInerte490_(defensor))labLimparEfeitosInerte490_(defensor);
+    return r;
+};
+
+const labEfeitosDisponiveis490Base_=labEfeitosDisponiveis_;
+labEfeitosDisponiveis_=function(pend){
+    const alvo=labAlvoAtaquePorId_(pend?.defensorId);
+    if(labAlvoInerte490_(alvo))return [];
+    return labEfeitosDisponiveis490Base_(pend);
+};
+
+function labSanearPendenciasMortos490_(){
+    const dp=labEstado_.danoPendenteLab;
+    if(dp&&labAlvoInerte490_(labAlvoAtaquePorId_(dp.defensorId))){
+        dp.efeitosRestantes=0;
+        dp.efeitosEscolhidos=[];
+        dp.escolhendoLocalizacao=false;
+        dp.aplicarSangrar=false;
+        dp.aplicarDerrubar=false;
+        dp.danificarArma=false;
+    }
+    for(const t of labEstado_.tokens||[])if(labAlvoInerte490_(t))labLimparEfeitosInerte490_(t);
+    for(const o of labEstado_.objetosLab||[])if(labAlvoInerte490_(o))labLimparEfeitosInerte490_(o);
+}
+
+// Ao selecionar outro alvo, não deixa uma pendência antiga de um morto prender o painel.
+const labSelecionar490Base_=window.labSelecionar_;
+window.labSelecionar_=function(id){
+    labSanearPendenciasMortos490_();
+    const novo=labAlvoAtaquePorId_(id);
+    const ator=labTokenAtual_();
+    if(ator && novo && String(ator.id)!==String(novo.id) && !labEstado_.pendenciaLab && !labEstado_.danoPendenteLab){
+        ator.alvoLab=String(novo.id);
+    }
+    return labSelecionar490Base_(id);
+};
+
+// Se o alvo escolhido deixou de ser válido para a preferência, não volta ao morto automaticamente.
+const labGarantirPrefsAtaque490Base_=labGarantirPrefsAtaque_;
+labGarantirPrefsAtaque_=function(t){
+    const anterior=String(t?.alvoLab||'');
+    labGarantirPrefsAtaque490Base_(t);
+    if(!t)return;
+    const alvos=labAlvosAtaque_(t);
+    if(anterior && alvos.some(a=>String(a.id)===anterior))t.alvoLab=anterior;
+};
+
+// ------------------------------------------------------------
+// 2) Restaurar = toda a mesa de testes
+// ------------------------------------------------------------
+function labRestaurarTokenCompleto490_(t){
+    if(!t)return;
+    const st=t.combateLab||labGarantirSnapshotCombate_(t);
+    if(st){
+        st.hit=JSON.parse(JSON.stringify(st.hitMax||st.hit||{}));
+        st.ferimentos={};
+        st.morto=false;st.inconsciente=false;st.incapacitado=false;
+        st.sangrando=false;st.sangramentoAtivo=false;st.derrubado=false;st.caido=false;
+        st.atordoado=false;st.armaDanificada=false;st.ataquesBloqueadosTurnos=0;
+        st.fadiga='Fresh';
+    }
+    t.psiGastosLab=0;
+    t.municaoLab={};
+    t.acoesAtuaisLab=Number(t.acoesMaxLab||t.acoesMax||2);
+    t.movimentoGratisDisponivel=true;
+    t.movimentoBonusLab=0;
+    t.primeirosSocorrosLab=null;
+    t.bonusIntuicaoPendenteLab=0;
+    t.sortePreparadaLab=false;
+    t.caidoPsiLab=false;
+    t.acoesDefensivasPsiLab=0;
+    t.agilidadePsiBonusLab=0;
+    t.agilidadePsiAteRodadaLab=-1;
+    t.menteAceleradaCargasLab=0;
+    t.meditacaoBatalhaPsiLab=null;
+    t.medoPsiLab=null;
+    t.mimetismoPsiLab=null;
+    t.cranioAcoLab=null;
+    t.circuloProtecaoPsiLab=null;
+    t.anoitecerPsiLab=null;
+    const c=labCharToken_(t);
+    if(c){
+        t.charLab={...(t.charLab||{}),...labSnapshotChar_(c),pontosMagiaGastos:0};
+        try{t.charLab.pontosSorte=pontosSorteMax_(c);}catch(_){}
+    }
+}
+window.labRestaurarParticipantes_=async function(){
+    if(!batalhaEhMestre_())return;
+    if(!confirm('Restaurar toda a Mesa de testes? PCs, NPCs, monstros, criaturas e objetos voltarão ao estado inicial de combate.'))return;
+    for(const t of labEstado_.tokens||[])labRestaurarTokenCompleto490_(t);
+    for(const o of labEstado_.objetosLab||[]){
+        o.pvAtual=Number(o.pvMax??o.pvAtual??0);
+        o.destruido=false;
+        o.pegandoFogoLab=false;
+        o.despedacadoLab=false;
+        o.explodindoLab=false;
+        o.fogoUltimaRodadaLab=-1;
+        o.sangrando=false;o.derrubado=false;o.atordoado=false;
+    }
+    labEstado_.pendenciaLab=null;
+    labEstado_.danoPendenteLab=null;
+    labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+    notificar_('♻️ Mesa restaurada por completo.','sucesso',3500);
+};
+
+// ------------------------------------------------------------
+// 3) Inflamabilidade e fogo visível
+// ------------------------------------------------------------
+const preencherEditorObjetoMapa490Base_=preencherEditorObjetoMapa_;
+preencherEditorObjetoMapa_=function(o){
+    preencherEditorObjetoMapa490Base_(o);
+    const e=document.getElementById('objMapaInflamabilidade');
+    if(e)e.value=Number.isFinite(Number(o?.inflamabilidade))?Math.max(0,Math.min(5,Number(o.inflamabilidade))):(o?.inflamavel?3:0);
+};
+
+const salvarObjetoMapaEditor490Base_=window.salvarObjetoMapaEditor_;
+window.salvarObjetoMapaEditor_=async function(){
+    const e=document.getElementById('objMapaInflamabilidade');
+    const valor=e?Math.max(0,Math.min(5,Math.trunc(Number(e.value)||0))):0;
+    const cb=document.getElementById('objMapaInflamavel');
+    if(cb)cb.checked=valor>0;
+    await salvarObjetoMapaEditor490Base_();
+    const id=String(document.getElementById('objMapaEditId')?.value||'');
+    const nome=String(document.getElementById('objMapaNome')?.value||'').trim();
+    const o=(objetosMapaDB||[]).find(x=>String(x.id)===id) || [...(objetosMapaDB||[])].reverse().find(x=>String(x.nome||'')===nome);
+    if(o){
+        o.inflamabilidade=valor;o.inflamavel=valor>0;
+        try{await setDoc(doc(db,'configuracoes',objetoMapaDocId_(o.id)),JSON.parse(JSON.stringify(o)),{merge:true});}catch(err){console.warn('Inflamabilidade',err);}
+    }
+};
+
+const labObjetoHtml490Base_=labObjetoHtml_;
+labObjetoHtml_=function(o,ppm){
+    if(labAlvoInerte490_(o))labLimparEfeitosInerte490_(o);
+    let h=labObjetoHtml490Base_(o,ppm);
+    if(o?.pegandoFogoLab&&!o?.destruido && !h.includes('lab-fire-490')){
+        h=h.replace(/<\/div>\s*$/i,'<span class="lab-fire-490">🔥🔥</span></div>');
+    }
+    return h;
+};
+window.labObjetoHtml_=labObjetoHtml_;
+
+// ------------------------------------------------------------
+// 4) Mapas agora preservam formas vetoriais
+// ------------------------------------------------------------
+const labMapaSepararPayload490Base_=labMapaSepararPayload_;
+labMapaSepararPayload_=function(dados){
+    const r=labMapaSepararPayload490Base_(dados);
+    // Recria as partes incluindo "formas", sem mudar o restante do formato.
+    const meta={...dados};
+    const payload={desenhos:meta.desenhos||[],objetos:meta.objetos||[],formas:meta.formas||[]};
+    delete meta.desenhos;delete meta.objetos;delete meta.formas;delete meta.__local;
+    const texto=JSON.stringify(payload),partes=[];
+    for(let i=0;i<texto.length;i+=LAB_MAPA_PARTE_CHARS_)partes.push(texto.slice(i,i+LAB_MAPA_PARTE_CHARS_));
+    if(!partes.length)partes.push('{}');
+    return {meta:{...meta,formato:'partes-v1',partes:partes.length,tamanhoSerializado:texto.length,tipo:'mapa'},partes};
+};
+
+const labMapaHidratar490Base_=labMapaHidratar_;
+labMapaHidratar_=async function(m){
+    if(!m)return null;
+    if(m.formato!=='partes-v1')return {...m,formas:Array.isArray(m.formas)?m.formas:[]};
+    const n=Math.max(1,Number(m.partes||1));let texto='';
+    for(let i=0;i<n;i++){
+        const snap=await getDoc(doc(db,'mapas',labMapaParteId_(m.id,i)));
+        if(!snap.exists())throw new Error(`Parte ${i+1}/${n} do mapa não encontrada.`);
+        texto+=String(snap.data()?.dados||'');
+    }
+    const payload=JSON.parse(texto||'{}');
+    return {...m,
+      desenhos:Array.isArray(payload.desenhos)?payload.desenhos:[],
+      objetos:Array.isArray(payload.objetos)?payload.objetos:[],
+      formas:Array.isArray(payload.formas)?payload.formas:[]
+    };
+};
+
+// ------------------------------------------------------------
+// 5) Oficina: carregar/editar mapas + formas editáveis
+// ------------------------------------------------------------
+let gmOficinaMapaAtualId490_='';
+const gmVet490_={tool:'select',stroke:'#00d4ff',fill:'#34537a',opacity:.65,strokeWidth:3,selectedId:''};
+let gmVet490Criando_=null;
+let gmVet490Undo_=[];
+
+function gmVet490Formas_(){
+    gmOficinaEstado_.formas=Array.isArray(gmOficinaEstado_.formas)?gmOficinaEstado_.formas:[];
+    return gmOficinaEstado_.formas;
+}
+function gmVet490Ppm_(){return typeof gmOficinaV2Ppm_==='function'?gmOficinaV2Ppm_():32;}
+function gmVet490Hist_(){gmVet490Undo_.push(JSON.parse(JSON.stringify(gmVet490Formas_())));if(gmVet490Undo_.length>60)gmVet490Undo_.shift();}
+function gmVet490Forma_(id){return gmVet490Formas_().find(x=>String(x.id)===String(id));}
+function gmVet490Sel_(){return gmVet490Forma_(gmVet490_.selectedId);}
+function gmVet490Clamp_(v,min,max){return Math.max(min,Math.min(max,Number(v)||0));}
+
+function gmVet490SvgEl_(f,ppm){
+    const id=String(f.id).replace(/'/g,"\\'");
+    const stroke=f.stroke||'#00d4ff',fill=f.tipo==='linha'?'none':(f.fill||'transparent');
+    const op=Number(f.opacity??.65),sw=Number(f.strokeWidth||3);
+    const x=Number(f.x||0)*ppm,y=Number(f.y||0)*ppm,w=Number(f.w||0)*ppm,h=Number(f.h||0)*ppm;
+    const cx=(Number(f.x||0)+Number(f.w||0)/2)*ppm,cy=(Number(f.y||0)+Number(f.h||0)/2)*ppm;
+    const common=`stroke="${stroke}" stroke-width="${sw}" fill="${fill}" opacity="${op}" transform="rotate(${Number(f.rot||0)} ${cx} ${cy})" data-vet-id="${escaparHtmlInventario_(f.id)}" class="${String(f.id)===String(gmVet490_.selectedId)?'gm-vector-selected':''}" onpointerdown="gmVet490PointerForma_(event,'${id}')"`;
+    if(f.tipo==='linha')return `<line x1="${x}" y1="${y}" x2="${Number(f.x2??f.x)*ppm}" y2="${Number(f.y2??f.y)*ppm}" ${common}/>`;
+    if(f.tipo==='circulo'){
+        const d=Math.max(Math.abs(w),Math.abs(h));
+        return `<ellipse cx="${x+d/2}" cy="${y+d/2}" rx="${d/2}" ry="${d/2}" ${common}/>`;
+    }
+    if(f.tipo==='elipse')return `<ellipse cx="${x+w/2}" cy="${y+h/2}" rx="${Math.abs(w)/2}" ry="${Math.abs(h)/2}" ${common}/>`;
+    if(f.tipo==='triangulo')return `<polygon points="${x+w/2},${y} ${x+w},${y+h} ${x},${y+h}" ${common}/>`;
+    return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" ${common}/>`;
+}
+function gmVet490Render_(){
+    const map=document.getElementById('gmOficinaV2Map');if(!map)return;
+    let svg=document.getElementById('gmOficinaVectorLayer');
+    if(!svg){
+        svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+        svg.id='gmOficinaVectorLayer';map.appendChild(svg);
+    }
+    const ppm=gmVet490Ppm_(),w=gmOficinaEstado_.larguraM*ppm,h=gmOficinaEstado_.alturaM*ppm;
+    svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    svg.style.cssText=`position:absolute;inset:0;width:${w}px;height:${h}px;z-index:7;pointer-events:auto;touch-action:none`;
+    svg.onpointerdown=gmVet490PointerCanvas_;
+    svg.innerHTML=gmVet490Formas_().map(f=>gmVet490SvgEl_(f,ppm)).join('');
+    gmVet490Inspector_();
+}
+function gmVet490Inspector_(){
+    const box=document.getElementById('gmVet490Inspector');if(!box)return;
+    const f=gmVet490Sel_();
+    if(!f){box.innerHTML='<span style="color:#9fb4c8">Selecione uma forma para mover, redimensionar, girar ou recolorir.</span>';return;}
+    box.innerHTML=`
+      <strong style="color:#ffd54a">${escaparHtmlInventario_(f.tipo)}</strong>
+      <label><small>X m</small><input type="number" step=".1" value="${Number(f.x||0)}" onchange="gmVet490Prop_('x',this.value)"></label>
+      <label><small>Y m</small><input type="number" step=".1" value="${Number(f.y||0)}" onchange="gmVet490Prop_('y',this.value)"></label>
+      ${f.tipo==='linha'
+        ? `<label><small>X2 m</small><input type="number" step=".1" value="${Number(f.x2||0)}" onchange="gmVet490Prop_('x2',this.value)"></label>
+           <label><small>Y2 m</small><input type="number" step=".1" value="${Number(f.y2||0)}" onchange="gmVet490Prop_('y2',this.value)"></label>`
+        : `<label><small>Largura m</small><input type="number" min=".1" step=".1" value="${Number(f.w||1)}" onchange="gmVet490Prop_('w',this.value)"></label>
+           <label><small>Altura m</small><input type="number" min=".1" step=".1" value="${Number(f.h||1)}" onchange="gmVet490Prop_('h',this.value)"></label>
+           <label><small>Rotação°</small><input type="number" step="5" value="${Number(f.rot||0)}" onchange="gmVet490Prop_('rot',this.value)"></label>`}
+      <label><small>Borda</small><input type="color" value="${f.stroke||'#00d4ff'}" onchange="gmVet490Prop_('stroke',this.value)"></label>
+      ${f.tipo==='linha'?'':`<label><small>Preenchimento</small><input type="color" value="${f.fill||'#34537a'}" onchange="gmVet490Prop_('fill',this.value)"></label>`}
+      <label><small>Opacidade</small><input type="number" min=".05" max="1" step=".05" value="${Number(f.opacity??.65)}" onchange="gmVet490Prop_('opacity',this.value)"></label>
+      <label><small>Borda px</small><input type="number" min="1" max="20" step="1" value="${Number(f.strokeWidth||3)}" onchange="gmVet490Prop_('strokeWidth',this.value)"></label>
+      <button class="btn-small" onclick="gmVet490Duplicar_()">⧉ Duplicar</button>
+      <button class="btn-small btn-danger" onclick="gmVet490Excluir_()">🗑 Excluir</button>`;
+}
+window.gmVet490Prop_=function(k,v){
+    const f=gmVet490Sel_();if(!f)return;
+    gmVet490Hist_();
+    if(['stroke','fill'].includes(k))f[k]=String(v);
+    else f[k]=Number(v);
+    if(f.tipo==='quadrado'){
+        if(k==='w')f.h=f.w;if(k==='h')f.w=f.h;
+    }
+    if(f.tipo==='circulo'){
+        if(k==='w')f.h=f.w;if(k==='h')f.w=f.h;
+    }
+    gmOficinaPersistir_();gmVet490Render_();
+};
+window.gmVet490Tool_=function(tool){
+    gmVet490_.tool=String(tool||'select');
+    gmOficinaV2Cfg_.ativo=false;
+    gmVet490Criando_=null;
+    gmVet490Render_();
+};
+window.gmVet490Duplicar_=function(){
+    const f=gmVet490Sel_();if(!f)return;
+    gmVet490Hist_();const cp=JSON.parse(JSON.stringify(f));
+    cp.id=`vet:${Date.now()}:${Math.random().toString(36).slice(2,5)}`;
+    cp.x=Number(cp.x||0)+.5;cp.y=Number(cp.y||0)+.5;
+    if(cp.tipo==='linha'){cp.x2=Number(cp.x2||0)+.5;cp.y2=Number(cp.y2||0)+.5;}
+    gmVet490Formas_().push(cp);gmVet490_.selectedId=cp.id;gmOficinaPersistir_();gmVet490Render_();
+};
+window.gmVet490Excluir_=function(){
+    const id=gmVet490_.selectedId;if(!id)return;
+    gmVet490Hist_();gmOficinaEstado_.formas=gmVet490Formas_().filter(x=>String(x.id)!==String(id));
+    gmVet490_.selectedId='';gmOficinaPersistir_();gmVet490Render_();
+};
+window.gmVet490PointerForma_=function(ev,id){
+    if(gmVet490_.tool!=='select')return;
+    ev.preventDefault();ev.stopPropagation();
+    gmVet490_.selectedId=String(id);
+    const f=gmVet490Sel_();if(!f)return;
+    gmVet490Hist_();
+    const ppm=gmVet490Ppm_(),sx=ev.clientX,sy=ev.clientY;
+    const ox=Number(f.x||0),oy=Number(f.y||0),ox2=Number(f.x2||0),oy2=Number(f.y2||0);
+    const move=e=>{
+        const dx=(e.clientX-sx)/ppm,dy=(e.clientY-sy)/ppm;
+        f.x=ox+dx;f.y=oy+dy;
+        if(f.tipo==='linha'){f.x2=ox2+dx;f.y2=oy2+dy;}
+        gmVet490Render_();
+    };
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();gmVet490Render_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+function gmVet490PointerCanvas_(ev){
+    if(ev.target!==ev.currentTarget && ev.target.closest?.('[data-vet-id]'))return;
+    if(gmVet490_.tool==='select'){
+        gmVet490_.selectedId='';gmVet490Render_();return;
+    }
+    if(!['linha','retangulo','quadrado','circulo','elipse','triangulo'].includes(gmVet490_.tool))return;
+    ev.preventDefault();ev.stopPropagation();gmVet490Hist_();
+    const svg=ev.currentTarget,r=svg.getBoundingClientRect(),ppm=gmVet490Ppm_();
+    const pt=e=>({x:gmVet490Clamp_((e.clientX-r.left)/ppm,0,gmOficinaEstado_.larguraM),y:gmVet490Clamp_((e.clientY-r.top)/ppm,0,gmOficinaEstado_.alturaM)});
+    const p0=pt(ev),id=`vet:${Date.now()}:${Math.random().toString(36).slice(2,5)}`;
+    const f={id,tipo:gmVet490_.tool,x:p0.x,y:p0.y,w:.1,h:.1,x2:p0.x,y2:p0.y,rot:0,stroke:gmVet490_.stroke,fill:gmVet490_.fill,opacity:gmVet490_.opacity,strokeWidth:gmVet490_.strokeWidth};
+    gmVet490Formas_().push(f);gmVet490Criando_=f;gmVet490_.selectedId=id;
+    const move=e=>{
+        const p=pt(e);
+        if(f.tipo==='linha'){f.x2=p.x;f.y2=p.y;}
+        else{
+            f.w=p.x-f.x;f.h=p.y-f.y;
+            if(f.tipo==='quadrado'||f.tipo==='circulo'){
+                const d=Math.max(Math.abs(f.w),Math.abs(f.h));
+                f.w=(f.w<0?-d:d);f.h=(f.h<0?-d:d);
+            }
+        }
+        gmVet490Render_();
+    };
+    const up=()=>{window.removeEventListener('pointermove',move);gmVet490Criando_=null;gmOficinaPersistir_();gmVet490_.tool='select';gmVet490Render_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
+
+function gmVet490InstalarUI_(){
+    const root=document.getElementById('gm-sub-oficina-mapas');
+    if(!root||document.getElementById('gmVet490Tools'))return;
+    const viewport=document.getElementById('gmOficinaV2Viewport');
+    if(!viewport)return;
+    const panel=document.createElement('div');panel.id='gmVet490Tools';
+    panel.style.cssText='margin:9px 0;padding:9px;border:1px solid rgba(255,213,74,.22);border-radius:9px;background:rgba(0,0,0,.12)';
+    panel.innerHTML=`
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:end">
+        <strong style="color:#ffd54a;align-self:center">📐 Formas editáveis</strong>
+        <button class="btn-small" onclick="gmVet490Tool_('select')">🖱 Selecionar</button>
+        <button class="btn-small" onclick="gmVet490Tool_('linha')">╱ Linha reta</button>
+        <button class="btn-small" onclick="gmVet490Tool_('retangulo')">▭ Retângulo</button>
+        <button class="btn-small" onclick="gmVet490Tool_('quadrado')">□ Quadrado</button>
+        <button class="btn-small" onclick="gmVet490Tool_('triangulo')">△ Triângulo</button>
+        <button class="btn-small" onclick="gmVet490Tool_('circulo')">○ Círculo</button>
+        <button class="btn-small" onclick="gmVet490Tool_('elipse')">⬭ Elipse</button>
+        <label style="margin:0"><small>Borda nova</small><input type="color" value="${gmVet490_.stroke}" onchange="gmVet490_.stroke=this.value" style="width:48px;height:34px;margin:3px 0 0;padding:2px"></label>
+        <label style="margin:0"><small>Preenchimento</small><input type="color" value="${gmVet490_.fill}" onchange="gmVet490_.fill=this.value" style="width:48px;height:34px;margin:3px 0 0;padding:2px"></label>
+      </div>
+      <div id="gmVet490Inspector"></div>`;
+    viewport.parentElement.insertBefore(panel,viewport);
+    gmVet490Render_();
+}
+
+function gmOficina490InstalarCarregador_(){
+    const root=document.getElementById('gm-sub-oficina-mapas');
+    if(!root||document.getElementById('gmOficinaMapaSalvo490'))return;
+    const top=root.querySelector('h3')?.parentElement;
+    if(!top)return;
+    const bar=document.createElement('div');
+    bar.style.cssText='display:flex;gap:7px;flex-wrap:wrap;align-items:end;margin:8px 0 10px;padding:9px;border-radius:9px;background:rgba(0,0,0,.12);border:1px solid rgba(126,231,255,.18)';
+    bar.innerHTML=`<label style="margin:0;min-width:300px"><small>Editar mapa salvo</small><select id="gmOficinaMapaSalvo490" onchange="gmOficina490Carregar_(this.value)" style="width:100%;margin:3px 0 0"><option value="">— carregar mapa —</option></select></label>
+      <button class="btn-small btn-select" onclick="gmOficina490SalvarAtual_()">💾 Salvar alterações</button>
+      <span id="gmOficinaMapaNome490" style="color:#9fc6d8;align-self:center"></span>`;
+    const firstControls=top.querySelector('div[style*="display:flex"]');
+    top.insertBefore(bar,firstControls||top.children[2]||null);
+    gmOficina490PopularMapas_();
+}
+function gmOficina490PopularMapas_(){
+    const sel=document.getElementById('gmOficinaMapaSalvo490');if(!sel)return;
+    const atual=String(gmOficinaMapaAtualId490_||'');
+    const lista=[...(mapasDB||[])].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+    sel.innerHTML='<option value="">— carregar mapa —</option>'+lista.map(m=>`<option value="${escaparHtmlInventario_(m.id)}">${escaparHtmlInventario_(m.nome||m.id)}</option>`).join('');
+    if(lista.some(m=>String(m.id)===atual))sel.value=atual;
+}
+window.gmOficina490Carregar_=async function(id){
+    if(!id)return;
+    try{
+        const base=(mapasDB||[]).find(m=>String(m.id)===String(id));if(!base)return;
+        const m=await labMapaHidratar_(base);
+        gmOficinaMapaAtualId490_=String(m.id);
+        gmOficinaEstado_={
+            larguraM:Number(m.larguraM||28),alturaM:Number(m.alturaM||14),
+            escalaPxM:Number(m.pxPorMetro||32),
+            fundo:m.fundo||'#d7d7d7',corGrade:m.corGrade||'#777777',
+            gradeVisivel:m.gradeVisivel!==false,textura:m.textura||'nenhuma',
+            objetos:JSON.parse(JSON.stringify(m.objetos||[])),
+            desenhos:JSON.parse(JSON.stringify(m.desenhos||[])),
+            formas:JSON.parse(JSON.stringify(m.formas||[]))
+        };
+        gmVet490_.selectedId='';gmOficinaPersistir_();gmOficinaRender_();
+        const n=document.getElementById('gmOficinaMapaNome490');if(n)n.textContent=`Editando: ${m.nome||m.id}`;
+        notificar_(`✏️ Mapa “${m.nome||m.id}” carregado na Oficina.`,'sucesso',3000);
+    }catch(e){console.error(e);notificar_('Não consegui carregar esse mapa na Oficina.','erro',5000);}
+};
+window.gmOficina490SalvarAtual_=async function(){
+    if(!gmOficinaMapaAtualId490_){return gmOficinaSalvarComoMapa_();}
+    const antigo=(mapasDB||[]).find(m=>String(m.id)===String(gmOficinaMapaAtualId490_));
+    if(!antigo)return gmOficinaSalvarComoMapa_();
+    const dados={
+        ...antigo,id:antigo.id,nome:antigo.nome,
+        larguraM:gmOficinaEstado_.larguraM,alturaM:gmOficinaEstado_.alturaM,
+        pxPorMetro:gmVet490Ppm_(),fundo:gmOficinaEstado_.fundo,corGrade:gmOficinaEstado_.corGrade,
+        gradeVisivel:gmOficinaEstado_.gradeVisivel!==false,textura:gmOficinaEstado_.textura||'nenhuma',
+        desenhos:JSON.parse(JSON.stringify(gmOficinaEstado_.desenhos||[])),
+        objetos:JSON.parse(JSON.stringify(gmOficinaEstado_.objetos||[])),
+        formas:JSON.parse(JSON.stringify(gmVet490Formas_())),
+        atualizadoEm:new Date().toISOString()
+    };
+    try{
+        const salvo=await labMapaSalvarFirestore_(dados,Number(antigo.partes||0));
+        const i=mapasDB.findIndex(m=>String(m.id)===String(antigo.id));if(i>=0)mapasDB[i]=salvo;
+        gmOficina490PopularMapas_();labAtualizarSelectMapas_();
+        notificar_(`💾 Alterações salvas em “${dados.nome}”.`,'sucesso',3000);
+    }catch(e){console.error(e);notificar_('Não foi possível salvar as alterações do mapa.','erro',5000);}
+};
+
+// Salvar como novo também leva as formas.
+window.gmOficinaSalvarComoMapa_=async function(){
+    if(!batalhaEhMestre_())return;
+    const nome=prompt('Nome do mapa preparado:','');if(nome==null||!String(nome).trim())return;
+    let id=labMapaSlug_(nome),base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
+    const dados={id,nome:String(nome).trim(),larguraM:gmOficinaEstado_.larguraM,alturaM:gmOficinaEstado_.alturaM,
+      pxPorMetro:gmVet490Ppm_(),fundo:gmOficinaEstado_.fundo,corGrade:gmOficinaEstado_.corGrade,
+      gradeVisivel:gmOficinaEstado_.gradeVisivel!==false,textura:gmOficinaEstado_.textura||'nenhuma',
+      desenhos:JSON.parse(JSON.stringify(gmOficinaEstado_.desenhos||[])),objetos:JSON.parse(JSON.stringify(gmOficinaEstado_.objetos||[])),
+      formas:JSON.parse(JSON.stringify(gmVet490Formas_())),criadoPor:currentUserUid||'',atualizadoEm:new Date().toISOString()};
+    try{
+        const salvo=await labMapaSalvarFirestore_(dados,0);mapasDB.push(salvo);
+        gmOficinaMapaAtualId490_=id;gmOficina490PopularMapas_();labAtualizarSelectMapas_();
+        notificar_(`Mapa “${dados.nome}” salvo na biblioteca.`,'sucesso',3000);
+    }catch(e){console.error(e);notificar_('Não foi possível salvar o mapa preparado.','erro');}
+};
+
+// Publicar conserva formas, mas elas ficam estáticas na Mesa.
+const gmOficinaPublicarMesa490Base_=window.gmOficinaPublicarMesa_;
+window.gmOficinaPublicarMesa_=function(){
+    labEstado_.formasLab=JSON.parse(JSON.stringify(gmVet490Formas_()));
+    return gmOficinaPublicarMesa490Base_();
+};
+
+// Carregar mapa salvo na Mesa conserva formas.
+const labCarregarMapaBanco490Base_=window.labCarregarMapaBanco_;
+window.labCarregarMapaBanco_=async function(){
+    const id=String(labMapaSelecionado_||'');
+    const base=(mapasDB||[]).find(m=>String(m.id)===id);
+    let m=null;try{if(base)m=await labMapaHidratar_(base);}catch(_){}
+    const r=await labCarregarMapaBanco490Base_();
+    if(m?.formas)labEstado_.formasLab=JSON.parse(JSON.stringify(m.formas));
+    labSalvarLocal_();labRender_();return r;
+};
+
+function labRenderFormasMapa490_(){
+    const map=document.getElementById('labMetricMap');if(!map)return;
+    let svg=document.getElementById('labFormasMapa490');
+    if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.id='labFormasMapa490';map.appendChild(svg);}
+    const ppm=Number(labEstado_.pxPorMetro||48),w=Number(labEstado_.larguraM||24)*ppm,h=Number(labEstado_.alturaM||14)*ppm;
+    svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.style.cssText=`position:absolute;inset:0;width:${w}px;height:${h}px;z-index:3;pointer-events:none`;
+    const formas=Array.isArray(labEstado_.formasLab)?labEstado_.formasLab:[];
+    svg.innerHTML=formas.map(f=>gmVet490SvgEl_(f,ppm).replace(/\sdata-vet-id="[^"]*"/,'').replace(/\sonpointerdown="[^"]*"/,'').replace(/\sclass="[^"]*"/,'')).join('');
+}
+
+// Cada render da Oficina reinstala as extensões.
+const gmOficinaRender490Base_=window.gmOficinaRender_;
+window.gmOficinaRender_=function(){
+    const r=gmOficinaRender490Base_();
+    try{gmOficina490InstalarCarregador_();gmVet490InstalarUI_();gmVet490Render_();}catch(e){console.warn('Oficina 490',e);}
+    return r;
+};
+
+// ------------------------------------------------------------
+// 6) Música compartilhada por link (YouTube ou áudio direto)
+// ------------------------------------------------------------
+let labAudioAtivado490_=false;
+let labAudioElemento490_=null;
+let labAudioUltimaChave490_='';
+let trilhasMesaDB490_=[];
+
+function labYoutubeId490_(url){
+    const s=String(url||'');
+    let m=s.match(/[?&]v=([^&]+)/);if(m)return m[1];
+    m=s.match(/youtu\.be\/([^?&/]+)/);if(m)return m[1];
+    m=s.match(/youtube\.com\/shorts\/([^?&/]+)/);if(m)return m[1];
+    m=s.match(/youtube\.com\/embed\/([^?&/]+)/);if(m)return m[1];
+    return '';
+}
+function labAudioParar490_(){
+    if(labAudioElemento490_){try{labAudioElemento490_.remove();}catch(_){}labAudioElemento490_=null;}
+}
+function labAudioAplicar490_(){
+    const st=labEstado_.audioMesaLab;
+    const key=JSON.stringify(st||{});
+    if(key===labAudioUltimaChave490_)return;
+    labAudioUltimaChave490_=key;
+    labAudioParar490_();
+    if(!labAudioAtivado490_||!st?.playing||!st?.url)return;
+    const offset=Math.max(0,Math.floor((Date.now()-Number(st.inicioTs||Date.now()))/1000));
+    const yid=labYoutubeId490_(st.url);
+    if(yid){
+        const iframe=document.createElement('iframe');
+        iframe.allow='autoplay; encrypted-media';iframe.referrerPolicy='strict-origin-when-cross-origin';
+        iframe.style.cssText='position:fixed;width:1px;height:1px;left:-10px;bottom:-10px;border:0;opacity:.01;pointer-events:none';
+        iframe.src=`https://www.youtube.com/embed/${encodeURIComponent(yid)}?autoplay=1&start=${offset}&loop=1&playlist=${encodeURIComponent(yid)}&controls=0`;
+        document.body.appendChild(iframe);labAudioElemento490_=iframe;
+    }else if(/\.(mp3|ogg|wav|m4a)(\?|$)/i.test(st.url)){
+        const a=document.createElement('audio');a.src=st.url;a.autoplay=true;a.loop=true;a.volume=Math.max(0,Math.min(1,Number(st.volume??.6)));
+        a.style.display='none';document.body.appendChild(a);
+        a.addEventListener('loadedmetadata',()=>{try{a.currentTime=Math.min(offset,a.duration||offset);a.play();}catch(_){}},{once:true});
+        labAudioElemento490_=a;
+    }
+}
+window.labAudioAtivar490_=function(){
+    labAudioAtivado490_=true;
+    localStorage.setItem('mesa_estelar_audio_ativado_v1','1');
+    labAudioAplicar490_();labAudioFloat490_();
+    notificar_('🔊 Áudio da Mesa ativado neste navegador.','sucesso',2500);
+};
+window.labAudioDesativar490_=function(){
+    labAudioAtivado490_=false;localStorage.removeItem('mesa_estelar_audio_ativado_v1');labAudioParar490_();labAudioFloat490_();
+};
+function labAudioFloat490_(){
+    let d=document.getElementById('labAudioMesaFloat');
+    if(!d){d=document.createElement('div');d.id='labAudioMesaFloat';document.body.appendChild(d);}
+    const st=labEstado_.audioMesaLab;
+    if(!labAudioAtivado490_){
+        d.innerHTML=`<button class="btn-small btn-select" onclick="labAudioAtivar490_()">🔊 Ativar áudio da mesa</button>${st?.nome?` <span>${escaparHtmlInventario_(st.nome)}</span>`:''}`;
+    }else{
+        d.innerHTML=`🔊 ${escaparHtmlInventario_(st?.nome||'Áudio da Mesa')} <button class="btn-small" onclick="labAudioDesativar490_()">Silenciar</button>`;
+    }
+}
+async function labTrilhasCarregar490_(){
+    if(!batalhaEhMestre_())return;
+    try{
+        const snap=await getDoc(doc(db,'configuracoes','trilhas_mesa_v1'));
+        trilhasMesaDB490_=snap.exists()&&Array.isArray(snap.data()?.trilhas)?snap.data().trilhas:[];
+    }catch(e){console.warn('trilhas',e);trilhasMesaDB490_=[];}
+    labMusicaRender490_();
+}
+async function labTrilhasSalvar490_(){
+    try{await setDoc(doc(db,'configuracoes','trilhas_mesa_v1'),{trilhas:trilhasMesaDB490_,atualizadoEm:new Date().toISOString()},{merge:false});}
+    catch(e){console.error(e);notificar_('Não foi possível salvar o banco de trilhas.','erro');}
+}
+function labMusicaInstalar490_(){
+    if(!batalhaEhMestre_())return;
+    const root=document.getElementById('gm-sub-campanha');if(!root||document.getElementById('gmMusica490'))return;
+    const box=document.createElement('div');box.id='gmMusica490';box.className='form-section';box.style.marginTop='14px';
+    box.innerHTML=`<h3>🎵 Trilha / Ambiente Compartilhado</h3><div style="color:#aaa;margin-bottom:8px">Cole um link do YouTube ou um áudio direto. Os jogadores precisam clicar uma vez em “Ativar áudio da mesa” no próprio navegador.</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:end">
+        <label style="margin:0"><small>Nome</small><input id="gmMusicaNome490" placeholder="Batalha em Véspera" style="margin:3px 0 0"></label>
+        <label style="margin:0"><small>Momento</small><input id="gmMusicaCat490" placeholder="Batalha / Bar / Tempestade" style="margin:3px 0 0"></label>
+        <label style="margin:0;min-width:320px;flex:1"><small>Link</small><input id="gmMusicaUrl490" placeholder="https://youtube.com/..." style="width:100%;margin:3px 0 0"></label>
+        <button class="btn-small" onclick="gmMusicaAdicionar490_()">➕ Salvar trilha</button>
+      </div>
+      <div id="gmMusicaLista490" style="margin-top:9px"></div>`;
+    root.appendChild(box);labTrilhasCarregar490_();
+}
+function labMusicaRender490_(){
+    const el=document.getElementById('gmMusicaLista490');if(!el)return;
+    el.innerHTML=trilhasMesaDB490_.length?trilhasMesaDB490_.map((t,i)=>`<div style="display:flex;gap:7px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.08)">
+      <strong style="min-width:160px">${escaparHtmlInventario_(t.nome||'Trilha')}</strong><span style="color:#9fb4c8;min-width:100px">${escaparHtmlInventario_(t.categoria||'')}</span>
+      <button class="btn-small btn-select" onclick="gmMusicaTocar490_(${i})">▶ Tocar para todos</button>
+      <button class="btn-small" onclick="gmMusicaParar490_()">⏹ Parar</button>
+      <button class="btn-small btn-danger" onclick="gmMusicaExcluir490_(${i})">Excluir</button></div>`).join(''):'<div style="color:#888">Nenhuma trilha salva.</div>';
+}
+window.gmMusicaAdicionar490_=async function(){
+    const nome=String(document.getElementById('gmMusicaNome490')?.value||'').trim();
+    const categoria=String(document.getElementById('gmMusicaCat490')?.value||'').trim();
+    const url=String(document.getElementById('gmMusicaUrl490')?.value||'').trim();
+    if(!nome||!url){notificar_('Informe nome e link da trilha.','aviso');return;}
+    trilhasMesaDB490_.push({id:`trilha:${Date.now()}`,nome,categoria,url,volume:.6});
+    await labTrilhasSalvar490_();labMusicaRender490_();
+};
+window.gmMusicaExcluir490_=async function(i){trilhasMesaDB490_.splice(Number(i),1);await labTrilhasSalvar490_();labMusicaRender490_();};
+window.gmMusicaTocar490_=function(i){
+    const t=trilhasMesaDB490_[Number(i)];if(!t)return;
+    labEstado_.audioMesaLab={...t,playing:true,inicioTs:Date.now()};
+    labSalvarLocal_();labAgendarSyncRemoto_();labAudioUltimaChave490_='';labAudioAplicar490_();labAudioFloat490_();
+};
+window.gmMusicaParar490_=function(){
+    labEstado_.audioMesaLab={...(labEstado_.audioMesaLab||{}),playing:false,inicioTs:Date.now()};
+    labSalvarLocal_();labAgendarSyncRemoto_();labAudioUltimaChave490_='';labAudioAplicar490_();labAudioFloat490_();
+};
+
+// ------------------------------------------------------------
+// 7) Render geral
+// ------------------------------------------------------------
+const labRender490Base_=labRender_;
+labRender_=function(){
+    const r=labRender490Base_();
+    try{
+        labSanearPendenciasMortos490_();
+        labRenderFormasMapa490_();
+        labAudioAplicar490_();
+        labAudioFloat490_();
+        labMusicaInstalar490_();
+    }catch(e){console.warn('v46.49 render',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
+// Estado inicial da preferência de áudio.
+try{labAudioAtivado490_=localStorage.getItem('mesa_estelar_audio_ativado_v1')==='1';}catch(_){}
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -20155,6 +20809,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.48.2: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.49.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
