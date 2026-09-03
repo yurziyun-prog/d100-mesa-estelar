@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.55.1 ===== */
+/* ===== V46.55.3 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.55.1 ===== */
+/* ===== V46.55.3 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22045,7 +22045,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.1 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.55.3 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22204,7 +22204,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.55.1
+// V46.55.3
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22561,7 +22561,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.1
+// V46.55.3
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22846,7 +22846,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.55.1 — Oficina: estilos de traço exclusivos + prévia real
+// V46.55.3 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22922,7 +22922,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.55.1
+// V46.55.3
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23004,6 +23004,389 @@ gmVet490Prop_ = function(k,v){
 };
 window.gmVet490Prop_ = gmVet490Prop_;
 
+
+
+// ============================================================
+// V46.55.3 — Oficina: cores digitáveis, borda zero e espessura fina
+// ============================================================
+
+function gmCor552Hex_(v, fallback='#000000'){
+    let x=String(v??'').trim();
+    if(!x) return fallback;
+    if(!x.startsWith('#')) x='#'+x;
+    if(/^#[0-9a-f]{3}$/i.test(x)) x='#'+x[1]+x[1]+x[2]+x[2]+x[3]+x[3];
+    return /^#[0-9a-f]{6}$/i.test(x) ? x.toUpperCase() : fallback;
+}
+function gmCor552Rgb_(hex){
+    const h=gmCor552Hex_(hex,'#000000').slice(1);
+    return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
+}
+function gmCor552DeRgb_(r,g,b){
+    const c=n=>Math.max(0,Math.min(255,Math.round(Number(n)||0))).toString(16).padStart(2,'0');
+    return ('#'+c(r)+c(g)+c(b)).toUpperCase();
+}
+window.gmVet552CorHex_=function(k,v){
+    const f=gmVet490Sel_(); if(!f)return;
+    const atual=f[k] || (k==='fill'?'#34537A':'#00D4FF');
+    const hex=gmCor552Hex_(v,gmCor552Hex_(atual));
+    gmVet490Prop_(k,hex); gmVet490Render_();
+};
+window.gmVet552CorRgb_=function(k,idx,v){
+    const f=gmVet490Sel_(); if(!f)return;
+    const atual=f[k] || (k==='fill'?'#34537A':'#00D4FF');
+    const rgb=gmCor552Rgb_(atual); rgb[idx]=Math.max(0,Math.min(255,Number(v)||0));
+    gmVet490Prop_(k,gmCor552DeRgb_(...rgb)); gmVet490Render_();
+};
+window.gmVet552NovaHex_=function(k,v){
+    const atual=gmVet490_[k] || (k==='fill'?'#34537A':'#00D4FF');
+    gmVet490_[k]=gmCor552Hex_(v,gmCor552Hex_(atual));
+    gmVet552AtualizarNovaCor_();
+};
+window.gmVet552NovaRgb_=function(k,idx,v){
+    const rgb=gmCor552Rgb_(gmVet490_[k] || (k==='fill'?'#34537A':'#00D4FF'));
+    rgb[idx]=Math.max(0,Math.min(255,Number(v)||0));
+    gmVet490_[k]=gmCor552DeRgb_(...rgb);
+    gmVet552AtualizarNovaCor_();
+};
+window.gmVet552AtualizarNovaCor_=function(){
+    for(const k of ['stroke','fill']){
+        const h=gmCor552Hex_(gmVet490_[k],k==='fill'?'#34537A':'#00D4FF');
+        const rgb=gmCor552Rgb_(h);
+        const cp=document.getElementById('gmVet552New_'+k+'_picker');
+        const tx=document.getElementById('gmVet552New_'+k+'_hex');
+        if(cp)cp.value=h;if(tx)tx.value=h;
+        rgb.forEach((n,i)=>{const el=document.getElementById('gmVet552New_'+k+'_rgb'+i);if(el)el.value=n;});
+    }
+};
+
+const gmVet490Inspector552Base_=gmVet490Inspector_;
+gmVet490Inspector_=function(){
+    const box=document.getElementById('gmVet490Inspector'); if(!box)return;
+    const f=gmVet490Sel_();
+    if(!f){gmVet490Inspector552Base_();return;}
+    const op=gmVet530Opacidades_(f);
+    const stroke=gmCor552Hex_(f.stroke,'#00D4FF'), fill=gmCor552Hex_(f.fill,'#34537A');
+    const sr=gmCor552Rgb_(stroke), fr=gmCor552Rgb_(fill);
+    const colorCtl=(k,label,hex,rgb)=>`
+      <span style="display:inline-flex;gap:4px;align-items:end;flex-wrap:wrap">
+        <label><small>${label}</small><input type="color" value="${hex}" onchange="gmVet552CorHex_('${k}',this.value)" style="width:45px;height:32px;padding:2px"></label>
+        <label><small>HEX</small><input type="text" value="${hex}" maxlength="7" onchange="gmVet552CorHex_('${k}',this.value)" style="width:78px"></label>
+        <label><small>R</small><input type="number" min="0" max="255" value="${rgb[0]}" onchange="gmVet552CorRgb_('${k}',0,this.value)" style="width:58px"></label>
+        <label><small>G</small><input type="number" min="0" max="255" value="${rgb[1]}" onchange="gmVet552CorRgb_('${k}',1,this.value)" style="width:58px"></label>
+        <label><small>B</small><input type="number" min="0" max="255" value="${rgb[2]}" onchange="gmVet552CorRgb_('${k}',2,this.value)" style="width:58px"></label>
+      </span>`;
+    box.innerHTML=`
+      <strong style="color:#ffd54a">${escaparHtmlInventario_(f.tipo)}</strong>
+      <label><small>X m</small><input type="number" step=".1" value="${Number(f.x||0)}" onchange="gmVet490Prop_('x',this.value)"></label>
+      <label><small>Y m</small><input type="number" step=".1" value="${Number(f.y||0)}" onchange="gmVet490Prop_('y',this.value)"></label>
+      ${f.tipo==='linha'
+        ? `<label><small>X2 m</small><input type="number" step=".1" value="${Number(f.x2||0)}" onchange="gmVet490Prop_('x2',this.value)"></label>
+           <label><small>Y2 m</small><input type="number" step=".1" value="${Number(f.y2||0)}" onchange="gmVet490Prop_('y2',this.value)"></label>`
+        : `<label><small>Largura m</small><input type="number" min=".1" step=".1" value="${Number(f.w||1)}" onchange="gmVet490Prop_('w',this.value)"></label>
+           <label><small>Altura m</small><input type="number" min=".1" step=".1" value="${Number(f.h||1)}" onchange="gmVet490Prop_('h',this.value)"></label>
+           <label><small>Rotação°</small><input type="number" step="5" value="${Number(f.rot||0)}" onchange="gmVet490Prop_('rot',this.value)"></label>
+           ${f.tipo==='arredondado'?`<label><small>Raio canto (m)</small><input type="number" min=".05" step=".05" value="${Number(f.radius||.25)}" onchange="gmVet490Prop_('radius',this.value)"></label>`:''}`}
+      ${colorCtl('stroke','Borda',stroke,sr)}
+      ${f.tipo==='linha'?'':colorCtl('fill','Preenchimento',fill,fr)}
+      <span class="opacity-group-530">
+        <label><small>Transp. borda</small><input type="number" min="0" max="1" step=".05" value="${op.stroke}" onchange="gmVet490Prop_('strokeOpacity',this.value)"></label>
+        ${f.tipo==='linha'?'':`<label><small>Transp. conteúdo</small><input type="number" min="0" max="1" step=".05" value="${op.fill}" onchange="gmVet490Prop_('fillOpacity',this.value)"></label>`}
+      </span>
+      <label><small>Borda px</small><input type="number" min="0" max="20" step="1" value="${Number(f.strokeWidth??3)}" onchange="gmVet490Prop_('strokeWidth',this.value)"></label>
+      <button class="btn-small" onclick="gmVet490Duplicar_()">⧉ Duplicar</button>
+      <button class="btn-small btn-danger" onclick="gmVet490Excluir_()">🗑 Excluir</button>`;
+};
+
+const gmVet490InstalarUI552Base_=gmVet490InstalarUI_;
+gmVet490InstalarUI_=function(){
+    gmVet490InstalarUI552Base_();
+    const panel=document.getElementById('gmVet490Tools'); if(!panel || document.getElementById('gmVet552NewColors'))return;
+    const row=panel.querySelector('div'); if(!row)return;
+    // Oculta os dois controles antigos, mantendo-os apenas por compatibilidade.
+    [...row.querySelectorAll('label')].forEach(l=>{
+        const t=(l.textContent||'').trim();
+        if(t.startsWith('Borda nova')||t.startsWith('Preenchimento')) l.style.display='none';
+    });
+    const wrap=document.createElement('div');wrap.id='gmVet552NewColors';
+    wrap.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:end;width:100%;margin-top:5px';
+    const make=(k,label)=>{
+        const h=gmCor552Hex_(gmVet490_[k],k==='fill'?'#34537A':'#00D4FF'), rgb=gmCor552Rgb_(h);
+        return `<span style="display:inline-flex;gap:4px;align-items:end;flex-wrap:wrap;padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:7px">
+          <label><small>${label}</small><input id="gmVet552New_${k}_picker" type="color" value="${h}" onchange="gmVet552NovaHex_('${k}',this.value)" style="width:45px;height:32px;padding:2px"></label>
+          <label><small>HEX</small><input id="gmVet552New_${k}_hex" type="text" value="${h}" maxlength="7" onchange="gmVet552NovaHex_('${k}',this.value)" style="width:78px"></label>
+          ${rgb.map((n,i)=>`<label><small>${'RGB'[i]}</small><input id="gmVet552New_${k}_rgb${i}" type="number" min="0" max="255" value="${n}" onchange="gmVet552NovaRgb_('${k}',${i},this.value)" style="width:58px"></label>`).join('')}
+        </span>`;
+    };
+    wrap.innerHTML=make('stroke','Borda nova')+make('fill','Preenchimento');
+    row.appendChild(wrap);
+};
+
+// Permite borda realmente zero também na rasterização/exportação.
+const gmVet500SvgShape552Base_=gmVet500SvgShape_;
+gmVet500SvgShape_=function(f,scale,b){
+    const c={...f};
+    if(c.strokeWidth===undefined||c.strokeWidth===null||c.strokeWidth==='') c.strokeWidth=3;
+    // A versão anterior forçava mínimo 1 na exportação.
+    const html=gmVet500SvgShape552Base_(c,scale,b);
+    if(Number(c.strokeWidth)===0) return html.replace(/stroke-width="[^"]*"/,'stroke-width="0"');
+    return html;
+};
+
+// O controle de espessura do pincel passa a aceitar 1 px.
+function gmOficina552EspessuraMinima_(){
+    const esp=document.getElementById('gmOficinaEsp');
+    if(esp){esp.min='1';esp.step='1';}
+}
+const labRender552Base_=labRender_;
+labRender_=function(){
+    const r=labRender552Base_();
+    try{gmOficina552EspessuraMinima_();gmVet552AtualizarNovaCor_();}catch(_){}
+    return r;
+};
+window.labRender_=labRender_;
+
+
+
+// ============================================================
+// V46.55.3 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// ============================================================
+
+let gmOficinaObjSel553_='';
+
+function gm553ShadowCss_(x){
+    const tipo=String(x?.sombraOficina||'nenhuma');
+    if(tipo==='nenhuma')return '';
+    const dir=String(x?.sombraDirecao||'SE');
+    const dist=Math.max(1,Number(x?.sombraDist||4));
+    const vec={N:[0,-1],NE:[1,-1],E:[1,0],SE:[1,1],S:[0,1],SO:[-1,1],O:[-1,0],NO:[-1,-1]}[dir]||[1,1];
+    const blur=tipo==='suave'?7:tipo==='forte'?3:5;
+    const alpha=tipo==='suave'?.30:tipo==='forte'?.62:.45;
+    return `drop-shadow(${vec[0]*dist}px ${vec[1]*dist}px ${blur}px rgba(0,0,0,${alpha}))`;
+}
+function gm553OpacoFilter_(o){
+    const opaco=(o?.opacoOficina!==false);
+    const sh=gm553ShadowCss_(o);
+    return `${opaco?'url(#gmOpaqueAlpha553) ':''}${sh}`.trim();
+}
+function gm553InstalarFiltro_(){
+    if(document.getElementById('gmOpaqueDefs553'))return;
+    const holder=document.createElement('div');
+    holder.id='gmOpaqueDefs553';
+    holder.style.cssText='position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
+    holder.innerHTML=`<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0">
+      <filter id="gmOpaqueAlpha553" color-interpolation-filters="sRGB">
+        <feComponentTransfer>
+          <feFuncA type="discrete" tableValues="0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"/>
+        </feComponentTransfer>
+      </filter>
+    </svg>`;
+    document.body.appendChild(holder);
+}
+gm553InstalarFiltro_();
+
+function gm553ObjSelecionado_(){
+    return (gmOficinaEstado_.objetos||[]).find(o=>String(o.id)===String(gmOficinaObjSel553_));
+}
+function gm553PersistRender_(){
+    gmOficinaPersistir_();gmOficinaRender_();
+}
+window.gm553ObjProp_=function(k,v){
+    const o=gm553ObjSelecionado_();if(!o)return;
+    if(k==='opacoOficina')o[k]=!!v;
+    else if(['sombraDist'].includes(k))o[k]=Number(v);
+    else o[k]=String(v);
+    gm553PersistRender_();
+};
+window.gm553ObjCamada_=function(dir){
+    const a=gmOficinaEstado_.objetos||[],i=a.findIndex(o=>String(o.id)===String(gmOficinaObjSel553_));
+    if(i<0)return;
+    const o=a.splice(i,1)[0];
+    if(dir==='frente')a.push(o);else a.unshift(o);
+    gm553PersistRender_();
+};
+window.gm553ObjExcluir_=function(){
+    const o=gm553ObjSelecionado_();if(!o)return;
+    if(!confirm(`Remover “${o.nome||'objeto'}” da Oficina?`))return;
+    gmOficinaEstado_.objetos=(gmOficinaEstado_.objetos||[]).filter(x=>String(x.id)!==String(o.id));
+    gmOficinaObjSel553_='';gm553PersistRender_();
+};
+window.gm553AlternarPlano_=function(v){
+    gmOficinaEstado_.objetosAcimaFormas=!!v;
+    gm553PersistRender_();
+};
+
+function gm553ObjInspector_(){
+    let box=document.getElementById('gmObjInspector553');
+    const tools=document.getElementById('gmVet490Tools');
+    if(!tools)return;
+    if(!box){
+        box=document.createElement('div');box.id='gmObjInspector553';
+        box.style.cssText='margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.10)';
+        tools.appendChild(box);
+    }
+    const o=gm553ObjSelecionado_();
+    if(!o){box.innerHTML='<span style="color:#9fb4c8">Clique num objeto da Oficina para editar sua aparência e camada.</span>';return;}
+    box.innerHTML=`
+      <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:end">
+        <strong style="color:#cfeeff">🧱 ${escaparHtmlInventario_(o.nome||'Objeto')}</strong>
+        <label><small>Pixels visíveis opacos</small><input type="checkbox" ${o.opacoOficina!==false?'checked':''} onchange="gm553ObjProp_('opacoOficina',this.checked)"></label>
+        <label><small>Sombra</small><select onchange="gm553ObjProp_('sombraOficina',this.value)">
+          ${['nenhuma','suave','media','forte'].map(v=>`<option value="${v}" ${String(o.sombraOficina||'nenhuma')===v?'selected':''}>${v==='media'?'média':v}</option>`).join('')}
+        </select></label>
+        <label><small>Direção</small><select onchange="gm553ObjProp_('sombraDirecao',this.value)">
+          ${['N','NE','E','SE','S','SO','O','NO'].map(v=>`<option ${String(o.sombraDirecao||'SE')===v?'selected':''}>${v}</option>`).join('')}
+        </select></label>
+        <label><small>Distância px</small><input type="number" min="1" max="30" step="1" value="${Number(o.sombraDist||4)}" onchange="gm553ObjProp_('sombraDist',this.value)" style="width:72px"></label>
+        <button class="btn-small" onclick="gm553ObjCamada_('frente')">⬆ Frente</button>
+        <button class="btn-small" onclick="gm553ObjCamada_('tras')">⬇ Trás</button>
+        <button class="btn-small btn-danger" onclick="gm553ObjExcluir_()">🗑 Excluir</button>
+      </div>`;
+}
+
+// Renderiza objetos com opacidade real, sombra opcional, ordem e seleção discreta.
+gmOficinaV2RenderObjetos_=function(){
+    const layer=document.getElementById('gmOficinaV2Objects');if(!layer)return;
+    const ppm=gmOficinaV2Ppm_();
+    layer.innerHTML=(gmOficinaEstado_.objetos||[]).map((o,i)=>{
+        const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(o.modeloId)),img=o.imagem||m?.imagem||'';
+        const w=Math.max(18,Number(o.larguraM||1)*ppm),h=Math.max(18,Number(o.alturaM||1)*ppm);
+        const sel=String(o.id)===String(gmOficinaObjSel553_);
+        const filtro=gm553OpacoFilter_(o);
+        return `<div class="${sel?'gm-oficina-object-selected-553':''}" data-of2="${escaparHtmlInventario_(o.id)}"
+          onpointerdown="gmOficinaV2ArrastarObjeto_(event,'${String(o.id).replace(/'/g,"\\'")}')"
+          style="position:absolute;left:${o.x*ppm-w/2}px;top:${o.y*ppm-h/2}px;width:${w}px;height:${h}px;z-index:${8+i};cursor:${gmOficinaV2Cfg_.ativo?'default':'grab'};touch-action:none;pointer-events:auto;transform:rotate(${Number(o.angulo||0)}deg);transform-origin:center">
+          ${img?`<img src="${img}" draggable="false" style="width:100%;height:100%;object-fit:contain;pointer-events:none;opacity:1;filter:${filtro||'none'}">`:'🧱'}
+        </div>`;
+    }).join('');
+    gm553ObjInspector_();
+};
+
+const gmOficinaV2ArrastarObjeto553Base_=window.gmOficinaV2ArrastarObjeto_;
+window.gmOficinaV2ArrastarObjeto_=function(ev,id){
+    gmOficinaObjSel553_=String(id);
+    gmVet490_.selectedId='';
+    gm553ObjInspector_();
+    return gmOficinaV2ArrastarObjeto553Base_(ev,id);
+};
+
+// Seleção de forma cancela seleção de objeto.
+const gmVet490PointerForma553Base_=window.gmVet490PointerForma_;
+window.gmVet490PointerForma_=function(ev,id){
+    gmOficinaObjSel553_='';
+    const r=gmVet490PointerForma553Base_(ev,id);
+    gm553ObjInspector_();
+    return r;
+};
+
+// Camadas das formas.
+window.gm553FormaCamada_=function(dir){
+    const a=gmVet490Formas_(),i=a.findIndex(f=>String(f.id)===String(gmVet490_.selectedId));
+    if(i<0)return;
+    gmVet490Hist_();const f=a.splice(i,1)[0];
+    if(dir==='frente')a.push(f);else a.unshift(f);
+    gmOficinaPersistir_();gmVet490Render_();
+};
+window.gm553FormaShadow_=function(k,v){
+    const f=gmVet490Sel_();if(!f)return;
+    gmVet490Hist_();
+    if(k==='sombraDist')f[k]=Number(v);else f[k]=String(v);
+    gmOficinaPersistir_();gmVet490Render_();
+};
+
+const gmVet490SvgEl553Base_=gmVet490SvgEl_;
+gmVet490SvgEl_=function(f,ppm){
+    let h=gmVet490SvgEl553Base_(f,ppm);
+    const sh=gm553ShadowCss_(f);
+    if(sh){
+        h=h.replace(/\/>$/,` style="filter:${sh}"/>`);
+    }
+    return h;
+};
+
+const gmVet490Inspector553Base_=gmVet490Inspector_;
+gmVet490Inspector_=function(){
+    gmVet490Inspector553Base_();
+    const box=document.getElementById('gmVet490Inspector'),f=gmVet490Sel_();
+    if(!box||!f)return;
+    box.insertAdjacentHTML('beforeend',`
+      <span style="display:inline-flex;gap:5px;align-items:end;flex-wrap:wrap;margin-left:5px">
+        <label><small>Sombra</small><select onchange="gm553FormaShadow_('sombraOficina',this.value)">
+          ${['nenhuma','suave','media','forte'].map(v=>`<option value="${v}" ${String(f.sombraOficina||'nenhuma')===v?'selected':''}>${v==='media'?'média':v}</option>`).join('')}
+        </select></label>
+        <label><small>Direção</small><select onchange="gm553FormaShadow_('sombraDirecao',this.value)">
+          ${['N','NE','E','SE','S','SO','O','NO'].map(v=>`<option ${String(f.sombraDirecao||'SE')===v?'selected':''}>${v}</option>`).join('')}
+        </select></label>
+        <label><small>Distância px</small><input type="number" min="1" max="30" step="1" value="${Number(f.sombraDist||4)}" onchange="gm553FormaShadow_('sombraDist',this.value)" style="width:72px"></label>
+        <button class="btn-small" onclick="gm553FormaCamada_('frente')">⬆ Frente</button>
+        <button class="btn-small" onclick="gm553FormaCamada_('tras')">⬇ Trás</button>
+      </span>`);
+};
+
+function gm553AplicarPlano_(){
+    const svg=document.getElementById('gmOficinaVectorLayer'),objs=document.getElementById('gmOficinaV2Objects');
+    const acima=gmOficinaEstado_.objetosAcimaFormas!==false;
+    if(svg)svg.style.zIndex=acima?'7':'9';
+    if(objs)objs.style.zIndex=acima?'8':'6';
+}
+function gm553InstalarPlanoUI_(){
+    const tools=document.getElementById('gmVet490Tools');
+    if(!tools||document.getElementById('gm553Plano'))return;
+    const d=document.createElement('label');d.id='gm553Plano';
+    d.style.cssText='display:inline-flex;align-items:center;gap:6px;margin:8px 0 0;color:#cfe0ee';
+    d.innerHTML=`<input type="checkbox" ${gmOficinaEstado_.objetosAcimaFormas!==false?'checked':''} onchange="gm553AlternarPlano_(this.checked)"> Objetos acima das formas`;
+    tools.appendChild(d);
+}
+
+// CSS: remove completamente o brilho amarelo herdado; usa contorno discreto.
+if(!document.getElementById('gm553Css')){
+    const st=document.createElement('style');st.id='gm553Css';
+    st.textContent=`
+      #gmOficinaV2Map .gm-vector-selected{
+        filter:none!important;
+        stroke-dasharray:6 4;
+      }
+      #gmOficinaV2Map .gm-oficina-object-selected-553{
+        outline:1px dashed rgba(235,245,255,.92)!important;
+        outline-offset:3px!important;
+        box-shadow:none!important;
+        filter:none!important;
+      }
+      #gmOficinaV2Map .gm-oficina-object-selected-553::after{
+        content:"";
+        position:absolute;inset:-4px;
+        border:1px solid rgba(90,180,220,.42);
+        pointer-events:none;
+      }`;
+    document.head.appendChild(st);
+}
+
+const gmOficinaRender553Base_=window.gmOficinaRender_;
+window.gmOficinaRender_=function(){
+    const r=gmOficinaRender553Base_();
+    try{
+        gm553InstalarFiltro_();
+        gm553InstalarPlanoUI_();
+        gm553AplicarPlano_();
+        gm553ObjInspector_();
+    }catch(e){console.warn('Oficina 553',e);}
+    return r;
+};
+
+// Publicado na Mesa: respeita "pixels opacos" e sombra do objeto.
+const labObjetoHtml553Base_=labObjetoHtml_;
+labObjetoHtml_=function(o,ppm){
+    let h=labObjetoHtml553Base_(o,ppm);
+    if(o?.opacoOficina!==false || o?.sombraOficina){
+        const filtro=gm553OpacoFilter_(o);
+        h=h.replace(/<img([^>]*?)style="([^"]*)"/, (m,a,style)=>{
+            const clean=style.replace(/filter:[^;"]*;?/g,'');
+            return `<img${a}style="${clean};filter:${filtro||'none'}"`;
+        });
+    }
+    return h;
+};
+window.labObjetoHtml_=labObjetoHtml_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -23020,6 +23403,6 @@ window.gmVet490Prop_ = gmVet490Prop_;
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.55.1: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.55.3: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
