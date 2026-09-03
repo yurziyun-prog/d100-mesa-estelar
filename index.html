@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.54.0 ===== */
+/* ===== V46.55.1 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.54.0 ===== */
+/* ===== V46.55.1 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -9185,12 +9185,40 @@ function labDesenhoAplicarTextura_(ctx,texture,pts,inicio,size,color,ppm,brush='
         return true;
     }
     if(texture==='giz'){
-        // núcleo fosco + pó seco nas bordas: visualmente bem diferente de um traço sólido
-        ctx.save();ctx.globalAlpha*=.34;ctx.lineWidth=Math.max(1,size*.72);ctx.lineCap='round';
-        const p0=pts[Math.max(0,a-1)]||pts[0];ctx.beginPath();ctx.moveTo(p0.x*ppm,p0.y*ppm);for(let j=a;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);ctx.stroke();ctx.restore();
-        for(let j=inicioAlinhado(Math.max(1,passo));j<pts.length;j+=Math.max(1,passo)){
-            const p=pts[j],n=Math.max(5,Math.round(size*.75));
-            for(let k=0;k<n;k++){const q=jitter(j,k,1.25),r=Math.max(.55,size*(.025+.045*labDesenhoRand_(j*47+k*31)));ctx.save();ctx.globalAlpha*=.35+.5*labDesenhoRand_(j*61+k*7);ctx.beginPath();ctx.arc(p.x*ppm+q.x,p.y*ppm+q.y,r,0,Math.PI*2);ctx.fill();ctx.restore();}
+        // Giz = faixa contínua, seca e fibrosa. Não usa nuvem radial como o spray.
+        // Faz várias fibras longitudinais com pequenas falhas e um pouco de pó nas bordas.
+        const p0=pts[Math.max(0,a-1)]||pts[0];
+        ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+        ctx.globalAlpha*=.30;ctx.lineWidth=Math.max(1,size*.78);
+        ctx.beginPath();ctx.moveTo(p0.x*ppm,p0.y*ppm);for(let j=a;j<pts.length;j++)ctx.lineTo(pts[j].x*ppm,pts[j].y*ppm);ctx.stroke();
+        ctx.restore();
+        const fibras=Math.max(5,Math.min(16,Math.round(size*.8)));
+        for(let k=0;k<fibras;k++){
+            const off=(k/(Math.max(1,fibras-1))-.5)*size*.82;
+            ctx.save();ctx.lineCap='butt';ctx.lineJoin='round';ctx.lineWidth=Math.max(.55,size*(.035+.025*labDesenhoRand_(k+17)));
+            ctx.globalAlpha*=.25+.35*labDesenhoRand_(k*31+9);
+            let aberto=false;ctx.beginPath();
+            for(let j=Math.max(1,a);j<pts.length;j++){
+                const p=pts[j],q=pts[j-1],dx=(p.x-q.x)*ppm,dy=(p.y-q.y)*ppm,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len;
+                const falha=labDesenhoRand_(j*103+k*47)<.16;
+                const jitterLong=(labDesenhoRand_(j*59+k*13)-.5)*size*.10;
+                const x=p.x*ppm+nx*(off+jitterLong),y=p.y*ppm+ny*(off+jitterLong);
+                if(falha){aberto=false;continue;}
+                if(!aberto){ctx.moveTo(x,y);aberto=true;}else ctx.lineTo(x,y);
+            }
+            ctx.stroke();ctx.restore();
+        }
+        // grãos pequenos apenas nas bordas, bem menos dispersos que o spray
+        const stride=Math.max(2,Math.round(size*.28));
+        for(let j=inicioAlinhado(stride);j<pts.length;j+=stride){
+            const p=pts[j],n=Math.max(2,Math.round(size*.18));
+            for(let k=0;k<n;k++){
+                const side=labDesenhoRand_(j*41+k*19)<.5?-1:1;
+                const ang=(labDesenhoRand_(j*67+k*23)-.5)*Math.PI*2;
+                const rr=size*(.34+.16*labDesenhoRand_(j*71+k*11));
+                const x=p.x*ppm+Math.cos(ang)*rr*side,y=p.y*ppm+Math.sin(ang)*rr;
+                ctx.save();ctx.globalAlpha*=.18+.24*labDesenhoRand_(j*89+k*7);ctx.beginPath();ctx.arc(x,y,Math.max(.45,size*.025),0,Math.PI*2);ctx.fill();ctx.restore();
+            }
         }
         return true;
     }
@@ -18618,8 +18646,8 @@ function gmOficinaV2ConstruirUI_(){
           </span>
           <label style="margin:0"><small>Tamanho</small><input id="gmOficinaV2BrushSize" type="range" min="2" max="48" value="7" oninput="gmOficinaV2BrushSize_(this.value)" style="width:90px;margin:8px 0"><span id="gmOficinaV2BrushSizeVal" style="font-size:.78em;color:#bbb">7</span></label>
           <label style="margin:0"><small>Opacidade</small><input id="gmOficinaV2Opacity" type="range" min="5" max="100" step="5" value="100" oninput="gmOficinaV2Opacity_(this.value)" style="width:90px;margin:8px 0"><span id="gmOficinaV2OpacityVal" style="font-size:.78em;color:#bbb">100%</span></label>
-          <label style="margin:0"><small>Pincel</small><select id="gmOficinaV2Brush" onchange="gmOficinaV2Brush_(this.value)" style="margin:3px 0 0"><option value="redondo">Redondo</option><option value="quadrado">Quadrado</option><option value="spray">Spray</option><option value="irregular">Irregular</option><option value="caligrafico">Caligráfico</option></select></label>
-          <label style="margin:0"><small>Textura do traço</small><select id="gmOficinaV2StrokeTexture" onchange="gmOficinaV2StrokeTexture_(this.value)" style="margin:3px 0 0"><option value="solida">Sólida</option><option value="pontilhada">Pontilhada</option><option value="giz">Giz</option><option value="ranhura">Ranhura</option><option value="areia">Areia</option><option value="cascalho">Cascalho</option><option value="grama">Grama</option><option value="folhas">Folhas</option><option value="neve">Neve</option><option value="fumaca">Fumaça</option></select></label>
+          <label style="margin:0"><small>Estilo do traço</small><select id="gmOficinaV2StrokeStyle" onchange="gmOficinaV2StrokeStyle_(this.value)" style="margin:3px 0 0;min-width:150px"><option value="redondo">Sólido redondo</option><option value="quadrado">Sólido quadrado</option><option value="irregular">Irregular</option><option value="caligrafico">Caligráfico</option><option value="spray">Spray</option><option value="pontilhada">Pontilhado</option><option value="giz">Giz</option><option value="ranhura">Ranhura</option><option value="areia">Areia</option><option value="cascalho">Cascalho</option><option value="grama">Grama</option><option value="folhas">Folhas</option><option value="neve">Neve</option><option value="fumaca">Fumaça</option></select></label>
+          <label style="margin:0"><small>Prévia</small><canvas id="gmOficinaV2BrushPreview" width="150" height="38" style="display:block;margin-top:3px;width:150px;height:38px;border:1px solid rgba(255,255,255,.18);border-radius:7px;background:rgba(255,255,255,.06)"></canvas></label>
           <button class="btn-small" onclick="gmOficinaV2Clear_()" style="height:38px">🗑️ Limpar pintura</button>
           <span style="height:30px;border-left:1px solid rgba(255,255,255,.18)"></span>
           <select id="gmOficinaV2Objeto" style="min-width:220px;margin:0"></select>
@@ -22017,7 +22045,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.54.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.55.1 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22176,7 +22204,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.54.0
+// V46.55.1
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22533,7 +22561,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.54.0
+// V46.55.1
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22815,6 +22843,167 @@ labRender_=function(){
 };
 window.labRender_=labRender_;
 
+
+
+// ============================================================
+// V46.55.1 — Oficina: estilos de traço exclusivos + prévia real
+// ============================================================
+function gmOficinaV2EstiloAtual550_(){
+    const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
+    if(tex!=='solida')return tex;
+    return String(gmOficinaV2Cfg_.pincel||'redondo');
+}
+window.gmOficinaV2StrokeStyle_=function(v){
+    const x=String(v||'redondo');
+    const brushes=['redondo','quadrado','irregular','caligrafico','spray'];
+    const textures=['pontilhada','giz','ranhura','areia','cascalho','grama','folhas','neve','fumaca'];
+    if(brushes.includes(x)){
+        gmOficinaV2Cfg_.pincel=x;
+        gmOficinaV2Cfg_.texturaTraco='solida';
+    }else if(textures.includes(x)){
+        // Uma textura é um estilo completo: não pode coexistir com Spray/Irregular/etc.
+        gmOficinaV2Cfg_.pincel='redondo';
+        gmOficinaV2Cfg_.texturaTraco=x;
+    }else{
+        gmOficinaV2Cfg_.pincel='redondo';gmOficinaV2Cfg_.texturaTraco='solida';
+    }
+    gmOficinaV2Cfg_.ativo=true;
+    gmOficinaRender_();
+};
+
+function gmOficinaV2Preview550_(){
+    const cv=document.getElementById('gmOficinaV2BrushPreview');if(!cv)return;
+    const dpr=Math.max(1,window.devicePixelRatio||1),w=150,h=38;
+    if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+    const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='rgba(255,255,255,.035)';ctx.fillRect(0,0,w,h);
+    const color=gmOficinaV2Cfg_.cor||'#ffcf4d',size=Math.max(2,Math.min(24,Number(gmOficinaV2Cfg_.tamanho||7))),opacity=Math.max(.05,Math.min(1,Number(gmOficinaV2Cfg_.opacidade||1)));
+    const pts=[];for(let x=10;x<=140;x+=3)pts.push({x:x,y:19+Math.sin(x/17)*3});
+    ctx.save();ctx.globalAlpha=opacity;ctx.fillStyle=color;ctx.strokeStyle=color;ctx.lineJoin='round';ctx.lineCap='round';
+    const brush=gmOficinaV2Cfg_.pincel||'redondo',texture=gmOficinaV2Cfg_.texturaTraco||'solida';
+    if(texture!=='solida')labDesenhoAplicarTextura_(ctx,texture,pts,0,size,color,1,brush);
+    else if(brush==='spray'){
+        for(let j=0;j<pts.length;j++){const p=pts[j],dots=Math.max(4,Math.round(size*.8));for(let k=0;k<dots;k++){const a=labDesenhoRand_(j*97+k*13)*Math.PI*2,r=Math.sqrt(labDesenhoRand_(j*193+k*29))*size*.8,rr=Math.max(.7,size*(.045+.08*labDesenhoRand_(j*71+k*41)));ctx.beginPath();ctx.arc(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,rr,0,Math.PI*2);ctx.fill();}}
+    }else if(brush==='quadrado'){for(const p of pts)ctx.fillRect(p.x-size/2,p.y-size/2,size,size);}
+    else if(brush==='irregular'){
+        ctx.lineWidth=size;ctx.beginPath();for(let j=0;j<pts.length;j++){const wob=size*.70,x=pts[j].x+(labDesenhoRand_(j*151+3)-.5)*wob,y=pts[j].y+(labDesenhoRand_(j*211+9)-.5)*wob;if(!j)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.stroke();
+    }else{
+        ctx.lineWidth=brush==='caligrafico'?Math.max(1,size*.42):size;ctx.lineCap=brush==='caligrafico'?'butt':'round';ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let j=1;j<pts.length;j++)ctx.lineTo(pts[j].x,pts[j].y);ctx.stroke();
+    }
+    ctx.restore();
+}
+
+const gmOficinaV2SyncUI550Base_=gmOficinaV2SyncUI_;
+gmOficinaV2SyncUI_=function(){
+    gmOficinaV2SyncUI550Base_();
+    const sel=document.getElementById('gmOficinaV2StrokeStyle');if(sel)sel.value=gmOficinaV2EstiloAtual550_();
+    gmOficinaV2Preview550_();
+};
+
+// Controles antigos continuam aceitos por compatibilidade com mapas salvos, mas
+// qualquer chamada direta também passa a obedecer exclusividade.
+window.gmOficinaV2Brush_=function(v){
+    const x=['redondo','quadrado','spray','irregular','caligrafico'].includes(String(v))?String(v):'redondo';
+    gmOficinaV2Cfg_.pincel=x;gmOficinaV2Cfg_.texturaTraco='solida';gmOficinaV2Cfg_.ativo=true;gmOficinaRender_();
+};
+window.gmOficinaV2StrokeTexture_=function(v){
+    const x=['pontilhada','giz','ranhura','areia','cascalho','grama','folhas','neve','fumaca'].includes(String(v))?String(v):'solida';
+    gmOficinaV2Cfg_.texturaTraco=x;gmOficinaV2Cfg_.pincel='redondo';gmOficinaV2Cfg_.ativo=true;gmOficinaRender_();
+};
+
+// Prévia reage instantaneamente a cor/tamanho/opacidade sem redesenhar a Oficina inteira.
+const gmOficinaV2Color550Base_=window.gmOficinaV2Color_;
+window.gmOficinaV2Color_=function(v){gmOficinaV2Color550Base_(v);gmOficinaV2Preview550_();};
+const gmOficinaV2BrushSize550Base_=window.gmOficinaV2BrushSize_;
+window.gmOficinaV2BrushSize_=function(v){gmOficinaV2BrushSize550Base_(v);gmOficinaV2Preview550_();};
+const gmOficinaV2Opacity550Base_=window.gmOficinaV2Opacity_;
+window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2Preview550_();};
+
+
+
+// ============================================================
+// V46.55.1
+// Corrige formas vetoriais aparentemente transparentes mesmo com
+// opacidade de conteúdo = 1.
+// ============================================================
+
+function gmVet551CorOpaca_(cor, fallback='#34537a'){
+    let c=String(cor||fallback).trim();
+    if(!c || c==='transparent' || c==='none') return fallback;
+
+    // Converte rgba(...,a) em rgb(...), removendo alpha embutido.
+    const rgba=c.match(/^rgba?\(\s*([0-9.]+)\s*,\s*([0-9.]+)\s*,\s*([0-9.]+)(?:\s*,\s*([0-9.]+))?\s*\)$/i);
+    if(rgba){
+        const r=Math.max(0,Math.min(255,Number(rgba[1])||0));
+        const g=Math.max(0,Math.min(255,Number(rgba[2])||0));
+        const b=Math.max(0,Math.min(255,Number(rgba[3])||0));
+        return `rgb(${r},${g},${b})`;
+    }
+
+    // #RRGGBBAA -> #RRGGBB
+    if(/^#[0-9a-f]{8}$/i.test(c)) return c.slice(0,7);
+    // #RGBA -> #RGB
+    if(/^#[0-9a-f]{4}$/i.test(c)) return '#'+c[1]+c[2]+c[3];
+
+    return c;
+}
+
+const gmVet490SvgEl551Base_ = gmVet490SvgEl_;
+gmVet490SvgEl_ = function(f, ppm){
+    const copia = {...f};
+
+    // Para qualquer forma fechada, a transparência passa a ser controlada
+    // exclusivamente por fillOpacity. A própria cor nunca carrega alpha.
+    if(copia.tipo !== 'linha'){
+        copia.fill = gmVet551CorOpaca_(copia.fill || '#34537a');
+        if(copia.fillOpacity === undefined || copia.fillOpacity === null || copia.fillOpacity === ''){
+            copia.fillOpacity = (copia.opacity === undefined ? 1 : Number(copia.opacity));
+        }
+        copia.fillOpacity = Math.max(0,Math.min(1,Number(copia.fillOpacity)));
+    }
+
+    copia.stroke = gmVet551CorOpaca_(copia.stroke || '#00d4ff','#00d4ff');
+    if(copia.strokeOpacity === undefined || copia.strokeOpacity === null || copia.strokeOpacity === ''){
+        copia.strokeOpacity = (copia.opacity === undefined ? 1 : Number(copia.opacity));
+    }
+    copia.strokeOpacity = Math.max(0,Math.min(1,Number(copia.strokeOpacity)));
+
+    return gmVet490SvgEl551Base_(copia, ppm);
+};
+
+const gmVet500SvgShape551Base_ = gmVet500SvgShape_;
+gmVet500SvgShape_ = function(f, scale, b){
+    const copia = {...f};
+    if(copia.tipo !== 'linha'){
+        copia.fill = gmVet551CorOpaca_(copia.fill || '#34537a');
+        if(copia.fillOpacity === undefined || copia.fillOpacity === null || copia.fillOpacity === ''){
+            copia.fillOpacity = (copia.opacity === undefined ? 1 : Number(copia.opacity));
+        }
+        copia.fillOpacity = Math.max(0,Math.min(1,Number(copia.fillOpacity)));
+    }
+    copia.stroke = gmVet551CorOpaca_(copia.stroke || '#00d4ff','#00d4ff');
+    if(copia.strokeOpacity === undefined || copia.strokeOpacity === null || copia.strokeOpacity === ''){
+        copia.strokeOpacity = (copia.opacity === undefined ? 1 : Number(copia.opacity));
+    }
+    copia.strokeOpacity = Math.max(0,Math.min(1,Number(copia.strokeOpacity)));
+    return gmVet500SvgShape551Base_(copia, scale, b);
+};
+
+// Também normaliza formas já existentes quando o inspetor altera opacidade/cor.
+const gmVet490Prop551Base_ = gmVet490Prop_;
+gmVet490Prop_ = function(k,v){
+    const f = gmVet490Sel_?.();
+    if(f){
+        if(k==='fill') v = gmVet551CorOpaca_(v,'#34537a');
+        if(k==='stroke') v = gmVet551CorOpaca_(v,'#00d4ff');
+        if(k==='fillOpacity' || k==='strokeOpacity'){
+            v = Math.max(0,Math.min(1,Number(v)));
+        }
+    }
+    return gmVet490Prop551Base_(k,v);
+};
+window.gmVet490Prop_ = gmVet490Prop_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -22831,6 +23020,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.54.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.55.1: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
