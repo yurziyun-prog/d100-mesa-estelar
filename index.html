@@ -1820,6 +1820,7 @@
                 <div class="form-group"><label>Peso (kg):</label><input type="number" id="dbItemPeso" step="0.1" min="-100"></div>
                 <div class="form-group"><label>Preço:</label><input type="number" id="dbItemPreco" step="1" min="0"></div>
                 <div class="form-group"><label>Nível de acesso:</label><input type="text" id="dbItemAcesso" placeholder="Livre, Licença, Restrito..."></div>
+                <div class="form-group"><label style="display:flex;align-items:center;gap:8px;"><input id="dbItemDisponivel" type="checkbox" checked> Disponível nesta campanha</label></div>
             </div>
 
             <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px;">
@@ -2736,9 +2737,16 @@ async function carregarBancosDeDados() {
     }
 
     const reformaEsp={
-      combate_pistola_laser:{formula:'DES*2'}, pistolas_revolveres:{formula:'DES*2'},
-      atirador_elite:{formula:'DES+INT'}, fuzis_carabinas:{formula:'DES+INT'}, rifles_laser:{formula:'DES+INT'}, armas_energia:{formula:'DES+INT'},
+      // IDs legados são preservados para não perder treino/XP dos personagens existentes.
+      combate_pistola_laser:{nome:'Pistolas de Energia',nome_en:'Energy Pistols',nome_zh:'能量手枪',formula:'DES*2',familiaArma:'pistola_energia'},
+      pistolas_laser:{nome:'Pistolas de Energia',nome_en:'Energy Pistols',nome_zh:'能量手枪',formula:'DES*2',familiaArma:'pistola_energia'},
+      rifles_laser:{nome:'Rifles e Carabinas de Energia',nome_en:'Energy Rifles & Carbines',nome_zh:'能量步枪与卡宾枪',formula:'DES+INT',familiaArma:'rifle_energia'},
+      arma_laser_pesada:{nome:'Armas Pesadas de Energia',nome_en:'Heavy Energy Weapons',nome_zh:'重型能量武器',formula:'FOR+DES',familiaArma:'energia_pesada'},
+      pistolas_revolveres:{formula:'DES*2',disponivelCampanha:false}, fuzis_carabinas:{formula:'DES+INT',disponivelCampanha:false},
+      escopetas:{disponivelCampanha:false}, submetralhadoras:{disponivelCampanha:false}, arqueiro:{disponivelCampanha:false}, artilharia:{disponivelCampanha:false},
+      atirador_elite:{formula:'DES+INT'}, armas_energia:{formula:'DES+INT'},
       luta_gravidade_zero:{formula:'DES+INT'}, combate_traje_espacial:{formula:'DES+CON'},
+      esgrima_plasma_vibro:{nome:'Lâminas de Energia / Vibrolâminas',nome_en:'Energy Blades / Vibroblades',nome_zh:'能量刃／振动刃',formula:'FOR+DES'},
       ninja:{nome:'Ataque Furtivo',nome_en:'Sneak Attack',nome_zh:'偷袭',formula:'DES+INT'},
       briga_taberna_pugilismo:{nome:'Pugilismo',nome_en:'Pugilism',nome_zh:'拳击',formula:'FOR+DES'}
     };
@@ -4339,12 +4347,12 @@ const NPC_ESPECIALIZACOES_COMBATE_META_={
   submetralhadoras:{nome:'Submetralhadoras',uso:'distancia'},
   armas_pesadas:{nome:'Armas Pesadas',uso:'distancia'},
   atirador_elite:{nome:'Atirador de Elite',uso:'distancia'},
-  combate_pistola_laser:{nome:'Pistolas Laser',uso:'distancia'},
-  pistolas_laser:{nome:'Pistolas Laser',uso:'distancia'},
-  rifles_laser:{nome:'Rifles Laser',uso:'distancia'},
-  arma_laser_pesada:{nome:'Arma Laser Pesada',uso:'distancia'},
+  combate_pistola_laser:{nome:'Pistolas de Energia',uso:'distancia'},
+  pistolas_laser:{nome:'Pistolas de Energia',uso:'distancia'},
+  rifles_laser:{nome:'Rifles e Carabinas de Energia',uso:'distancia'},
+  arma_laser_pesada:{nome:'Armas Pesadas de Energia',uso:'distancia'},
   armas_energia:{nome:'Armas de Energia',uso:'distancia'},
-  esgrima_plasma_vibro:{nome:'Esgrima Plasma/Vibro',uso:'corpo a corpo'}
+  esgrima_plasma_vibro:{nome:'Lâminas de Energia / Vibrolâminas',uso:'corpo a corpo'}
 };
 function especializacaoCombateFallback_(id){
     const m=NPC_ESPECIALIZACOES_COMBATE_META_[id];
@@ -4399,6 +4407,7 @@ function batalhaListaPericiasDefesa_(char){
 
 
 function familiaArmaCompat_(item) {
+    if(item?.familiaArma) return normalizarTextoCombate_(item.familiaArma);
     const n = normalizarTextoCombate_([item?.id,item?.nome,item?.nome_en,item?.nome_zh,item?.descricao].filter(Boolean).join(' '));
     if (/escudo|shield/.test(n)) return 'escudo';
     if (/granada|grenade|arremesso|throw/.test(n)) return 'arremesso';
@@ -4406,9 +4415,11 @@ function familiaArmaCompat_(item) {
     if (/escopeta|shotgun/.test(n)) return 'escopeta';
     if (/submetralhadora|submachine/.test(n)) return 'submetralhadora';
     if (/sniper|precisao|precision|anti.?material/.test(n)) return 'precisao';
-    if (/laser/.test(n) && /pesad|heavy/.test(n)) return 'laser_pesada';
-    if (/laser/.test(n) && /pistola|pistol|palm/.test(n)) return 'laser_pistola';
-    if (/laser/.test(n) && /rifle|fuzil|carabina|carbine/.test(n)) return 'laser_rifle';
+    if (/(laser|blaster|plasma|phaser)/.test(n) && /(pesad|heavy|bazuca|bazooka|canhao portatil|launcher)/.test(n)) return 'energia_pesada';
+    if (/(laser|blaster|phaser|plasma)/.test(n) && /(pistola|pistol|palma|palm)/.test(n)) return 'pistola_energia';
+    if (/(laser|blaster|phaser|plasma)/.test(n) && /(rifle|fuzil|carabina|carbine)/.test(n)) return 'rifle_energia';
+    if (/(gauss|railgun|coilgun)/.test(n)) return 'eletromagnetica';
+    if (/(espada de forca|force sword|energy sword|espada de energia|energy blade|plasma|vibro)/.test(n) && /(espada|sword|blade|lamina)/.test(n)) return 'plasma_vibro';
     if (/blaster|phaser|disrupt|disintegr|sonic/.test(n)) return 'energia';
     if (/pistola|revolver|pistol|handgun|\.38|9mm|\.45|\.357|\.44/.test(n)) return 'pistola';
     if (/fuzil|rifle|carabina|carbine|5\.56|7\.62/.test(n)) return 'rifle';
@@ -4425,8 +4436,8 @@ const FAMILIAS_ESPECIALIZACAO_COMPAT_ = {
   armas_improvisadas:['improvisada'], armas_arremesso:['arremesso'], arqueiro:['arco'],
   pistolas_revolveres:['pistola'], fuzis_carabinas:['rifle'], escopetas:['escopeta'],
   submetralhadoras:['submetralhadora'], armas_pesadas:['pesada'], atirador_elite:['precisao'],
-  combate_pistola_laser:['laser_pistola'], pistolas_laser:['laser_pistola'], rifles_laser:['laser_rifle'],
-  arma_laser_pesada:['laser_pesada'], armas_energia:['energia'], esgrima_plasma_vibro:['plasma_vibro']
+  combate_pistola_laser:['pistola_energia'], pistolas_laser:['pistola_energia'], rifles_laser:['rifle_energia'],
+  arma_laser_pesada:['energia_pesada'], armas_energia:['energia'], esgrima_plasma_vibro:['plasma_vibro']
 };
 function penalidadeCompatibilidadeArma_(pericia, item) {
     if (!pericia || !item || ['esquiva','combate_desarmado','briga_pugilismo'].includes(pericia.id)) return 0;
@@ -4437,8 +4448,8 @@ function penalidadeCompatibilidadeArma_(pericia, item) {
       atirador_elite:['rifle'], fuzis_carabinas:['precisao'],
       pistolas_revolveres:['submetralhadora'], submetralhadoras:['pistola'],
       combate_pistola_laser:['energia'], pistolas_laser:['energia'],
-      rifles_laser:['energia','laser_pesada'], arma_laser_pesada:['laser_rifle','energia'],
-      armas_energia:['laser_pistola','laser_rifle','laser_pesada'],
+      rifles_laser:['energia','energia_pesada'], arma_laser_pesada:['rifle_energia','pistola_energia','energia'],
+      armas_energia:['pistola_energia','rifle_energia','energia_pesada'],
       esgrima_plasma_vibro:['branca_curta','branca_longa','haste'],
       armas_brancas_curtas:['plasma_vibro'], armas_brancas_longas:['plasma_vibro'], armas_haste:['plasma_vibro']
     };
@@ -6810,6 +6821,7 @@ window.renderizarMercado = () => {
     const busca = String(document.getElementById('marketSearch')?.value || '').trim().toLowerCase();
     const categoria = String(document.getElementById('marketCategory')?.value || '').trim();
     const filtrados = itensDB.filter(item => {
+        if(item?.disponivelCampanha===false) return false;
         const nomes = `${item.nome || ''} ${item.nome_en || ''} ${item.nome_zh || ''}`.toLowerCase();
         return (!busca || nomes.includes(busca)) && (!categoria || String(item.categoria || '') === categoria);
     }).sort((a,b) => rankAcesso_(a)-rankAcesso_(b) || getNome(a).localeCompare(getNome(b)));
@@ -12880,7 +12892,7 @@ function renderizarBancoItens() {
             ].filter(Boolean).map(esc).join(' &nbsp;|&nbsp; ');
 
             return `
-                <tr class="db-item-main-row">
+                <tr class="db-item-main-row ${i.disponivelCampanha===false?'db-campaign-off':''}">
                     <td rowspan="2">${img}</td>
                     <td class="name-pt">${esc(i.nome || '')}</td>
                     <td>${esc(i.nome_en || '')}</td>
@@ -12891,7 +12903,7 @@ function renderizarBancoItens() {
                 <tr class="db-item-meta-row">
                     <td colspan="4">${meta}</td>
                     <td class="actions">
-                        <button class="btn-small btn-select" onclick="editarItemBanco('${esc(i.id)}')">Editar</button>
+                        <button class="btn-small db-availability ${i.disponivelCampanha===false?'':'btn-select'}" onclick="alternarDisponibilidadeItemBanco_('${esc(i.id)}')">${i.disponivelCampanha===false?'⛔ Guardado':'✅ Disponível'}</button> <button class="btn-small btn-select" onclick="editarItemBanco('${esc(i.id)}')">Editar</button>
                         <button class="btn-small btn-delete" onclick="removerItemBanco('${esc(i.id)}')">Remover</button>
                     </td>
                 </tr>`;
@@ -13483,6 +13495,7 @@ function preencherModalItemBanco_(item = null) {
     set('dbItemPeso', item?.peso ?? 0);
     set('dbItemPreco', item?.preco ?? 0);
     set('dbItemAcesso', item?.nivelAcesso || item?.acesso || '');
+    const dispItem=document.getElementById('dbItemDisponivel'); if(dispItem) dispItem.checked=item?.disponivelCampanha!==false;
     set('dbItemPA', item?.pa ?? 0);
     set('dbItemPV', item?.pv ?? 1);
     set('dbItemAlcance', item?.alcance || '');
@@ -13602,6 +13615,7 @@ window.salvarItemBancoModal = async () => {
         uso: val('dbItemUso'),
         qualidade: normalizarQualidade_(val('dbItemQualidade') || 'Básica'),
         nivelAcesso: val('dbItemAcesso'),
+        disponivelCampanha: !!document.getElementById('dbItemDisponivel')?.checked,
         material: val('dbItemMaterial'),
         unidade: val('dbItemUnidade'),
         destinoLocal: val('dbItemDestino'),
@@ -13689,6 +13703,7 @@ window.removerPericia = async (id) => { if (!confirm('Remover?')) return; await 
 window.removerOrigem = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "origens", id)); origensDB = origensDB.filter(o => o.id !== id); popularSelects(); renderizarBancoOrigens(); };
 window.removerCarreira = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "carreiras", id)); carreirasDB = carreirasDB.filter(c => c.id !== id); popularSelects(); renderizarBancoCarreiras(); };
 window.removerEspecializacao = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "especializacoes", id)); especializacoesDB = especializacoesDB.filter(e => e.id !== id); renderizarBancoEspecializacoes(); };
+window.alternarDisponibilidadeItemBanco_=async function(id){if(userData?.role!=='mestre')return;const obj=(itensDB||[]).find(x=>x.id===id);if(!obj)return;const novo=obj.disponivelCampanha===false;await setDoc(doc(db,'itens',id),{disponivelCampanha:novo},{merge:true});obj.disponivelCampanha=novo;renderizarBancoItens();renderizarMercado();};
 window.removerItemBanco = async (id) => { if (!confirm('Remover?')) return; await deleteDoc(doc(db, "itens", id)); itensDB = itensDB.filter(i => i.id !== id); renderizarBancoItens(); };
 
 // ============================================
@@ -18005,7 +18020,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.47.2',e);}
+    }catch(e){console.warn('v46.48.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19049,7 +19064,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.47.2',e);}
+    }catch(e){console.warn('laser v46.48.0',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19915,6 +19930,6 @@ window.labEncerrarOportunidade_=function(){
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.47.2: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.48.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
