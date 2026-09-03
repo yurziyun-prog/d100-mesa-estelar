@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.53.0 ===== */
+/* ===== V46.54.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -493,6 +493,11 @@
     min-height:38px;padding:0 8px
 }
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
+
+
+/* ===== V46.54.0 ===== */
+#labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
+.lab-burn-hint-540{font-weight:800}
 
 </style>
 
@@ -8549,7 +8554,7 @@ window.labRolarAtaque_=function(){
             || !!stAlvo?.morto
             || !!stAlvo?.inconsciente;
         if(semReacao){
-            const qtd=labEfeitosQuantidade_(r.grau,'Falha',true);
+            const qtd=(stAlvo?.morto||stAlvo?.inconsciente)?0:labEfeitosQuantidade_(r.grau,'Falha',true);
             labEstado_.danoPendenteLab={...pend,efeitosRestantes:qtd,efeitosEscolhidos:[],danoAutomatico:true};
             const motivo=stAlvo?.morto?'alvo já incapacitado/morto':stAlvo?.inconsciente?'alvo inconsciente':(Number(alvo.acoesAtuaisLab||0)<=0&&Number(alvo.acoesDefensivasPsiLab||0)<=0)?'sem AÇ para reagir':!defesasPossiveis.length?'sem defesa possível':'alvo sem reação';
             labEstado_.ultimoResultadoLab=base+` ${motivo}; ${qtd?`${qtd} efeito(s) especial(is) antes do dano automático.`:'dano automático.'}`;
@@ -22012,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.53.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.54.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22171,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.53.0
+// V46.54.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22525,6 +22530,291 @@ labRender_=function(){
 };
 window.labRender_=labRender_;
 
+
+
+// ============================================================
+// V46.54.0
+// Corrige floats fantasmas, aviso de queimadura, estabilidade
+// vertical da Mesa, ataque a mortos e entrada livre automática.
+// ============================================================
+
+// ------------------------------------------------------------
+// 1) Números de dano: nunca reaparecem "fantasmas"
+// ------------------------------------------------------------
+function labFloatTimestamp540_(f){
+    const m=String(f?.id||'').match(/^f_(\d{10,})_/);
+    return m?Number(m[1]):0;
+}
+const labFloatHtml540Base_=labFloatHtml_;
+labFloatHtml_=function(f,ppm){
+    const ts=labFloatTimestamp540_(f);
+    if(ts&&Date.now()-ts>1900)return '';
+    return labFloatHtml540Base_(f,ppm);
+};
+
+const labEstadoPublico540Base_=labEstadoPublico_;
+labEstadoPublico_=function(){
+    const c=labEstadoPublico540Base_();
+    // Só números realmente recentes entram no snapshot público.
+    c.floatsLab=(c.floatsLab||[]).filter(f=>{
+        const ts=labFloatTimestamp540_(f);
+        return ts&&Date.now()-ts<1750;
+    });
+    return c;
+};
+function labLimparFloatsAntigos540_(){
+    const agora=Date.now();
+    labEstado_.floatsLab=(labEstado_.floatsLab||[]).filter(f=>{
+        const ts=labFloatTimestamp540_(f);
+        return ts&&agora-ts<2000;
+    });
+}
+
+// ------------------------------------------------------------
+// 2) Fogo: quem está queimando recebe aviso privado visível
+// ------------------------------------------------------------
+const labFogoDanoToken540Base_=labFogoDanoToken520_;
+labFogoDanoToken520_=function(t,dano=1){
+    const aplicado=labFogoDanoToken540Base_(t,dano);
+    if(aplicado>0){
+        t.fogoAvisoTsLab=Date.now();
+        t.ultimoResultadoRecebidoLab=`🔥 Você está sendo queimado! Sofreu ${aplicado} de dano. Saia das chamas.`;
+        t.ultimoResultadoRecebidoTsLab=t.fogoAvisoTsLab;
+    }
+    return aplicado;
+};
+
+let labFogoAvisoVisto540_=0;
+function labAvisarJogadorQueimando540_(){
+    if(batalhaEhMestre_())return;
+    const meus=(labEstado_.tokens||[]).filter(t=>{
+        try{return labPodeControlarToken_(t);}catch(_){return false;}
+    });
+    for(const t of meus){
+        const ts=Number(t.fogoAvisoTsLab||0);
+        if(ts>labFogoAvisoVisto540_){
+            labFogoAvisoVisto540_=ts;
+            notificar_(`🔥 ${t.nome}: você está sendo queimado. Saia das chamas!`,'aviso',5200);
+        }
+    }
+}
+
+// ------------------------------------------------------------
+// 3) Restaurar: remove também floats, avisos e fogo sincronizado
+// ------------------------------------------------------------
+const labRestaurarParticipantes540Base_=window.labRestaurarParticipantes_;
+window.labRestaurarParticipantes_=async function(){
+    // Limpa os transitórios ANTES e DEPOIS do restaurar anterior.
+    labEstado_.floatsLab=[];
+    for(const t of (labEstado_.tokens||[])){
+        t.fogoAvisoTsLab=0;
+        t.fogoContatoChave530='';
+    }
+    await labRestaurarParticipantes540Base_();
+    labEstado_.floatsLab=[];
+    labEstado_.efeitosObjetosLab={};
+    for(const o of (labEstado_.objetosLab||[])){
+        o.pegandoFogoLab=false;
+        o.fogoUltimaRodadaLab=-1;
+    }
+    document.querySelectorAll('[data-lab-float],.lab-fire-real-510,.lab-fire-overlay-481,.lab-object-fire-v2,.lab-fire-490').forEach(x=>x.remove());
+    labSalvarLocal_();
+};
+
+// ------------------------------------------------------------
+// 4) Alvo morto: seleção manual é respeitada e ataque causa dano
+// ------------------------------------------------------------
+const labGarantirPrefsAtaque540Base_=labGarantirPrefsAtaque_;
+labGarantirPrefsAtaque_=function(t){
+    if(!t)return;
+    const escolhido=String(t.alvoLab||'');
+    const alvoEscolhido=escolhido?labAlvoAtaquePorId_(escolhido):null;
+    const manualMorto=!!t._alvoMortoManual510 && !!alvoEscolhido;
+    labGarantirPrefsAtaque540Base_(t);
+    if(manualMorto)t.alvoLab=escolhido;
+};
+
+// Se o alvo morto for selecionado no menu, não deixa outro saneador trocá-lo.
+const labUniversalAlvo540Base_=window.labUniversalAlvo_;
+window.labUniversalAlvo_=function(v){
+    const t=labTokenAtual_();
+    if(t&&t.universalModoLab==='combate'){
+        const a=labAlvoAtaquePorId_(v);
+        t._alvoMortoManual510=!!labAlvoInerte490_(a);
+        t.alvoLab=String(v||'');
+    }
+    return labUniversalAlvo540Base_(v);
+};
+
+// ------------------------------------------------------------
+// 5) Entrada livre: é automática; não existe "aprovação do mestre"
+// ------------------------------------------------------------
+function labCharPertenceAoUid540_(c,uid){
+    if(!c)return false;
+    const donos=[
+        c.donoUid,c.dono,c.uid,c.userUid,c.usuarioUid,c.ownerUid,c.ownerId,c.criadoPor
+    ].filter(v=>v!==undefined&&v!==null&&String(v)!=='').map(String);
+    // Se o documento não registra proprietário, a lista local do próprio
+    // jogador já foi a fonte da solicitação; não bloqueia a entrada livre.
+    return !donos.length||donos.includes(String(uid||''));
+}
+
+const labEntradaLivreAtualizar540Base_=labEntradaLivreAtualizar530_;
+labEntradaLivreAtualizar530_=function(){
+    labEntradaLivreAtualizar540Base_();
+    const d=document.getElementById('labPlayerJoin530');
+    if(!d||batalhaEhMestre_()||!labEstado_.entradaLivreLab)return;
+
+    // userCharacters já é a coleção acessível ao usuário atual.
+    const chars=(userCharacters||[]).filter(c=>String(c.tipo||'pc').toLowerCase()==='pc');
+    const emMesa=new Set((labEstado_.tokens||[]).map(t=>String(t.origemId||t.id)));
+    const disponiveis=chars.filter(c=>!emMesa.has(String(c.id)));
+    if(!disponiveis.length){
+        d.style.display='flex';
+        d.classList.remove('joining-540');
+        d.innerHTML='<span style="color:#9fc6d8">✅ Seu personagem já está nesta mesa.</span>';
+        return;
+    }
+    let escolhido=String(currentCharId||'');
+    if(!disponiveis.some(c=>String(c.id)===escolhido))escolhido=String(disponiveis[0].id);
+    d.style.display='flex';
+    d.classList.remove('joining-540');
+    d.innerHTML=`<strong style="color:#8ff0a8">🚪 Entrada livre</strong>
+      <select id="labPlayerJoinChar530">${disponiveis.map(c=>`<option value="${escaparHtmlInventario_(c.id)}" ${String(c.id)===escolhido?'selected':''}>${escaparHtmlInventario_(c.nome||'Personagem')}</option>`).join('')}</select>
+      <button class="btn-small btn-select" onclick="labPlayerJoin540_()">Entrar agora</button>`;
+};
+
+window.labPlayerJoin540_=async function(){
+    if(batalhaEhMestre_()||!labEstado_.entradaLivreLab)return;
+    const id=String(document.getElementById('labPlayerJoinChar530')?.value||currentCharId||'');
+    const c=(userCharacters||[]).find(x=>String(x.id)===id);
+    if(!c){notificar_('Escolha um personagem seu.','aviso');return;}
+    if((labEstado_.tokens||[]).some(t=>String(t.origemId||t.id)===id))return;
+
+    const d=document.getElementById('labPlayerJoin530');
+    if(d){
+        d.classList.add('joining-540');
+        d.innerHTML='<span style="color:#8ff0a8">🚪 Entrando na Mesa…</span>';
+    }
+    try{
+        // Continua usando a fila segura do Firestore, porém o mestre não
+        // aprova nada: o cliente do mestre processa automaticamente.
+        await setDoc(doc(db,'combatesAtivos','mapaMesa','acoes',id),{
+            personagemId:id,
+            donoUid:String(currentUserUid||currentUser?.uid||''),
+            tipo:'entrar_mapa',
+            payload:{personagemId:id,entradaLivre:true},
+            nonce:`${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+            status:'novo',criadoEm:new Date().toISOString()
+        },{merge:false});
+        // Sem mensagem de "pedido ao mestre": entrada livre não é pedido.
+    }catch(e){
+        console.error(e);
+        notificar_('Não foi possível entrar na Mesa.','erro',4500);
+        labEntradaLivreAtualizar530_();
+    }
+};
+window.labPlayerJoin530_=window.labPlayerJoin540_;
+
+const labProcessarComandoJogador540Base_=labProcessarComandoJogador_;
+labProcessarComandoJogador_=async function(personagemId,acao){
+    if(acao?.tipo!=='entrar_mapa')return labProcessarComandoJogador540Base_(personagemId,acao);
+
+    const chave=`join540:${personagemId}:${acao?.nonce||''}`;
+    if(labMapaComandosEmProcessamento_.has(chave))return;
+    labMapaComandosEmProcessamento_.add(chave);
+    try{
+        if(!batalhaEhMestre_()||!labEstado_.entradaLivreLab)return;
+        const id=String(personagemId||acao?.payload?.personagemId||'');
+        if((labEstado_.tokens||[]).some(t=>String(t.origemId||t.id)===id))return;
+
+        let c=(userCharacters||[]).find(x=>String(x.id)===id);
+        if(!c){
+            try{
+                const ds=await getDoc(doc(db,'personagens',id));
+                if(ds.exists())c={id,...ds.data()};
+            }catch(_){}
+        }
+        if(!c||!labCharPertenceAoUid540_(c,acao?.donoUid))return;
+
+        const atorAntes=labTokenAtual_()?.id||'';
+        const t=labTokenDeCharDireto_(c,id,(labEstado_.tokens||[]).length);
+        // Garante que o token público saiba quem o controla.
+        if(!t.donoUid)t.donoUid=String(acao?.donoUid||'');
+        if(labEstado_.fase==='combate')t.iniciativaLab=1+Math.floor(Math.random()*10)+Number(t.iniciativaBonus||0);
+        labEstado_.tokens.push(t);
+
+        if(labEstado_.fase==='combate'){
+            const ids=(labEstado_.ordemIniciativa||[]).filter(x=>(labEstado_.tokens||[]).some(t0=>String(t0.id)===String(x)));
+            ids.push(String(t.id));
+            ids.sort((ia,ib)=>{
+                const a=labTokenPorId_(ia),b=labTokenPorId_(ib);
+                return Number(b?.iniciativaLab||0)-Number(a?.iniciativaLab||0)
+                    ||String(a?.nome||'').localeCompare(String(b?.nome||''));
+            });
+            labEstado_.ordemIniciativa=ids;
+            const ix=ids.findIndex(x=>String(x)===String(atorAntes));
+            if(ix>=0)labEstado_.turnoIndex=ix;
+        }
+
+        // Sem pop-up/pedido para o mestre. Só registra no histórico técnico.
+        labEstado_.logLab=Array.isArray(labEstado_.logLab)?labEstado_.logLab:[];
+        labEstado_.logLab.unshift({
+            ts:new Date().toLocaleTimeString(),
+            texto:`${t.nome} entrou pela entrada livre${t.iniciativaLab!=null?` · INI ${t.iniciativaLab}`:''}.`
+        });
+        labSalvarLocal_();
+        labAgendarSyncRemoto_();
+        labRender_();
+    }catch(e){
+        console.error('Entrada livre automática',e);
+    }finally{
+        try{await deleteDoc(doc(db,'combatesAtivos','mapaMesa','acoes',String(personagemId)));}catch(_){}
+        labMapaComandosEmProcessamento_.delete(chave);
+    }
+};
+
+// ------------------------------------------------------------
+// 6) O mapa não muda de posição na tela quando painel/log muda
+// ------------------------------------------------------------
+const labRender540Base_=labRender_;
+labRender_=function(){
+    labLimparFloatsAntigos540_();
+
+    const antes=document.getElementById('labMetricMap');
+    const visivel=!!antes && antes.getBoundingClientRect().bottom>0 && antes.getBoundingClientRect().top<window.innerHeight;
+    const topAntes=visivel?antes.getBoundingClientRect().top:null;
+    const viewportAntes=antes?.parentElement;
+    const scrollTopAntes=viewportAntes?.scrollTop||0;
+    const scrollLeftAntes=viewportAntes?.scrollLeft||0;
+
+    const r=labRender540Base_();
+
+    try{
+        labAvisarJogadorQueimando540_();
+        labEntradaLivreAtualizar530_();
+    }catch(e){console.warn('v46.54 pós-render',e);}
+
+    if(visivel){
+        // Duplo frame: roda depois das restaurações de scroll das versões
+        // antigas e depois da atualização de altura dos painéis.
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+            const depois=document.getElementById('labMetricMap');
+            if(!depois)return;
+            const vp=depois.parentElement;
+            if(vp){
+                vp.scrollTop=scrollTopAntes;
+                vp.scrollLeft=scrollLeftAntes;
+            }
+            const topDepois=depois.getBoundingClientRect().top;
+            const delta=topDepois-topAntes;
+            if(Math.abs(delta)>.5)window.scrollBy(0,delta);
+        }));
+    }
+    return r;
+};
+window.labRender_=labRender_;
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -22541,6 +22831,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.53.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.54.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
