@@ -429,7 +429,7 @@
 .lab-fire-overlay-481{position:absolute;left:50%;bottom:2%;transform:translateX(-50%);z-index:80;pointer-events:none;font-size:26px;filter:drop-shadow(0 0 6px #ff7a00);animation:labFirePulse481 .38s ease-in-out infinite}
 
 
-/* ===== V46.50.0 ===== */
+/* ===== V46.50.2 ===== */
 @keyframes labFire490{0%,100%{transform:translate(-50%,0) scale(.92);opacity:.78}50%{transform:translate(-50%,-6px) scale(1.13);opacity:1}}
 .lab-fire-490{position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-size:27px;z-index:90;pointer-events:none;filter:drop-shadow(0 0 8px #ff7400);animation:labFire490 .36s ease-in-out infinite}
 .gm-vector-selected{filter:drop-shadow(0 0 5px #ffd54a)}
@@ -440,7 +440,7 @@
 #labAudioMesaFloat button{margin:0;padding:7px 10px}
 
 
-/* ===== V46.50.0 ===== */
+/* ===== V46.50.2 ===== */
 #gmResizeModal500{position:fixed;inset:0;z-index:2147483400;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px}
 #gmResizeModal500 .card{width:min(620px,94vw);background:#211638;border:1px solid rgba(126,231,255,.35);border-radius:14px;padding:18px;box-shadow:0 16px 50px rgba(0,0,0,.55)}
 #gmResizeModal500 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
@@ -449,6 +449,12 @@
 #labAudioMesaFloat.audio-open-500{min-width:270px;max-width:390px}
 #labAudioMesaFloat input[type="range"]{width:110px;margin:0 4px}
 #labAudioStatus500{font-size:11px;color:#9fc6d8;margin-top:4px}
+
+
+/* ===== V46.50.2 ===== */
+#gmVetSelectToggle501{display:inline-flex;align-items:center;gap:6px;margin:0;padding:7px 10px;border-radius:7px;background:rgba(255,255,255,.08);cursor:pointer}
+#gmVetSelectToggle501 input{width:18px;height:18px;margin:0}
+.gm-fixed-badge-501{position:absolute;right:-7px;bottom:-7px;z-index:95;font-size:16px;filter:drop-shadow(0 1px 3px #000);pointer-events:none}
 
 </style>
 
@@ -1304,6 +1310,7 @@
                             <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaInflamavel" type="checkbox"> Inflamável</label>
                             <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaBloqueiaMov" type="checkbox" checked> Bloqueia movimento</label>
                             <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaBloqueiaVisao" type="checkbox"> Bloqueia visão</label>
+<label style="display:flex;align-items:center;gap:6px;"><input id="objMapaFixo" type="checkbox"> Fixo ao mapa</label>
                           </div>
                           <div style="display:grid;grid-template-columns:minmax(220px,1fr) minmax(220px,1fr) 120px;gap:10px;align-items:end;">
                             <label>Imagem por URL<input id="objMapaImagemUrl" type="url" placeholder="https://..." oninput="objMapaPreviewUrl_(this.value)"></label>
@@ -18066,7 +18073,7 @@ labRender_=function(){
         labRenderActionPanel_();
         labPsiRenderModalMestre_();
         labRenderPsiVisuais_();
-    }catch(e){console.warn('v46.50.0',e);}
+    }catch(e){console.warn('v46.50.2',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19110,7 +19117,7 @@ labRender_=function(){
         if(fx?.tipo==='laser' && Date.now()-Number(fx.ts||0)<5000){
             labLaserAgendarBodyV3_(fx);
         }
-    }catch(e){console.warn('laser v46.50.0',e);}
+    }catch(e){console.warn('laser v46.50.2',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -19366,7 +19373,7 @@ labRenderActionPanel_=function(){
     const primeiro=[
       ...comb.map(p=>({v:batalhaTokenPericia_(p),n:`${getNome(p)} (${labValorPericiaAtaque_(c,p,null,null)}%)`})),
       {v:'__outras__',n:'🎲 Outras Perícias'},
-      ...(temPsiquismoInvestido_(c)?[{v:'__psi__',n:`🔮 Psiquismo (${labPsiRestantes_(t)}/${labPsiMax_(t)} PP)`}]:[])
+      ...(temPsiquismoInvestido_(c)?[{v:'__psi__',n:`🔮 Psiquismo (${Math.max(0,...poderes.map(p=>labPsiValor_(t,p)))}%) · ${labPsiRestantes_(t)}/${labPsiMax_(t)} PP`}]:[])
     ];
     const primeiroValor=modo==='outras'?'__outras__':modo==='psi'?'__psi__':t.periciaLab;
 
@@ -19395,6 +19402,7 @@ labRenderActionPanel_=function(){
         const alvo=aa.find(x=>String(x.id)===String(alvoValor)),item=labItemSelecionado_(t);
         descricao=getDescricao(per);
         if(item?.descricao)descricao=[descricao,getDescricao(item)].filter(Boolean).join(' · ');
+        if(item?.dano)descricao=[descricao,`🎲 Dano ${item.dano}${Number(item?.penetracao||0)?` · Pen. ${Number(item.penetracao)}`:''}`].filter(Boolean).join(' · ');
         if(alvo&&item){const d=labDistanciaEntre_(t,alvo),a=labAlcanceAtaque_(t,item);distTxt=`Distância: ${d.toFixed(2)} m · alcance ${a.toFixed(1)} m`;}
         campo4=`<button class="btn-small ${t.sortePreparadaLab?'btn-select':''}" onclick="labPrepararSorte_()" ${labSorteAtualToken_(t)<=0||t.sortePreparadaLab?'disabled':''} style="width:100%;height:48px;margin:0;white-space:nowrap;">${t.sortePreparadaLab?'🍀 Preparada':`🍀 Sorte ${labSorteAtualToken_(t)}/${labSorteMaxToken_(t)}`}</button>`;
         final=`<button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!labItemSelecionado_(t)||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;margin:0;">🎲 Atacar (1 AÇ)</button>`;
@@ -19964,7 +19972,7 @@ window.labEncerrarOportunidade_=function(){
 
 
 // ============================================================
-// V46.50.0 — lâminas de energia, alcance melee, som/FX e fogo
+// V46.50.2 — lâminas de energia, alcance melee, som/FX e fogo
 // ============================================================
 
 // Reconhecimento explícito: "Espada de Força" é uma lâmina de energia,
@@ -20166,7 +20174,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.50.0
+// V46.50.2
 // Alvos mortos, Restaurar total, fogo, Oficina vetorial/editável,
 // carregar mapas na Oficina e música compartilhada.
 // ============================================================
@@ -20808,7 +20816,7 @@ try{labAudioAtivado490_=localStorage.getItem('mesa_estelar_audio_ativado_v1')===
 
 
 // ============================================================
-// V46.50.0 — redimensionamento seguro da Oficina,
+// V46.50.2 — redimensionamento seguro da Oficina,
 // YouTube via IFrame API, áudio compacto e formas -> objeto.
 // ============================================================
 
@@ -21152,6 +21160,421 @@ labRender_=function(){
 };
 window.labRender_=labRender_;
 
+
+
+// ============================================================
+// V46.50.2 — Oficina híbrida, composição->objeto,
+// ordenação de perícias, objeto fixo e fogo sincronizado.
+// ============================================================
+
+// ------------------------------------------------------------
+// 1) Perícias ordenadas pelo valor real e melhor opção padrão
+// ------------------------------------------------------------
+const labPericiasAtaque501Base_=labPericiasAtaque_;
+labPericiasAtaque_=function(t){
+    const c=labCharToken_(t);
+    return (labPericiasAtaque501Base_(t)||[]).slice().sort((a,b)=>
+        Number(labValorPericiaAtaque_(c,b,null,null)||0)-Number(labValorPericiaAtaque_(c,a,null,null)||0)
+        || String(getNome(a)||'').localeCompare(String(getNome(b)||''),'pt-BR')
+    );
+};
+
+const labUniversalPericiasGerais501Base_=labUniversalPericiasGerais_;
+labUniversalPericiasGerais_=function(t){
+    return (labUniversalPericiasGerais501Base_(t)||[]).slice().sort((a,b)=>
+        Number(labValorTeste_(t,b)||0)-Number(labValorTeste_(t,a)||0)
+        || String(getNome(a)||'').localeCompare(String(getNome(b)||''),'pt-BR')
+    );
+};
+
+function labPsiMelhorValor501_(t){
+    const ps=labPsiPoderes_(t)||[];
+    return ps.length?Math.max(...ps.map(p=>Number(labPsiValor_(t,p)||0))):0;
+}
+function labAutoSelecionarMelhor501_(t){
+    if(!t||labEstado_.fase!=='combate')return;
+    const rodada=Number(labEstado_.rodada||0);
+    if(Number(t._manualPericiaRodada501)===rodada)return;
+    if(Number(t._autoPericiaRodada501)===rodada)return;
+
+    const comb=labPericiasAtaque_(t),c=labCharToken_(t);
+    const melhorComb=comb[0]||null;
+    const valorComb=melhorComb?Number(labValorPericiaAtaque_(c,melhorComb,null,null)||0):-1;
+    const valorPsi=temPsiquismoInvestido_(c)?labPsiMelhorValor501_(t):-1;
+
+    if(valorPsi>valorComb){
+        t.universalModoLab='psi';
+        const poderes=(labPsiPoderes_(t)||[]).slice().sort((a,b)=>labPsiValor_(t,b)-labPsiValor_(t,a));
+        if(poderes.length)t.universalPsiPoderIdLab=poderes[0].id;
+    }else if(melhorComb){
+        t.universalModoLab='combate';
+        t.periciaLab=batalhaTokenPericia_(melhorComb);
+        t.equipamentoLab='';
+        labGarantirPrefsAtaque_(t);
+    }
+    t._autoPericiaRodada501=rodada;
+}
+const labUniversalGarantir501Base_=labUniversalGarantir_;
+labUniversalGarantir_=function(t){
+    labAutoSelecionarMelhor501_(t);
+    labUniversalGarantir501Base_(t);
+    if(t?.universalModoLab==='outras'){
+        const ps=labUniversalPericiasGerais_(t);
+        if(!ps.some(p=>String(p.id)===String(t.universalPericiaIdLab)))t.universalPericiaIdLab=ps[0]?.id||'';
+    }
+};
+const labUniversalPrimeiro501Base_=window.labUniversalPrimeiro_;
+window.labUniversalPrimeiro_=function(v){
+    const t=labTokenAtual_();
+    if(t)t._manualPericiaRodada501=Number(labEstado_.rodada||0);
+    return labUniversalPrimeiro501Base_(v);
+};
+
+// ------------------------------------------------------------
+// 2) Inflamabilidade consistente + objeto fixo ao mapa
+// ------------------------------------------------------------
+const preencherEditorObjetoMapa501Base_=preencherEditorObjetoMapa_;
+preencherEditorObjetoMapa_=function(o){
+    preencherEditorObjetoMapa501Base_(o);
+    const infl=document.getElementById('objMapaInflamabilidade');
+    const cb=document.getElementById('objMapaInflamavel');
+    const fix=document.getElementById('objMapaFixo');
+    let grau=Number(o?.inflamabilidade);
+    if(!Number.isFinite(grau))grau=o?.inflamavel?3:0;
+    grau=Math.max(0,Math.min(5,Math.trunc(grau)));
+    if(infl)infl.value=grau;
+    if(cb)cb.checked=grau>0 || !!o?.inflamavel;
+    if(fix)fix.checked=!!o?.fixoAoMapa;
+};
+
+window.salvarObjetoMapaEditor_=async function(){
+    garantirObjetosMapaPadrao_();
+    const editId=String(document.getElementById('objMapaEditId')?.value||'');
+    const nome=String(document.getElementById('objMapaNome')?.value||'').trim();
+    if(!nome){notificar_('Dê um nome ao objeto.','aviso');return;}
+
+    const lista=JSON.parse(JSON.stringify(objetosMapaDB||[]));
+    let o=editId?lista.find(x=>String(x.id)===editId):null;
+    if(!o){
+        let id=labMapaSlug_(nome)||`objeto_${Date.now()}`,b=id,n=2;
+        while(lista.some(x=>String(x.id)===id))id=`${b}_${n++}`;
+        o={id};lista.push(o);
+    }
+
+    const prev=document.getElementById('objMapaImagemPreview');
+    const img=String(prev?.dataset?.imagem||prev?.src||'').trim()||objetoSvgData_('caixa');
+    const cbInfl=!!document.getElementById('objMapaInflamavel')?.checked;
+    let infl=Math.max(0,Math.min(5,Math.trunc(Number(document.getElementById('objMapaInflamabilidade')?.value)||0)));
+    // Marcar "Inflamável" sem escolher grau dá um padrão útil em vez de salvar 0.
+    if(cbInfl&&infl===0)infl=3;
+    if(!cbInfl)infl=0;
+
+    Object.assign(o,{
+        nome,imagem:img,tipoVisual:o.tipoVisual||'personalizado',
+        larguraM:objetoNumero_(document.getElementById('objMapaLargura')?.value,1,.1),
+        alturaM:objetoNumero_(document.getElementById('objMapaAltura')?.value,1,.1),
+        pvMax:objetoNumero_(document.getElementById('objMapaPV')?.value,10,0),
+        dureza:objetoNumero_(document.getElementById('objMapaDureza')?.value,2,0),
+        pesoKg:objetoNumero_(document.getElementById('objMapaPesoKg')?.value,10,.1),
+        destrutivel:!!document.getElementById('objMapaDestrutivel')?.checked,
+        inflamavel:infl>0,inflamabilidade:infl,
+        bloqueiaMovimento:!!document.getElementById('objMapaBloqueiaMov')?.checked,
+        bloqueiaVisao:!!document.getElementById('objMapaBloqueiaVisao')?.checked,
+        fixoAoMapa:!!document.getElementById('objMapaFixo')?.checked
+    });
+
+    const botao=document.querySelector('#editorObjetoMapaBanco .btn-save'),txt=botao?.innerHTML||'💾 Salvar objeto';
+    if(botao){botao.disabled=true;botao.innerHTML='⏳ Salvando...';}
+    try{
+        await setDoc(doc(db,'configuracoes',objetoMapaDocId_(o.id)),JSON.parse(JSON.stringify(o)),{merge:false});
+        await setDoc(doc(db,'configuracoes','objetosMapa'),{formato:'docs-v1',ids:lista.map(x=>x.id),atualizadoEm:new Date().toISOString()},{merge:false});
+        objetosMapaDB=lista;renderizarBancoObjetosMapa_();fecharEditorObjetoMapa_();
+        notificar_(`Objeto “${nome}” salvo${infl?` · inflamabilidade ${infl}/5`:''}${o.fixoAoMapa?' · fixo ao mapa':''}.`,'sucesso',3200);
+    }catch(e){
+        console.error(e);notificar_(`Não foi possível salvar “${nome}”. ${e?.message||''}`,'erro',6500);
+    }finally{if(botao){botao.disabled=false;botao.innerHTML=txt;}}
+};
+
+function labObjetoFixo501_(o){
+    const m=labObjetoModelo_(o);
+    return !!(o?.fixoAoMapa||m?.fixoAoMapa);
+}
+
+// Força Bruta / ações físicas não deslocam estruturas fixas.
+const labObjetoAcaoExecutar501Base_=labObjetoAcaoExecutar_;
+labObjetoAcaoExecutar_=function(ator,objeto,tipo){
+    if(String(tipo)==='mover'&&labObjetoFixo501_(objeto)){
+        notificar_(`${objeto.nome||'Este objeto'} é uma estrutura fixa e não pode ser deslocado por Força Bruta.`,'aviso',4200);
+        return;
+    }
+    return labObjetoAcaoExecutar501Base_(ator,objeto,tipo);
+};
+
+// Mover Objeto Psi nem oferece estruturas fixas como alvo.
+const labPsiAlvos501Base_=labPsiAlvos_;
+labPsiAlvos_=function(t,p){
+    const out=labPsiAlvos501Base_(t,p)||[];
+    if(p?.id==='mover_objeto')return out.filter(x=>!labEhAlvoObjeto_(x)||!labObjetoFixo501_(x));
+    return out;
+};
+
+// Badge discreto para estrutura fixa.
+const labObjetoHtml501Base_=labObjetoHtml_;
+labObjetoHtml_=function(o,ppm){
+    let h=labObjetoHtml501Base_(o,ppm);
+    if(labObjetoFixo501_(o)&&!h.includes('gm-fixed-badge-501')){
+        h=h.replace(/<\/div>\s*$/i,'<span class="gm-fixed-badge-501" title="Estrutura fixa">⚓</span></div>');
+    }
+    return h;
+};
+window.labObjetoHtml_=labObjetoHtml_;
+
+// ------------------------------------------------------------
+// 3) Fogo compartilhado explicitamente com todos os clientes
+// ------------------------------------------------------------
+const labEstadoPublico501Base_=labEstadoPublico_;
+labEstadoPublico_=function(){
+    const clone=labEstadoPublico501Base_();
+    clone.efeitosObjetosLab={};
+    for(const o of (labEstado_.objetosLab||[])){
+        clone.efeitosObjetosLab[String(o.id)]={
+            pegandoFogoLab:!!o.pegandoFogoLab,
+            despedacadoLab:!!o.despedacadoLab,
+            explodindoLab:!!o.explodindoLab,
+            fogoUltimaRodadaLab:Number(o.fogoUltimaRodadaLab??-1)
+        };
+    }
+    return clone;
+};
+function labAplicarEfeitosObjetosPublicos501_(){
+    const fx=labEstado_.efeitosObjetosLab||{};
+    for(const o of (labEstado_.objetosLab||[])){
+        const e=fx[String(o.id)];
+        if(!e)continue;
+        o.pegandoFogoLab=!!e.pegandoFogoLab;
+        o.despedacadoLab=!!e.despedacadoLab;
+        o.explodindoLab=!!e.explodindoLab;
+        o.fogoUltimaRodadaLab=Number(e.fogoUltimaRodadaLab??o.fogoUltimaRodadaLab??-1);
+    }
+}
+const labAplicarEfeitoObjetoEnergia501Base_=labAplicarEfeitoObjetoEnergia481_;
+labAplicarEfeitoObjetoEnergia481_=function(alvo,item,acertou,grau){
+    const r=labAplicarEfeitoObjetoEnergia501Base_(alvo,item,acertou,grau);
+    if(labEhAlvoObjeto_(alvo)){
+        labEstado_.efeitosObjetosLab=labEstado_.efeitosObjetosLab||{};
+        labEstado_.efeitosObjetosLab[String(alvo.id)]={
+            pegandoFogoLab:!!alvo.pegandoFogoLab,
+            despedacadoLab:!!alvo.despedacadoLab,
+            explodindoLab:!!alvo.explodindoLab,
+            fogoUltimaRodadaLab:Number(alvo.fogoUltimaRodadaLab??-1)
+        };
+        labSalvarLocal_();
+    }
+    return r;
+};
+
+// ------------------------------------------------------------
+// 4) Oficina: "Selecionar formas" é um modo, não prisão perpétua
+// ------------------------------------------------------------
+let gmVetSelectAtivo501_=false;
+
+function gmVet501AtualizarCamadas_(){
+    const svg=document.getElementById('gmOficinaVectorLayer');
+    const cv=document.getElementById('gmOficinaV2Canvas');
+    const criando=gmVet490_.tool!=='select';
+    if(svg)svg.style.pointerEvents=(gmVetSelectAtivo501_||criando)?'auto':'none';
+    // Desenho livre continua por cima das formas quando o modo selecionar está desligado.
+    if(cv){
+        cv.style.zIndex='9';
+        if(gmOficinaV2Cfg_.ativo&&!gmVetSelectAtivo501_)cv.style.pointerEvents='auto';
+    }
+}
+window.gmVet501ToggleSelect_=function(checked){
+    gmVetSelectAtivo501_=!!checked;
+    gmVet490_.tool='select';
+    gmVet490_.selectedId='';
+    gmVet490Render_();
+    gmVet501AtualizarCamadas_();
+};
+const gmVet490Tool501Base_=window.gmVet490Tool_;
+window.gmVet490Tool_=function(tool){
+    if(String(tool)!=='select')gmVetSelectAtivo501_=false;
+    const r=gmVet490Tool501Base_(tool);
+    gmVet501AtualizarCamadas_();
+    return r;
+};
+const gmVet490Render501Base_=gmVet490Render_;
+gmVet490Render_=function(){
+    const r=gmVet490Render501Base_();
+    gmVet501AtualizarCamadas_();
+    return r;
+};
+
+function gmVet501TrocarBotaoSelecao_(){
+    const tools=document.getElementById('gmVet490Tools');if(!tools)return;
+    const btn=[...tools.querySelectorAll('button')].find(b=>(b.getAttribute('onclick')||'').includes("gmVet490Tool_('select')"));
+    if(btn){
+        const lab=document.createElement('label');lab.id='gmVetSelectToggle501';
+        lab.innerHTML=`<input type="checkbox" ${gmVetSelectAtivo501_?'checked':''} onchange="gmVet501ToggleSelect_(this.checked)"> 🖱 Selecionar formas`;
+        btn.replaceWith(lab);
+    }
+}
+const gmVet490InstalarUI501Base_=gmVet490InstalarUI_;
+gmVet490InstalarUI_=function(){
+    gmVet490InstalarUI501Base_();
+    gmVet501TrocarBotaoSelecao_();
+    gmVet501AtualizarCamadas_();
+    const row=document.getElementById('gmVet490Tools')?.querySelector('div');
+    if(row&&!document.getElementById('gmVet501CompBtn')){
+        row.insertAdjacentHTML('beforeend','<button id="gmVet501CompBtn" class="btn-small btn-select" onclick="gmVet501SalvarComposicao_()">🎨 Salvar composição como objeto</button>');
+    }
+};
+
+// ------------------------------------------------------------
+// 5) Salvar DESENHOS + FORMAS como objeto transparente
+// ------------------------------------------------------------
+function gmVet501BoundsComposicao_(){
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    const add=(x,y)=>{x=Number(x);y=Number(y);if(!Number.isFinite(x)||!Number.isFinite(y))return;minX=Math.min(minX,x);minY=Math.min(minY,y);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);};
+    for(const st of (gmOficinaEstado_.desenhos||[]))for(const p of (st.pts||[]))add(p.x,p.y);
+    for(const f of (gmOficinaEstado_.formas||[])){
+        if(f.tipo==='linha'){add(f.x,f.y);add(f.x2,f.y2);}
+        else{add(f.x,f.y);add(Number(f.x||0)+Number(f.w||0),Number(f.y||0)+Number(f.h||0));}
+    }
+    if(!Number.isFinite(minX))return null;
+    return {minX,minY,maxX,maxY,w:Math.max(.1,maxX-minX),h:Math.max(.1,maxY-minY)};
+}
+async function gmVet501RasterizarComposicao_(){
+    const b=gmVet501BoundsComposicao_();if(!b)return null;
+    const ppm=gmVet490Ppm_(),pad=10;
+    const source=document.getElementById('gmOficinaV2Canvas');
+    const w=Math.max(24,Math.ceil(b.w*ppm)+pad*2),h=Math.max(24,Math.ceil(b.h*ppm)+pad*2);
+    const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');
+    ctx.clearRect(0,0,w,h);
+    if(source){
+        const sx=Math.max(0,b.minX*ppm-pad),sy=Math.max(0,b.minY*ppm-pad);
+        const sw=Math.min(source.width-sx,w),sh=Math.min(source.height-sy,h);
+        if(sw>0&&sh>0)ctx.drawImage(source,sx,sy,sw,sh,0,0,sw,sh);
+    }
+    const shapes=(gmOficinaEstado_.formas||[]).map(f=>gmVet500SvgShape_(f,ppm,{...b,minX:b.minX-pad/ppm,minY:b.minY-pad/ppm})).join('');
+    if(shapes){
+        const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${shapes}</svg>`;
+        const blob=new Blob([svg],{type:'image/svg+xml'}),url=URL.createObjectURL(blob);
+        try{
+            const img=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=url;});
+            ctx.drawImage(img,0,0);
+        }finally{URL.revokeObjectURL(url);}
+    }
+    let data=c.toDataURL('image/webp',.88);
+    if(data.length>105000)data=c.toDataURL('image/webp',.68);
+    return {data,wM:b.w,hM:b.h};
+}
+window.gmVet501SalvarComposicao_=async function(){
+    const rr=await gmVet501RasterizarComposicao_();
+    if(!rr){notificar_('Não há desenhos ou formas para transformar em objeto.','aviso');return;}
+    const nome=prompt('Nome do objeto criado a partir da composição:','Estrutura futurista');
+    if(!nome||!String(nome).trim())return;
+    const fixo=confirm('Este objeto deve ser FIXO AO MAPA?\n\nOK = estrutura fixa (bar, parede, balcão, edifício)\nCancelar = objeto móvel.');
+    try{
+        garantirObjetosMapaPadrao_();
+        const lista=JSON.parse(JSON.stringify(objetosMapaDB||[]));
+        let id=labMapaSlug_(nome)||`objeto_${Date.now()}`,base=id,n=2;
+        while(lista.some(x=>String(x.id)===id))id=`${base}_${n++}`;
+        const o={id,nome:String(nome).trim(),imagem:rr.data,tipoVisual:'personalizado',
+          larguraM:Math.max(.1,rr.wM),alturaM:Math.max(.1,rr.hM),pvMax:fixo?30:10,dureza:fixo?5:2,pesoKg:fixo?500:10,
+          destrutivel:true,inflamavel:false,inflamabilidade:0,bloqueiaMovimento:true,bloqueiaVisao:false,
+          fixoAoMapa:fixo,rascunho:true};
+        await setDoc(doc(db,'configuracoes',objetoMapaDocId_(id)),o,{merge:false});
+        lista.push(o);
+        await setDoc(doc(db,'configuracoes','objetosMapa'),{formato:'docs-v1',ids:lista.map(x=>x.id),atualizadoEm:new Date().toISOString()},{merge:false});
+        objetosMapaDB=lista;renderizarBancoObjetosMapa_();gmOficinaV2PopularObjetos_?.();
+        notificar_(`🎨 “${o.nome}” salvo como objeto${fixo?' fixo':''}, incluindo pintura e formas.`,'sucesso',4200);
+    }catch(e){console.error(e);notificar_(`Não consegui criar o objeto: ${e?.message||e}`,'erro',6000);}
+};
+
+// ------------------------------------------------------------
+// 6) Render: aplicar fogo remoto ANTES de montar os objetos
+// ------------------------------------------------------------
+const labRender501Base_=labRender_;
+labRender_=function(){
+    try{labAplicarEfeitosObjetosPublicos501_();}catch(_){}
+    const r=labRender501Base_();
+    try{
+        gmVet501AtualizarCamadas_();
+        gmVet501TrocarBotaoSelecao_();
+    }catch(e){console.warn('v46.50.2',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
+
+
+// ============================================================
+// V46.50.2 — áudio recolhido também quando desativado
+// ============================================================
+let labAudioAvisoExpandido502_=false;
+
+window.labAudioAbrirDesativado502_=function(){
+    labAudioAvisoExpandido502_=true;
+    labAudioFloat490_();
+};
+window.labAudioFecharDesativado502_=function(){
+    labAudioAvisoExpandido502_=false;
+    labAudioFloat490_();
+};
+
+const labAudioAtivar502Base_=window.labAudioAtivar490_;
+window.labAudioAtivar490_=function(){
+    labAudioAvisoExpandido502_=false;
+    return labAudioAtivar502Base_();
+};
+const labAudioDesativar502Base_=window.labAudioDesativar490_;
+window.labAudioDesativar490_=function(){
+    labAudioAvisoExpandido502_=false;
+    const r=labAudioDesativar502Base_();
+    labAudioFloat490_();
+    return r;
+};
+
+labAudioFloat490_=function(){
+    let d=document.getElementById('labAudioMesaFloat');
+    if(!d){d=document.createElement('div');d.id='labAudioMesaFloat';document.body.appendChild(d);}
+    const st=labEstado_.audioMesaLab;
+
+    // Desativado também fica recolhido para não ocupar a tela.
+    if(!labAudioAtivado490_){
+        if(!labAudioAvisoExpandido502_){
+            d.className='audio-mini-500';
+            d.title='Áudio da Mesa desativado';
+            d.innerHTML='<span onclick="labAudioAbrirDesativado502_()" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;opacity:.65">🔇</span>';
+        }else{
+            d.className='audio-open-500';
+            d.innerHTML=`<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+              <button class="btn-small" onclick="labAudioFecharDesativado502_()">◀</button>
+              <button class="btn-small btn-select" onclick="labAudioAtivar490_()">🔊 Ativar áudio da mesa</button>
+              ${st?.nome?`<span style="color:#9fc6d8">${escaparHtmlInventario_(st.nome)}</span>`:''}
+            </div>`;
+        }
+        return;
+    }
+
+    if(!labAudioExpandido500_){
+        d.className='audio-mini-500';
+        d.title=st?.nome?`Áudio: ${st.nome}`:'Áudio da Mesa';
+        d.innerHTML='<span onclick="labAudioTogglePainel500_()" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">🔊</span>';
+        return;
+    }
+
+    d.className='audio-open-500';
+    d.innerHTML=`<div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+      <button class="btn-small" onclick="labAudioTogglePainel500_()">◀</button>
+      <strong style="flex:1">${escaparHtmlInventario_(st?.nome||'Áudio da Mesa')}</strong>
+      <button class="btn-small" onclick="labAudioRetomar500_()">▶ Retomar</button>
+      <button class="btn-small" onclick="labAudioDesativar490_()">🔇</button>
+      <span>Vol.</span><input type="range" min="0" max="100" value="${labAudioVolume500_}" oninput="labAudioVolume500_(this.value)">
+    </div><div id="labAudioStatus500"></div>`;
+};
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -21167,6 +21590,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.0: sync leve de objetos, alvos destrutíveis, restauração total, lote visual itens/NPCs/criaturas e remoção de fundo -->
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
-<!-- Mesa Estelar v46.50.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
+<!-- Mesa Estelar v46.50.2: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 </body>
 </html>
