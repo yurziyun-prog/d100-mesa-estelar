@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.62.0 ===== */
+/* ===== V46.63.1 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.62.0 ===== */
+/* ===== V46.63.1 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22017,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.62.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.63.1 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22176,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.62.0
+// V46.63.1
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22533,7 +22533,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.62.0
+// V46.63.1
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22818,7 +22818,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.62.0 — Oficina: estilos de traço exclusivos + prévia real
+// V46.63.1 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22894,7 +22894,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.62.0
+// V46.63.1
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22979,7 +22979,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.62.0 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.63.1 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23120,7 +23120,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.62.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.63.1 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23362,7 +23362,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.62.0 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.63.1 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23521,7 +23521,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.62.0 — Oficina simplificada
+// V46.63.1 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23866,7 +23866,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.62.0 — Oficina: objetos realmente opacos + painel de camadas
+// V46.63.1 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24039,7 +24039,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.62.0 — Oficina: composição real por ordem de adição
+// V46.63.1 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24262,7 +24262,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.62.0',e);}
+    }catch(e){console.warn('Oficina v46.63.1',e);}
     return r;
 };
 
@@ -24272,7 +24272,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.62.0 — REFORMA DA OFICINA
+// V46.63.1 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25025,8 +25025,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.62.0 — reconstrução limpa da barra da Oficina
-// Base: 46.62.0 funcional. Não usa varredura agressiva do DOM.
+// V46.63.1 — reconstrução limpa da barra da Oficina
+// Base: 46.63.1 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25255,8 +25255,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.62.0 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.62.0
+// V46.63.1 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.63.1
 // ============================================================
 
 const gm580_ = {
@@ -25923,14 +25923,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.62.0 — OFICINA REESTRUTURADA
+// V46.63.1 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.62.0'
+  version:'46.63.1'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26154,7 +26154,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.62.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.63.1 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26246,7 +26246,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.62.0 — Oficina realmente única
+// V46.63.1 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26302,7 +26302,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.62.0 — edição persistente de formas/objetos + histórico completo
+// V46.63.1 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26704,6 +26704,559 @@ setTimeout(()=>{
   setTimeout(()=>{try{gm620Install_();}catch(_){ }},1000);
 })();
 
+
+
+// ============================================================
+// V46.63.1 — estados separados, undo/redo real, sombra persistente,
+// fixar formas, ferramenta persistente e feedback de carregamento
+// ============================================================
+(function(){
+  const gm630_ = {
+    tool:'select',
+    shape:'',
+    line:'',
+    objectId:'',
+    suppressHistory:false,
+    loadingStartedAt:0
+  };
+
+  function gm630Snapshot_(){
+    return JSON.parse(JSON.stringify({
+      desenhos:gmOficinaEstado_.desenhos||[],
+      objetos:gmOficinaEstado_.objetos||[],
+      formas:gmOficinaEstado_.formas||[],
+      larguraM:gmOficinaEstado_.larguraM,
+      alturaM:gmOficinaEstado_.alturaM,
+      pxPorMetro:gmOficinaEstado_.pxPorMetro,
+      fundo:gmOficinaEstado_.fundo,
+      corGrade:gmOficinaEstado_.corGrade,
+      gradeVisivel:gmOficinaEstado_.gradeVisivel,
+      textura:gmOficinaEstado_.textura
+    }));
+  }
+  function gm630PushHistory_(){
+    if(gm630_.suppressHistory)return;
+    gmOficinaV2Undo_.push(gm630Snapshot_());
+    if(gmOficinaV2Undo_.length>120)gmOficinaV2Undo_.shift();
+    gmOficinaV2Redo_.length=0;
+  }
+  function gm630Restore_(snap){
+    gm630_.suppressHistory=true;
+    try{
+      gmOficinaEstado_.desenhos=snap.desenhos||[];
+      gmOficinaEstado_.objetos=snap.objetos||[];
+      gmOficinaEstado_.formas=snap.formas||[];
+      if(snap.larguraM!=null)gmOficinaEstado_.larguraM=snap.larguraM;
+      if(snap.alturaM!=null)gmOficinaEstado_.alturaM=snap.alturaM;
+      if(snap.pxPorMetro!=null)gmOficinaEstado_.pxPorMetro=snap.pxPorMetro;
+      if(snap.fundo!=null)gmOficinaEstado_.fundo=snap.fundo;
+      if(snap.corGrade!=null)gmOficinaEstado_.corGrade=snap.corGrade;
+      if(snap.gradeVisivel!=null)gmOficinaEstado_.gradeVisivel=snap.gradeVisivel;
+      if(snap.textura!=null)gmOficinaEstado_.textura=snap.textura;
+      gm580_.selection?.clear?.();
+      gm570_.selected={type:'',id:''};
+      gmVet490_.selectedId='';
+      gmOficinaObjSel553_='';
+      gm570_.strokeCache?.clear?.();
+      gmOficinaPersistir_();
+      gmOficinaRender_();
+    } finally {
+      gm630_.suppressHistory=false;
+    }
+  }
+  window.gmOficinaV2Historico_=gm630PushHistory_;
+  window.gmOficinaV2Undo_=function(){
+    if(!gmOficinaV2Undo_.length)return;
+    gmOficinaV2Redo_.push(gm630Snapshot_());
+    gm630Restore_(gmOficinaV2Undo_.pop());
+  };
+  window.gmOficinaV2Redo_=function(){
+    if(!gmOficinaV2Redo_.length)return;
+    gmOficinaV2Undo_.push(gm630Snapshot_());
+    gm630Restore_(gmOficinaV2Redo_.pop());
+  };
+
+  function gm630ApplySelection_(type,id,add=false){
+    const key=gm580Key_(type,id);
+    if(!add)gm580_.selection.clear();
+    if(add && gm580_.selection.has(key))gm580_.selection.delete(key);
+    else gm580_.selection.add(key);
+    const p=gm580Primary_();
+    gm570_.selected=p?{type:p.type,id:String(p.id)}:{type:'',id:''};
+    gmVet490_.selectedId=p?.type==='shape'?String(p.id):'';
+    gmOficinaObjSel553_=p?.type==='object'?String(p.id):'';
+    if(p?.type==='shape'){
+      gm570_.edit=true;
+      gm630LoadStyleFromElement_(p);
+    }
+    gm580Render_();gm580Inspector_();
+  }
+  window.gm580Select_=gm630ApplySelection_;
+  window.gm570Select_=function(type,id){gm630ApplySelection_(type,id,false);};
+
+  function gm630ClearSelection_(){
+    gm580_.selection.clear();
+    gm570_.selected={type:'',id:''};
+    gmVet490_.selectedId='';
+    gmOficinaObjSel553_='';
+    gm580Render_();gm580Inspector_();
+  }
+
+  function gm630LoadStyleFromElement_(it){
+    if(!it)return;
+    const r=it.ref;
+    if(it.type==='shape'){
+      const line=String(r.tipo||'').startsWith('linha');
+      gmOficinaV2Cfg_.cor=line?(r.stroke||gmOficinaV2Cfg_.cor):(r.fill||gmOficinaV2Cfg_.cor);
+      gmOficinaV2Cfg_.opacidade=line?Number(r.strokeOpacity??1):Number(r.fillOpacity??1);
+      gm570_.borderColor=r.stroke||gm570_.borderColor;
+      gm570_.borderWidth=Math.max(0,Number(r.strokeWidth??0));
+      gm570_.borderOpacity=Number(r.strokeOpacity??1);
+    }
+    if(r.sombraOficina)gm580_.shadowPreset=r.sombraOficina;
+    if(r.sombraDirecao)gm580_.shadowDir=r.sombraDirecao;
+    if(r.sombraDist!=null)gm580_.shadowDist=Number(r.sombraDist);
+    gm580Sync_?.();gm580Inspector_?.();
+  }
+
+  function gm630CurrentShadow_(){
+    const p=gm580Primary_();
+    return {
+      preset:p?.ref?.sombraOficina ?? gm580_.shadowPreset ?? 'nenhuma',
+      dir:p?.ref?.sombraDirecao ?? gm580_.shadowDir ?? 'SE',
+      dist:Number(p?.ref?.sombraDist ?? gm580_.shadowDist ?? 4)
+    };
+  }
+
+  window.gm580Shadow_=function(k,v){
+    const sel=gm580Selected_();
+    if(sel.length){
+      gm630PushHistory_();
+      for(const it of sel){
+        if(k==='sombraOficina')it.ref.sombraOficina=v;
+        else if(k==='sombraDirecao')it.ref.sombraDirecao=v;
+        else if(k==='sombraDist')it.ref.sombraDist=Number(v);
+      }
+      gmOficinaPersistir_();gm580Render_();gm580Inspector_();
+    }else{
+      if(k==='sombraOficina')gm580_.shadowPreset=v;
+      else if(k==='sombraDirecao')gm580_.shadowDir=v;
+      else if(k==='sombraDist')gm580_.shadowDist=Number(v);
+    }
+  };
+
+  const inspector630base=gm580Inspector_;
+  gm580Inspector_=function(){
+    const box=document.getElementById('gm580Inspector');if(!box)return;
+    const s=gm580Selected_();
+    if(!s.length){
+      const sh=gm630CurrentShadow_();
+      box.innerHTML=`<div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+        <strong style="color:#8ee7ff">Próximos elementos</strong>
+        <label><small>Sombra</small><select onchange="gm580Shadow_('sombraOficina',this.value)">
+          ${['nenhuma','suave','media','forte'].map(v=>`<option value="${v}" ${sh.preset===v?'selected':''}>${v==='media'?'média':v}</option>`).join('')}
+        </select></label>
+        <label><small>Direção</small><select onchange="gm580Shadow_('sombraDirecao',this.value)">
+          ${['N','NE','E','SE','S','SO','O','NO'].map(v=>`<option ${sh.dir===v?'selected':''}>${v}</option>`).join('')}
+        </select></label>
+        <label><small>Distância</small><input type="number" min="1" max="30" value="${sh.dist}" onchange="gm580Shadow_('sombraDist',this.value)" style="width:70px"></label>
+      </div>`;
+      return;
+    }
+    inspector630base();
+    const p=gm580Primary_();if(!p)return;
+    const locked=!!p.ref.fixada;
+    box.insertAdjacentHTML('beforeend',`
+      <div style="margin-top:7px">
+        <button class="btn-small ${locked?'btn-select':''}" onclick="gm630ToggleLock_()">🔒 ${locked?'Desafixar':'Fixar'} elemento</button>
+      </div>`);
+  };
+
+  window.gm630ToggleLock_=function(){
+    const p=gm580Primary_();if(!p)return;
+    gm630PushHistory_();
+    p.ref.fixada=!p.ref.fixada;
+    gmOficinaPersistir_();gm580Render_();gm580Inspector_();
+  };
+
+  function gm630ShadowProps_(){
+    const sh=gm630CurrentShadow_();
+    return {sombraOficina:sh.preset,sombraDirecao:sh.dir,sombraDist:sh.dist};
+  }
+
+  function gm630MarkTools_(){
+    const tb=document.getElementById('gm580Toolbar');if(!tb)return;
+    [...tb.querySelectorAll('button')].forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      if(oc.includes('gm580Shape_')){
+        const m=oc.match(/gm580Shape_\('([^']+)'\)/);
+        b.classList.toggle('btn-select',!!m&&gm630_.tool==='shape'&&m[1]===gm630_.shape);
+      }
+    });
+    const toolSel=document.getElementById('gm580Tool');
+    if(toolSel&&gm630_.tool==='select')toolSel.value='select';
+    if(toolSel&&gm630_.tool==='draw')toolSel.value=gm580_.mode;
+  }
+
+  const toolBase630=window.gm580Tool_;
+  window.gm580Tool_=function(v){
+    gm630ClearSelection_();
+    gm630_.shape='';gm630_.line='';gm630_.objectId='';
+    if(v==='select'){
+      gm630_.tool='select';gm580_.mode='select';gmOficinaV2Cfg_.ativo=false;
+    }else{
+      gm630_.tool='draw';gm580_.mode=v;toolBase630(v);
+    }
+    gm630MarkTools_();
+  };
+
+  window.gm580Shape_=function(tipo){
+    tipo=String(tipo||'');
+    if(tipo==='arredondado')tipo='retangulo';
+    gm630ClearSelection_();
+    gm630_.tool='shape';gm630_.shape=tipo;gm630_.line='';gm630_.objectId='';
+    gm580_.mode='shape';gmOficinaV2Cfg_.ativo=false;gmVet490_.tool='select';gm570_.edit=true;
+    const cv=document.getElementById('gmOficinaV2Canvas');if(cv)cv.style.pointerEvents='none';
+    gm630MarkTools_();gm580Render_();
+  };
+
+  window.gm580Line_=function(v){
+    if(!v)return;
+    gm630ClearSelection_();
+    gm630_.tool='line';gm630_.line=v;gm630_.shape='';gm630_.objectId='';
+    gm580_.mode='line';gmOficinaV2Cfg_.ativo=false;
+    if(typeof gm570LineTool_==='function')gm570LineTool_(v);else gmVet490Tool_(v);
+  };
+
+  function gm630ShapeAt_(x,y,w=1,h=1){
+    const tipo=gm630_.shape;if(!tipo)return null;
+    const f={
+      id:`vet:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,tipo,
+      x,y,w,h,rot:0,radius:0,
+      stroke:gm570_.borderColor,fill:gmOficinaV2Cfg_.cor,
+      strokeWidth:gm570_.borderWidth,strokeOpacity:gm570_.borderOpacity,
+      fillOpacity:gmOficinaV2Cfg_.opacidade,opacity:1,
+      ordemOficina:gm600NextOrder_(),...gm630ShadowProps_()
+    };
+    gmVet490Formas_().push(f);return f;
+  }
+
+  function gm630PointHitsUnlockedShape_(mx,my){
+    const shapes=[...(gmVet490Formas_()||[])].sort((a,b)=>Number(b.ordemOficina||0)-Number(a.ordemOficina||0));
+    return shapes.find(f=>{
+      if(f.fixada)return false;
+      const b=gm580BBox_({type:'shape',ref:f});
+      return mx>=b.x&&mx<=b.x+b.w&&my>=b.y&&my<=b.y+b.h;
+    })||null;
+  }
+
+  function gm630InstallStageEvents_(){
+    const svg=document.getElementById('gmOficinaVectorLayer');if(!svg||svg.dataset.gm630)return;
+    svg.dataset.gm630='1';
+    svg.addEventListener('pointerdown',ev=>{
+      const r=svg.getBoundingClientRect(),ppm=gmOficinaV2Ppm_();
+      const sx=(ev.clientX-r.left)/ppm,sy=(ev.clientY-r.top)/ppm;
+
+      if(gm630_.tool==='shape'&&gm630_.shape){
+        const hit=gm630PointHitsUnlockedShape_(sx,sy);
+        if(hit){
+          gm630ApplySelection_('shape',hit.id,false);
+          return;
+        }
+        ev.preventDefault();ev.stopPropagation();
+        gm630PushHistory_();
+        let created=null,moved=false;
+        const move=e=>{
+          moved=true;
+          const ex=(e.clientX-r.left)/ppm,ey=(e.clientY-r.top)/ppm;
+          if(!created)created=gm630ShapeAt_(sx,sy,.05,.05);
+          created.x=Math.min(sx,ex);created.y=Math.min(sy,ey);
+          created.w=Math.max(.05,Math.abs(ex-sx));created.h=Math.max(.05,Math.abs(ey-sy));
+          gm580Render_();
+        };
+        const up=()=>{
+          window.removeEventListener('pointermove',move);
+          if(!moved)created=gm630ShapeAt_(Math.max(0,sx-.5),Math.max(0,sy-.5),1,1);
+          if(created){
+            gm580_.selection.clear();gm580_.selection.add(gm580Key_('shape',created.id));
+            gm570_.selected={type:'shape',id:created.id};gmVet490_.selectedId=created.id;gm570_.edit=true;
+          }
+          gmOficinaPersistir_();gm580Render_();
+        };
+        window.addEventListener('pointermove',move,{passive:true});
+        window.addEventListener('pointerup',up,{once:true});
+        return;
+      }
+
+      if(gm630_.tool==='select'&&ev.target===svg)gm630ClearSelection_();
+    },true);
+  }
+
+  window.gm570ShapeDown_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();
+    const f=gmVet490Forma_(id);if(!f)return;
+    gm630ApplySelection_('shape',id,ev.ctrlKey||ev.metaKey);
+    if(f.fixada)return;
+    gm630PushHistory_();
+    const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY;
+    const ox=Number(f.x||0),oy=Number(f.y||0);
+    const move=e=>{f.x=ox+(e.clientX-sx)/ppm;f.y=oy+(e.clientY-sy)/ppm;gm580Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+  };
+  window.gm570ObjectDown_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();
+    const o=(gmOficinaEstado_.objetos||[]).find(x=>String(x.id)===String(id));if(!o)return;
+    gm630ApplySelection_('object',id,ev.ctrlKey||ev.metaKey);
+    if(o.fixada)return;
+    gm630PushHistory_();
+    const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY,ox=Number(o.x||0),oy=Number(o.y||0);
+    const move=e=>{o.x=ox+(e.clientX-sx)/ppm;o.y=oy+(e.clientY-sy)/ppm;gm580Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+  };
+
+  function gm630CanEditSelection_(){return gm630_.tool==='select'&&gm580Selected_().length>0;}
+
+  const c630=window.gm580Color_;
+  window.gm580Color_=function(v){
+    if(!gm630CanEditSelection_()){gmOficinaV2Cfg_.cor=gm580Hex_(v,gmOficinaV2Cfg_.cor||'#111111');gm580Sync_();return;}
+    c630(v);
+  };
+  const o630=window.gm580Opacity_;
+  window.gm580Opacity_=function(v){
+    if(!gm630CanEditSelection_()){gmOficinaV2Cfg_.opacidade=Math.max(0,Math.min(1,Number(v)/100));gm580Sync_();return;}
+    o630(v);
+  };
+  const bc630=window.gm580BorderColor_;
+  window.gm580BorderColor_=function(v){
+    if(!gm630CanEditSelection_()){
+      gm570_.borderColor=gm580Hex_(v,gm570_.borderColor||'#111111');gm580_.borderColor=gm570_.borderColor;gm580Sync_();return;
+    }
+    bc630(v);
+  };
+  const bw630=window.gm580BorderWidth_;
+  window.gm580BorderWidth_=function(v){
+    if(!gm630CanEditSelection_()){gm570_.borderWidth=Math.max(0,Number(v)||0);gm580_.borderWidth=gm570_.borderWidth;gm580Sync_();return;}
+    bw630(v);
+  };
+  const bo630=window.gm580BorderOpacity_;
+  window.gm580BorderOpacity_=function(v){
+    if(!gm630CanEditSelection_()){gm570_.borderOpacity=Math.max(0,Math.min(1,Number(v)/100));gm580_.borderOpacity=gm570_.borderOpacity;gm580Sync_();return;}
+    bo630(v);
+  };
+
+  function gm630Roundable_(tipo){
+    return !['circulo','elipse','coracao','meialua','semicirculo'].includes(String(tipo||''));
+  }
+  const handles630base=gm570Handles_;
+  gm570Handles_=function(f,ppm){
+    let h=handles630base_(f,ppm);
+    if(!gm630Roundable_(f.tipo))return h;
+    if(!h.includes('gm570RadiusHandle_')){
+      const x=Number(f.x||0)*ppm,y=Number(f.y||0)*ppm,w=Math.abs(Number(f.w||1))*ppm,hgt=Math.abs(Number(f.h||1))*ppm;
+      const id=String(f.id).replace(/'/g,"\\'");
+      h+=`<circle cx="${x+Math.min(w,hgt)*.22}" cy="${y+Math.min(w,hgt)*.22}" r="7" fill="#fff" stroke="#19cfe8" stroke-width="2"
+        pointer-events="auto" onpointerdown="gm570RadiusHandle_(event,'${id}')" style="cursor:nwse-resize"/>`;
+    }
+    return h;
+  };
+
+  function gm630BusyBtn_(btn,on,label){
+    if(!btn)return;
+    if(on){
+      if(!btn.dataset.gm630Text)btn.dataset.gm630Text=btn.textContent;
+      btn.dataset.gm630Busy='1';
+      btn.style.boxShadow='inset 0 0 0 2px rgba(255,255,255,.28),0 0 16px rgba(0,212,255,.7)';
+      btn.style.transform='translateY(1px)';
+      btn.style.opacity='.88';
+      btn.disabled=true;
+      if(label)btn.textContent=label;
+    }else{
+      btn.style.boxShadow='';btn.style.transform='';btn.style.opacity='';btn.disabled=false;
+      if(btn.dataset.gm630Text){btn.textContent=btn.dataset.gm630Text;delete btn.dataset.gm630Text;}
+      delete btn.dataset.gm630Busy;
+    }
+  }
+  function gm630WrapAsyncButton_(selector,words){
+    document.querySelectorAll(selector).forEach(btn=>{
+      if(btn.dataset.gm630Wrapped)return;
+      const t=(btn.textContent||'').toLowerCase();
+      if(!words.some(w=>t.includes(w)))return;
+      btn.dataset.gm630Wrapped='1';
+      btn.addEventListener('click',()=>{
+        gm630BusyBtn_(btn,true,'Carregando…');
+        setTimeout(()=>{if(btn.dataset.gm630Busy)gm630BusyBtn_(btn,false)},180000);
+      },true);
+    });
+  }
+  function gm630InstallBusyButtons_(){
+    gm630WrapAsyncButton_('button',['entrar','login','criar personagem','criar conta','cadastrar']);
+  }
+
+  function gm630Mark_(name){
+    const now=performance.now();
+    if(!gm630_.loadingStartedAt)gm630_.loadingStartedAt=now;
+    console.info(`[Mesa Estelar] ${name}: ${((now-gm630_.loadingStartedAt)/1000).toFixed(1)}s`);
+  }
+  window.gm630Mark_=gm630Mark_;
+
+  const render630base=gm580Render_;
+  gm580Render_=function(){
+    render630base();
+    gm630InstallStageEvents_();
+    gm630MarkTools_();
+  };
+
+  const open630base=window.gmOficinaRender_;
+  window.gmOficinaRender_=function(){
+    const r=open630base.apply(this,arguments);
+    requestAnimationFrame(()=>{gm630InstallStageEvents_();gm630MarkTools_();});
+    return r;
+  };
+
+  setInterval(gm630InstallBusyButtons_,1200);
+  setTimeout(()=>{gm630InstallBusyButtons_();gm630Mark_('interface carregada');},1000);
+})();
+
+
+
+// ============================================================
+// V46.63.1 — hotfix Ctrl+V duplicado + corte de imagens
+// ============================================================
+(function(){
+  // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
+  // este listener em capture assume a operação uma única vez e impede
+  // que os listeners antigos recebam o mesmo evento.
+  document.addEventListener('paste',function(e){
+    const oficina=document.getElementById('gm580Toolbar')||document.getElementById('gmOficinaV2Map');
+    if(!oficina)return;
+    const items=[...(e.clipboardData?.items||[])];
+    const img=items.find(i=>i.kind==='file' && i.type?.startsWith('image/'));
+    if(!img)return; // texto / clipboard interno continua nas rotinas normais
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const f=img.getAsFile();
+    if(f&&typeof gm570AddClipboardImage_==='function')gm570AddClipboardImage_(f);
+  },true);
+
+  // Guarda fonte original da imagem colada para permitir novo recorte.
+  const clip631base=window.gm570AddClipboardImage_;
+  window.gm570AddClipboardImage_=async function(file){
+    const before=new Set((gmOficinaEstado_.objetos||[]).map(o=>String(o.id)));
+    await clip631base(file);
+    const novo=(gmOficinaEstado_.objetos||[]).find(o=>!before.has(String(o.id)));
+    if(novo){
+      novo.imagemOriginal631=novo.imagem;
+      novo.crop631={left:0,right:0,top:0,bottom:0};
+      gmOficinaPersistir_();
+      gm580Render_();
+      gm580Inspector_?.();
+    }
+  };
+
+  function gm631CropValues_(){
+    const get=id=>Math.max(0,Math.min(45,Number(document.getElementById(id)?.value||0)));
+    return {
+      left:get('gm631CropL'),right:get('gm631CropR'),
+      top:get('gm631CropT'),bottom:get('gm631CropB')
+    };
+  }
+  function gm631CropValid_(c){
+    return c.left+c.right<95 && c.top+c.bottom<95;
+  }
+  window.gm631CropPreview_=function(){
+    const p=gm580Primary_();if(p?.type!=='object')return;
+    const c=gm631CropValues_();
+    const txt=document.getElementById('gm631CropInfo');
+    if(txt)txt.textContent=gm631CropValid_(c)
+      ? `Área restante: ${100-c.left-c.right}% × ${100-c.top-c.bottom}%`
+      : 'Recorte excessivo.';
+  };
+  window.gm631ResetCrop_=function(){
+    const p=gm580Primary_();if(p?.type!=='object')return;
+    const o=p.ref;
+    if(!o.imagemOriginal631)return;
+    gmOficinaV2Historico_();
+    o.imagem=o.imagemOriginal631;
+    if(o.aspectRatioOriginal631){
+      const area=Math.max(.1,Number(o.larguraM||1)*Number(o.alturaM||1));
+      const r=o.aspectRatioOriginal631;
+      o.larguraM=Math.sqrt(area*r);o.alturaM=o.larguraM/r;
+      o.aspectRatio=r;
+    }
+    o.crop631={left:0,right:0,top:0,bottom:0};
+    gmOficinaPersistir_();gm580Render_();gm580Inspector_();
+  };
+  window.gm631ApplyCrop_=async function(){
+    const p=gm580Primary_();if(p?.type!=='object')return;
+    const o=p.ref,src=o.imagemOriginal631||o.imagem;
+    if(!src)return;
+    const c=gm631CropValues_();
+    if(!gm631CropValid_(c)){
+      notificar_?.('O corte remove praticamente toda a imagem. Reduza as margens.','erro',3200);
+      return;
+    }
+    try{
+      gmOficinaV2Historico_();
+      const im=new Image();
+      await new Promise((res,rej)=>{im.onload=res;im.onerror=rej;im.src=src;});
+      if(!o.imagemOriginal631)o.imagemOriginal631=src;
+      if(!o.aspectRatioOriginal631)o.aspectRatioOriginal631=(im.naturalWidth||1)/(im.naturalHeight||1);
+
+      const sx=Math.round(im.naturalWidth*c.left/100);
+      const sy=Math.round(im.naturalHeight*c.top/100);
+      const sw=Math.max(1,Math.round(im.naturalWidth*(100-c.left-c.right)/100));
+      const sh=Math.max(1,Math.round(im.naturalHeight*(100-c.top-c.bottom)/100));
+
+      const cv=document.createElement('canvas');cv.width=sw;cv.height=sh;
+      const cx=cv.getContext('2d');cx.drawImage(im,sx,sy,sw,sh,0,0,sw,sh);
+      o.imagem=cv.toDataURL('image/png');
+      o.crop631=c;
+      const oldArea=Math.max(.01,Number(o.larguraM||1)*Number(o.alturaM||1));
+      const ratio=sw/sh;
+      o.aspectRatio=ratio;
+      // Mantém aproximadamente a área ocupada no mapa, mas adapta a moldura
+      // à nova proporção. Depois ainda pode ser redimensionada pelas alças.
+      o.larguraM=Math.sqrt(oldArea*ratio);
+      o.alturaM=o.larguraM/ratio;
+
+      gmOficinaPersistir_();gm580Render_();gm580Inspector_();
+      notificar_?.('Imagem recortada.','sucesso',1800);
+    }catch(err){
+      console.error(err);
+      notificar_?.('Não consegui recortar esta imagem.','erro',3200);
+    }
+  };
+
+  const insp631base=gm580Inspector_;
+  gm580Inspector_=function(){
+    insp631base();
+    const box=document.getElementById('gm580Inspector'),p=gm580Primary_();
+    if(!box||p?.type!=='object')return;
+    const o=p.ref;
+    const isImage=!!String(o.imagem||'').trim();
+    if(!isImage)return;
+    const c=o.crop631||{left:0,right:0,top:0,bottom:0};
+    box.insertAdjacentHTML('beforeend',`
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.09)">
+        <strong style="color:#ffd54a">✂️ Cortar imagem</strong>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:7px;margin-top:6px">
+          <label><small>Esquerda %</small><input id="gm631CropL" type="range" min="0" max="45" value="${Number(c.left||0)}" oninput="gm631CropPreview_()"></label>
+          <label><small>Direita %</small><input id="gm631CropR" type="range" min="0" max="45" value="${Number(c.right||0)}" oninput="gm631CropPreview_()"></label>
+          <label><small>Topo %</small><input id="gm631CropT" type="range" min="0" max="45" value="${Number(c.top||0)}" oninput="gm631CropPreview_()"></label>
+          <label><small>Base %</small><input id="gm631CropB" type="range" min="0" max="45" value="${Number(c.bottom||0)}" oninput="gm631CropPreview_()"></label>
+        </div>
+        <div id="gm631CropInfo" style="font-size:.8em;color:#9fb4c8;margin:5px 0">Ajuste as quatro bordas e aplique o corte.</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn-small" onclick="gm631ApplyCrop_()">✂️ Aplicar corte</button>
+          ${o.imagemOriginal631?`<button class="btn-small" onclick="gm631ResetCrop_()">↺ Restaurar imagem</button>`:''}
+        </div>
+      </div>`);
+    gm631CropPreview_();
+  };
+})();
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -26720,6 +27273,6 @@ setTimeout(()=>{
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.62.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.63.1: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
