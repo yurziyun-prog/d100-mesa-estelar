@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.61.0 ===== */
+/* ===== V46.62.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.61.0 ===== */
+/* ===== V46.62.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22017,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.61.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.62.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22176,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.61.0
+// V46.62.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22533,7 +22533,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.61.0
+// V46.62.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22818,7 +22818,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.61.0 — Oficina: estilos de traço exclusivos + prévia real
+// V46.62.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22894,7 +22894,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.61.0
+// V46.62.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22979,7 +22979,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.61.0 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.62.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23120,7 +23120,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.61.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.62.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23362,7 +23362,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.61.0 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.62.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23521,7 +23521,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.61.0 — Oficina simplificada
+// V46.62.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23866,7 +23866,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.61.0 — Oficina: objetos realmente opacos + painel de camadas
+// V46.62.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24039,7 +24039,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.61.0 — Oficina: composição real por ordem de adição
+// V46.62.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24262,7 +24262,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.61.0',e);}
+    }catch(e){console.warn('Oficina v46.62.0',e);}
     return r;
 };
 
@@ -24272,7 +24272,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.61.0 — REFORMA DA OFICINA
+// V46.62.0 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25025,8 +25025,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.61.0 — reconstrução limpa da barra da Oficina
-// Base: 46.61.0 funcional. Não usa varredura agressiva do DOM.
+// V46.62.0 — reconstrução limpa da barra da Oficina
+// Base: 46.62.0 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25255,8 +25255,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.61.0 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.61.0
+// V46.62.0 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.62.0
 // ============================================================
 
 const gm580_ = {
@@ -25923,14 +25923,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.61.0 — OFICINA REESTRUTURADA
+// V46.62.0 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.61.0'
+  version:'46.62.0'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26154,7 +26154,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.61.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.62.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26229,26 +26229,8 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
     `;
     document.head.appendChild(st);
   }
-
-  // Observa apenas o caso legítimo de a aba ser recriada pelo app.
-  // Não reage a mudanças internas de desenho/seleção.
-  const root=document.getElementById('gmShield')||document.body;
-  let scheduled=false;
-  const obs=new MutationObserver(muts=>{
-    if(scheduled)return;
-    const needs=muts.some(m=>[...m.addedNodes].some(n=>
-      n.nodeType===1 && (n.id==='gmOficinaV2Viewport'||n.querySelector?.('#gmOficinaV2Viewport'))
-    ));
-    if(!needs)return;
-    scheduled=true;
-    requestAnimationFrame(()=>{
-      scheduled=false;
-      try{gm600Install_();}catch(e){console.warn('Oficina 60.1 mount',e)}
-    });
-  });
-  obs.observe(root,{childList:true,subtree:true});
-
-  setTimeout(()=>{
+  // v46.62: observador global removido; a Oficina monta apenas quando chamada.
+setTimeout(()=>{
     try{
       gm600Install_();
       if(typeof gm580Tool_==='function'){
@@ -26264,7 +26246,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.61.0 — Oficina realmente única
+// V46.62.0 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26317,6 +26299,411 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
   },950);
 })();
 
+
+
+// ============================================================
+// V46.62.0 — edição persistente de formas/objetos + histórico completo
+// ============================================================
+(function(){
+  const gm620_ = {
+    activeShape:'',
+    lastStyleHistory:0
+  };
+
+  function gm620Hist_(){
+    try{gmOficinaV2Historico_();}catch(_){}
+  }
+
+  // ---------- histórico completo ----------
+  window.gmOficinaV2Snapshot_=function(){
+    return JSON.parse(JSON.stringify({
+      desenhos:gmOficinaEstado_.desenhos||[],
+      objetos:gmOficinaEstado_.objetos||[],
+      formas:gmOficinaEstado_.formas||[]
+    }));
+  };
+  window.gmOficinaV2Undo_=function(){
+    if(!gmOficinaV2Undo_.length)return;
+    gmOficinaV2Redo_.push(gmOficinaV2Snapshot_());
+    const x=gmOficinaV2Undo_.pop();
+    gmOficinaEstado_.desenhos=x.desenhos||[];
+    gmOficinaEstado_.objetos=x.objetos||[];
+    gmOficinaEstado_.formas=x.formas||[];
+    gm580_.selection?.clear?.();
+    gm570_.selected={type:'',id:''};
+    gm570_.strokeCache?.clear?.();
+    gmOficinaPersistir_();gmOficinaRender_();
+  };
+  window.gmOficinaV2Redo_=function(){
+    if(!gmOficinaV2Redo_.length)return;
+    gmOficinaV2Undo_.push(gmOficinaV2Snapshot_());
+    const x=gmOficinaV2Redo_.pop();
+    gmOficinaEstado_.desenhos=x.desenhos||[];
+    gmOficinaEstado_.objetos=x.objetos||[];
+    gmOficinaEstado_.formas=x.formas||[];
+    gm580_.selection?.clear?.();
+    gm570_.selected={type:'',id:''};
+    gm570_.strokeCache?.clear?.();
+    gmOficinaPersistir_();gmOficinaRender_();
+  };
+
+  // ---------- retângulo único, com raio editável ----------
+  const gm620BaseShapeSvg_=gm570BaseShapeSvg_;
+  gm570BaseShapeSvg_=function(f,ppm){
+    if(f && (f.tipo==='retangulo'||f.tipo==='arredondado')){
+      const op=gmVet530Opacidades_(f);
+      const x=Number(f.x||0)*ppm,y=Number(f.y||0)*ppm,w=Math.abs(Number(f.w||0))*ppm,h=Math.abs(Number(f.h||0))*ppm;
+      const cx=x+w/2,cy=y+h/2,rot=Number(f.rot||0);
+      const rx=Math.min(w/2,h/2,Math.max(0,Number(f.radius||0))*ppm);
+      const stroke=f.stroke||gm570_.borderColor,fill=f.fill||gmOficinaV2Cfg_.cor;
+      const sw=Math.max(0,Number(f.strokeWidth??0))*gm554Zoom_();
+      const id=String(f.id).replace(/'/g,"\\'");
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" ry="${rx}"
+        stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${sw}"
+        fill="${fill}" fill-opacity="${op.fill}"
+        transform="rotate(${rot} ${cx} ${cy})"
+        data-vet-id="${gm570Esc_(f.id)}"
+        onpointerdown="gm570ShapeDown_(event,'${id}')"
+        style="pointer-events:auto;cursor:move"/>`;
+    }
+    return gm620BaseShapeSvg_(f,ppm);
+  };
+
+  const gm620HandlesBase_=gm570Handles_;
+  gm570Handles_=function(f,ppm){
+    let h=gm620HandlesBase_(f,ppm);
+    // A bolinha de arredondamento é sempre branca.
+    h=h.replace(/fill="#ffd54a" stroke="#222"/g,'fill="#fff" stroke="#19cfe8"');
+    return h;
+  };
+
+  // ---------- seleção carrega o estilo da própria forma ----------
+  function gm620LoadStyle_(it){
+    if(!it)return;
+    if(it.type==='shape'){
+      const f=it.ref;
+      const line=String(f.tipo||'').startsWith('linha');
+      gmOficinaV2Cfg_.cor=line?(f.stroke||gmOficinaV2Cfg_.cor):(f.fill||gmOficinaV2Cfg_.cor);
+      gmOficinaV2Cfg_.opacidade=line?Number(f.strokeOpacity??f.opacity??1):Number(f.fillOpacity??f.opacity??1);
+      gm570_.borderColor=f.stroke||gm570_.borderColor;
+      gm570_.borderWidth=Math.max(0,Number(f.strokeWidth??0));
+      gm570_.borderOpacity=Number(f.strokeOpacity??1);
+      gm570_.edit=!line;
+    }
+    gm580Sync_?.();
+  }
+
+  const gm620SelectBase_=gm580Select_;
+  gm580Select_=function(type,id,add=false){
+    gm620SelectBase_(type,id,add);
+    gm620LoadStyle_(gm580Primary_());
+    gm620RefreshButtons_();
+  };
+
+  const gm620Select570Base_=gm570Select_;
+  gm570Select_=function(type,id){
+    gm620Select570Base_(type,id);
+    const it=gm570SelectedRef_();
+    gm620LoadStyle_(it);
+    gm620RefreshButtons_();
+  };
+
+  // ---------- alterações do menu atuam sobre a seleção ----------
+  function gm620SelectedShapes_(){
+    try{return gm580Selected_().filter(x=>x.type==='shape');}catch(_){return [];}
+  }
+  function gm620ApplyStyle_(kind,val){
+    const shapes=gm620SelectedShapes_();
+    if(!shapes.length)return false;
+    gm620Hist_();
+    for(const it of shapes){
+      const f=it.ref,line=String(f.tipo||'').startsWith('linha');
+      if(kind==='color'){
+        if(line)f.stroke=val; else f.fill=val;
+      }else if(kind==='opacity'){
+        if(line)f.strokeOpacity=val; else f.fillOpacity=val;
+      }else if(kind==='borderColor') f.stroke=val;
+      else if(kind==='borderWidth') f.strokeWidth=val;
+      else if(kind==='borderOpacity') f.strokeOpacity=val;
+    }
+    gmOficinaPersistir_();gm580Render_();return true;
+  }
+
+  const c580=window.gm580Color_;
+  window.gm580Color_=function(v){
+    const c=gm580Hex_(v,gmOficinaV2Cfg_.cor||'#111111');
+    gmOficinaV2Cfg_.cor=c;
+    if(!gm620ApplyStyle_('color',c)) c580?.(c);
+    gm580Sync_?.();
+  };
+  const o580=window.gm580Opacity_;
+  window.gm580Opacity_=function(v){
+    const x=Math.max(0,Math.min(1,Number(v)/100));gmOficinaV2Cfg_.opacidade=x;
+    if(!gm620ApplyStyle_('opacity',x)) o580?.(v);
+    gm580Sync_?.();
+  };
+  const bc580=window.gm580BorderColor_;
+  window.gm580BorderColor_=function(v){
+    const c=gm580Hex_(v,gm570_.borderColor||'#111111');gm570_.borderColor=c;gm580_.borderColor=c;
+    if(!gm620ApplyStyle_('borderColor',c)) bc580?.(c);
+    gm580Sync_?.();
+  };
+  const bw580=window.gm580BorderWidth_;
+  window.gm580BorderWidth_=function(v){
+    const x=Math.max(0,Math.min(20,Number(v)||0));gm570_.borderWidth=x;gm580_.borderWidth=x;
+    if(!gm620ApplyStyle_('borderWidth',x)) bw580?.(v);
+    gm580Sync_?.();
+  };
+  const bo580=window.gm580BorderOpacity_;
+  window.gm580BorderOpacity_=function(v){
+    const x=Math.max(0,Math.min(1,Number(v)/100));gm570_.borderOpacity=x;gm580_.borderOpacity=x;
+    if(!gm620ApplyStyle_('borderOpacity',x)) bo580?.(v);
+    gm580Sync_?.();
+  };
+
+  // ---------- botões de formas: ferramenta persistente ----------
+  function gm620ShapeButtons_(){
+    const tb=document.getElementById('gm580Toolbar');if(!tb)return [];
+    return [...tb.querySelectorAll('button')].filter(b=>(b.getAttribute('onclick')||'').includes("gm580Shape_"));
+  }
+  function gm620RefreshButtons_(){
+    for(const b of gm620ShapeButtons_()){
+      const m=(b.getAttribute('onclick')||'').match(/gm580Shape_\('([^']+)'\)/);
+      b.classList.toggle('btn-select',!!m&&m[1]===gm620_.activeShape);
+    }
+  }
+  window.gm580Shape_=function(tipo){
+    tipo=String(tipo||'');
+    if(tipo==='arredondado')tipo='retangulo';
+    gm620_.activeShape=tipo;
+    gm580_.mode='shape';
+    gmOficinaV2Cfg_.ativo=false;
+    gmVet490_.tool='select';
+    gm570_.edit=true;
+    const cv=document.getElementById('gmOficinaV2Canvas');if(cv)cv.style.pointerEvents='none';
+    gm620RefreshButtons_();gm580Render_();
+  };
+
+  // ---------- criar forma com um clique em espaço vazio ----------
+  function gm620CreateShapeAt_(ev){
+    if(!gm620_.activeShape)return false;
+    const svg=document.getElementById('gmOficinaVectorLayer');if(!svg||ev.target!==svg)return false;
+    ev.preventDefault();ev.stopPropagation();gm620Hist_();
+    const r=svg.getBoundingClientRect(),ppm=gmOficinaV2Ppm_();
+    const px=Math.max(0,Math.min(gmOficinaEstado_.larguraM,(ev.clientX-r.left)/ppm));
+    const py=Math.max(0,Math.min(gmOficinaEstado_.alturaM,(ev.clientY-r.top)/ppm));
+    const tipo=gm620_.activeShape;
+    const one=1;
+    const f={
+      id:`vet:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,tipo,
+      x:Math.max(0,px-one/2),y:Math.max(0,py-one/2),w:one,h:one,rot:0,radius:0,
+      stroke:gm570_.borderColor,fill:gmOficinaV2Cfg_.cor,
+      strokeWidth:gm570_.borderWidth,strokeOpacity:gm570_.borderOpacity,
+      fillOpacity:gmOficinaV2Cfg_.opacidade,opacity:1,
+      ordemOficina:gm600NextOrder_()
+    };
+    gmVet490Formas_().push(f);
+    gm580_.selection.clear();gm580_.selection.add(gm580Key_('shape',f.id));
+    gm570_.selected={type:'shape',id:f.id};gmVet490_.selectedId=f.id;
+    gm570_.edit=true;
+    gmOficinaPersistir_();gm580Render_();gm620LoadStyle_({type:'shape',ref:f});
+    return true;
+  }
+
+  // ---------- mover formas e objetos sem Ctrl quando estão selecionáveis ----------
+  window.gm570ShapeDown_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();
+    const f=gmVet490Forma_(id);if(!f)return;
+    gm580Select_('shape',id,ev.ctrlKey||ev.metaKey);
+    if(ev.ctrlKey||ev.metaKey)return; // Ctrl reservado à multi-seleção
+    gm620Hist_();
+    gm570_.edit=true;
+    const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY;
+    const st={x:Number(f.x||0),y:Number(f.y||0),x2:Number(f.x2??f.x),y2:Number(f.y2??f.y),cx:Number(f.cx||0),cy:Number(f.cy||0)};
+    const move=e=>{
+      const dx=(e.clientX-sx)/ppm,dy=(e.clientY-sy)/ppm;
+      f.x=st.x+dx;f.y=st.y+dy;
+      if(String(f.tipo||'').startsWith('linha')){
+        f.x2=st.x2+dx;f.y2=st.y2+dy;
+        if(f.tipo==='linha_curva'){f.cx=st.cx+dx;f.cy=st.cy+dy;}
+      }
+      gm580Render_();
+    };
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+  };
+
+  window.gm570ObjectDown_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();
+    const o=(gmOficinaEstado_.objetos||[]).find(x=>String(x.id)===String(id));if(!o)return;
+    gm580Select_('object',id,ev.ctrlKey||ev.metaKey);
+    if(ev.ctrlKey||ev.metaKey)return;
+    gm620Hist_();
+    const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY,ox=Number(o.x||0),oy=Number(o.y||0);
+    const move=e=>{o.x=ox+(e.clientX-sx)/ppm;o.y=oy+(e.clientY-sy)/ppm;gm580Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+  };
+
+  // ---------- redimensionamento de objetos preservando proporção ----------
+  function gm620ObjectHandles_(o,ppm){
+    const w=Math.max(.05,Number(o.larguraM||1))*ppm,h=Math.max(.05,Number(o.alturaM||1))*ppm;
+    const cx=Number(o.x||0)*ppm,cy=Number(o.y||0)*ppm,x=cx-w/2,y=cy-h/2;
+    const id=String(o.id).replace(/'/g,"\\'");
+    const hs=[['nw',x,y],['ne',x+w,y],['se',x+w,y+h],['sw',x,y+h]];
+    return `<g data-gm620-object-handles="1">
+      <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#19cfe8" stroke-width="1.2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>
+      ${hs.map(q=>`<circle cx="${q[1]}" cy="${q[2]}" r="6" fill="#fff" stroke="#19cfe8" stroke-width="2" pointer-events="auto" onpointerdown="gm620ResizeObject_(event,'${id}','${q[0]}')" style="cursor:nwse-resize"/>`).join('')}
+      <line x1="${cx}" y1="${y}" x2="${cx}" y2="${y-28}" stroke="#19cfe8" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+      <circle cx="${cx}" cy="${y-32}" r="7" fill="#fff" stroke="#19cfe8" stroke-width="2" pointer-events="auto" onpointerdown="gm600RotateObject_(event,'${id}')" style="cursor:grab"/>
+    </g>`;
+  }
+  window.gm620ResizeObject_=function(ev,id,corner){
+    ev.preventDefault();ev.stopPropagation();
+    const o=(gmOficinaEstado_.objetos||[]).find(x=>String(x.id)===String(id));if(!o)return;
+    gm620Hist_();
+    const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY;
+    const sw=Math.max(.05,Number(o.larguraM||1)),sh=Math.max(.05,Number(o.alturaM||1)),ratio=sw/sh;
+    const cx=Number(o.x||0),cy=Number(o.y||0);
+    const signX=corner.includes('e')?1:-1,signY=corner.includes('s')?1:-1;
+    const anchorX=cx-signX*sw/2,anchorY=cy-signY*sh/2;
+    const move=e=>{
+      let nw=Math.max(.1,Math.abs((e.clientX-sx)/ppm + signX*sw));
+      let nh=nw/ratio;
+      const dy=Math.abs((e.clientY-sy)/ppm + signY*sh);
+      if(dy>nh){nh=Math.max(.1,dy);nw=nh*ratio;}
+      o.larguraM=nw;o.alturaM=nh;
+      o.x=anchorX+signX*nw/2;o.y=anchorY+signY*nh/2;
+      gm580Render_();
+    };
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+  };
+
+  // ---------- render final: canvas vazio cria forma; objeto selecionado ganha alças ----------
+  const gm620RenderBase_=gm580Render_;
+  gm580Render_=function(){
+    gm620RenderBase_();
+    const svg=document.getElementById('gmOficinaVectorLayer');
+    if(svg){
+      svg.onpointerdown=function(ev){
+        if(gm620CreateShapeAt_(ev))return;
+        if(gm580_.mode==='select' && ev.target===svg){gm580ClearSel_();}
+      };
+      svg.querySelectorAll('[data-gm620-object-handles]').forEach(x=>x.remove());
+      const p=gm580Primary_();
+      if(p?.type==='object'){
+        const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+        g.innerHTML=gm620ObjectHandles_(p.ref,gmOficinaV2Ppm_());
+        svg.appendChild(g);
+      }
+    }
+    gm620RefreshButtons_();
+  };
+
+  // ---------- desenho livre desliga edição de formas ----------
+  const gm620ToolBase_=window.gm580Tool_;
+  window.gm580Tool_=function(v){
+    gm620_.activeShape='';
+    gm620ToolBase_(v);
+    gm620RefreshButtons_();
+  };
+
+  // ---------- remover botão redundante "Retângulo arredondado" ----------
+  function gm620CleanShapeUI_(){
+    const tb=document.getElementById('gm580Toolbar');if(!tb)return;
+    [...tb.querySelectorAll('button')].forEach(b=>{
+      const oc=b.getAttribute('onclick')||'';
+      if(oc.includes("gm580Shape_('arredondado')"))b.remove();
+    });
+  }
+
+  // ---------- imagem colada: proporção + remover fundo ----------
+  const gm620ClipBase_=gm570AddClipboardImage_;
+  gm570AddClipboardImage_=async function(file){
+    const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+    const dims=await new Promise(res=>{const im=new Image();im.onload=()=>res([im.naturalWidth||1,im.naturalHeight||1]);im.onerror=()=>res([1,1]);im.src=data;});
+    const ratio=dims[0]/dims[1],base=3,w=ratio>=1?base:base*ratio,h=ratio>=1?base/ratio:base;
+    gm620Hist_();
+    const o={id:`ofobj:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,nome:'Imagem colada',imagem:data,
+      x:gmOficinaEstado_.larguraM/2,y:gmOficinaEstado_.alturaM/2,
+      larguraM:Math.max(.2,w),alturaM:Math.max(.2,h),aspectRatio:ratio,
+      angulo:0,ordemOficina:gm600NextOrder_(),sombraOficina:'nenhuma',coladoClipboard:true};
+    gmOficinaEstado_.objetos.push(o);
+    gm580_.selection.clear();gm580_.selection.add(gm580Key_('object',o.id));gm570_.selected={type:'object',id:o.id};
+    gmOficinaPersistir_();gm580Render_();
+  };
+
+  window.gm620RemoveBg_=async function(){
+    const p=gm580Primary_();if(p?.type!=='object')return;
+    const o=p.ref,src=String(o.imagem||'').trim();if(!src)return;
+    const tol=Math.max(1,Math.min(90,Number(document.getElementById('gm620BgTol')?.value||38)));
+    try{
+      gm620Hist_();
+      const im=new Image();
+      await new Promise((res,rej)=>{im.onload=res;im.onerror=rej;im.src=src;});
+      const c=bancoRemoverFundoCanvas_(im,tol);
+      o.imagem=c.toDataURL('image/png');
+      gmOficinaPersistir_();gm580Render_();gm580Inspector_();
+      notificar_?.('Fundo removido da imagem colada.','sucesso',2200);
+    }catch(e){
+      console.error(e);
+      notificar_?.('Não consegui remover o fundo desta imagem.','erro',3500);
+    }
+  };
+
+  function gm620SetObjSize_(axis,v){
+    const p=gm580Primary_();if(p?.type!=='object')return;
+    const o=p.ref,ratio=Math.max(.0001,Number(o.aspectRatio||((Number(o.larguraM)||1)/(Number(o.alturaM)||1))));
+    gm620Hist_();
+    if(axis==='w'){o.larguraM=Math.max(.1,Number(v)||.1);o.alturaM=o.larguraM/ratio;}
+    else{o.alturaM=Math.max(.1,Number(v)||.1);o.larguraM=o.alturaM*ratio;}
+    gmOficinaPersistir_();gm580Render_();gm580Inspector_();
+  }
+  window.gm620SetObjSize_=gm620SetObjSize_;
+
+  const gm620InspectorBase_=gm580Inspector_;
+  gm580Inspector_=function(){
+    gm620InspectorBase_();
+    const box=document.getElementById('gm580Inspector'),p=gm580Primary_();if(!box||p?.type!=='object')return;
+    const o=p.ref;
+    box.insertAdjacentHTML('beforeend',`
+      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:7px;padding-top:7px;border-top:1px solid rgba(255,255,255,.08)">
+        <strong style="color:#8ee7ff">Tamanho do objeto</strong>
+        <label><small>Largura (m)</small><input type="number" min=".1" step=".1" value="${Number(o.larguraM||1).toFixed(2)}" onchange="gm620SetObjSize_('w',this.value)" style="width:86px"></label>
+        <label><small>Altura (m)</small><input type="number" min=".1" step=".1" value="${Number(o.alturaM||1).toFixed(2)}" onchange="gm620SetObjSize_('h',this.value)" style="width:86px"></label>
+        ${o.coladoClipboard||String(o.nome||'')==='Imagem colada'?`
+          <label><small>Tolerância fundo</small><input id="gm620BgTol" type="range" min="8" max="90" value="38"></label>
+          <button class="btn-small" onclick="gm620RemoveBg_()">✂️ Remover fundo</button>`:''}
+        <span style="color:#9fb4c8;font-size:.82em">1 quadrado da grade = 1 m × 1 m. O redimensionamento mantém a proporção.</span>
+      </div>`);
+  };
+
+  // ---------- corrigir histórico antes de handles de forma ----------
+  const rHandle=window.gm570ResizeHandle_;
+  window.gm570ResizeHandle_=function(ev,id,which){gm620Hist_();return rHandle(ev,id,which);};
+  const radHandle=window.gm570RadiusHandle_;
+  window.gm570RadiusHandle_=function(ev,id){gm620Hist_();return radHandle(ev,id);};
+  const rotHandle=window.gm570RotateHandle_;
+  window.gm570RotateHandle_=function(ev,id){gm620Hist_();return rotHandle(ev,id);};
+  const curveHandle=window.gm570CurveHandle_;
+  window.gm570CurveHandle_=function(ev,id){gm620Hist_();return curveHandle(ev,id);};
+
+  // ---------- montagem ----------
+  function gm620Install_(){
+    gm620CleanShapeUI_();
+    gm620RefreshButtons_();
+    // Sem observer global. Apenas instala quando a Oficina existe.
+  }
+  const renderOpen=window.gmOficinaRender_;
+  window.gmOficinaRender_=function(){
+    const r=renderOpen.apply(this,arguments);
+    requestAnimationFrame(()=>{try{gm620Install_();gm580Render_();}catch(e){console.warn('Oficina 46.62',e)}});
+    return r;
+  };
+  setTimeout(()=>{try{gm620Install_();}catch(_){ }},1000);
+})();
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -26333,6 +26720,6 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.61.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.62.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
