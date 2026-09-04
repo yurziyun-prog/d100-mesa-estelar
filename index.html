@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.66.0 ===== */
+/* ===== V46.70.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.66.0 ===== */
+/* ===== V46.70.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22017,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.66.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.70.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22176,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.66.0
+// V46.70.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22533,7 +22533,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.66.0
+// V46.70.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22818,7 +22818,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.66.0 — Oficina: estilos de traço exclusivos + prévia real
+// V46.70.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22894,7 +22894,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.66.0
+// V46.70.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22979,7 +22979,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.66.0 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.70.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23120,7 +23120,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.66.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.70.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23362,7 +23362,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.66.0 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.70.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23521,7 +23521,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.66.0 — Oficina simplificada
+// V46.70.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23866,7 +23866,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.66.0 — Oficina: objetos realmente opacos + painel de camadas
+// V46.70.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24039,7 +24039,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.66.0 — Oficina: composição real por ordem de adição
+// V46.70.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24262,7 +24262,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.66.0',e);}
+    }catch(e){console.warn('Oficina v46.70.0',e);}
     return r;
 };
 
@@ -24272,7 +24272,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.66.0 — REFORMA DA OFICINA
+// V46.70.0 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25025,8 +25025,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.66.0 — reconstrução limpa da barra da Oficina
-// Base: 46.66.0 funcional. Não usa varredura agressiva do DOM.
+// V46.70.0 — reconstrução limpa da barra da Oficina
+// Base: 46.70.0 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25255,8 +25255,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.66.0 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.66.0
+// V46.70.0 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.70.0
 // ============================================================
 
 const gm580_ = {
@@ -25923,14 +25923,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.66.0 — OFICINA REESTRUTURADA
+// V46.70.0 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.66.0'
+  version:'46.70.0'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26154,7 +26154,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.66.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.70.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26246,7 +26246,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — Oficina realmente única
+// V46.70.0 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26302,7 +26302,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — edição persistente de formas/objetos + histórico completo
+// V46.70.0 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26707,7 +26707,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — estados separados, undo/redo real, sombra persistente,
+// V46.70.0 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27122,7 +27122,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.70.0 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27260,7 +27260,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.70.0 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27715,7 +27715,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — layout da Oficina baseado no mockup do usuário
+// V46.70.0 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -27953,7 +27953,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — corrige aplicação real do layout 46.65
+// V46.70.0 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -27966,7 +27966,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.66.0: falha ao substituir bindings',e);
+    console.warn('Oficina 46.70.0: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -27989,7 +27989,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.66.0 rebuild',e);
+      console.warn('Oficina 46.70.0 rebuild',e);
     }
   }
 
@@ -28014,7 +28014,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — arrumação visual da Oficina
+// V46.70.0 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28125,7 +28125,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — remove conta-gotas extras e coloca HEX compacto
+// V46.70.0 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28202,7 +28202,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.66.0 — estabilização funcional da Oficina
+// V46.70.0 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28663,6 +28663,685 @@ setTimeout(()=>{
   setTimeout(()=>{try{gm660Install_();gm580Render_();}catch(e){console.warn('Oficina 46.66',e)}},900);
 })();
 
+
+
+// ============================================================
+// V46.70.0 — OFICINA 2 EXPERIMENTAL
+// Editor novo e independente. Não reutiliza os controladores da Oficina 1.
+// ============================================================
+(function(){
+'use strict';
+
+const GM2_KEY='mesa_estelar_oficina2_v1';
+const GM2_CLIP={items:[]};
+const gm2={
+  st:{
+    w:28,h:14,ppm:32,bg:'#d7d7d7',grid:'#777777',showGrid:true,texture:'nenhuma',
+    elements:[]
+  },
+  tool:'select', shape:'retangulo', line:'linha_reta', brush:'redondo',
+  selected:new Set(), primary:'',
+  defaults:{
+    fill:'#59e391',fillOpacity:1,stroke:'#111111',strokeWidth:0,strokeOpacity:1,
+    size:7,opacity:1,shadow:'nenhuma',shadowDir:'SE',shadowDist:4
+  },
+  history:[],future:[],drag:null,renderQueued:false,
+  internalPasteStamp:0,lastExternalPasteSig:'',lastExternalPasteAt:0
+};
+
+function gm2clone(x){return JSON.parse(JSON.stringify(x));}
+function gm2id(p='e'){return `${p}:${Date.now()}:${Math.random().toString(36).slice(2,8)}`;}
+function gm2esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function gm2saveLocal(){try{localStorage.setItem(GM2_KEY,JSON.stringify(gm2.st));}catch(e){console.warn(e);}}
+function gm2loadLocal(){try{const x=JSON.parse(localStorage.getItem(GM2_KEY)||'null');if(x&&Array.isArray(x.elements))gm2.st={...gm2.st,...x};}catch(e){console.warn(e);}}
+gm2loadLocal();
+
+function gm2snap(){return gm2clone(gm2.st);}
+function gm2pushHistory(){
+  gm2.history.push(gm2snap());
+  if(gm2.history.length>180)gm2.history.shift();
+  gm2.future.length=0;
+}
+function gm2restore(x){
+  if(!x)return;
+  gm2.st=gm2clone(x);gm2.selected.clear();gm2.primary='';
+  gm2saveLocal();gm2render();
+}
+function gm2undo(){
+  if(!gm2.history.length)return;
+  gm2.future.push(gm2snap());gm2restore(gm2.history.pop());
+}
+function gm2redo(){
+  if(!gm2.future.length)return;
+  gm2.history.push(gm2snap());gm2restore(gm2.future.pop());
+}
+
+function gm2el(id){return gm2.st.elements.find(e=>String(e.id)===String(id));}
+function gm2zNext(){return gm2.st.elements.reduce((m,e)=>Math.max(m,Number(e.z)||0),0)+1;}
+function gm2selectedEls(){return [...gm2.selected].map(gm2el).filter(Boolean);}
+function gm2clearSelection(){
+  for(const e of gm2selectedEls())if(e.type==='image')e.cropMode=false;
+  gm2.selected.clear();gm2.primary='';
+}
+function gm2select(id,add=false){
+  if(!add)gm2clearSelection();
+  if(add&&gm2.selected.has(id)){gm2.selected.delete(id);if(gm2.primary===id)gm2.primary=[...gm2.selected].at(-1)||'';}
+  else {gm2.selected.add(id);gm2.primary=id;}
+  gm2loadStyleFromPrimary();gm2render();
+}
+function gm2setTool(t,val=''){
+  gm2clearSelection();
+  gm2.tool=t;
+  if(t==='shape'&&val)gm2.shape=val;
+  if(t==='line'&&val)gm2.line=val;
+  if(t==='brush'&&val)gm2.brush=val;
+  gm2updateToolbarState();gm2render();
+}
+
+function gm2historyAction(fn){
+  gm2pushHistory();
+  fn();
+  gm2saveLocal();gm2render();
+}
+
+function gm2applyDefaultsToSelection(){
+  const a=gm2selectedEls(); if(!a.length)return false;
+  gm2pushHistory();
+  for(const e of a){
+    if(['shape','line','path'].includes(e.type)){
+      e.fill=gm2.defaults.fill;e.fillOpacity=gm2.defaults.fillOpacity;
+      e.stroke=gm2.defaults.stroke;e.strokeWidth=gm2.defaults.strokeWidth;e.strokeOpacity=gm2.defaults.strokeOpacity;
+      e.opacity=gm2.defaults.opacity;
+    }
+    e.shadow=gm2.defaults.shadow;e.shadowDir=gm2.defaults.shadowDir;e.shadowDist=gm2.defaults.shadowDist;
+  }
+  gm2saveLocal();gm2render();return true;
+}
+
+function gm2loadStyleFromPrimary(){
+  const e=gm2el(gm2.primary);if(!e)return;
+  if(e.fill){gm2.defaults.fill=e.fill;gm2.defaults.fillOpacity=Number(e.fillOpacity??1);}
+  if(e.stroke){gm2.defaults.stroke=e.stroke;gm2.defaults.strokeWidth=Number(e.strokeWidth??0);gm2.defaults.strokeOpacity=Number(e.strokeOpacity??1);}
+  gm2.defaults.opacity=Number(e.opacity??1);
+  gm2syncControls();
+}
+
+function gm2newShape(kind,x,y,w=1,h=1){
+ return {
+   id:gm2id('s'),type:'shape',kind,x,y,w,h,rot:0,radius:0,z:gm2zNext(),locked:false,
+   fill:gm2.defaults.fill,fillOpacity:gm2.defaults.fillOpacity,
+   stroke:gm2.defaults.stroke,strokeWidth:gm2.defaults.strokeWidth,strokeOpacity:gm2.defaults.strokeOpacity,
+   opacity:gm2.defaults.opacity,shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist
+ };
+}
+function gm2newLine(kind,x,y,x2,y2){
+ return {
+   id:gm2id('l'),type:'line',kind,x,y,x2,y2,cx:(x+x2)/2,cy:(y+y2)/2-.5,z:gm2zNext(),locked:false,
+   fill:'none',stroke:gm2.defaults.fill,strokeWidth:gm2.defaults.size,strokeOpacity:gm2.defaults.opacity,opacity:1,
+   shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist
+ };
+}
+function gm2newPath(points){
+ return {
+   id:gm2id('p'),type:'path',brush:gm2.brush,points,z:gm2zNext(),locked:false,
+   stroke:gm2.defaults.fill,strokeWidth:gm2.defaults.size,strokeOpacity:gm2.defaults.opacity,opacity:1,
+   shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist
+ };
+}
+function gm2newImage(src,x,y,w,h,name='Imagem'){
+ return {id:gm2id('img'),type:'image',src,name,x,y,w,h,rot:0,z:gm2zNext(),locked:false,opacity:1,
+   crop:{l:0,t:0,r:0,b:0},cropMode:true,shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist};
+}
+
+function gm2bbox(e){
+ if(!e)return{x:0,y:0,w:0,h:0};
+ if(e.type==='line'){
+   const x=Math.min(e.x,e.x2),y=Math.min(e.y,e.y2);
+   return{x,y,w:Math.max(.08,Math.abs(e.x2-e.x)),h:Math.max(.08,Math.abs(e.y2-e.y))};
+ }
+ if(e.type==='path'){
+   const xs=(e.points||[]).map(p=>p.x),ys=(e.points||[]).map(p=>p.y);
+   if(!xs.length)return{x:0,y:0,w:0,h:0};
+   const x=Math.min(...xs),y=Math.min(...ys);return{x,y,w:Math.max(.08,Math.max(...xs)-x),h:Math.max(.08,Math.max(...ys)-y)};
+ }
+ return{x:Number(e.x)||0,y:Number(e.y)||0,w:Math.max(.05,Number(e.w)||.05),h:Math.max(.05,Number(e.h)||.05)};
+}
+function gm2intersects(a,b){return a.x<=b.x+b.w&&a.x+a.w>=b.x&&a.y<=b.y+b.h&&a.y+a.h>=b.y;}
+
+function gm2shadowFilter(e){
+ const preset=e.shadow||'nenhuma';if(preset==='nenhuma')return'';
+ const blur=preset==='suave'?2:preset==='media'?5:9,alpha=preset==='suave'?.25:preset==='media'?.4:.58;
+ const d=Number(e.shadowDist||4),dir=e.shadowDir||'SE';
+ const sx=dir.includes('E')?d:dir.includes('O')?-d:0,sy=dir.includes('S')?d:dir.includes('N')?-d:0;
+ return `filter:drop-shadow(${sx}px ${sy}px ${blur}px rgba(0,0,0,${alpha}))`;
+}
+function gm2dash(e){
+ const b=e.brush||e.kind||'';
+ if(b==='pontilhada'||b==='pontilhado')return'2 8';
+ if(b==='ranhura')return'12 5';
+ if(['areia','cascalho','folhas','neve'].includes(b))return'1 7';
+ if(b==='grama')return'5 4';
+ if(b==='fumaca')return'14 9';
+ if(b==='giz'||b==='giz_cera'||b==='lapis')return'5 3';
+ return'';
+}
+
+function gm2shapeInner(e){
+ const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p,fill=e.fill||'none',stroke=e.stroke||'none',
+       sw=Math.max(0,Number(e.strokeWidth||0)),fo=Number(e.fillOpacity??1),so=sw===0?0:Number(e.strokeOpacity??1);
+ const common=`fill="${fill}" fill-opacity="${fo}" stroke="${stroke}" stroke-opacity="${so}" stroke-width="${sw}" vector-effect="non-scaling-stroke"`;
+ const cx=x+w/2,cy=y+h/2,rot=Number(e.rot||0),tr=rot?` transform="rotate(${rot} ${cx} ${cy})"`:'';
+ switch(e.kind){
+  case 'retangulo': case 'quadrado': return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${Math.max(0,Number(e.radius||0))*p}" ${common}${tr}/>`;
+  case 'circulo': case 'elipse': return `<ellipse cx="${cx}" cy="${cy}" rx="${w/2}" ry="${h/2}" ${common}${tr}/>`;
+  case 'triangulo': return `<polygon points="${cx},${y} ${x+w},${y+h} ${x},${y+h}" ${common}${tr}/>`;
+  case 'losango': return `<polygon points="${cx},${y} ${x+w},${cy} ${cx},${y+h} ${x},${cy}" ${common}${tr}/>`;
+  case 'pentagono': return gm2polySvg(5,cx,cy,w/2,h/2,-90,common,tr);
+  case 'hexagono': return gm2polySvg(6,cx,cy,w/2,h/2,0,common,tr);
+  case 'estrela': return gm2starSvg(5,cx,cy,w/2,h/2,.45,-90,common,tr);
+  case 'pentagrama': return gm2starSvg(5,cx,cy,w/2,h/2,.36,-90,common,tr);
+  case 'hexagrama': return gm2starSvg(6,cx,cy,w/2,h/2,.42,-90,common,tr);
+  case 'heptagrama': return gm2starSvg(7,cx,cy,w/2,h/2,.43,-90,common,tr);
+  case 'u':{
+    const d=`M ${x+w*.18} ${y} L ${x+w*.18} ${y+h*.72} Q ${x+w*.18} ${y+h} ${cx} ${y+h} Q ${x+w*.82} ${y+h} ${x+w*.82} ${y+h*.72} L ${x+w*.82} ${y}`;
+    return `<path d="${d}" ${common} fill="none"${tr}/>`;
+  }
+  case 'coracao':{
+    const d=`M ${cx} ${y+h} C ${x-w*.05} ${y+h*.45}, ${x} ${y+h*.10}, ${x+w*.27} ${y+h*.18} C ${x+w*.43} ${y+h*.22}, ${cx} ${y+h*.35}, ${cx} ${y+h*.35} C ${cx} ${y+h*.35}, ${x+w*.57} ${y+h*.22}, ${x+w*.73} ${y+h*.18} C ${x+w} ${y+h*.10}, ${x+w*1.05} ${y+h*.45}, ${cx} ${y+h} Z`;
+    return `<path d="${d}" ${common}${tr}/>`;
+  }
+  case 'crescente':{
+    const d=`M ${cx+w*.28} ${y} A ${w*.48} ${h*.5} 0 1 0 ${cx+w*.28} ${y+h} A ${w*.36} ${h*.42} 0 0 1 ${cx+w*.28} ${y} Z`;
+    return `<path d="${d}" ${common}${tr}/>`;
+  }
+  case 'semicirculo': return `<path d="M ${x} ${y+h} A ${w/2} ${h} 0 0 1 ${x+w} ${y+h} Z" ${common}${tr}/>`;
+  default:return `<rect x="${x}" y="${y}" width="${w}" height="${h}" ${common}${tr}/>`;
+ }
+}
+function gm2polySvg(n,cx,cy,rx,ry,start,common,tr){
+ const pts=[];for(let i=0;i<n;i++){const a=(start+i*360/n)*Math.PI/180;pts.push(`${cx+Math.cos(a)*rx},${cy+Math.sin(a)*ry}`);}
+ return `<polygon points="${pts.join(' ')}" ${common}${tr}/>`;
+}
+function gm2starSvg(n,cx,cy,rx,ry,k,start,common,tr){
+ const pts=[];for(let i=0;i<n*2;i++){const rr=i%2?rx*k:rx,rry=i%2?ry*k:ry,a=(start+i*180/n)*Math.PI/180;pts.push(`${cx+Math.cos(a)*rr},${cy+Math.sin(a)*rry}`);}
+ return `<polygon points="${pts.join(' ')}" ${common}${tr}/>`;
+}
+function gm2lineInner(e){
+ const p=gm2.st.ppm,x=e.x*p,y=e.y*p,x2=e.x2*p,y2=e.y2*p,sw=Math.max(1,Number(e.strokeWidth||1)),dash=e.kind==='linha_pontilhada'?'6 7':'';
+ if(e.kind==='linha_ondulada'){
+   const dx=x2-x,dy=y2-y,len=Math.hypot(dx,dy),steps=Math.max(8,Math.floor(len/18)),pts=[];
+   for(let i=0;i<=steps;i++){const t=i/steps,px=x+dx*t,py=y+dy*t,amp=8*Math.sin(t*Math.PI*steps/2),nx=-dy/(len||1),ny=dx/(len||1);pts.push(`${px+nx*amp},${py+ny*amp}`);}
+   return `<polyline points="${pts.join(' ')}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+ }
+ if(e.kind==='linha_curva')return `<path d="M ${x} ${y} Q ${e.cx*p} ${e.cy*p} ${x2} ${y2}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round"/>`;
+ return `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+}
+function gm2pathInner(e){
+ const p=gm2.st.ppm,pts=(e.points||[]).map(q=>`${q.x*p},${q.y*p}`).join(' '),dash=gm2dash(e),cap=['quadrado','caligrafico'].includes(e.brush)?'square':'round';
+ if(e.brush==='spray'){
+   // aproximação visual deliberada: trilha translúcida pontilhada
+   return `<polyline points="${pts}" fill="none" stroke="${e.stroke}" stroke-opacity="${Math.min(.42,Number(e.strokeOpacity??1))}" stroke-width="${Math.max(2,e.strokeWidth*1.8)}" stroke-linecap="round" stroke-dasharray="1 5"/>`;
+ }
+ return `<polyline points="${pts}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${e.strokeWidth}" stroke-linecap="${cap}" stroke-linejoin="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+}
+function gm2imageInner(e){
+ const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p,c=e.crop||{l:0,t:0,r:0,b:0},
+       fullW=w/Math.max(.03,1-c.l-c.r),fullH=h/Math.max(.03,1-c.t-c.b),
+       ix=x-c.l*fullW,iy=y-c.t*fullH,clip=`gm2clip_${String(e.id).replace(/\W/g,'_')}`;
+ return `<defs><clipPath id="${clip}"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath></defs>
+ <image href="${gm2esc(e.src)}" x="${ix}" y="${iy}" width="${fullW}" height="${fullH}" preserveAspectRatio="none" clip-path="url(#${clip})" opacity="${e.opacity??1}"/>`;
+}
+function gm2objectInner(e){
+ const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p;
+ if(e.src)return `<image href="${gm2esc(e.src)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" opacity="${e.opacity??1}"/>`;
+ return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#445"/><text x="${x+w/2}" y="${y+h/2}" text-anchor="middle" fill="white" font-size="12">obj</text>`;
+}
+
+function gm2elementSvg(e){
+ const style=gm2shadowFilter(e),lock=e.locked?' data-locked="1"':'';
+ let inner='';
+ if(e.type==='shape')inner=gm2shapeInner(e);
+ else if(e.type==='line')inner=gm2lineInner(e);
+ else if(e.type==='path')inner=gm2pathInner(e);
+ else if(e.type==='image')inner=gm2imageInner(e);
+ else if(e.type==='object')inner=gm2objectInner(e);
+ return `<g class="gm2-el" data-eid="${gm2esc(e.id)}" data-type="${e.type}"${lock} style="${style};cursor:${e.locked?'default':'move'}">${inner}</g>`;
+}
+
+function gm2handlesSvg(e){
+ if(!e||e.locked)return'';
+ const p=gm2.st.ppm,b=gm2bbox(e),x=b.x*p,y=b.y*p,w=b.w*p,h=b.h*p,cx=x+w/2;
+ const hs=7, pts=[['nw',x,y],['n',cx,y],['ne',x+w,y],['e',x+w,y+h/2],['se',x+w,y+h],['s',cx,y+h],['sw',x,y+h],['w',x,y+h/2]];
+ let out=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#67e8f9" stroke-width="1.4" stroke-dasharray="5 4" pointer-events="none"/>`;
+ if(e.type!=='path'&&e.type!=='line'){
+   out+=pts.map(([k,px,py])=>`<rect class="gm2-handle" data-handle="${k}" data-eid="${gm2esc(e.id)}" x="${px-hs/2}" y="${py-hs/2}" width="${hs}" height="${hs}" rx="1" fill="#fff" stroke="#23c7dc" stroke-width="1.5"/>`).join('');
+   out+=`<line x1="${cx}" y1="${y}" x2="${cx}" y2="${y-22}" stroke="#67e8f9" stroke-width="1.2"/>
+         <circle class="gm2-handle" data-handle="rot" data-eid="${gm2esc(e.id)}" cx="${cx}" cy="${y-27}" r="6" fill="#fff" stroke="#23c7dc" stroke-width="1.7"/>`;
+   if(e.type==='shape'&&['retangulo','quadrado'].includes(e.kind)){
+     out+=`<circle class="gm2-handle" data-handle="radius" data-eid="${gm2esc(e.id)}" cx="${x+Math.max(12,Math.min(w/2,(Number(e.radius||0)*p)+12))}" cy="${y+12}" r="5.5" fill="#d9fbff" stroke="#23c7dc" stroke-width="1.6"/>`;
+   }
+   if(e.type==='image'&&e.cropMode){
+     const cs=9;
+     out+=`<rect class="gm2-crop-handle" data-crop="l" data-eid="${gm2esc(e.id)}" x="${x-cs/2}" y="${y+h/2-cs}" width="${cs}" height="${cs*2}" fill="#ffd166" stroke="#111"/>
+           <rect class="gm2-crop-handle" data-crop="r" data-eid="${gm2esc(e.id)}" x="${x+w-cs/2}" y="${y+h/2-cs}" width="${cs}" height="${cs*2}" fill="#ffd166" stroke="#111"/>
+           <rect class="gm2-crop-handle" data-crop="t" data-eid="${gm2esc(e.id)}" x="${x+w/2-cs}" y="${y-cs/2}" width="${cs*2}" height="${cs}" fill="#ffd166" stroke="#111"/>
+           <rect class="gm2-crop-handle" data-crop="b" data-eid="${gm2esc(e.id)}" x="${x+w/2-cs}" y="${y+h-cs/2}" width="${cs*2}" height="${cs}" fill="#ffd166" stroke="#111"/>`;
+   }
+ }else if(e.type==='line'&&e.kind==='linha_curva'){
+   out+=`<circle class="gm2-handle" data-handle="curve" data-eid="${gm2esc(e.id)}" cx="${e.cx*p}" cy="${e.cy*p}" r="6" fill="#fff" stroke="#23c7dc" stroke-width="1.7"/>`;
+ }
+ return out;
+}
+
+function gm2render(){
+ if(gm2.renderQueued)return;
+ gm2.renderQueued=true;
+ requestAnimationFrame(()=>{
+  gm2.renderQueued=false;
+  const svg=document.getElementById('gm2svg');if(!svg)return;
+  const p=gm2.st.ppm,w=gm2.st.w*p,h=gm2.st.h*p;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.style.width=w+'px';svg.style.height=h+'px';
+  const grid=gm2.st.showGrid?`
+   <defs><pattern id="gm2grid" width="${p}" height="${p}" patternUnits="userSpaceOnUse"><path d="M ${p} 0 L 0 0 0 ${p}" fill="none" stroke="${gm2.st.grid}" stroke-width="1"/></pattern></defs>
+   <rect x="0" y="0" width="${w}" height="${h}" fill="url(#gm2grid)" pointer-events="none"/>`:'';
+  const els=[...gm2.st.elements].sort((a,b)=>(a.z||0)-(b.z||0)).map(gm2elementSvg).join('');
+  const primary=gm2el(gm2.primary),handles=primary?gm2handlesSvg(primary):'';
+  const marquee=gm2.drag?.kind==='marquee'?(()=>{const d=gm2.drag,b={x:Math.min(d.x0,d.x1)*p,y:Math.min(d.y0,d.y1)*p,w:Math.abs(d.x1-d.x0)*p,h:Math.abs(d.y1-d.y0)*p};return `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="rgba(103,232,249,.10)" stroke="#67e8f9" stroke-dasharray="5 4"/>`;})():'';
+  svg.innerHTML=`<rect id="gm2bg" x="0" y="0" width="${w}" height="${h}" fill="${gm2.st.bg}"/>${grid}<g id="gm2elements">${els}</g><g id="gm2overlay">${handles}${marquee}</g>`;
+  gm2syncControls();gm2updateToolbarState();gm2status();
+ });
+}
+function gm2status(){
+ const el=document.getElementById('gm2status');if(!el)return;
+ const n=gm2.st.elements.length,sel=gm2.selected.size;
+ el.textContent=`Oficina 2 · ${gm2.st.w} × ${gm2.st.h} m · ${n} elementos${sel?` · ${sel} selecionado(s)`:''} · ferramenta: ${gm2.tool}`;
+}
+
+function gm2panelHtml(){
+ const brushOpts=[
+ ['redondo','Pincel'],['quadrado','Pincel de ladrilhos'],['espelhado','Pincel espelhado'],['caligrafico','Caligrafia'],
+ ['caneta','Caneta'],['lapis','Lápis'],['serpentina','Serpentina'],['seta','Seta'],['curso','Curso'],
+ ['giz_cera','Giz de cera'],['spray','Tinta spray'],['carimbo','Carimbo'],['pele','Pele / pelos'],['esboco','Esboço'],
+ ['espirografo','Espirógrafo'],['teia','Teia'],['irregular','Irregular'],['pontilhada','Pontilhado'],['giz','Giz'],
+ ['ranhura','Ranhura'],['areia','Areia'],['cascalho','Cascalho'],['grama','Grama'],['folhas','Folhas'],['neve','Neve'],
+ ['fumaca','Fumaça'],['borracha','Borracha']
+ ];
+ return `
+ <div class="gm2-head">
+   <div><h3>🧭 Oficina 2 <span>experimental</span></h3><p>Editor novo e independente da Oficina antiga. O rascunho desta aba usa outro estado e outro histórico.</p></div>
+   <div class="gm2-actions">
+    <button id="gm2new">🆕 Novo</button><button id="gm2save" class="ok">💾 Salvar na biblioteca</button>
+    <button id="gm2publish">📡 Publicar na Mesa</button><button id="gm2upload">🖼️ Importar mapa/imagem</button>
+    <input id="gm2file" type="file" accept="image/*" hidden>
+   </div>
+ </div>
+ <div id="gm2ribbon">
+   <div class="gm2-row gm2-maprow">
+    <label>Tamanho<select id="gm2size"><option>10x10</option><option>20x12</option><option selected>28x14</option><option>36x20</option><option>50x30</option><option>50x40</option></select></label>
+    <label>Escala<select id="gm2ppm"><option>24</option><option selected>32</option><option>40</option><option>48</option></select></label>
+    <label>Fundo<input id="gm2bgcolor" type="color"></label><label>Grade<input id="gm2gridcolor" type="color"></label>
+    <label class="gm2-check"><span>Grade</span><input id="gm2gridshow" type="checkbox" checked></label>
+    <label>Textura<select id="gm2texture"><option value="nenhuma">Nenhuma</option><option value="papel">Papel</option><option value="pedra">Pedra</option><option value="terra">Terra</option></select></label>
+    <button id="gm2undo" title="Desfazer (Ctrl+Z)">↶</button><button id="gm2redo" title="Refazer (Ctrl+Y)">↷</button>
+    <label>Ferramenta<select id="gm2tool">
+      <option value="select">Selecionar</option>${brushOpts.map(x=>`<option value="brush:${x[0]}">${x[1]}</option>`).join('')}
+    </select></label>
+    <div class="gm2-preview"><small>Prévia</small><span id="gm2preview"></span></div>
+   </div>
+   <div class="gm2-row gm2-stylerow">
+    <b>Preenchimento / traço</b>
+    <input id="gm2fill" type="color"><input id="gm2fillhex" class="gm2-hex" maxlength="7">
+    <div id="gm2swatches">${['#ffffff','#111111','#ff5555','#ffd166','#59e391','#56c7f0','#a66cff'].map(c=>`<button data-color="${c}" style="background:${c}"></button>`).join('')}</div>
+    <label>Tamanho<input id="gm2sizebrush" type="range" min="1" max="80"></label>
+    <label>Opacidade<input id="gm2opacity" type="range" min="0" max="100"></label><span id="gm2opacityval"></span>
+    <i class="gm2-sep"></i><b class="gold">Borda</b>
+    <input id="gm2stroke" type="color"><input id="gm2strokehex" class="gm2-hex" maxlength="7">
+    <label>Grossura<input id="gm2strokeW" type="range" min="0" max="24"></label><span id="gm2strokeWval"></span>
+    <label>Opacidade<input id="gm2strokeO" type="range" min="0" max="100"></label>
+    <label>Linhas<select id="gm2line"><option value="">— escolher —</option><option value="linha_reta">Reta</option><option value="linha_ondulada">Ondulada</option><option value="linha_pontilhada">Pontilhada</option><option value="linha_curva">Curva editável</option></select></label>
+    <button id="gm2selectBtn" title="Selecionar / editar">↖</button>
+    <button id="gm2front" title="Trazer para frente">↑</button><button id="gm2back" title="Enviar para trás">↓</button>
+    <button id="gm2dup" title="Duplicar">▣</button><button id="gm2lock" title="Fixar / soltar">🔒</button>
+    <button id="gm2crop" title="Recortar imagem">✂</button><button id="gm2del" title="Excluir">🗑</button>
+   </div>
+ </div>
+ <div class="gm2-workspace">
+   <aside id="gm2side">
+    <small>Formas</small>
+    ${[['retangulo','▭','Retângulo'],['quadrado','□','Quadrado'],['triangulo','△','Triângulo'],['circulo','○','Círculo'],['elipse','⬭','Elipse']].map(x=>`<button data-shape="${x[0]}" title="${x[2]}">${x[1]}</button>`).join('')}
+    <small>Outras</small>
+    <select id="gm2other"><option value="">⌄</option><option value="hexagono">Hexágono</option><option value="pentagono">Pentágono</option><option value="losango">Losango</option><option value="estrela">Estrela</option><option value="pentagrama">Pentagrama</option><option value="hexagrama">Hexagrama</option><option value="heptagrama">Heptagrama</option><option value="u">U</option><option value="coracao">Coração</option><option value="crescente">Lua crescente</option><option value="semicirculo">Semicírculo</option></select>
+    <small>Próximos elementos</small>
+    <label>Sombra<select id="gm2shadow"><option value="nenhuma">nenhuma</option><option value="suave">suave</option><option value="media">média</option><option value="forte">forte</option></select></label>
+    <label>Direção<select id="gm2shadowdir"><option>SE</option><option>SO</option><option>NE</option><option>NO</option><option>S</option><option>N</option><option>E</option><option>O</option></select></label>
+    <label>Distância<input id="gm2shadowdist" type="number" min="0" max="30" value="4"></label>
+   </aside>
+   <div id="gm2viewport"><svg id="gm2svg"></svg></div>
+ </div>
+ <div id="gm2bank">
+   <div class="gm2-bankhead"><b>Objetos do banco</b><label><input id="gm2allobj" type="checkbox"> Selecionar todos</label></div>
+   <div id="gm2objlist"></div>
+   <button id="gm2addobj">＋ Adicionar marcados</button>
+ </div>
+ <div id="gm2status"></div>`;
+}
+
+function gm2css(){
+ if(document.getElementById('gm2css'))return;
+ const st=document.createElement('style');st.id='gm2css';st.textContent=`
+ #gm-sub-oficina2{--g2:#67e8f9;--g2b:#11152d}
+ #gm-sub-oficina2 button,#gm-sub-oficina2 select,#gm-sub-oficina2 input{font:inherit}
+ .gm2-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
+ .gm2-head h3{margin:0 0 3px;color:#8feaff}.gm2-head h3 span{font-size:.55em;color:#ffcf67;border:1px solid #80651f;border-radius:10px;padding:2px 6px}
+ .gm2-head p{margin:0;color:#aaa}.gm2-actions{display:flex;gap:7px;flex-wrap:wrap}.gm2-actions button{padding:8px 12px;border-radius:7px;border:1px solid #777;cursor:pointer}.gm2-actions .ok{background:#24a844;color:#fff}
+ #gm2ribbon{border:1px solid #34506d;border-radius:10px 10px 0 0;background:#11152d;overflow:hidden}
+ .gm2-row{display:flex;align-items:flex-end;gap:7px;flex-wrap:wrap;padding:7px 9px}.gm2-row+.gm2-row{border-top:1px solid rgba(255,255,255,.10)}
+ .gm2-row label{display:flex;flex-direction:column;gap:2px;margin:0;font-size:9px;color:#b9c2e7}.gm2-row select{height:34px;margin:0;min-width:100px}
+ .gm2-row input[type=color]{width:42px;height:32px;padding:2px;margin:0}.gm2-row input[type=range]{width:100px;margin:9px 0 5px}
+ .gm2-row button{height:34px;min-width:36px;border-radius:6px;border:1px solid #666;cursor:pointer}.gm2-row b{align-self:center;font-size:13px}.gm2-row .gold{color:#ffd24d}
+ .gm2-check{flex-direction:row!important;align-items:center;gap:4px!important;padding-bottom:7px}.gm2-check input{width:auto}
+ .gm2-hex{width:74px!important;height:32px!important;margin:0!important}.gm2-sep{height:36px;border-left:1px solid rgba(255,255,255,.14)}
+ #gm2swatches{display:flex;gap:4px;align-items:center}#gm2swatches button{width:24px;min-width:24px;height:24px;border-radius:50%;padding:0}
+ .gm2-preview{min-width:120px}.gm2-preview small{display:block;font-size:9px;color:#b9c2e7}.gm2-preview span{display:block;width:120px;height:34px;border-radius:7px;background:#252b4d;position:relative;overflow:hidden}
+ .gm2-preview span:after{content:"";position:absolute;left:7px;right:7px;top:16px;height:var(--sz,7px);background:var(--c,#59e391);opacity:var(--o,1);border-radius:99px;transform:rotate(-2deg)}
+ .gm2-workspace{display:grid;grid-template-columns:58px minmax(0,1fr);align-items:start}
+ #gm2side{border:1px solid #34506d;border-top:0;background:#11152d;padding:7px 5px;display:flex;flex-direction:column;gap:6px;min-height:560px}
+ #gm2side small{font-size:9px;color:#d6e5ff;margin-top:3px}#gm2side button{height:38px;font-size:20px;border-radius:6px;border:1px solid #777;cursor:pointer}
+ #gm2side button.active,#gm2ribbon button.active{outline:2px solid #67e8f9;background:#233e50;color:#fff}
+ #gm2side select,#gm2side input{width:100%;margin:0;font-size:10px;padding:4px}#gm2side label{font-size:9px;color:#b9c2e7;margin:0}
+ #gm2viewport{overflow:auto;max-width:100%;min-height:560px;padding:12px;background:rgba(3,8,25,.35);border-bottom:1px solid #34506d}
+ #gm2svg{display:block;touch-action:none;user-select:none;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+ .gm2-el{pointer-events:all}.gm2-handle,.gm2-crop-handle{cursor:pointer;pointer-events:all}
+ #gm2bank{border:1px solid #34506d;border-top:0;background:#11152d;padding:8px}.gm2-bankhead{display:flex;justify-content:space-between;align-items:center;gap:10px}
+ #gm2objlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:4px;max-height:120px;overflow:auto;margin:7px 0}
+ #gm2objlist label{font-size:11px;background:#181d39;border-radius:5px;padding:4px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #gm2status{font-size:11px;color:#9fc6d8;margin-top:6px}
+ @media(max-width:900px){.gm2-workspace{grid-template-columns:48px minmax(0,1fr)}#gm2side{min-height:420px}.gm2-row{gap:5px}}
+ `;document.head.appendChild(st);
+}
+
+function gm2installTab(){
+ const old=document.getElementById('gm-sub-oficina-mapas');if(!old)return;
+ if(document.getElementById('gm-sub-oficina2'))return;
+ const tabs=old.parentElement.querySelector('.gm-subtabs');
+ const oldBtn=[...tabs.querySelectorAll('button')].find(b=>b.textContent.includes('Oficina de Mapas'));
+ const btn=document.createElement('button');btn.className='btn-small gm-subtab-btn';btn.textContent='🧭 Oficina 2';
+ btn.onclick=function(){mostrarSubAbaMestre('oficina2',this);setTimeout(()=>{gm2render();gm2populateBank();},0)};
+ oldBtn?.insertAdjacentElement('afterend',btn);
+ const panel=document.createElement('div');panel.id='gm-sub-oficina2';panel.className='gm-sub-content hidden';panel.innerHTML=gm2panelHtml();
+ old.insertAdjacentElement('afterend',panel);
+ gm2css();gm2wire();gm2populateBank();gm2render();
+}
+
+function gm2populateBank(){
+ const box=document.getElementById('gm2objlist');if(!box)return;
+ const list=[...(objetosMapaDB||[])].sort((a,b)=>String(getNome(a)||'').localeCompare(String(getNome(b)||''),'pt-BR'));
+ box.innerHTML=list.map(o=>`<label title="${gm2esc(getNome(o))}"><input class="gm2objcheck" type="checkbox" value="${gm2esc(o.id)}"> ${gm2esc(getNome(o)||o.id)}</label>`).join('');
+}
+function gm2syncControls(){
+ const set=(id,v)=>{const e=document.getElementById(id);if(e&&document.activeElement!==e)e.value=v};
+ set('gm2size',`${gm2.st.w}x${gm2.st.h}`);set('gm2ppm',gm2.st.ppm);set('gm2bgcolor',gm2.st.bg);set('gm2gridcolor',gm2.st.grid);
+ const gs=document.getElementById('gm2gridshow');if(gs)gs.checked=gm2.st.showGrid!==false;
+ set('gm2texture',gm2.st.texture);set('gm2fill',gm2.defaults.fill);set('gm2fillhex',gm2.defaults.fill);set('gm2stroke',gm2.defaults.stroke);set('gm2strokehex',gm2.defaults.stroke);
+ set('gm2sizebrush',gm2.defaults.size);set('gm2opacity',Math.round(gm2.defaults.opacity*100));set('gm2strokeW',gm2.defaults.strokeWidth);set('gm2strokeO',Math.round(gm2.defaults.strokeOpacity*100));
+ set('gm2shadow',gm2.defaults.shadow);set('gm2shadowdir',gm2.defaults.shadowDir);set('gm2shadowdist',gm2.defaults.shadowDist);
+ const ov=document.getElementById('gm2opacityval');if(ov)ov.textContent=Math.round(gm2.defaults.opacity*100)+'%';
+ const sw=document.getElementById('gm2strokeWval');if(sw)sw.textContent=gm2.defaults.strokeWidth;
+ const pv=document.getElementById('gm2preview');if(pv){pv.style.setProperty('--c',gm2.defaults.fill);pv.style.setProperty('--sz',Math.max(2,Math.min(20,gm2.defaults.size))+'px');pv.style.setProperty('--o',gm2.defaults.opacity);}
+}
+function gm2updateToolbarState(){
+ const tool=document.getElementById('gm2tool');if(tool){
+   tool.value=gm2.tool==='brush'?`brush:${gm2.brush}`:gm2.tool==='select'?'select':'select';
+ }
+ document.querySelectorAll('#gm2side [data-shape]').forEach(b=>b.classList.toggle('active',gm2.tool==='shape'&&b.dataset.shape===gm2.shape));
+ document.getElementById('gm2selectBtn')?.classList.toggle('active',gm2.tool==='select');
+ const lk=document.getElementById('gm2lock'),pr=gm2el(gm2.primary);if(lk)lk.textContent=pr?.locked?'🔓':'🔒';
+ const crop=document.getElementById('gm2crop');if(crop)crop.style.display=pr?.type==='image'?'inline-block':'none';
+}
+
+function gm2setHex(key,v){
+ v=String(v||'').trim();if(!/^#[0-9a-f]{6}$/i.test(v))return;
+ gm2.defaults[key]=v;
+ if(gm2selectedEls().length)gm2applyDefaultsToSelection();else gm2syncControls();
+}
+function gm2styleChanged(){
+ if(gm2selectedEls().length)gm2applyDefaultsToSelection();else gm2syncControls();
+}
+
+function gm2wire(){
+ const $=id=>document.getElementById(id);
+ $('gm2new').onclick=()=>{if(!confirm('Limpar o rascunho da Oficina 2?'))return;gm2pushHistory();gm2.st={w:28,h:14,ppm:32,bg:'#d7d7d7',grid:'#777777',showGrid:true,texture:'nenhuma',elements:[]};gm2clearSelection();gm2saveLocal();gm2render();};
+ $('gm2undo').onclick=gm2undo;$('gm2redo').onclick=gm2redo;
+ $('gm2size').onchange=e=>{const[a,b]=e.target.value.split('x').map(Number);gm2historyAction(()=>{gm2.st.w=a;gm2.st.h=b;});};
+ $('gm2ppm').onchange=e=>{gm2.st.ppm=Number(e.target.value)||32;gm2saveLocal();gm2render();};
+ $('gm2bgcolor').oninput=e=>{gm2.st.bg=e.target.value;gm2saveLocal();gm2render();};
+ $('gm2gridcolor').oninput=e=>{gm2.st.grid=e.target.value;gm2saveLocal();gm2render();};
+ $('gm2gridshow').onchange=e=>{gm2.st.showGrid=e.target.checked;gm2saveLocal();gm2render();};
+ $('gm2texture').onchange=e=>{gm2.st.texture=e.target.value;gm2saveLocal();gm2render();};
+ $('gm2tool').onchange=e=>{const v=e.target.value;if(v==='select')gm2setTool('select');else if(v.startsWith('brush:'))gm2setTool('brush',v.slice(6));};
+ $('gm2selectBtn').onclick=()=>gm2setTool('select');
+ document.querySelectorAll('#gm2side [data-shape]').forEach(b=>b.onclick=()=>gm2setTool('shape',b.dataset.shape));
+ $('gm2other').onchange=e=>{if(e.target.value)gm2setTool('shape',e.target.value);};
+ $('gm2line').onchange=e=>{if(e.target.value)gm2setTool('line',e.target.value);};
+
+ const setStyle=(id,key,conv=x=>x)=>{$(id).oninput=e=>{gm2.defaults[key]=conv(e.target.value);gm2styleChanged();};};
+ setStyle('gm2fill','fill');$('gm2fillhex').onchange=e=>gm2setHex('fill',e.target.value);
+ setStyle('gm2stroke','stroke');$('gm2strokehex').onchange=e=>gm2setHex('stroke',e.target.value);
+ setStyle('gm2sizebrush','size',Number);setStyle('gm2opacity','opacity',v=>Number(v)/100);
+ setStyle('gm2strokeW','strokeWidth',Number);setStyle('gm2strokeO','strokeOpacity',v=>Number(v)/100);
+ setStyle('gm2shadow','shadow');setStyle('gm2shadowdir','shadowDir');setStyle('gm2shadowdist','shadowDist',Number);
+ document.querySelectorAll('#gm2swatches [data-color]').forEach(b=>b.onclick=()=>{gm2.defaults.fill=b.dataset.color;gm2styleChanged();});
+
+ $('gm2front').onclick=()=>gm2Layer(true);$('gm2back').onclick=()=>gm2Layer(false);$('gm2dup').onclick=gm2duplicate;$('gm2del').onclick=gm2delete;
+ $('gm2lock').onclick=gm2toggleLock;$('gm2crop').onclick=gm2toggleCrop;
+
+ $('gm2allobj').onchange=e=>document.querySelectorAll('.gm2objcheck').forEach(c=>c.checked=e.target.checked);
+ $('gm2addobj').onclick=()=>{const ids=[...document.querySelectorAll('.gm2objcheck:checked')].map(c=>c.value);if(!ids.length)return;gm2.tool='object';gm2.objectIds=ids;gm2clearSelection();gm2updateToolbarState();gm2status();};
+
+ $('gm2upload').onclick=()=>$('gm2file').click();$('gm2file').onchange=e=>{const f=e.target.files?.[0];if(f)gm2importImageFile(f);e.target.value='';};
+
+ $('gm2save').onclick=gm2saveLibrary;$('gm2publish').onclick=gm2publish;
+
+ const svg=$('gm2svg');
+ svg.addEventListener('pointerdown',gm2pointerDown);
+ window.addEventListener('keydown',gm2keys,true);
+ window.addEventListener('paste',gm2paste,true);
+}
+
+function gm2point(ev){
+ const svg=document.getElementById('gm2svg'),r=svg.getBoundingClientRect(),sx=(svg.viewBox.baseVal.width||r.width)/r.width,sy=(svg.viewBox.baseVal.height||r.height)/r.height,p=gm2.st.ppm;
+ return{x:(ev.clientX-r.left)*sx/p,y:(ev.clientY-r.top)*sy/p};
+}
+function gm2pointerDown(ev){
+ if(ev.button===2)return;
+ const handle=ev.target.closest?.('.gm2-handle'),crop=ev.target.closest?.('.gm2-crop-handle');
+ if(handle){ev.preventDefault();ev.stopPropagation();gm2handleStart(ev,handle.dataset.eid,handle.dataset.handle);return;}
+ if(crop){ev.preventDefault();ev.stopPropagation();gm2cropStart(ev,crop.dataset.eid,crop.dataset.crop);return;}
+ const node=ev.target.closest?.('.gm2-el'),id=node?.dataset.eid,e=id?gm2el(id):null,p=gm2point(ev);
+
+ if(e&&!e.locked){
+   if(gm2.tool==='select'||gm2.tool==='shape'||gm2.tool==='line'||gm2.tool==='object'){
+     ev.preventDefault();gm2select(id,ev.ctrlKey||ev.metaKey);
+     if(!(ev.ctrlKey||ev.metaKey))gm2moveStart(ev,id);return;
+   }
+ }
+ if(gm2.tool==='select'){
+   ev.preventDefault();if(!(ev.ctrlKey||ev.metaKey))gm2clearSelection();
+   gm2.drag={kind:'marquee',x0:p.x,y0:p.y,x1:p.x,y1:p.y};
+   const mv=e2=>{const q=gm2point(e2);gm2.drag.x1=q.x;gm2.drag.y1=q.y;gm2render();};
+   const up=()=>{window.removeEventListener('pointermove',mv);const d=gm2.drag,b={x:Math.min(d.x0,d.x1),y:Math.min(d.y0,d.y1),w:Math.abs(d.x1-d.x0),h:Math.abs(d.y1-d.y0)};gm2.drag=null;if(b.w>.05||b.h>.05){for(const el of gm2.st.elements)if(!el.locked&&gm2intersects(b,gm2bbox(el)))gm2.selected.add(el.id);gm2.primary=[...gm2.selected].at(-1)||'';}gm2render();};
+   window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});gm2render();return;
+ }
+ if(gm2.tool==='shape'){ev.preventDefault();gm2createShapeDrag(ev,p);return;}
+ if(gm2.tool==='line'){ev.preventDefault();gm2createLineDrag(ev,p);return;}
+ if(gm2.tool==='brush'){ev.preventDefault();gm2drawPath(ev,p);return;}
+ if(gm2.tool==='object'){ev.preventDefault();gm2placeObjects(p);return;}
+}
+
+function gm2createShapeDrag(ev,p0){
+ gm2pushHistory();let e=null,moved=false;
+ const mv=e2=>{moved=true;const p=gm2point(e2);if(!e){e=gm2newShape(gm2.shape,p0.x,p0.y,.05,.05);gm2.st.elements.push(e);}
+   e.x=Math.min(p0.x,p.x);e.y=Math.min(p0.y,p.y);e.w=Math.max(.05,Math.abs(p.x-p0.x));e.h=Math.max(.05,Math.abs(p.y-p0.y));
+   if(['quadrado','circulo'].includes(e.kind)){const q=Math.max(e.w,e.h);e.w=q;e.h=q;}gm2render();};
+ const up=()=>{window.removeEventListener('pointermove',mv);if(!moved){e=gm2newShape(gm2.shape,p0.x-.5,p0.y-.5,1,1);gm2.st.elements.push(e);}gm2clearSelection();gm2.selected.add(e.id);gm2.primary=e.id;gm2saveLocal();gm2render();};
+ window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
+function gm2createLineDrag(ev,p0){
+ gm2pushHistory();const e=gm2newLine(gm2.line,p0.x,p0.y,p0.x+.05,p0.y);gm2.st.elements.push(e);let moved=false;
+ const mv=e2=>{moved=true;const p=gm2point(e2);e.x2=p.x;e.y2=p.y;if(e.kind==='linha_curva'){e.cx=(p0.x+p.x)/2;e.cy=(p0.y+p.y)/2-.5;}gm2render();};
+ const up=()=>{window.removeEventListener('pointermove',mv);if(!moved)e.x2=p0.x+1;gm2clearSelection();gm2.selected.add(e.id);gm2.primary=e.id;gm2saveLocal();gm2render();};
+ window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
+function gm2drawPath(ev,p0){
+ gm2pushHistory();const e=gm2newPath([p0]);gm2.st.elements.push(e);
+ const mv=e2=>{const p=gm2point(e2);const last=e.points.at(-1);if(!last||Math.hypot(p.x-last.x,p.y-last.y)>.025)e.points.push(p);gm2render();};
+ const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();gm2render();};
+ window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
+
+function gm2moveStart(ev,id){
+ const targets=gm2.selected.has(id)?gm2selectedEls():[gm2el(id)];if(!targets.length)return;
+ gm2pushHistory();const p0=gm2point(ev),starts=targets.map(e=>({e,x:e.x,y:e.y,x2:e.x2,y2:e.y2,cx:e.cx,cy:e.cy,pts:e.type==='path'?gm2clone(e.points):null}));
+ const mv=e2=>{const p=gm2point(e2),dx=p.x-p0.x,dy=p.y-p0.y;for(const s of starts){const e=s.e;
+   if(e.type==='path')e.points=s.pts.map(q=>({x:q.x+dx,y:q.y+dy}));
+   else {e.x=s.x+dx;e.y=s.y+dy;if(e.type==='line'){e.x2=s.x2+dx;e.y2=s.y2+dy;if(e.kind==='linha_curva'){e.cx=s.cx+dx;e.cy=s.cy+dy;}}}
+ }gm2render();};
+ const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
+ window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
+
+function gm2handleStart(ev,id,h){
+ const e=gm2el(id);if(!e||e.locked)return;gm2pushHistory();const p0=gm2point(ev),b=gm2bbox(e),s=gm2clone(e);
+ if(h==='rot'){
+   const c={x:b.x+b.w/2,y:b.y+b.h/2};
+   const mv=e2=>{const p=gm2point(e2);e.rot=(Math.atan2(p.y-c.y,p.x-c.x)*180/Math.PI+90+360)%360;gm2render();};
+   const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
+   window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});return;
+ }
+ if(h==='radius'){
+   const mv=e2=>{const p=gm2point(e2);e.radius=Math.max(0,Math.min(Math.min(e.w,e.h)/2,p.x-e.x));gm2render();};
+   const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
+   window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});return;
+ }
+ if(h==='curve'){
+   const mv=e2=>{const p=gm2point(e2);e.cx=p.x;e.cy=p.y;gm2render();};
+   const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
+   window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});return;
+ }
+ const aspect=(s.w||1)/(s.h||1);
+ const mv=e2=>{const p=gm2point(e2),dx=p.x-p0.x,dy=p.y-p0.y;
+   let x=s.x,y=s.y,w=s.w,hv=s.h;
+   if(h.includes('e'))w=Math.max(.08,s.w+dx);if(h.includes('s'))hv=Math.max(.08,s.h+dy);
+   if(h.includes('w')){w=Math.max(.08,s.w-dx);x=s.x+s.w-w;}if(h.includes('n')){hv=Math.max(.08,s.h-dy);y=s.y+s.h-hv;}
+   if(e.type==='image'&&['nw','ne','se','sw'].includes(h)){if(Math.abs(dx)>Math.abs(dy)){hv=w/aspect;if(h.includes('n'))y=s.y+s.h-hv;}else{w=hv*aspect;if(h.includes('w'))x=s.x+s.w-w;}}
+   if(e.type==='shape'&&['quadrado','circulo'].includes(e.kind)){const q=Math.max(w,hv);w=q;hv=q;if(h.includes('w'))x=s.x+s.w-q;if(h.includes('n'))y=s.y+s.h-q;}
+   e.x=x;e.y=y;e.w=w;e.h=hv;gm2render();
+ };
+ const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
+ window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
+function gm2cropStart(ev,id,side){
+ const e=gm2el(id);if(!e||e.type!=='image')return;gm2pushHistory();const p0=gm2point(ev),s=gm2clone(e),c=gm2clone(e.crop||{l:0,t:0,r:0,b:0});
+ const fullW=s.w/Math.max(.03,1-c.l-c.r),fullH=s.h/Math.max(.03,1-c.t-c.b);
+ const mv=e2=>{const p=gm2point(e2),dx=p.x-p0.x,dy=p.y-p0.y;
+   if(side==='l'){const d=Math.max(-c.l*fullW,Math.min(s.w-.08,dx));e.x=s.x+d;e.w=s.w-d;e.crop.l=Math.max(0,Math.min(.95-c.r,c.l+d/fullW));}
+   if(side==='r'){const d=Math.max(-c.r*fullW,Math.min(s.w-.08,-dx));e.w=s.w+dx;e.crop.r=Math.max(0,Math.min(.95-c.l,c.r-dx/fullW));}
+   if(side==='t'){const d=Math.max(-c.t*fullH,Math.min(s.h-.08,dy));e.y=s.y+d;e.h=s.h-d;e.crop.t=Math.max(0,Math.min(.95-c.b,c.t+d/fullH));}
+   if(side==='b'){e.h=Math.max(.08,s.h+dy);e.crop.b=Math.max(0,Math.min(.95-c.t,c.b-dy/fullH));}
+   gm2render();
+ };
+ const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
+ window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
+
+function gm2Layer(front){
+ const a=gm2selectedEls();if(!a.length)return;gm2pushHistory();
+ if(front){let z=gm2zNext();a.forEach(e=>e.z=z++);}
+ else{const min=Math.min(...gm2.st.elements.map(e=>Number(e.z)||0))-a.length-1;a.forEach((e,i)=>e.z=min+i);}
+ gm2saveLocal();gm2render();
+}
+function gm2duplicate(){
+ const a=gm2selectedEls();if(!a.length)return;gm2pushHistory();gm2clearSelection();
+ for(const old of a){const e=gm2clone(old);e.id=gm2id(old.type[0]);e.z=gm2zNext();if(e.type==='path')e.points=e.points.map(p=>({x:p.x+.35,y:p.y+.35}));else{e.x+=.35;e.y+=.35;if(e.type==='line'){e.x2+=.35;e.y2+=.35;e.cx+=.35;e.cy+=.35;}}gm2.st.elements.push(e);gm2.selected.add(e.id);gm2.primary=e.id;}
+ gm2saveLocal();gm2render();
+}
+function gm2delete(){if(!gm2.selected.size)return;gm2pushHistory();gm2.st.elements=gm2.st.elements.filter(e=>!gm2.selected.has(e.id));gm2clearSelection();gm2saveLocal();gm2render();}
+function gm2toggleLock(){const a=gm2selectedEls();if(!a.length)return;gm2pushHistory();const lock=!a.every(e=>e.locked);a.forEach(e=>e.locked=lock);gm2saveLocal();gm2render();}
+function gm2toggleCrop(){const e=gm2el(gm2.primary);if(!e||e.type!=='image')return;e.cropMode=!e.cropMode;gm2render();}
+
+function gm2copy(cut=false){
+ const a=gm2selectedEls();if(!a.length)return;
+ GM2_CLIP.items=gm2clone(a);gm2.internalPasteStamp=Date.now();
+ if(cut)gm2delete();
+}
+function gm2pasteInternal(){
+ if(!GM2_CLIP.items.length)return;gm2pushHistory();gm2clearSelection();
+ for(const old of GM2_CLIP.items){const e=gm2clone(old);e.id=gm2id(e.type[0]);e.z=gm2zNext();if(e.type==='path')e.points=e.points.map(p=>({x:p.x+.35,y:p.y+.35}));else{e.x+=.35;e.y+=.35;if(e.type==='line'){e.x2+=.35;e.y2+=.35;e.cx+=.35;e.cy+=.35;}}gm2.st.elements.push(e);gm2.selected.add(e.id);gm2.primary=e.id;}
+ gm2saveLocal();gm2render();
+}
+function gm2keys(ev){
+ const panel=document.getElementById('gm-sub-oficina2');if(!panel||panel.classList.contains('hidden'))return;
+ const tag=ev.target?.tagName?.toLowerCase();if(['input','textarea','select'].includes(tag))return;
+ const mod=ev.ctrlKey||ev.metaKey,k=ev.key.toLowerCase();
+ if(mod&&k==='z'){ev.preventDefault();ev.shiftKey?gm2redo():gm2undo();}
+ else if(mod&&k==='y'){ev.preventDefault();gm2redo();}
+ else if(mod&&k==='c'){ev.preventDefault();gm2copy(false);}
+ else if(mod&&k==='x'){ev.preventDefault();gm2copy(true);}
+ else if(mod&&k==='d'){ev.preventDefault();gm2duplicate();}
+ else if(mod&&k==='v'&&GM2_CLIP.items.length){ev.preventDefault();gm2pasteInternal();}
+ else if(ev.key==='Delete'||ev.key==='Backspace'){ev.preventDefault();gm2delete();}
+}
+function gm2paste(ev){
+ const panel=document.getElementById('gm-sub-oficina2');if(!panel||panel.classList.contains('hidden'))return;
+ if(Date.now()-gm2.internalPasteStamp<350)return;
+ const files=[...(ev.clipboardData?.files||[])].filter(f=>f.type.startsWith('image/'));
+ if(!files.length)return;
+ ev.preventDefault();const f=files[0],sig=`${f.name}|${f.size}|${f.type}`;
+ if(sig===gm2.lastExternalPasteSig&&Date.now()-gm2.lastExternalPasteAt<1600)return;
+ gm2.lastExternalPasteSig=sig;gm2.lastExternalPasteAt=Date.now();gm2importImageFile(f);
+}
+function gm2importImageFile(f){
+ const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const maxW=Math.min(gm2.st.w*.65,10),ratio=im.width/im.height||1,w=maxW,h=w/ratio;
+   gm2pushHistory();const e=gm2newImage(r.result,Math.max(0,(gm2.st.w-w)/2),Math.max(0,(gm2.st.h-h)/2),w,h,f.name||'Imagem');gm2.st.elements.push(e);gm2clearSelection();gm2.selected.add(e.id);gm2.primary=e.id;gm2.tool='select';gm2saveLocal();gm2render();
+ };im.src=r.result;};r.readAsDataURL(f);
+}
+
+function gm2placeObjects(p){
+ const ids=gm2.objectIds||[];if(!ids.length)return;gm2pushHistory();let off=0;
+ for(const id of ids){const m=(objetosMapaDB||[]).find(o=>String(o.id)===String(id));if(!m)continue;const w=Math.max(.35,Number(m.larguraM||m.largura||1)),h=Math.max(.35,Number(m.alturaM||m.altura||1)),src=m.imagem||m.image||'';
+   gm2.st.elements.push({id:gm2id('o'),type:'object',modeloId:m.id,name:getNome(m)||m.id,src,x:p.x+off,y:p.y+off,w,h,rot:0,z:gm2zNext(),locked:false,opacity:1,shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist});off+=.25;}
+ gm2saveLocal();gm2render();
+}
+
+function gm2toLegacy(){
+ const desenhos=[],objetos=[],formas=[];
+ for(const e of gm2.st.elements){
+   if(e.type==='path')desenhos.push({id:e.id,cor:e.stroke,esp:e.strokeWidth,opacidade:e.strokeOpacity,pincel:e.brush,textura:e.brush,ferramenta:e.brush==='borracha'?'borracha':'traco',pts:gm2clone(e.points),ordemOficina:e.z});
+   else if(e.type==='shape')formas.push({id:e.id,tipo:e.kind,x:e.x,y:e.y,w:e.w,h:e.h,rot:e.rot||0,radius:e.radius||0,fill:e.fill,fillOpacity:e.fillOpacity,stroke:e.stroke,strokeWidth:e.strokeWidth,strokeOpacity:e.strokeOpacity,opacity:e.opacity,ordemOficina:e.z,fixada:e.locked,sombraOficina:e.shadow,sombraDirecao:e.shadowDir,sombraDist:e.shadowDist});
+   else if(e.type==='line')formas.push({id:e.id,tipo:e.kind,x:e.x,y:e.y,x2:e.x2,y2:e.y2,cx:e.cx,cy:e.cy,w:Math.abs(e.x2-e.x),h:Math.abs(e.y2-e.y),fill:'none',stroke:e.stroke,strokeWidth:e.strokeWidth,strokeOpacity:e.strokeOpacity,ordemOficina:e.z,fixada:e.locked,sombraOficina:e.shadow,sombraDirecao:e.shadowDir,sombraDist:e.shadowDist});
+   else if(e.type==='object')objetos.push({id:e.id,modeloId:e.modeloId,x:e.x+e.w/2,y:e.y+e.h/2,larguraM:e.w,alturaM:e.h,angulo:e.rot||0,imagem:e.src,ordemOficina:e.z,fixada:e.locked,sombraOficina:e.shadow,sombraDirecao:e.shadowDir,sombraDist:e.shadowDist});
+   else if(e.type==='image')objetos.push({id:e.id,modeloId:'imagem_importada',x:e.x+e.w/2,y:e.y+e.h/2,larguraM:e.w,alturaM:e.h,angulo:e.rot||0,imagem:e.src,ordemOficina:e.z,fixada:e.locked,imagemImportada:true,crop:e.crop});
+ }
+ return{desenhos,objetos,formas};
+}
+async function gm2saveLibrary(){
+ if(!batalhaEhMestre_())return;
+ const nome=prompt('Nome do mapa preparado:','');if(nome==null||!String(nome).trim())return;
+ const legacy=gm2toLegacy();let id=labMapaSlug_(nome),base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
+ const dados={id,nome:String(nome).trim(),larguraM:gm2.st.w,alturaM:gm2.st.h,pxPorMetro:gm2.st.ppm,fundo:gm2.st.bg,corGrade:gm2.st.grid,gradeVisivel:gm2.st.showGrid,textura:gm2.st.texture,...legacy,criadoPor:currentUserUid||'',atualizadoEm:new Date().toISOString(),oficina2:true};
+ try{const salvo=await labMapaSalvarFirestore_(dados,0);mapasDB.push(salvo);labAtualizarSelectMapas_();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();notificar_(`Mapa “${dados.nome}” salvo pela Oficina 2.`,'sucesso',3500);}
+ catch(e){console.error(e);notificar_('Não foi possível salvar. Imagens coladas muito grandes podem ultrapassar o limite do Firestore.','erro',6000);}
+}
+function gm2publish(){
+ if(!batalhaEhMestre_())return;if(!confirm('Publicar o mapa da Oficina 2 na Mesa ao Vivo? Participantes serão mantidos.'))return;
+ const legacy=gm2toLegacy();labEstado_.larguraM=gm2.st.w;labEstado_.alturaM=gm2.st.h;labEstado_.fundo=gm2.st.bg;labEstado_.corGrade=gm2.st.grid;labEstado_.gradeVisivel=gm2.st.showGrid;labEstado_.textura=gm2.st.texture;
+ labEstado_.desenhosLab=legacy.desenhos;labEstado_.objetosLab=legacy.objetos;labEstado_.formasLab=legacy.formas;labSalvarLocal_();labRender_();notificar_('Mapa da Oficina 2 publicado na Mesa ao Vivo.','sucesso',3500);
+}
+
+window.gm2render=gm2render;
+setTimeout(gm2installTab,900);
+})();
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -28679,6 +29358,6 @@ setTimeout(()=>{
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.66.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.70.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
