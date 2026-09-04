@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.64.0 ===== */
+/* ===== V46.65.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.64.0 ===== */
+/* ===== V46.65.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22017,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.64.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.65.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22176,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.64.0
+// V46.65.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22533,7 +22533,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.64.0
+// V46.65.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22818,7 +22818,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.64.0 — Oficina: estilos de traço exclusivos + prévia real
+// V46.65.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22894,7 +22894,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.64.0
+// V46.65.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22979,7 +22979,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.64.0 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.65.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23120,7 +23120,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.64.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.65.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23362,7 +23362,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.64.0 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.65.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23521,7 +23521,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.64.0 — Oficina simplificada
+// V46.65.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23866,7 +23866,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.64.0 — Oficina: objetos realmente opacos + painel de camadas
+// V46.65.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24039,7 +24039,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.64.0 — Oficina: composição real por ordem de adição
+// V46.65.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24262,7 +24262,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.64.0',e);}
+    }catch(e){console.warn('Oficina v46.65.0',e);}
     return r;
 };
 
@@ -24272,7 +24272,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.64.0 — REFORMA DA OFICINA
+// V46.65.0 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25025,8 +25025,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.64.0 — reconstrução limpa da barra da Oficina
-// Base: 46.64.0 funcional. Não usa varredura agressiva do DOM.
+// V46.65.0 — reconstrução limpa da barra da Oficina
+// Base: 46.65.0 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25255,8 +25255,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.64.0 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.64.0
+// V46.65.0 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.65.0
 // ============================================================
 
 const gm580_ = {
@@ -25923,14 +25923,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.64.0 — OFICINA REESTRUTURADA
+// V46.65.0 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.64.0'
+  version:'46.65.0'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26154,7 +26154,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.64.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.65.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26246,7 +26246,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.64.0 — Oficina realmente única
+// V46.65.0 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26302,7 +26302,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.64.0 — edição persistente de formas/objetos + histórico completo
+// V46.65.0 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26707,7 +26707,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.64.0 — estados separados, undo/redo real, sombra persistente,
+// V46.65.0 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27122,7 +27122,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.64.0 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.65.0 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27260,7 +27260,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.64.0 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.65.0 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27712,6 +27712,244 @@ setTimeout(()=>{
   setTimeout(()=>{try{gm640Compactify_();gm640InstallMapCapture_();gm640CompactState_();}catch(e){console.warn('Oficina 46.64',e)}},1000);
 })();
 
+
+
+// ============================================================
+// V46.65.0 — layout da Oficina baseado no mockup do usuário
+// barra superior compacta + formas à esquerda + banco embaixo
+// rolagem natural: nada fica sticky sobre o mapa
+// ============================================================
+(function(){
+  window.gm580ToolbarHtml_=function(){
+    const tools=[
+      ['select','Selecionar'],['solido','Pincel'],['ladrilhos','Ladrilhos'],['espelhado','Espelhado'],
+      ['caligrafia','Caligrafia'],['caneta','Caneta'],['lapis','Lápis'],['serpentina','Serpentina'],
+      ['seta','Seta'],['curso','Curso'],['giz_cera','Giz de cera'],['spray','Spray'],['carimbo','Carimbo'],
+      ['pele','Pelos'],['esboco','Esboço'],['espirografo','Espirógrafo'],['teia','Teia'],['irregular','Irregular'],
+      ['pontilhado','Pontilhado'],['giz','Giz'],['ranhura','Ranhura'],['areia','Areia'],['cascalho','Cascalho'],
+      ['grama','Grama'],['folhas','Folhas'],['neve','Neve'],['fumaca','Fumaça'],['borracha','Borracha']
+    ];
+    const other=[
+      ['hexagono','Hexágono'],['pentagono','Pentágono'],['losango','Losango'],['estrela','Estrela'],
+      ['pentagrama','Pentagrama'],['hexagrama','Hexagrama'],['heptagrama','Heptagrama'],['u','U'],
+      ['coracao','Coração'],['meialua','Meia-lua'],['semicirculo','Semicírculo']
+    ];
+    const colors=['#ffffff','#111111','#ff5555','#ffd15c','#59e391','#4fc3f7','#b56cff'];
+
+    return `
+    <div id="gm580Toolbar" class="gm650-toolbar">
+      <div class="gm650-ribbon gm650-ribbon-a">
+        <label><small>Tamanho</small><select id="gm580Size" onchange="gmOficinaV2Tamanho_(this.value)">
+          <option value="10x10">10 × 10 m</option><option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option>
+          <option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option><option value="50x40">50 × 40 m</option>
+        </select></label>
+        <label><small>Escala</small><select id="gm580Scale" onchange="gmOficinaV2Escala_(this.value)">${[18,24,32,40,48,60,72].map(x=>`<option value="${x}">${x} px/m</option>`).join('')}</select></label>
+        <label class="gm650-color"><small>Fundo</small><input id="gm580Bg" type="color" onchange="gmOficinaV2Fundo_(this.value)"></label>
+        <label class="gm650-color"><small>Grade</small><input id="gm580GridColor" type="color" onchange="gmOficinaV2GradeCor_(this.value)"></label>
+        <label class="gm650-check" title="Mostrar ou ocultar grade"><input id="gm580Grid" type="checkbox" onchange="gmOficinaV2GradeVis_(this.checked)"> Grade</label>
+        <label class="gm650-terrain"><small>Textura do terreno</small><select id="gm580Terrain" onchange="gmOficinaV2Terreno_(this.value)">
+          <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option>
+          <option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option>
+          <option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option>
+          <option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
+        </select></label>
+        <button class="gm650-icon" title="Desfazer" onclick="gmOficinaV2Undo_()">↶</button>
+        <button class="gm650-icon" title="Refazer" onclick="gmOficinaV2Redo_()">↷</button>
+        <span class="gm650-sep"></span>
+        <label class="gm650-tool"><small>Ferramenta</small><select id="gm580Tool" onchange="gm580Tool_(this.value)">${tools.map((x,i)=>`<option value="${x[0]}" ${i===0?'selected':''}>${x[1]}</option>`).join('')}</select></label>
+        <label class="gm650-preview"><small>Prévia</small><canvas id="gm580Preview" width="120" height="30"></canvas></label>
+      </div>
+
+      <div class="gm650-ribbon gm650-ribbon-b">
+        <strong>Preenchimento / traço</strong>
+        <label class="gm650-color"><small>Cor</small><input id="gm580Color" type="color" value="#111111" onchange="gm580Color_(this.value)"></label>
+        <button class="gm650-icon" title="Conta-gotas do preenchimento/traço" onclick="gm640PickColor_(false)">💧</button>
+        <label class="gm650-advanced"><small>RGB</small><input id="gm580Rgb" type="text" value="17/17/17" onchange="gm580RgbInput_(this.value)"></label>
+        <label class="gm650-advanced"><small>HEX</small><input id="gm580Hex" type="text" value="#111111" maxlength="7" onchange="gm580Color_(this.value)"></label>
+        <span class="gm650-swatches">${colors.map(c=>`<button title="${c}" onclick="gm580Color_('${c}')" style="background:${c}"></button>`).join('')}</span>
+        <label><small>Tamanho</small><span class="gm650-range"><input id="gm580SizeBrush" type="range" min="1" max="100" value="7" oninput="gm580BrushSize_(this.value)"><b id="gm580SizeVal">7</b></span></label>
+        <label><small>Opacidade</small><span class="gm650-range"><input id="gm580Opacity" type="range" min="0" max="100" step="5" value="100" oninput="gm580Opacity_(this.value)"><b id="gm580OpacityVal">100%</b></span></label>
+
+        <span class="gm650-sep"></span><strong class="gm650-yellow">Borda</strong>
+        <label class="gm650-color"><small>Cor</small><input id="gm580BorderColor" type="color" value="#111111" onchange="gm580BorderColor_(this.value)"></label>
+        <button class="gm650-icon" title="Conta-gotas da borda" onclick="gm640PickColor_(true)">💧</button>
+        <label class="gm650-advanced"><small>RGB</small><input id="gm580BorderRgb" type="text" value="17/17/17" onchange="gm580BorderRgb_(this.value)"></label>
+        <label class="gm650-advanced"><small>HEX</small><input id="gm580BorderHex" type="text" value="#111111" maxlength="7" onchange="gm580BorderColor_(this.value)"></label>
+        <label><small>Grossura</small><span class="gm650-range"><input id="gm580BorderWidth" type="range" min="0" max="20" value="0" oninput="gm580BorderWidth_(this.value)"><b id="gm580BorderWidthVal">0</b></span></label>
+        <label><small>Opacidade</small><span class="gm650-range"><input id="gm580BorderOpacity" type="range" min="0" max="100" step="5" value="100" oninput="gm580BorderOpacity_(this.value)"><b id="gm580BorderOpacityVal">100%</b></span></label>
+
+        <label class="gm650-lines"><small>Linhas</small><select id="gm580Line" onchange="gm580Line_(this.value)">
+          <option value="">— escolher —</option><option value="linha">Reta</option><option value="linha_sinuosa">Sinuosa</option>
+          <option value="linha_pontilhada">Pontilhada</option><option value="linha_curva">Curva editável</option>
+        </select></label>
+        <span class="gm650-actions">
+          <button class="gm650-icon" title="Editar forma" id="gm580EditBtn" onclick="gm580ToggleEdit_()">✥</button>
+          <button class="gm650-icon" title="Trazer para frente" onclick="gm580Front_()">↑</button>
+          <button class="gm650-icon" title="Enviar para trás" onclick="gm580Back_()">↓</button>
+          <button class="gm650-icon" title="Duplicar" onclick="gm580Duplicate_()">⧉</button>
+          <button class="gm650-icon" title="Excluir" onclick="gm580Delete_()">🗑</button>
+          <button class="gm650-icon gm650-more" title="Mostrar/ocultar RGB e HEX" onclick="document.getElementById('gm580Toolbar').classList.toggle('gm650-show-advanced')">⋯</button>
+        </span>
+      </div>
+
+      <div id="gm650Side" class="gm650-side">
+        <strong title="Formas">Formas</strong>
+        <button title="Retângulo" onclick="gm580Shape_('retangulo')">▭</button>
+        <button title="Quadrado" onclick="gm580Shape_('quadrado')">□</button>
+        <button title="Triângulo" onclick="gm580Shape_('triangulo')">△</button>
+        <button title="Círculo" onclick="gm580Shape_('circulo')">○</button>
+        <button title="Elipse" onclick="gm580Shape_('elipse')">⬭</button>
+        <label title="Outras formas"><small>Outras</small><select id="gm580Other" onchange="if(this.value){gm580Shape_(this.value);this.value=''}">
+          <option value="">⌄</option>${other.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}
+        </select></label>
+        <div id="gm580Inspector"></div>
+      </div>
+
+      <div id="gm650Bank" class="gm650-bank">
+        <div class="gm650-bankhead">
+          <strong>Objetos do banco</strong>
+          <label><input type="checkbox" onchange="gm580CheckAllObjects_(this.checked)"> Selecionar todos</label>
+        </div>
+        <div id="gm580ObjectBank"></div>
+        <button class="btn-small" onclick="gm580AddObjects_()">＋ Adicionar marcados</button>
+      </div>
+    </div>`;
+  };
+
+  window.gm580BuildUI_=function(){
+    const view=document.getElementById('gmOficinaV2Viewport');if(!view)return;
+    document.getElementById('gm573Toolbar')?.remove();
+    document.getElementById('gm580Toolbar')?.remove();
+    document.getElementById('gm650Workspace')?.replaceWith(view);
+    ['gmVet490Tools','gm570Toolbar'].forEach(id=>document.getElementById(id)?.remove());
+
+    view.insertAdjacentHTML('beforebegin',gm580ToolbarHtml_());
+    const tb=document.getElementById('gm580Toolbar');
+    const side=document.getElementById('gm650Side');
+    const bank=document.getElementById('gm650Bank');
+
+    const workspace=document.createElement('div');
+    workspace.id='gm650Workspace';
+    workspace.className='gm650-workspace';
+    view.parentNode.insertBefore(workspace,view);
+    workspace.appendChild(side);
+    workspace.appendChild(view);
+    workspace.insertAdjacentElement('afterend',bank);
+
+    gm580PopulateObjects_();
+    gm580Sync_();
+    gm580Tool_('select');
+  };
+
+  function gm650EnsureLayout_(){
+    const view=document.getElementById('gmOficinaV2Viewport');
+    if(!view)return;
+    if(!document.getElementById('gm580Toolbar') || !document.getElementById('gm650Workspace')){
+      gm580BuildUI_();
+    }
+  }
+
+  const css=document.createElement('style');
+  css.id='gm650Css';
+  css.textContent=`
+    #gm580Toolbar.gm650-toolbar{
+      position:static!important; top:auto!important; z-index:auto!important;
+      display:block!important; margin:6px 0 0!important; padding:0!important;
+      border:1px solid rgba(126,231,255,.18)!important; border-radius:8px 8px 0 0!important;
+      background:rgba(16,17,40,.78)!important; box-shadow:none!important; backdrop-filter:none!important;
+      overflow:visible!important;
+    }
+    .gm650-ribbon{
+      display:flex!important; align-items:flex-end!important; gap:5px!important; flex-wrap:wrap!important;
+      padding:5px 7px!important; min-height:42px; border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    .gm650-ribbon label{display:flex;flex-direction:column;gap:1px;min-width:0}
+    .gm650-ribbon small,.gm650-side small{font-size:8px!important;line-height:9px!important;color:#aebdd0!important}
+    .gm650-ribbon strong{font-size:11px!important;line-height:28px;white-space:nowrap;color:#d7efff}
+    .gm650-yellow{color:#ffd84f!important}
+    .gm650-ribbon select{height:27px!important;font-size:11px!important;padding:2px 22px 2px 6px!important;border-radius:6px!important}
+    #gm580Size{width:112px!important} #gm580Scale{width:88px!important}
+    #gm580Terrain{width:145px!important} #gm580Tool{width:150px!important} #gm580Line{width:150px!important}
+    .gm650-color input[type=color]{width:34px!important;height:27px!important;padding:1px!important}
+    .gm650-check{flex-direction:row!important;align-items:center!important;height:27px;padding-top:8px;font-size:10px!important;white-space:nowrap}
+    .gm650-icon{width:30px!important;min-width:30px!important;height:28px!important;padding:2px!important;font-size:14px!important;border-radius:5px!important}
+    .gm650-preview canvas{width:100px!important;height:27px!important;border:1px solid rgba(255,255,255,.18);border-radius:6px;background:rgba(255,255,255,.05)}
+    .gm650-sep{height:28px;width:1px;background:rgba(255,255,255,.12);margin:0 2px}
+    .gm650-swatches{display:flex;gap:3px;align-items:center;height:27px}
+    .gm650-swatches button{width:20px!important;min-width:20px!important;height:20px!important;padding:0!important;border-radius:50%!important}
+    .gm650-range{display:flex;align-items:center;gap:3px;height:27px}
+    .gm650-range input{width:82px!important}
+    .gm650-range b{font-size:10px;min-width:27px}
+    .gm650-advanced{display:none!important}
+    .gm650-show-advanced .gm650-advanced{display:flex!important}
+    .gm650-advanced input{width:70px!important;height:27px!important;font-size:10px!important;padding:3px!important}
+    .gm650-actions{display:flex;gap:4px;align-items:flex-end;margin-left:auto}
+
+    .gm650-workspace{
+      display:grid; grid-template-columns:44px minmax(0,1fr); align-items:start;
+      width:100%; margin:0!important; padding:0!important;
+    }
+    .gm650-side{
+      position:static!important; width:44px; min-width:44px; align-self:stretch;
+      display:flex; flex-direction:column; align-items:center; gap:5px;
+      padding:7px 4px; background:rgba(16,17,40,.86); border:1px solid rgba(126,231,255,.18); border-top:0;
+      overflow:visible;
+    }
+    .gm650-side>strong{font-size:8px!important;color:#d7efff;writing-mode:horizontal-tb}
+    .gm650-side>button{width:29px!important;min-width:29px!important;height:29px!important;padding:1px!important;font-size:15px!important;border-radius:5px!important}
+    .gm650-side>label{width:36px;text-align:center}
+    .gm650-side select{width:36px!important;height:25px!important;padding:1px!important;font-size:9px!important}
+    .gm650-side #gm580Inspector{
+      width:40px!important; margin-top:5px; font-size:8px!important; overflow:visible;
+    }
+    .gm650-side #gm580Inspector>div{
+      width:40px!important; display:flex!important; flex-direction:column!important; gap:3px!important; padding:0!important;
+    }
+    .gm650-side #gm580Inspector label{width:40px!important;font-size:8px!important}
+    .gm650-side #gm580Inspector select,.gm650-side #gm580Inspector input[type=number]{
+      width:40px!important;min-width:40px!important;height:24px!important;font-size:9px!important;padding:1px!important
+    }
+    .gm650-side #gm580Inspector button{width:36px!important;min-width:36px!important;padding:2px!important;font-size:9px!important}
+    #gmOficinaV2Viewport{
+      margin:0!important; border-radius:0!important; min-width:0;
+    }
+
+    .gm650-bank{
+      position:static!important; width:100%; margin:0!important; padding:5px 8px 7px!important;
+      background:rgba(16,17,40,.86); border:1px solid rgba(126,231,255,.18); border-top:1px solid rgba(255,255,255,.12);
+      border-radius:0 0 8px 8px;
+    }
+    .gm650-bankhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px}
+    .gm650-bankhead strong{font-size:11px;color:#d7efff}.gm650-bankhead label{font-size:10px}
+    #gm580ObjectBank{
+      display:grid!important;grid-template-columns:repeat(auto-fill,minmax(115px,1fr))!important;
+      gap:3px!important;max-width:none!important;max-height:78px!important;overflow:auto!important;
+      padding:3px!important;border:0!important;border-radius:4px!important;font-size:9px!important;
+    }
+    #gm580ObjectBank label{font-size:9px!important;min-height:20px!important;padding:2px 4px!important}
+    .gm650-bank>.btn-small{margin-top:4px!important;font-size:10px!important;padding:4px 7px!important}
+
+    @media(max-width:1100px){
+      .gm650-workspace{grid-template-columns:40px minmax(0,1fr)}
+      .gm650-side{width:40px;min-width:40px}
+      .gm650-ribbon{gap:4px!important}
+      #gm580Terrain{width:125px!important} #gm580Tool{width:130px!important}
+    }
+  `;
+  document.head.appendChild(css);
+
+  // A regra antiga da 46.64 tornava a barra sticky. Esta chamada reconstrói
+  // a Oficina com a nova estrutura e deixa toda a página rolar naturalmente.
+  setTimeout(()=>{try{gm580BuildUI_();gm650EnsureLayout_();}catch(e){console.warn('Oficina 46.65',e)}},700);
+
+  const render650base=window.gmOficinaRender_;
+  window.gmOficinaRender_=function(){
+    const r=render650base.apply(this,arguments);
+    requestAnimationFrame(()=>{try{gm650EnsureLayout_();}catch(_){}});
+    return r;
+  };
+})();
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -27728,6 +27966,6 @@ setTimeout(()=>{
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.64.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.65.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
