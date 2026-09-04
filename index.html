@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.73.0 ===== */
+/* ===== V46.73.1 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.73.0 ===== */
+/* ===== V46.73.1 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22021,7 +22021,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.73.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.73.1 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22180,7 +22180,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.73.0
+// V46.73.1
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22537,7 +22537,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.73.0
+// V46.73.1
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22822,7 +22822,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.73.0 — Oficina: estilos de traço exclusivos + prévia real
+// V46.73.1 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22898,7 +22898,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.73.0
+// V46.73.1
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22983,7 +22983,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.73.0 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.73.1 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23124,7 +23124,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.73.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.73.1 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23366,7 +23366,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.73.0 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.73.1 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23525,7 +23525,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.73.0 — Oficina simplificada
+// V46.73.1 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23870,7 +23870,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.73.0 — Oficina: objetos realmente opacos + painel de camadas
+// V46.73.1 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24043,7 +24043,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.73.0 — Oficina: composição real por ordem de adição
+// V46.73.1 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24266,7 +24266,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.73.0',e);}
+    }catch(e){console.warn('Oficina v46.73.1',e);}
     return r;
 };
 
@@ -24276,7 +24276,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.73.0 — REFORMA DA OFICINA
+// V46.73.1 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25029,8 +25029,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.73.0 — reconstrução limpa da barra da Oficina
-// Base: 46.73.0 funcional. Não usa varredura agressiva do DOM.
+// V46.73.1 — reconstrução limpa da barra da Oficina
+// Base: 46.73.1 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25259,8 +25259,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.73.0 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.73.0
+// V46.73.1 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.73.1
 // ============================================================
 
 const gm580_ = {
@@ -25927,14 +25927,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.73.0 — OFICINA REESTRUTURADA
+// V46.73.1 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.73.0'
+  version:'46.73.1'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26158,7 +26158,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.73.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.73.1 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26250,7 +26250,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — Oficina realmente única
+// V46.73.1 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26306,7 +26306,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — edição persistente de formas/objetos + histórico completo
+// V46.73.1 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26711,7 +26711,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — estados separados, undo/redo real, sombra persistente,
+// V46.73.1 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27126,7 +27126,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.73.1 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27264,7 +27264,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.73.1 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27719,7 +27719,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — layout da Oficina baseado no mockup do usuário
+// V46.73.1 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -27957,7 +27957,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — corrige aplicação real do layout 46.65
+// V46.73.1 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -27970,7 +27970,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.73.0: falha ao substituir bindings',e);
+    console.warn('Oficina 46.73.1: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -27993,7 +27993,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.73.0 rebuild',e);
+      console.warn('Oficina 46.73.1 rebuild',e);
     }
   }
 
@@ -28018,7 +28018,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — arrumação visual da Oficina
+// V46.73.1 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28129,7 +28129,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — remove conta-gotas extras e coloca HEX compacto
+// V46.73.1 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28206,7 +28206,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — estabilização funcional da Oficina
+// V46.73.1 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28670,7 +28670,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.73.0 — OFICINA 2 EXPERIMENTAL
+// V46.73.1 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -29968,105 +29968,201 @@ class RPGTextureGenerator {
 
 
 
-// V46.73 — refinamentos solicitados de textura.
-// São overrides locais do gerador; o restante do gerador 46.72 permanece intacto.
+// V46.73.1 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
+// IMPORTANTE: RPGTextureGenerator usa this.canvas.width/height; ele não possui this.w/this.h.
 RPGTextureGenerator.prototype.textureFloresta=function(){
- const c=this.ctx,w=this.w,h=this.h;
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
  c.fillStyle='#173114';c.fillRect(0,0,w,h);
  const count=Math.max(40,Math.floor(w*h/2400));
  for(let i=0;i<count;i++){
    const cx=Math.random()*w,cy=Math.random()*h,R=16+Math.random()*28;
-   // sombra irregular sob a copa
    c.fillStyle='rgba(5,18,5,.34)';c.beginPath();c.ellipse(cx+R*.18,cy+R*.28,R*.92,R*.62,Math.random(),0,Math.PI*2);c.fill();
    const lobes=9+Math.floor(Math.random()*8);
    for(let j=0;j<lobes;j++){
      const a=Math.random()*Math.PI*2,dist=R*(.12+Math.random()*.55),rr=R*(.24+Math.random()*.34);
      const fx=cx+Math.cos(a)*dist,fy=cy+Math.sin(a)*dist;
      const g=c.createRadialGradient(fx-rr*.28,fy-rr*.32,1,fx,fy,rr);
-     g.addColorStop(0,Math.random()>.45?'#67994a':'#56863d');g.addColorStop(.48,'#356b2b');g.addColorStop(1,'#10290f');
+     g.addColorStop(0,Math.random()>.45?'#67994a':'#56863d');
+     g.addColorStop(.48,'#356b2b');g.addColorStop(1,'#10290f');
      c.fillStyle=g;c.beginPath();
-     // lóbulo ligeiramente elíptico, não bolinha perfeita
      c.ellipse(fx,fy,rr*(.72+Math.random()*.4),rr*(.62+Math.random()*.45),Math.random()*Math.PI,0,Math.PI*2);c.fill();
    }
-   // folhas visíveis e pequenos vazios/sombras
    for(let k=0;k<22;k++){
      const a=Math.random()*Math.PI*2,rr=Math.sqrt(Math.random())*R*.75,x=cx+Math.cos(a)*rr,y=cy+Math.sin(a)*rr;
-     if(Math.random()<.18){c.fillStyle='rgba(5,25,5,.55)';c.beginPath();c.arc(x,y,1.2+Math.random()*2.2,0,Math.PI*2);c.fill();}
-     else {c.fillStyle=Math.random()>.5?'#7cad56':'#4f8739';c.save();c.translate(x,y);c.rotate(Math.random()*Math.PI);c.beginPath();c.ellipse(0,0,1+Math.random()*1.8,2+Math.random()*2.8,0,0,Math.PI*2);c.fill();c.restore();}
+     if(Math.random()<.18){
+       c.fillStyle='rgba(5,25,5,.55)';c.beginPath();c.arc(x,y,1.2+Math.random()*2.2,0,Math.PI*2);c.fill();
+     }else{
+       c.fillStyle=Math.random()>.5?'#7cad56':'#4f8739';
+       c.save();c.translate(x,y);c.rotate(Math.random()*Math.PI);c.beginPath();
+       c.ellipse(0,0,1+Math.random()*1.8,2+Math.random()*2.8,0,0,Math.PI*2);c.fill();c.restore();
+     }
    }
  }
 };
+
 RPGTextureGenerator.prototype.textureTerrenoAcidentado=function(){
- const c=this.ctx,w=this.w,h=this.h;c.fillStyle='#6e5d4f';c.fillRect(0,0,w,h);
- // granulação do solo
- for(let i=0;i<w*h/90;i++){c.fillStyle=Math.random()>.5?'rgba(35,25,18,.16)':'rgba(210,185,150,.10)';c.fillRect(Math.random()*w,Math.random()*h,1+Math.random()*2,1+Math.random()*2);}
- // cavidades angulares
- for(let i=0;i<Math.max(35,w*h/14000);i++){
-   let x=Math.random()*w,y=Math.random()*h;c.beginPath();c.moveTo(x,y);
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
+ c.fillStyle='#6e5d4f';c.fillRect(0,0,w,h);
+ for(let i=0;i<Math.max(500,Math.floor(w*h/90));i++){
+   c.fillStyle=Math.random()>.5?'rgba(35,25,18,.16)':'rgba(210,185,150,.10)';
+   c.fillRect(Math.random()*w,Math.random()*h,1+Math.random()*2,1+Math.random()*2);
+ }
+ for(let i=0;i<Math.max(35,Math.floor(w*h/14000));i++){
+   let x=Math.random()*w,y=Math.random()*h;
+   const sx=x,sy=y;
+   c.beginPath();c.moveTo(x,y);
    const n=5+Math.floor(Math.random()*5);
-   for(let j=0;j<n;j++){x+=(Math.random()-.5)*55;y+=(Math.random()-.5)*42;c.lineTo(x,y);}
-   c.closePath();const g=c.createRadialGradient(x,y,2,x,y,35);g.addColorStop(0,'rgba(25,17,13,.68)');g.addColorStop(1,'rgba(55,38,28,.16)');c.fillStyle=g;c.fill();
+   for(let j=0;j<n;j++){
+     x+=(Math.random()-.5)*55;y+=(Math.random()-.5)*42;c.lineTo(x,y);
+   }
+   c.closePath();
+   const g=c.createRadialGradient(sx,sy,2,sx,sy,38);
+   g.addColorStop(0,'rgba(25,17,13,.72)');g.addColorStop(1,'rgba(55,38,28,.10)');
+   c.fillStyle=g;c.fill();
  }
- // cristas/pontas
- for(let i=0;i<Math.max(55,w*h/9000);i++){
-   const x=Math.random()*w,y=Math.random()*h,S=7+Math.random()*18;
-   c.fillStyle='#44382f';c.beginPath();c.moveTo(x-S,y+S*.5);c.lineTo(x,y-S*(.8+Math.random()*.8));c.lineTo(x+S,y+S*.5);c.closePath();c.fill();
-   c.fillStyle='#a18a74';c.beginPath();c.moveTo(x-S,y+S*.5);c.lineTo(x,y-S*(.8+Math.random()*.8));c.lineTo(x-S*.12,y+S*.32);c.closePath();c.fill();
-   if(Math.random()<.55){c.strokeStyle='rgba(40,28,20,.6)';c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(x+(Math.random()-.5)*S*2,y+(Math.random()-.5)*S*1.6);c.stroke();}
+ for(let i=0;i<Math.max(55,Math.floor(w*h/9000));i++){
+   const x=Math.random()*w,y=Math.random()*h,S=7+Math.random()*18,peak=S*(.8+Math.random()*.8);
+   c.fillStyle='#44382f';c.beginPath();c.moveTo(x-S,y+S*.5);c.lineTo(x,y-peak);c.lineTo(x+S,y+S*.5);c.closePath();c.fill();
+   c.fillStyle='#a18a74';c.beginPath();c.moveTo(x-S,y+S*.5);c.lineTo(x,y-peak);c.lineTo(x-S*.12,y+S*.32);c.closePath();c.fill();
+   if(Math.random()<.55){
+     c.strokeStyle='rgba(40,28,20,.6)';c.lineWidth=1;c.beginPath();
+     c.moveTo(x,y);c.lineTo(x+(Math.random()-.5)*S*2,y+(Math.random()-.5)*S*1.6);c.stroke();
+   }
  }
 };
+
 RPGTextureGenerator.prototype.textureTerraRochasIrregulares=function(){
- const c=this.ctx,w=this.w,h=this.h;c.fillStyle='#5c4033';c.fillRect(0,0,w,h);
- for(let i=0;i<w*h/140;i++){c.fillStyle=Math.random()>.5?'#4b3226':'#6a4e3d';c.fillRect(Math.random()*w,Math.random()*h,1+Math.random()*3,1+Math.random()*3);}
- for(let i=0;i<Math.max(40,w*h/9000);i++){
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
+ c.fillStyle='#5c4033';c.fillRect(0,0,w,h);
+ for(let i=0;i<Math.max(700,Math.floor(w*h/140));i++){
+   c.fillStyle=Math.random()>.5?'#4b3226':'#6a4e3d';
+   c.fillRect(Math.random()*w,Math.random()*h,1+Math.random()*3,1+Math.random()*3);
+ }
+ for(let i=0;i<Math.max(40,Math.floor(w*h/9000));i++){
    const cx=Math.random()*w,cy=Math.random()*h,r=7+Math.random()*17,pts=[];
-   for(let j=0;j<7;j++){const a=j/7*Math.PI*2,rr=r*(.68+Math.random()*.55);pts.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr]);}
-   c.fillStyle='rgba(20,15,12,.32)';c.beginPath();pts.forEach((p,j)=>j?c.lineTo(p[0]+3,p[1]+4):c.moveTo(p[0]+3,p[1]+4));c.closePath();c.fill();
-   c.fillStyle='#77736d';c.beginPath();pts.forEach((p,j)=>j?c.lineTo(...p):c.moveTo(...p));c.closePath();c.fill();
+   for(let j=0;j<7;j++){
+     const a=j/7*Math.PI*2,rr=r*(.68+Math.random()*.55);
+     pts.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr]);
+   }
+   c.fillStyle='rgba(20,15,12,.32)';c.beginPath();
+   pts.forEach((q,j)=>j?c.lineTo(q[0]+3,q[1]+4):c.moveTo(q[0]+3,q[1]+4));c.closePath();c.fill();
+   c.fillStyle='#77736d';c.beginPath();
+   pts.forEach((q,j)=>j?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1]));c.closePath();c.fill();
    c.strokeStyle='#4b4945';c.lineWidth=1;c.stroke();
-   c.fillStyle='rgba(210,205,195,.42)';c.beginPath();c.ellipse(cx-r*.22,cy-r*.25,r*.35,r*.18,-.45,0,Math.PI*2);c.fill();
+   c.fillStyle='rgba(210,205,195,.42)';c.beginPath();
+   c.ellipse(cx-r*.22,cy-r*.25,r*.35,r*.18,-.45,0,Math.PI*2);c.fill();
  }
 };
+
 RPGTextureGenerator.prototype.textureMasmorraCustom=function(tileWidth=22,tileHeight=14,light=false){
- const c=this.ctx,w=this.w,h=this.h;c.fillStyle=light?'#6a6965':'#3a3a3a';c.fillRect(0,0,w,h);
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
+ c.fillStyle=light?'#6a6965':'#3a3a3a';c.fillRect(0,0,w,h);
  let row=0;c.lineWidth=2.2;c.strokeStyle=light?'#33322f':'#171717';
- for(let y=0;y<h;y+=tileHeight){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();const off=(row%2)*(tileWidth/2);for(let x=off;x<w;x+=tileWidth){c.beginPath();c.moveTo(x,y);c.lineTo(x,y+tileHeight);c.stroke();}row++;}
+ for(let y=0;y<h;y+=tileHeight){
+   c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();
+   const off=(row%2)*(tileWidth/2);
+   for(let x=off;x<w;x+=tileWidth){c.beginPath();c.moveTo(x,y);c.lineTo(x,y+tileHeight);c.stroke();}
+   row++;
+ }
  row=0;c.lineWidth=.8;c.strokeStyle='rgba(255,255,255,.16)';
- for(let y=0;y<h;y+=tileHeight){const off=(row%2)*(tileWidth/2);for(let x=off;x<w;x+=tileWidth){c.beginPath();c.moveTo(x+1.5,y+tileHeight-1.5);c.lineTo(x+1.5,y+1.5);c.lineTo(x+tileWidth-1.5,y+1.5);c.stroke();}row++;}
+ for(let y=0;y<h;y+=tileHeight){
+   const off=(row%2)*(tileWidth/2);
+   for(let x=off;x<w;x+=tileWidth){
+     c.beginPath();c.moveTo(x+1.5,y+tileHeight-1.5);c.lineTo(x+1.5,y+1.5);c.lineTo(x+tileWidth-1.5,y+1.5);c.stroke();
+   }
+   row++;
+ }
 };
+
 RPGTextureGenerator.prototype.textureMarmorizadoPremium=function(tipo='branco'){
- const c=this.ctx,w=this.w,h=this.h;
- const sets={branco:['#f2f1ed',['#676d74','#a8adb2','#d3c8bd','#8b8078']],preto:['#101113',['#e8e8e5','#777b80','#34383e','#b69b72']],vermelho:['#762b2b',['#f0d1c6','#3a1113','#c58b7e','#f4eee6']],verde:['#174a35',['#b7dfc8','#09291d','#6ca786','#e5eee7']]};
- const [base,cols]=sets[tipo]||sets.branco;c.fillStyle=base;c.fillRect(0,0,w,h);
- // manchas minerais muito sutis
- for(let i=0;i<70;i++){c.fillStyle=cols[Math.floor(Math.random()*cols.length)]+'18';c.beginPath();c.ellipse(Math.random()*w,Math.random()*h,15+Math.random()*65,3+Math.random()*16,Math.random()*Math.PI,0,Math.PI*2);c.fill();}
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
+ const sets={
+   branco:['#f2f1ed',['#676d74','#a8adb2','#d3c8bd','#8b8078']],
+   preto:['#101113',['#e8e8e5','#777b80','#34383e','#b69b72']],
+   vermelho:['#762b2b',['#f0d1c6','#3a1113','#c58b7e','#f4eee6']],
+   verde:['#174a35',['#b7dfc8','#09291d','#6ca786','#e5eee7']]
+ };
+ const [base,cols]=sets[tipo]||sets.branco;
+ c.fillStyle=base;c.fillRect(0,0,w,h);
+ for(let i=0;i<70;i++){
+   c.globalAlpha=.07+Math.random()*.10;
+   c.fillStyle=cols[Math.floor(Math.random()*cols.length)];
+   c.beginPath();c.ellipse(Math.random()*w,Math.random()*h,15+Math.random()*65,3+Math.random()*16,Math.random()*Math.PI,0,Math.PI*2);c.fill();
+ }
+ c.globalAlpha=1;
  for(let k=0;k<55;k++){
-   c.strokeStyle=cols[Math.floor(Math.random()*cols.length)];c.lineWidth=.35+Math.random()*2.2;c.globalAlpha=.18+Math.random()*.48;
+   c.strokeStyle=cols[Math.floor(Math.random()*cols.length)];
+   c.lineWidth=.35+Math.random()*2.2;c.globalAlpha=.18+Math.random()*.48;
    let x=Math.random()*w,y=Math.random()*h;c.beginPath();c.moveTo(x,y);
    const steps=55+Math.floor(Math.random()*120);
-   for(let i=0;i<steps;i++){x+=(Math.random()-.48)*(5+Math.random()*13);y+=(Math.random()-.5)*(3+Math.random()*10);c.lineTo(x,y);if(Math.random()<.035){c.stroke();c.beginPath();c.moveTo(x,y);}}
+   for(let i=0;i<steps;i++){
+     x+=(Math.random()-.48)*(5+Math.random()*13);y+=(Math.random()-.5)*(3+Math.random()*10);c.lineTo(x,y);
+     if(Math.random()<.035){c.stroke();c.beginPath();c.moveTo(x,y);}
+   }
    c.stroke();
  }
  c.globalAlpha=1;
 };
+
 RPGTextureGenerator.prototype.texturePraiaCristalina=function(){
- const c=this.ctx,w=this.w,h=this.h;const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#f0dda9');g.addColorStop(1,'#d7bc79');c.fillStyle=g;c.fillRect(0,0,w,h);
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
+ const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#f0dda9');g.addColorStop(1,'#d7bc79');
+ c.fillStyle=g;c.fillRect(0,0,w,h);
  c.strokeStyle='rgba(255,249,220,.48)';c.lineWidth=1.1;
- for(let i=0;i<45;i++){let x=Math.random()*w,y=Math.random()*h;c.beginPath();c.moveTo(x,y);for(let j=0;j<7;j++){x+=(Math.random()-.5)*95;y+=(Math.random()-.5)*70;c.lineTo(x,y);}c.stroke();}
- for(let i=0;i<w*h/55;i++){c.fillStyle=Math.random()>.7?'rgba(255,255,238,.7)':'rgba(170,135,70,.38)';c.fillRect(Math.random()*w,Math.random()*h,1,1);}
-};
-RPGTextureGenerator.prototype.textureDesertoRosado=function(){
- const c=this.ctx,w=this.w,h=this.h,g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#d9959c');g.addColorStop(.5,'#c87683');g.addColorStop(1,'#a95a69');c.fillStyle=g;c.fillRect(0,0,w,h);
- for(let y=-40;y<h+40;y+=22){c.strokeStyle='rgba(255,206,204,.22)';c.lineWidth=3;c.beginPath();for(let x=0;x<=w;x+=12){const yy=y+Math.sin(x*.022+y*.01)*13+(x/w)*8;x?c.lineTo(x,yy):c.moveTo(x,yy);}c.stroke();}
-};
-RPGTextureGenerator.prototype.textureDesertoBranco=function(){
- const c=this.ctx,w=this.w,h=this.h;c.fillStyle='#f1eee4';c.fillRect(0,0,w,h);
- for(let y=-40;y<h+40;y+=25){c.strokeStyle='rgba(190,184,169,.34)';c.lineWidth=2.2;c.beginPath();for(let x=0;x<=w;x+=12){const yy=y+Math.sin(x*.017+y*.013)*12;x?c.lineTo(x,yy):c.moveTo(x,yy);}c.stroke();}
- for(let i=0;i<w*h/65;i++){c.fillStyle='rgba(255,255,255,.72)';c.fillRect(Math.random()*w,Math.random()*h,1+Math.random(),1+Math.random());}
+ for(let i=0;i<45;i++){
+   let x=Math.random()*w,y=Math.random()*h;c.beginPath();c.moveTo(x,y);
+   for(let j=0;j<7;j++){x+=(Math.random()-.5)*95;y+=(Math.random()-.5)*70;c.lineTo(x,y);}
+   c.stroke();
+ }
+ for(let i=0;i<Math.max(1200,Math.floor(w*h/55));i++){
+   c.fillStyle=Math.random()>.7?'rgba(255,255,238,.7)':'rgba(170,135,70,.38)';
+   c.fillRect(Math.random()*w,Math.random()*h,1,1);
+ }
 };
 
-// Encaminha apenas as novas/substituídas. As demais continuam no applyTexture original.
-const gm273ApplyTextureBase_=RPGTextureGenerator.prototype.applyTexture;
+RPGTextureGenerator.prototype.textureDesertoRosado=function(){
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
+ const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,'#d9959c');g.addColorStop(.5,'#c87683');g.addColorStop(1,'#a95a69');
+ c.fillStyle=g;c.fillRect(0,0,w,h);
+ for(let y=-40;y<h+40;y+=22){
+   c.strokeStyle='rgba(255,206,204,.22)';c.lineWidth=3;c.beginPath();
+   for(let x=0;x<=w;x+=12){const yy=y+Math.sin(x*.022+y*.01)*13+(x/w)*8;x?c.lineTo(x,yy):c.moveTo(x,yy);}
+   c.stroke();
+ }
+};
+
+RPGTextureGenerator.prototype.textureDesertoBranco=function(){
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
+ c.fillStyle='#f1eee4';c.fillRect(0,0,w,h);
+ for(let y=-40;y<h+40;y+=25){
+   c.strokeStyle='rgba(190,184,169,.34)';c.lineWidth=2.2;c.beginPath();
+   for(let x=0;x<=w;x+=12){const yy=y+Math.sin(x*.017+y*.013)*12;x?c.lineTo(x,yy):c.moveTo(x,yy);}
+   c.stroke();
+ }
+ for(let i=0;i<Math.max(1000,Math.floor(w*h/65));i++){
+   c.fillStyle='rgba(255,255,255,.72)';c.fillRect(Math.random()*w,Math.random()*h,1+Math.random(),1+Math.random());
+ }
+};
+
+RPGTextureGenerator.prototype.textureNoite=function(){
+ const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
+ const g=c.createLinearGradient(0,0,0,h);
+ g.addColorStop(0,'#0b1730');g.addColorStop(.55,'#101a2b');g.addColorStop(1,'#070c16');
+ c.fillStyle=g;c.fillRect(0,0,w,h);
+ // manchas muito sutis para não virar "espaço sideral"
+ for(let i=0;i<120;i++){
+   const x=Math.random()*w,y=Math.random()*h,r=15+Math.random()*65;
+   const rg=c.createRadialGradient(x,y,0,x,y,r);
+   rg.addColorStop(0,'rgba(45,70,105,.08)');rg.addColorStop(1,'rgba(0,0,0,0)');
+   c.fillStyle=rg;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill();
+ }
+ for(let i=0;i<Math.max(300,Math.floor(w*h/500));i++){
+   c.fillStyle=Math.random()>.7?'rgba(120,145,180,.12)':'rgba(0,0,0,.11)';
+   c.fillRect(Math.random()*w,Math.random()*h,1,1);
+ }
+};
+
+const gm2731ApplyTextureBase_=RPGTextureGenerator.prototype.applyTexture;
 RPGTextureGenerator.prototype.applyTexture=function(type){
  switch(type){
    case 'floresta':return this.textureFloresta();
@@ -30081,7 +30177,8 @@ RPGTextureGenerator.prototype.applyTexture=function(type){
    case 'praia':return this.texturePraiaCristalina();
    case 'deserto_rosado':return this.textureDesertoRosado();
    case 'deserto_branco':return this.textureDesertoBranco();
-   default:return gm273ApplyTextureBase_.call(this,type);
+   case 'noite':return this.textureNoite();
+   default:return gm2731ApplyTextureBase_.call(this,type);
  }
 };
 
@@ -30192,7 +30289,7 @@ function gm2panelHtml(){
 <option value="concreto">Concreto</option><option value="metal">Metal</option>
 </optgroup>
 <optgroup label="Fantasia">
-<option value="congelado">Congelado</option><option value="espacio_sideral">Espaço sideral</option>
+<option value="congelado">Congelado</option><option value="noite">Noite</option><option value="espacio_sideral">Espaço sideral</option>
 </optgroup>
 <optgroup label="Mapas antigos">
 <option value="papel">Papel envelhecido</option><option value="papiro">Papiro</option>
@@ -30750,6 +30847,6 @@ setTimeout(gm2installTab,900);
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.73.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.73.1: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
