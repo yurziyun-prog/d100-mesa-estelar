@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.70.1 ===== */
+/* ===== V46.70.2 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.70.1 ===== */
+/* ===== V46.70.2 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22017,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.70.1 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.70.2 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22176,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.70.1
+// V46.70.2
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22533,7 +22533,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.70.1
+// V46.70.2
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22818,7 +22818,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.70.1 — Oficina: estilos de traço exclusivos + prévia real
+// V46.70.2 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22894,7 +22894,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.70.1
+// V46.70.2
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22979,7 +22979,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.70.1 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.70.2 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23120,7 +23120,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.70.1 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.70.2 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23362,7 +23362,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.70.1 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.70.2 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23521,7 +23521,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.70.1 — Oficina simplificada
+// V46.70.2 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23866,7 +23866,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.70.1 — Oficina: objetos realmente opacos + painel de camadas
+// V46.70.2 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24039,7 +24039,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.70.1 — Oficina: composição real por ordem de adição
+// V46.70.2 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24262,7 +24262,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.70.1',e);}
+    }catch(e){console.warn('Oficina v46.70.2',e);}
     return r;
 };
 
@@ -24272,7 +24272,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.70.1 — REFORMA DA OFICINA
+// V46.70.2 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25025,8 +25025,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.70.1 — reconstrução limpa da barra da Oficina
-// Base: 46.70.1 funcional. Não usa varredura agressiva do DOM.
+// V46.70.2 — reconstrução limpa da barra da Oficina
+// Base: 46.70.2 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25255,8 +25255,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.70.1 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.70.1
+// V46.70.2 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.70.2
 // ============================================================
 
 const gm580_ = {
@@ -25923,14 +25923,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.70.1 — OFICINA REESTRUTURADA
+// V46.70.2 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.70.1'
+  version:'46.70.2'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26154,7 +26154,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.70.1 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.70.2 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26246,7 +26246,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — Oficina realmente única
+// V46.70.2 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26302,7 +26302,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — edição persistente de formas/objetos + histórico completo
+// V46.70.2 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26707,7 +26707,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — estados separados, undo/redo real, sombra persistente,
+// V46.70.2 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27122,7 +27122,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.70.2 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27260,7 +27260,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.70.2 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27715,7 +27715,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — layout da Oficina baseado no mockup do usuário
+// V46.70.2 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -27953,7 +27953,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — corrige aplicação real do layout 46.65
+// V46.70.2 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -27966,7 +27966,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.70.1: falha ao substituir bindings',e);
+    console.warn('Oficina 46.70.2: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -27989,7 +27989,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.70.1 rebuild',e);
+      console.warn('Oficina 46.70.2 rebuild',e);
     }
   }
 
@@ -28014,7 +28014,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — arrumação visual da Oficina
+// V46.70.2 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28125,7 +28125,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — remove conta-gotas extras e coloca HEX compacto
+// V46.70.2 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28202,7 +28202,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — estabilização funcional da Oficina
+// V46.70.2 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28666,7 +28666,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.1 — OFICINA 2 EXPERIMENTAL
+// V46.70.2 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -29345,7 +29345,7 @@ setTimeout(gm2installTab,900);
 
 
 // ============================================================
-// V46.70.1 — Oficina 2: escala métrica + ferramentas persistentes
+// V46.70.2 — Oficina 2: escala métrica + ferramentas persistentes
 // + objetos adicionados + pincéis confiáveis + destravar elementos
 // ============================================================
 (function(){
@@ -29685,6 +29685,257 @@ gm2render();
 
 })();
 
+
+
+// ============================================================
+// V46.70.2 — Oficina 2
+// pincéis distintos + borracha real + remove textura problemática
+// + banco de objetos corrigido após montagem da aba
+// + U balcão oco com arredondamento + camadas passo a passo
+// ============================================================
+(function(){
+'use strict';
+
+function gm272whenReady_(fn, tries=40){
+  const ok=document.getElementById('gm2svg') && document.getElementById('gm2addobj');
+  if(ok){try{fn();}catch(e){console.warn('Oficina 2.70.2',e)};return;}
+  if(tries>0)setTimeout(()=>gm272whenReady_(fn,tries-1),150);
+}
+
+// ---------- remove o seletor de textura da Oficina 2 ----------
+gm272whenReady_(()=>{
+  const tex=document.getElementById('gm2texture');
+  const lab=tex?.closest('label');
+  if(lab) lab.remove();
+});
+
+// ---------- U oco, quadrado por padrão e arredondável ----------
+const gm272_shapeInnerBase_=gm2shapeInner;
+gm2shapeInner=function(e){
+  if(e?.type==='shape' && e.kind==='u_balcao'){
+    const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p;
+    const t=Math.max(0.08,Math.min(e.thickness||Math.min(e.w,e.h)*.18,Math.min(e.w,e.h)*.45))*p;
+    const r=Math.max(0,Number(e.radius||0))*p;
+    const fill=e.fill||'#59e391',fo=Number(e.fillOpacity??1),stroke=e.stroke||'#111',sw=Math.max(0,Number(e.strokeWidth||0)),so=sw===0?0:Number(e.strokeOpacity??1);
+
+    // U formado por três barras, com cantos externos/internos arredondáveis.
+    // O interior permanece vazio.
+    const rr=Math.min(r, Math.max(0, t/2));
+    const d=[
+      `M ${x+rr} ${y}`,
+      `H ${x+t-rr}`, `Q ${x+t} ${y} ${x+t} ${y+rr}`,
+      `V ${y+h-t-rr}`, `Q ${x+t} ${y+h-t} ${x+t+rr} ${y+h-t}`,
+      `H ${x+w-t-rr}`, `Q ${x+w-t} ${y+h-t} ${x+w-t} ${y+h-t-rr}`,
+      `V ${y+rr}`, `Q ${x+w-t} ${y} ${x+w-t+rr} ${y}`,
+      `H ${x+w-rr}`, `Q ${x+w} ${y} ${x+w} ${y+rr}`,
+      `V ${y+h-rr}`, `Q ${x+w} ${y+h} ${x+w-rr} ${y+h}`,
+      `H ${x+rr}`, `Q ${x} ${y+h} ${x} ${y+h-rr}`,
+      `V ${y+rr}`, `Q ${x} ${y} ${x+rr} ${y}`, 'Z'
+    ].join(' ');
+    const cx=x+w/2,cy=y+h/2,tr=e.rot?` transform="rotate(${e.rot} ${cx} ${cy})"`:'';
+    return `<path d="${d}" fill="${fill}" fill-opacity="${fo}" stroke="${stroke}" stroke-width="${sw}" stroke-opacity="${so}" vector-effect="non-scaling-stroke"${tr}/>`;
+  }
+  return gm272_shapeInnerBase_(e);
+};
+
+// adiciona opção do U ao seletor "Outras"
+gm272whenReady_(()=>{
+  const sel=document.getElementById('gm2other');
+  if(sel && ![...sel.options].some(o=>o.value==='u_balcao')){
+    const o=document.createElement('option');o.value='u_balcao';o.textContent='U balcão (oco)';
+    sel.appendChild(o);
+  }
+});
+
+// alça extra para espessura/concavidade do U
+const gm272_handlesBase_=gm2handlesSvg;
+gm2handlesSvg=function(e){
+  let h=gm272_handlesBase_(e);
+  if(e?.type==='shape' && e.kind==='u_balcao' && !e.locked){
+    const p=gm2.st.ppm,b=gm2bbox(e),t=Math.max(.08,Number(e.thickness||Math.min(e.w,e.h)*.18));
+    const cx=(b.x+t)*p,cy=(b.y+b.h*.5)*p;
+    h+=`<circle class="gm2-handle" data-handle="uthick" data-eid="${gm2esc(e.id)}" cx="${cx}" cy="${cy}" r="5.5" fill="#fff5b8" stroke="#23c7dc" stroke-width="1.6"/>`;
+  }
+  return h;
+};
+
+const gm272_handleStartBase_=gm2handleStart;
+gm2handleStart=function(ev,id,h){
+  const e=gm2el(id);
+  if(h==='uthick' && e?.kind==='u_balcao'){
+    ev.preventDefault();ev.stopPropagation();gm2pushHistory();
+    const p0=gm2point(ev),s=Number(e.thickness||Math.min(e.w,e.h)*.18);
+    const mv=e2=>{
+      const p=gm2point(e2);
+      e.thickness=Math.max(.08,Math.min(Math.min(e.w,e.h)*.45,s+(p.x-p0.x)));
+      gm2render();
+    };
+    const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
+    window.addEventListener('pointermove',mv,{passive:true});
+    window.addEventListener('pointerup',up,{once:true});
+    return;
+  }
+  return gm272_handleStartBase_(ev,id,h);
+};
+
+// ---------- pincéis realmente diferentes ----------
+function gm272pathD_(pts,p){
+  if(!pts?.length)return'';
+  let d=`M ${pts[0].x*p} ${pts[0].y*p}`;
+  for(let i=1;i<pts.length;i++)d+=` L ${pts[i].x*p} ${pts[i].y*p}`;
+  return d;
+}
+function gm272normal_(e,p,sw,dash='',cap='round',opacity=null){
+  const d=gm272pathD_(e.points,p);
+  return `<path d="${d}" fill="none" stroke="${e.stroke}" stroke-opacity="${opacity??e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="${cap}" stroke-linejoin="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+}
+function gm272offset_(e,p,sw,dx,dy,op=.45){
+  const pts=(e.points||[]).map(q=>({x:q.x+dx/p,y:q.y+dy/p}));
+  return gm272normal_({...e,points:pts},p,sw,'','round',op);
+}
+
+gm2pathInner=function(e){
+  const p=gm2.st.ppm;
+  if(e.strokeWidthM==null)e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,p));
+  const sw=Math.max(1,e.strokeWidthM*p),b=e.brush||'redondo';
+
+  if(b==='borracha') return ''; // borracha atua nos dados, não desenha.
+
+  if(b==='quadrado') return gm272normal_(e,p,sw,'','square');
+  if(b==='caligrafico') return gm272normal_(e,p,Math.max(1,sw*.65),'','square')+gm272offset_(e,p,Math.max(1,sw*.28),3,-2,.65);
+  if(b==='lapis') return gm272normal_(e,p,Math.max(1,sw*.45),'2 2','round',Math.min(.72,e.strokeOpacity??1));
+  if(b==='caneta') return gm272normal_(e,p,Math.max(1,sw*.72),'','round');
+  if(b==='espelhado') return gm272normal_(e,p,sw)+gm272offset_(e,p,sw,0,Math.max(5,sw*1.5),.48);
+  if(b==='serpentina') return gm272normal_(e,p,Math.max(1,sw*.55),'7 4','round')+gm272offset_(e,p,Math.max(1,sw*.25),4,0,.7);
+  if(b==='seta'){
+    let base=gm272normal_(e,p,sw);
+    const pts=e.points||[];if(pts.length>1){const a=pts.at(-2),z=pts.at(-1),ang=Math.atan2(z.y-a.y,z.x-a.x),L=Math.max(.18,e.strokeWidthM*3.2),q1={x:z.x-Math.cos(ang-.55)*L,y:z.y-Math.sin(ang-.55)*L},q2={x:z.x-Math.cos(ang+.55)*L,y:z.y-Math.sin(ang+.55)*L};
+      base+=`<path d="M ${q1.x*p} ${q1.y*p} L ${z.x*p} ${z.y*p} L ${q2.x*p} ${q2.y*p}" fill="none" stroke="${e.stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;}
+    return base;
+  }
+  if(b==='curso') return gm272normal_(e,p,Math.max(1,sw*.75),'','round');
+  if(b==='giz_cera') return gm272normal_(e,p,sw,'3 2','round',Math.min(.72,e.strokeOpacity??1))+gm272offset_(e,p,Math.max(1,sw*.28),2,1,.35);
+  if(b==='spray') return gm272normal_(e,p,Math.max(2,sw*1.7),'1 6','round',Math.min(.32,e.strokeOpacity??1))+gm272offset_(e,p,Math.max(1,sw*.8),4,-3,.2);
+  if(b==='carimbo') return gm272normal_(e,p,Math.max(3,sw),'1 12','round',e.strokeOpacity??1);
+  if(b==='pele') return gm272normal_(e,p,Math.max(1,sw*.25),'1 4','round',.65)+gm272offset_(e,p,Math.max(1,sw*.22),3,-2,.5)+gm272offset_(e,p,Math.max(1,sw*.2),-3,2,.45);
+  if(b==='esboco') return gm272normal_(e,p,Math.max(1,sw*.4),'','round',.55)+gm272offset_(e,p,Math.max(1,sw*.32),2,1,.36);
+  if(b==='espirografo') return gm272normal_(e,p,Math.max(1,sw*.35),'3 5','round',.8)+gm272offset_(e,p,Math.max(1,sw*.2),5,0,.4);
+  if(b==='teia') return gm272normal_(e,p,Math.max(1,sw*.25),'8 4','round',.72)+gm272offset_(e,p,Math.max(1,sw*.18),0,5,.35);
+  if(b==='irregular') return gm272normal_(e,p,sw,'9 2 2 4','round',.9);
+  if(b==='pontilhada') return gm272normal_(e,p,Math.max(2,sw),'1 8','round');
+  if(b==='giz') return gm272normal_(e,p,Math.max(1,sw*.7),'5 3','round',.58)+gm272offset_(e,p,Math.max(1,sw*.18),1.5,0,.28);
+  if(b==='ranhura') return gm272normal_(e,p,Math.max(1,sw*.5),'12 4','butt',.75);
+  if(b==='areia') return gm272normal_(e,p,Math.max(2,sw),'1 5','round',.42);
+  if(b==='cascalho') return gm272normal_(e,p,Math.max(3,sw),'2 7','round',.7);
+  if(b==='grama') return gm272normal_(e,p,Math.max(1,sw*.45),'5 3','butt',.8)+gm272offset_(e,p,Math.max(1,sw*.18),2,-3,.55);
+  if(b==='folhas') return gm272normal_(e,p,Math.max(3,sw*.9),'1 10','round',.78);
+  if(b==='neve') return gm272normal_(e,p,Math.max(4,sw),'1 12','round',.82);
+  if(b==='fumaca') return gm272normal_(e,p,Math.max(5,sw*1.6),'15 9','round',.24);
+  return gm272normal_(e,p,sw);
+};
+
+// ---------- borracha real para traços ----------
+// Apaga o traço inteiro quando a borracha toca nele.
+// É deliberadamente simples e previsível nesta versão.
+function gm272eraseAt_(p){
+  const radiusM=Math.max(.12,Number(gm2.defaults.size||7)/Math.max(1,gm2.st.ppm)*1.4);
+  const hit=[];
+  for(const e of gm2.st.elements){
+    if(e.type!=='path'||e.locked)continue;
+    const pts=e.points||[];
+    if(pts.some(q=>Math.hypot(q.x-p.x,q.y-p.y)<=radiusM))hit.push(e.id);
+  }
+  if(hit.length)gm2.st.elements=gm2.st.elements.filter(e=>!hit.includes(e.id));
+  return hit.length>0;
+}
+const gm272_drawPathBase_=gm2drawPath;
+gm2drawPath=function(ev,p0){
+  if(gm2.brush!=='borracha')return gm272_drawPathBase_(ev,p0);
+  gm2pushHistory();let changed=gm272eraseAt_(p0);
+  const mv=e2=>{const p=gm2point(e2);if(gm272eraseAt_(p))changed=true;gm2render();};
+  const up=()=>{window.removeEventListener('pointermove',mv);if(!changed)gm2.history.pop();gm2saveLocal();gm2render();};
+  window.addEventListener('pointermove',mv,{passive:true});
+  window.addEventListener('pointerup',up,{once:true});
+  gm2render();
+};
+
+// ---------- banco de objetos: instalar DEPOIS da criação da aba ----------
+function gm272wireBank_(){
+  const btn=document.getElementById('gm2addobj');
+  if(!btn)return;
+  btn.textContent='＋ Adicionar marcados ao mapa';
+  btn.onclick=()=>{
+    const ids=[...document.querySelectorAll('.gm2objcheck:checked')].map(c=>c.value);
+    if(!ids.length)return;
+    gm2.objectIds=ids;gm2.tool='object';gm2clearSelection();
+
+    const x=gm2.st.w/2,y=gm2.st.h/2;
+    gm2placeObjects({x,y});
+    gm2.tool='object';gm2.objectIds=ids;
+    gm2updateToolbarState();gm2status();
+  };
+}
+
+// ---------- camadas: mais que só frente/trás ----------
+// ↑/↓ existentes continuam "frente" e "trás".
+// Acrescentamos subir 1 camada e descer 1 camada.
+function gm272stepLayer_(dir){
+  const sel=gm2selectedEls();if(!sel.length)return;
+  gm2pushHistory();
+
+  const ordered=[...gm2.st.elements].sort((a,b)=>(a.z||0)-(b.z||0));
+  const ids=new Set(sel.map(e=>e.id));
+
+  if(dir>0){
+    for(let i=ordered.length-2;i>=0;i--){
+      if(ids.has(ordered[i].id)&&!ids.has(ordered[i+1].id)){
+        const z=ordered[i].z;ordered[i].z=ordered[i+1].z;ordered[i+1].z=z;
+      }
+    }
+  }else{
+    for(let i=1;i<ordered.length;i++){
+      if(ids.has(ordered[i].id)&&!ids.has(ordered[i-1].id)){
+        const z=ordered[i].z;ordered[i].z=ordered[i-1].z;ordered[i-1].z=z;
+      }
+    }
+  }
+  gm2saveLocal();gm2render();
+}
+gm272whenReady_(()=>{
+  const front=document.getElementById('gm2front');
+  if(front&&!document.getElementById('gm2up1')){
+    const up=document.createElement('button');up.id='gm2up1';up.title='Subir uma camada';up.textContent='⇧';
+    const down=document.createElement('button');down.id='gm2down1';down.title='Descer uma camada';down.textContent='⇩';
+    up.onclick=()=>gm272stepLayer_(1);down.onclick=()=>gm272stepLayer_(-1);
+    front.insertAdjacentElement('afterend',up);up.insertAdjacentElement('afterend',down);
+  }
+});
+
+// ---------- U também aceita alça de arredondamento ----------
+const gm272_handles2Base_=gm2handlesSvg;
+gm2handlesSvg=function(e){
+  let h=gm272_handles2Base_(e);
+  if(e?.type==='shape' && e.kind==='u_balcao' && !e.locked){
+    // garante radius handle no U, pois base só cria em retângulo/quadrado
+    const p=gm2.st.ppm,b=gm2bbox(e),x=b.x*p,y=b.y*p,w=b.w*p;
+    h+=`<circle class="gm2-handle" data-handle="radius" data-eid="${gm2esc(e.id)}" cx="${x+Math.max(12,Math.min(w/2,(Number(e.radius||0)*p)+12))}" cy="${y+12}" r="5.5" fill="#d9fbff" stroke="#23c7dc" stroke-width="1.6"/>`;
+  }
+  return h;
+};
+
+// ---------- inicialização pós-montagem ----------
+gm272whenReady_(()=>{
+  gm272wireBank_();
+
+  // neutraliza de vez eventual onchange antigo da textura caso ela ainda exista
+  const tex=document.getElementById('gm2texture');
+  if(tex){tex.onchange=null;tex.disabled=true;tex.closest('label')?.remove();}
+
+  gm2render();
+});
+
+})();
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -29701,6 +29952,6 @@ gm2render();
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.70.1: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.70.2: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
