@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.70.3 ===== */
+/* ===== V46.71.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.70.3 ===== */
+/* ===== V46.71.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22017,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.70.3 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.71.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22176,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.70.3
+// V46.71.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22533,7 +22533,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.70.3
+// V46.71.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22818,7 +22818,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.70.3 — Oficina: estilos de traço exclusivos + prévia real
+// V46.71.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22894,7 +22894,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.70.3
+// V46.71.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22979,7 +22979,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.70.3 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.71.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23120,7 +23120,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.70.3 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.71.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23362,7 +23362,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.70.3 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.71.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23521,7 +23521,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.70.3 — Oficina simplificada
+// V46.71.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23866,7 +23866,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.70.3 — Oficina: objetos realmente opacos + painel de camadas
+// V46.71.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24039,7 +24039,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.70.3 — Oficina: composição real por ordem de adição
+// V46.71.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24262,7 +24262,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.70.3',e);}
+    }catch(e){console.warn('Oficina v46.71.0',e);}
     return r;
 };
 
@@ -24272,7 +24272,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.70.3 — REFORMA DA OFICINA
+// V46.71.0 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25025,8 +25025,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.70.3 — reconstrução limpa da barra da Oficina
-// Base: 46.70.3 funcional. Não usa varredura agressiva do DOM.
+// V46.71.0 — reconstrução limpa da barra da Oficina
+// Base: 46.71.0 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25255,8 +25255,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.70.3 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.70.3
+// V46.71.0 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.71.0
 // ============================================================
 
 const gm580_ = {
@@ -25923,14 +25923,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.70.3 — OFICINA REESTRUTURADA
+// V46.71.0 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.70.3'
+  version:'46.71.0'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26154,7 +26154,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.70.3 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.71.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26246,7 +26246,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — Oficina realmente única
+// V46.71.0 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26302,7 +26302,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — edição persistente de formas/objetos + histórico completo
+// V46.71.0 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26707,7 +26707,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — estados separados, undo/redo real, sombra persistente,
+// V46.71.0 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27122,7 +27122,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.71.0 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27260,7 +27260,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.71.0 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27715,7 +27715,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — layout da Oficina baseado no mockup do usuário
+// V46.71.0 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -27953,7 +27953,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — corrige aplicação real do layout 46.65
+// V46.71.0 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -27966,7 +27966,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.70.3: falha ao substituir bindings',e);
+    console.warn('Oficina 46.71.0: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -27989,7 +27989,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.70.3 rebuild',e);
+      console.warn('Oficina 46.71.0 rebuild',e);
     }
   }
 
@@ -28014,7 +28014,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — arrumação visual da Oficina
+// V46.71.0 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28125,7 +28125,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — remove conta-gotas extras e coloca HEX compacto
+// V46.71.0 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28202,7 +28202,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — estabilização funcional da Oficina
+// V46.71.0 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28666,7 +28666,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.70.3 — OFICINA 2 EXPERIMENTAL
+// V46.71.0 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -28696,6 +28696,11 @@ function gm2saveLocal(){try{localStorage.setItem(GM2_KEY,JSON.stringify(gm2.st))
 function gm2loadLocal(){try{const x=JSON.parse(localStorage.getItem(GM2_KEY)||'null');if(x&&Array.isArray(x.elements))gm2.st={...gm2.st,...x};}catch(e){console.warn(e);}}
 gm2loadLocal();
 
+
+// Migração do rascunho 2 anterior: espessuras passam a acompanhar a escala em metros.
+for(const e of gm2.st.elements||[]){
+ if((e.type==='path'||e.type==='line')&&e.strokeWidthM==null)e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,gm2.st.ppm));
+}
 function gm2snap(){return gm2clone(gm2.st);}
 function gm2pushHistory(){
   gm2.history.push(gm2snap());
@@ -28777,15 +28782,25 @@ function gm2newShape(kind,x,y,w=1,h=1){
 function gm2newLine(kind,x,y,x2,y2){
  return {
    id:gm2id('l'),type:'line',kind,x,y,x2,y2,cx:(x+x2)/2,cy:(y+y2)/2-.5,z:gm2zNext(),locked:false,
-   fill:'none',stroke:gm2.defaults.fill,strokeWidth:gm2.defaults.size,strokeOpacity:gm2.defaults.opacity,opacity:1,
+   fill:'none',stroke:gm2.defaults.fill,strokeWidth:gm2.defaults.size,
+   strokeWidthM:Math.max(.01,Number(gm2.defaults.size||1)/Math.max(1,gm2.st.ppm)),
+   strokeOpacity:gm2.defaults.opacity,opacity:1,
    shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist
  };
 }
 function gm2newPath(points){
  return {
    id:gm2id('p'),type:'path',brush:gm2.brush,points,z:gm2zNext(),locked:false,
-   stroke:gm2.defaults.fill,strokeWidth:gm2.defaults.size,strokeOpacity:gm2.defaults.opacity,opacity:1,
+   stroke:gm2.defaults.fill,strokeWidth:gm2.defaults.size,
+   strokeWidthM:Math.max(.01,Number(gm2.defaults.size||1)/Math.max(1,gm2.st.ppm)),
+   strokeOpacity:gm2.defaults.opacity,opacity:1,
    shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist
+ };
+}
+function gm2newEraser(points){
+ return {
+   id:gm2id('er'),type:'eraser',points,z:gm2zNext(),locked:true,
+   widthM:Math.max(.04,Number(gm2.defaults.size||7)/Math.max(1,gm2.st.ppm))
  };
 }
 function gm2newImage(src,x,y,w,h,name='Imagem'){
@@ -28842,6 +28857,21 @@ function gm2shapeInner(e){
   case 'pentagrama': return gm2starSvg(5,cx,cy,w/2,h/2,.36,-90,common,tr);
   case 'hexagrama': return gm2starSvg(6,cx,cy,w/2,h/2,.42,-90,common,tr);
   case 'heptagrama': return gm2starSvg(7,cx,cy,w/2,h/2,.43,-90,common,tr);
+  case 'u_balcao':{
+    const t=Math.max(.08,Math.min(Number(e.thickness||Math.min(e.w,e.h)*.18),Math.min(e.w,e.h)*.45))*p;
+    const rr=Math.min(Math.max(0,Number(e.radius||0))*p,t/2);
+    const d=[
+      `M ${x+rr} ${y}`,`H ${x+t-rr}`,`Q ${x+t} ${y} ${x+t} ${y+rr}`,
+      `V ${y+h-t-rr}`,`Q ${x+t} ${y+h-t} ${x+t+rr} ${y+h-t}`,
+      `H ${x+w-t-rr}`,`Q ${x+w-t} ${y+h-t} ${x+w-t} ${y+h-t-rr}`,
+      `V ${y+rr}`,`Q ${x+w-t} ${y} ${x+w-t+rr} ${y}`,
+      `H ${x+w-rr}`,`Q ${x+w} ${y} ${x+w} ${y+rr}`,
+      `V ${y+h-rr}`,`Q ${x+w} ${y+h} ${x+w-rr} ${y+h}`,
+      `H ${x+rr}`,`Q ${x} ${y+h} ${x} ${y+h-rr}`,
+      `V ${y+rr}`,`Q ${x} ${y} ${x+rr} ${y}`,'Z'
+    ].join(' ');
+    return `<path d="${d}" ${common}${tr}/>`;
+  }
   case 'u':{
     const d=`M ${x+w*.18} ${y} L ${x+w*.18} ${y+h*.72} Q ${x+w*.18} ${y+h} ${cx} ${y+h} Q ${x+w*.82} ${y+h} ${x+w*.82} ${y+h*.72} L ${x+w*.82} ${y}`;
     return `<path d="${d}" ${common} fill="none"${tr}/>`;
@@ -28867,7 +28897,9 @@ function gm2starSvg(n,cx,cy,rx,ry,k,start,common,tr){
  return `<polygon points="${pts.join(' ')}" ${common}${tr}/>`;
 }
 function gm2lineInner(e){
- const p=gm2.st.ppm,x=e.x*p,y=e.y*p,x2=e.x2*p,y2=e.y2*p,sw=Math.max(1,Number(e.strokeWidth||1)),dash=e.kind==='linha_pontilhada'?'6 7':'';
+ const p=gm2.st.ppm,x=e.x*p,y=e.y*p,x2=e.x2*p,y2=e.y2*p;
+ if(e.strokeWidthM==null)e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,p));
+ const sw=Math.max(1,e.strokeWidthM*p),dash=e.kind==='linha_pontilhada'?'6 7':'';
  if(e.kind==='linha_ondulada'){
    const dx=x2-x,dy=y2-y,len=Math.hypot(dx,dy),steps=Math.max(8,Math.floor(len/18)),pts=[];
    for(let i=0;i<=steps;i++){const t=i/steps,px=x+dx*t,py=y+dy*t,amp=8*Math.sin(t*Math.PI*steps/2),nx=-dy/(len||1),ny=dx/(len||1);pts.push(`${px+nx*amp},${py+ny*amp}`);}
@@ -28876,13 +28908,138 @@ function gm2lineInner(e){
  if(e.kind==='linha_curva')return `<path d="M ${x} ${y} Q ${e.cx*p} ${e.cy*p} ${x2} ${y2}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round"/>`;
  return `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
 }
-function gm2pathInner(e){
- const p=gm2.st.ppm,pts=(e.points||[]).map(q=>`${q.x*p},${q.y*p}`).join(' '),dash=gm2dash(e),cap=['quadrado','caligrafico'].includes(e.brush)?'square':'round';
- if(e.brush==='spray'){
-   // aproximação visual deliberada: trilha translúcida pontilhada
-   return `<polyline points="${pts}" fill="none" stroke="${e.stroke}" stroke-opacity="${Math.min(.42,Number(e.strokeOpacity??1))}" stroke-width="${Math.max(2,e.strokeWidth*1.8)}" stroke-linecap="round" stroke-dasharray="1 5"/>`;
+function gm2hash_(str){
+ let h=2166136261;for(let i=0;i<String(str).length;i++){h^=String(str).charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;
+}
+function gm2rand_(seed){
+ let x=seed>>>0;return ()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};
+}
+function gm2smoothPath_(pts,p){
+ if(!pts?.length)return'';
+ if(pts.length===1)return`M ${pts[0].x*p} ${pts[0].y*p}`;
+ let d=`M ${pts[0].x*p} ${pts[0].y*p}`;
+ for(let i=1;i<pts.length-1;i++){
+   const xc=(pts[i].x+pts[i+1].x)/2*p,yc=(pts[i].y+pts[i+1].y)/2*p;
+   d+=` Q ${pts[i].x*p} ${pts[i].y*p} ${xc} ${yc}`;
  }
- return `<polyline points="${pts}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${e.strokeWidth}" stroke-linecap="${cap}" stroke-linejoin="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+ const z=pts.at(-1);d+=` L ${z.x*p} ${z.y*p}`;return d;
+}
+function gm2sample_(pts,stepM=.12){
+ const out=[];let last=null;
+ for(const q of pts||[]){if(!last||Math.hypot(q.x-last.x,q.y-last.y)>=stepM){out.push(q);last=q;}}
+ if(pts?.length&&out.at(-1)!==pts.at(-1))out.push(pts.at(-1));return out;
+}
+function gm2baseStroke_(e,p,sw,extra=''){
+ return `<path d="${gm2smoothPath_(e.points,p)}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" ${extra}/>`;
+}
+function gm2pathInner(e){
+ const p=gm2.st.ppm,b=e.brush||'redondo',op=Number(e.strokeOpacity??1);
+ if(e.strokeWidthM==null)e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,p));
+ const sw=Math.max(1,e.strokeWidthM*p),pts=e.points||[],seed=gm2hash_(e.id),rnd=gm2rand_(seed);
+
+ if(!pts.length)return'';
+ if(b==='borracha')return'';
+
+ if(b==='redondo')return gm2baseStroke_(e,p,sw);
+ if(b==='caneta')return gm2baseStroke_(e,p,Math.max(1,sw*.55));
+ if(b==='curso')return gm2baseStroke_(e,p,Math.max(1,Math.min(2,sw*.25)));
+ if(b==='pontilhada')return gm2baseStroke_(e,p,Math.max(2,sw*.55),`stroke-dasharray="${Math.max(2,sw*.55)} ${Math.max(4,sw*1.25)}"`);
+
+ if(b==='quadrado'){
+   const cells=new Set(),a=gm2sample_(pts,.08),out=[];
+   for(const q of a){const gx=Math.floor(q.x),gy=Math.floor(q.y),k=gx+','+gy;if(cells.has(k))continue;cells.add(k);out.push(`<rect x="${gx*p}" y="${gy*p}" width="${p}" height="${p}" fill="${e.stroke}" fill-opacity="${op}"/>`);}
+   return out.join('');
+ }
+ if(b==='espelhado'){
+   const mirrored=pts.map(q=>({x:gm2.st.w-q.x,y:q.y}));
+   return gm2baseStroke_(e,p,sw)+`<path d="${gm2smoothPath_(mirrored,p)}" fill="none" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
+ }
+ if(b==='caligrafico'){
+   const d=gm2smoothPath_(pts,p);
+   return `<path d="${d}" fill="none" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${Math.max(2,sw*.75)}" stroke-linecap="butt" stroke-linejoin="bevel"/>
+           <path d="${d}" transform="translate(${Math.max(1,sw*.25)} ${-Math.max(1,sw*.25)})" fill="none" stroke="${e.stroke}" stroke-opacity="${op*.45}" stroke-width="${Math.max(1,sw*.2)}" stroke-linecap="butt"/>`;
+ }
+ if(b==='lapis'){
+   const a=gm2sample_(pts,.12),dots=[];
+   for(const q of a)for(let i=0;i<3;i++){const dx=(rnd()-.5)*sw,dy=(rnd()-.5)*sw;dots.push(`<circle cx="${q.x*p+dx}" cy="${q.y*p+dy}" r="${.35+rnd()*.65}" fill="${e.stroke}" opacity="${op*.28}"/>`);}
+   return gm2baseStroke_(e,p,Math.max(1,sw*.3))+dots.join('');
+ }
+ if(b==='serpentina'){
+   const a=gm2sample_(pts,.05),wave=[];
+   for(let i=0;i<a.length;i++){
+     const q=a[i],prev=a[Math.max(0,i-1)],ang=Math.atan2(q.y-prev.y,q.x-prev.x),off=Math.sin(i*.85)*e.strokeWidthM*1.5;
+     wave.push({x:q.x+Math.cos(ang+Math.PI/2)*off,y:q.y+Math.sin(ang+Math.PI/2)*off});
+   }
+   return `<path d="${gm2smoothPath_(wave,p)}" fill="none" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${Math.max(1,sw*.35)}" stroke-linecap="round"/>`;
+ }
+ if(b==='seta'){
+   const a=gm2sample_(pts,Math.max(.35,e.strokeWidthM*4)),heads=[];
+   for(let i=1;i<a.length;i++){const q=a[i],pr=a[i-1],ang=Math.atan2(q.y-pr.y,q.x-pr.x),L=Math.max(.13,e.strokeWidthM*2.1),x=q.x*p,y=q.y*p;
+     const x1=(q.x-Math.cos(ang-.55)*L)*p,y1=(q.y-Math.sin(ang-.55)*L)*p,x2=(q.x-Math.cos(ang+.55)*L)*p,y2=(q.y-Math.sin(ang+.55)*L)*p;
+     heads.push(`<path d="M ${x1} ${y1} L ${x} ${y} L ${x2} ${y2}" fill="none" stroke="${e.stroke}" stroke-width="${Math.max(1,sw*.45)}" stroke-linecap="round"/>`);
+   }
+   return gm2baseStroke_(e,p,Math.max(1,sw*.25))+heads.join('');
+ }
+ if(b==='giz_cera'||b==='giz'){
+   const a=gm2sample_(pts,.07),dots=[],density=b==='giz'?8:13;
+   for(const q of a)for(let i=0;i<density;i++){const ang=rnd()*Math.PI*2,rr=rnd()*sw*.55;dots.push(`<circle cx="${q.x*p+Math.cos(ang)*rr}" cy="${q.y*p+Math.sin(ang)*rr}" r="${.35+rnd()*1.2}" fill="${e.stroke}" opacity="${op*(b==='giz'?.18:.28)}"/>`);}
+   return gm2baseStroke_(e,p,Math.max(1,sw*.35))+dots.join('');
+ }
+ if(b==='spray'){
+   const a=gm2sample_(pts,.09),dots=[];
+   for(const q of a)for(let i=0;i<22;i++){const ang=rnd()*Math.PI*2,rr=Math.sqrt(rnd())*sw*1.8;dots.push(`<circle cx="${q.x*p+Math.cos(ang)*rr}" cy="${q.y*p+Math.sin(ang)*rr}" r="${.35+rnd()*.7}" fill="${e.stroke}" opacity="${op*(.12+rnd()*.25)}"/>`);}
+   return dots.join('');
+ }
+ if(b==='carimbo'){
+   const a=gm2sample_(pts,Math.max(.45,e.strokeWidthM*5)),out=[];
+   for(const q of a){const S=Math.max(5,sw*1.7),x=q.x*p,y=q.y*p;out.push(`<path d="M ${x} ${y-S} L ${x+S} ${y+S} L ${x-S} ${y+S} Z" fill="none" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${Math.max(1,sw*.2)}"/>`);}
+   return out.join('');
+ }
+ if(b==='pele'){
+   const a=gm2sample_(pts,.10),out=[];
+   for(let j=1;j<a.length;j++){const q=a[j],pr=a[j-1],ang=Math.atan2(q.y-pr.y,q.x-pr.x)+Math.PI/2;
+     for(let i=-2;i<=2;i++){const off=i*sw*.28,x=q.x*p+Math.cos(ang)*off,y=q.y*p+Math.sin(ang)*off,L=sw*(.5+rnd()*.7);out.push(`<line x1="${x}" y1="${y}" x2="${x+(rnd()-.5)*L}" y2="${y-L}" stroke="${e.stroke}" stroke-opacity="${op*.72}" stroke-width="1"/>`);}
+   }return out.join('');
+ }
+ if(b==='esboco'){
+   const paths=[];for(let k=0;k<3;k++){const j=pts.map(q=>({x:q.x+(rnd()-.5)*.06,y:q.y+(rnd()-.5)*.06}));paths.push(`<path d="${gm2smoothPath_(j,p)}" fill="none" stroke="${e.stroke}" stroke-opacity="${op*.45}" stroke-width="${Math.max(1,sw*.18)}"/>`);}return paths.join('');
+ }
+ if(b==='espirografo'){
+   const a=gm2sample_(pts,Math.max(.22,e.strokeWidthM*2.5)),out=[];
+   for(const q of a){const r=Math.max(3,sw*(.65+rnd()*.45));out.push(`<circle cx="${q.x*p}" cy="${q.y*p}" r="${r}" fill="none" stroke="${e.stroke}" stroke-opacity="${op*.5}" stroke-width="1"/>`);}
+   return out.join('');
+ }
+ if(b==='teia'){
+   const a=gm2sample_(pts,.18),out=[gm2baseStroke_(e,p,Math.max(1,sw*.15))];
+   for(let i=0;i<a.length;i++)for(let j=0;j<i;j+=3){const d=Math.hypot(a[i].x-a[j].x,a[i].y-a[j].y);if(d<e.strokeWidthM*9&&rnd()>.65)out.push(`<line x1="${a[i].x*p}" y1="${a[i].y*p}" x2="${a[j].x*p}" y2="${a[j].y*p}" stroke="${e.stroke}" stroke-opacity="${op*.25}" stroke-width="1"/>`);}
+   return out.join('');
+ }
+ if(b==='irregular'){
+   const a=gm2sample_(pts,.06),out=[];for(const q of a){const r=Math.max(2,sw*(.15+rnd()*.65));out.push(`<circle cx="${q.x*p}" cy="${q.y*p}" r="${r}" fill="${e.stroke}" opacity="${op*.55}"/>`);}return out.join('');
+ }
+ if(b==='ranhura'){
+   const d=gm2smoothPath_(pts,p),out=[];for(const off of [-5,-1.5,1.5,5])out.push(`<path d="${d}" transform="translate(${off} 0)" fill="none" stroke="${e.stroke}" stroke-opacity="${op*.75}" stroke-width="1"/>`);return out.join('');
+ }
+ if(b==='areia'){
+   const a=gm2sample_(pts,.08),out=[];for(const q of a)for(let i=0;i<12;i++){const ang=rnd()*6.283,rr=rnd()*sw;out.push(`<circle cx="${q.x*p+Math.cos(ang)*rr}" cy="${q.y*p+Math.sin(ang)*rr}" r="${.25+rnd()*.65}" fill="${e.stroke}" opacity="${op*.55}"/>`);}return out.join('');
+ }
+ if(b==='cascalho'){
+   const a=gm2sample_(pts,.12),out=[];for(const q of a)if(rnd()>.25){const x=q.x*p+(rnd()-.5)*sw,y=q.y*p+(rnd()-.5)*sw,r=1.2+rnd()*Math.max(2,sw*.22);out.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${e.stroke}" fill-opacity="${op*.18}" stroke="${e.stroke}" stroke-opacity="${op*.7}" stroke-width=".8"/>`);}return out.join('');
+ }
+ if(b==='grama'){
+   const a=gm2sample_(pts,.11),out=[];for(const q of a)if(rnd()>.25){const x=q.x*p+(rnd()-.5)*sw,y=q.y*p+(rnd()-.5)*sw,H=Math.max(5,sw*(.8+rnd()*.7));out.push(`<path d="M ${x} ${y} Q ${x-3} ${y-H*.5} ${x-5} ${y-H} M ${x} ${y} Q ${x} ${y-H*.6} ${x} ${y-H*1.25} M ${x} ${y} Q ${x+3} ${y-H*.5} ${x+5} ${y-H}" fill="none" stroke="${e.stroke}" stroke-opacity="${op*.8}" stroke-width="1.2" stroke-linecap="round"/>`);}return out.join('');
+ }
+ if(b==='folhas'){
+   const a=gm2sample_(pts,.12),out=[];for(const q of a)if(rnd()>.18){const x=q.x*p+(rnd()-.5)*sw*1.2,y=q.y*p+(rnd()-.5)*sw*1.2,rx=Math.max(2,sw*.28),ry=Math.max(3,sw*.5),rot=rnd()*180;out.push(`<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${x} ${y})" fill="${e.stroke}" opacity="${op*.62}"/>`);}return out.join('');
+ }
+ if(b==='neve'){
+   const a=gm2sample_(pts,.10),out=[];for(const q of a)for(let i=0;i<5;i++){const ang=rnd()*6.283,rr=rnd()*sw,x=q.x*p+Math.cos(ang)*rr,y=q.y*p+Math.sin(ang)*rr,r=.8+rnd()*2.4;out.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#ffffff" opacity="${.3+rnd()*.5}"/>`);}return out.join('');
+ }
+ if(b==='fumaca'){
+   const a=gm2sample_(pts,.16),fid='gm2sm_'+String(e.id).replace(/\W/g,'_'),out=[`<defs><filter id="${fid}"><feGaussianBlur stdDeviation="${Math.max(2,sw*.45)}"/></filter></defs>`];
+   for(const q of a){const x=q.x*p+(rnd()-.5)*sw,y=q.y*p+(rnd()-.5)*sw,r=Math.max(6,sw*(.8+rnd()));out.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${e.stroke}" opacity="${op*.08}" filter="url(#${fid})"/>`);}return out.join('');
+ }
+ return gm2baseStroke_(e,p,sw);
 }
 function gm2imageInner(e){
  const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p,c=e.crop||{l:0,t:0,r:0,b:0},
@@ -28905,20 +29062,27 @@ function gm2elementSvg(e){
  else if(e.type==='path')inner=gm2pathInner(e);
  else if(e.type==='image')inner=gm2imageInner(e);
  else if(e.type==='object')inner=gm2objectInner(e);
- return `<g class="gm2-el" data-eid="${gm2esc(e.id)}" data-type="${e.type}"${lock} style="${style};cursor:${e.locked?'default':'move'}">${inner}</g>`;
+ return `<g class="gm2-el" data-eid="${gm2esc(e.id)}" data-type="${e.type}"${lock} style="${style}">${inner}</g>`;
 }
 
 function gm2handlesSvg(e){
- if(!e||e.locked)return'';
+ if(!e)return'';
  const p=gm2.st.ppm,b=gm2bbox(e),x=b.x*p,y=b.y*p,w=b.w*p,h=b.h*p,cx=x+w/2;
+ if(e.locked)return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="5 4" pointer-events="none"/>
+ <g pointer-events="none"><rect x="${x+w-24}" y="${y+5}" width="19" height="19" rx="4" fill="#111827" stroke="#ffd166"/><text x="${x+w-14.5}" y="${y+19}" font-size="12" text-anchor="middle">🔒</text></g>`;
+
  const hs=7, pts=[['nw',x,y],['n',cx,y],['ne',x+w,y],['e',x+w,y+h/2],['se',x+w,y+h],['s',cx,y+h],['sw',x,y+h],['w',x,y+h/2]];
  let out=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#67e8f9" stroke-width="1.4" stroke-dasharray="5 4" pointer-events="none"/>`;
  if(e.type!=='path'&&e.type!=='line'){
    out+=pts.map(([k,px,py])=>`<rect class="gm2-handle" data-handle="${k}" data-eid="${gm2esc(e.id)}" x="${px-hs/2}" y="${py-hs/2}" width="${hs}" height="${hs}" rx="1" fill="#fff" stroke="#23c7dc" stroke-width="1.5"/>`).join('');
    out+=`<line x1="${cx}" y1="${y}" x2="${cx}" y2="${y-22}" stroke="#67e8f9" stroke-width="1.2"/>
          <circle class="gm2-handle" data-handle="rot" data-eid="${gm2esc(e.id)}" cx="${cx}" cy="${y-27}" r="6" fill="#fff" stroke="#23c7dc" stroke-width="1.7"/>`;
-   if(e.type==='shape'&&['retangulo','quadrado'].includes(e.kind)){
+   if(e.type==='shape'&&['retangulo','quadrado','u_balcao'].includes(e.kind)){
      out+=`<circle class="gm2-handle" data-handle="radius" data-eid="${gm2esc(e.id)}" cx="${x+Math.max(12,Math.min(w/2,(Number(e.radius||0)*p)+12))}" cy="${y+12}" r="5.5" fill="#d9fbff" stroke="#23c7dc" stroke-width="1.6"/>`;
+   }
+   if(e.type==='shape'&&e.kind==='u_balcao'){
+     const t=Math.max(.08,Number(e.thickness||Math.min(e.w,e.h)*.18));
+     out+=`<circle class="gm2-handle" data-handle="uthick" data-eid="${gm2esc(e.id)}" cx="${(e.x+t)*p}" cy="${(e.y+e.h*.5)*p}" r="5.5" fill="#fff5b8" stroke="#23c7dc" stroke-width="1.6"/>`;
    }
    if(e.type==='image'&&e.cropMode){
      const cs=9;
@@ -28933,6 +29097,21 @@ function gm2handlesSvg(e){
  return out;
 }
 
+function gm2textureSvg_(p,w,h){
+ const t=gm2.st.texture||'nenhuma';if(t==='nenhuma')return'';
+ const bf=t==='papel'?'.035':t==='pedra'?'.018':'.055',oct=t==='pedra'?4:2,op=t==='papel'?.055:t==='pedra'?.10:.075,seed=t==='papel'?8:t==='pedra'?13:21;
+ return `<defs><filter id="gm2tex"><feTurbulence baseFrequency="${bf}" numOctaves="${oct}" seed="${seed}"/><feColorMatrix type="saturate" values="0"/></filter></defs>
+ <rect x="0" y="0" width="${w}" height="${h}" filter="url(#gm2tex)" opacity="${op}" pointer-events="none"/>`;
+}
+function gm2eraserPathSvg_(er,p,color='black'){
+ return `<path d="${gm2smoothPath_(er.points,p)}" fill="none" stroke="${color}" stroke-width="${Math.max(1,Number(er.widthM||.2)*p)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+function gm2renderWithErasers_(e,erasers,w,h,p){
+ const later=erasers.filter(er=>(er.z||0)>(e.z||0));
+ const body=gm2elementSvg(e);if(!later.length)return body;
+ const mid='gm2mask_'+String(e.id).replace(/\W/g,'_');
+ return `<defs><mask id="${mid}"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${later.map(er=>gm2eraserPathSvg_(er,p,'black')).join('')}</mask></defs><g mask="url(#${mid})">${body}</g>`;
+}
 function gm2render(){
  if(gm2.renderQueued)return;
  gm2.renderQueued=true;
@@ -28944,11 +29123,13 @@ function gm2render(){
   const grid=gm2.st.showGrid?`
    <defs><pattern id="gm2grid" width="${p}" height="${p}" patternUnits="userSpaceOnUse"><path d="M ${p} 0 L 0 0 0 ${p}" fill="none" stroke="${gm2.st.grid}" stroke-width="1"/></pattern></defs>
    <rect x="0" y="0" width="${w}" height="${h}" fill="url(#gm2grid)" pointer-events="none"/>`:'';
-  const els=[...gm2.st.elements].sort((a,b)=>(a.z||0)-(b.z||0)).map(gm2elementSvg).join('');
+  const ordered=[...gm2.st.elements].sort((a,b)=>(a.z||0)-(b.z||0));
+  const erasers=ordered.filter(e=>e.type==='eraser');
+  const els=ordered.filter(e=>e.type!=='eraser').map(e=>gm2renderWithErasers_(e,erasers,w,h,p)).join('');
   const primary=gm2el(gm2.primary),handles=primary?gm2handlesSvg(primary):'';
   const marquee=gm2.drag?.kind==='marquee'?(()=>{const d=gm2.drag,b={x:Math.min(d.x0,d.x1)*p,y:Math.min(d.y0,d.y1)*p,w:Math.abs(d.x1-d.x0)*p,h:Math.abs(d.y1-d.y0)*p};return `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" fill="rgba(103,232,249,.10)" stroke="#67e8f9" stroke-dasharray="5 4"/>`;})():'';
-  svg.innerHTML=`<rect id="gm2bg" x="0" y="0" width="${w}" height="${h}" fill="${gm2.st.bg}"/>${grid}<g id="gm2elements">${els}</g><g id="gm2overlay">${handles}${marquee}</g>`;
-  gm2syncControls();gm2updateToolbarState();gm2status();
+  svg.innerHTML=`<rect id="gm2bg" x="0" y="0" width="${w}" height="${h}" fill="${gm2.st.bg}"/>${gm2textureSvg_(p,w,h)}${grid}<g id="gm2elements">${els}</g><g id="gm2overlay">${handles}${marquee}</g>`;
+  gm2syncControls();gm2updateToolbarState();gm2status();gm2updateCursor_();
  });
 }
 function gm2status(){
@@ -28981,7 +29162,7 @@ function gm2panelHtml(){
     <label>Escala<select id="gm2ppm"><option>24</option><option selected>32</option><option>40</option><option>48</option></select></label>
     <label>Fundo<input id="gm2bgcolor" type="color"></label><label>Grade<input id="gm2gridcolor" type="color"></label>
     <label class="gm2-check"><span>Grade</span><input id="gm2gridshow" type="checkbox" checked></label>
-    <label>Textura<select id="gm2texture"><option value="nenhuma">Nenhuma</option><option value="papel">Papel</option><option value="pedra">Pedra</option><option value="terra">Terra</option></select></label>
+    <label>Textura do mapa<select id="gm2texture"><option value="nenhuma">Nenhuma</option><option value="papel">Papel</option><option value="pedra">Pedra</option><option value="terra">Terra</option></select></label>
     <button id="gm2undo" title="Desfazer (Ctrl+Z)">↶</button><button id="gm2redo" title="Refazer (Ctrl+Y)">↷</button>
     <label>Ferramenta<select id="gm2tool">
       <option value="select">Selecionar</option>${brushOpts.map(x=>`<option value="brush:${x[0]}">${x[1]}</option>`).join('')}
@@ -29000,9 +29181,14 @@ function gm2panelHtml(){
     <label>Opacidade<input id="gm2strokeO" type="range" min="0" max="100"></label>
     <label>Linhas<select id="gm2line"><option value="">— escolher —</option><option value="linha_reta">Reta</option><option value="linha_ondulada">Ondulada</option><option value="linha_pontilhada">Pontilhada</option><option value="linha_curva">Curva editável</option></select></label>
     <button id="gm2selectBtn" title="Selecionar / editar">↖</button>
-    <button id="gm2front" title="Trazer para frente">↑</button><button id="gm2back" title="Enviar para trás">↓</button>
+    <button id="gm2front" title="Trazer para a frente de tudo">⤒</button>
+    <button id="gm2up1" title="Subir UMA camada">↑1</button>
+    <button id="gm2down1" title="Descer UMA camada">↓1</button>
+    <button id="gm2back" title="Enviar para trás de tudo">⤓</button>
     <button id="gm2dup" title="Duplicar">▣</button><button id="gm2lock" title="Fixar / soltar">🔒</button>
-    <button id="gm2crop" title="Recortar imagem">✂</button><button id="gm2del" title="Excluir">🗑</button>
+    <button id="gm2crop" title="Recortar imagem">✂</button>
+    <button id="gm2eraseAll" title="Apagador total: remove o elemento inteiro que tocar">⌫</button>
+    <button id="gm2del" title="Excluir">🗑</button>
    </div>
  </div>
  <div class="gm2-workspace">
@@ -29010,7 +29196,7 @@ function gm2panelHtml(){
     <small>Formas</small>
     ${[['retangulo','▭','Retângulo'],['quadrado','□','Quadrado'],['triangulo','△','Triângulo'],['circulo','○','Círculo'],['elipse','⬭','Elipse']].map(x=>`<button data-shape="${x[0]}" title="${x[2]}">${x[1]}</button>`).join('')}
     <small>Outras</small>
-    <select id="gm2other"><option value="">⌄</option><option value="hexagono">Hexágono</option><option value="pentagono">Pentágono</option><option value="losango">Losango</option><option value="estrela">Estrela</option><option value="pentagrama">Pentagrama</option><option value="hexagrama">Hexagrama</option><option value="heptagrama">Heptagrama</option><option value="u">U</option><option value="coracao">Coração</option><option value="crescente">Lua crescente</option><option value="semicirculo">Semicírculo</option></select>
+    <select id="gm2other"><option value="">⌄</option><option value="hexagono">Hexágono</option><option value="pentagono">Pentágono</option><option value="losango">Losango</option><option value="estrela">Estrela</option><option value="pentagrama">Pentagrama</option><option value="hexagrama">Hexagrama</option><option value="heptagrama">Heptagrama</option><option value="u">U aberto</option><option value="u_balcao">U balcão (oco)</option><option value="coracao">Coração</option><option value="crescente">Lua crescente</option><option value="semicirculo">Semicírculo</option></select>
     <small>Próximos elementos</small>
     <label>Sombra<select id="gm2shadow"><option value="nenhuma">nenhuma</option><option value="suave">suave</option><option value="media">média</option><option value="forte">forte</option></select></label>
     <label>Direção<select id="gm2shadowdir"><option>SE</option><option>SO</option><option>NE</option><option>NO</option><option>S</option><option>N</option><option>E</option><option>O</option></select></label>
@@ -29047,7 +29233,7 @@ function gm2css(){
  .gm2-workspace{display:grid;grid-template-columns:58px minmax(0,1fr);align-items:start}
  #gm2side{border:1px solid #34506d;border-top:0;background:#11152d;padding:7px 5px;display:flex;flex-direction:column;gap:6px;min-height:560px}
  #gm2side small{font-size:9px;color:#d6e5ff;margin-top:3px}#gm2side button{height:38px;font-size:20px;border-radius:6px;border:1px solid #777;cursor:pointer}
- #gm2side button.active,#gm2ribbon button.active{outline:2px solid #67e8f9;background:#233e50;color:#fff}
+ #gm2side button.active,#gm2ribbon button.active,#gm2eraseAll.active{outline:2px solid #67e8f9;background:#233e50;color:#fff}
  #gm2side select,#gm2side input{width:100%;margin:0;font-size:10px;padding:4px}#gm2side label{font-size:9px;color:#b9c2e7;margin:0}
  #gm2viewport{overflow:auto;max-width:100%;min-height:560px;padding:12px;background:rgba(3,8,25,.35);border-bottom:1px solid #34506d}
  #gm2svg{display:block;touch-action:none;user-select:none;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
@@ -29089,14 +29275,34 @@ function gm2syncControls(){
  const sw=document.getElementById('gm2strokeWval');if(sw)sw.textContent=gm2.defaults.strokeWidth;
  const pv=document.getElementById('gm2preview');if(pv){pv.style.setProperty('--c',gm2.defaults.fill);pv.style.setProperty('--sz',Math.max(2,Math.min(20,gm2.defaults.size))+'px');pv.style.setProperty('--o',gm2.defaults.opacity);}
 }
+function gm2cursorData_(kind){
+ const svgs={
+  brush:`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><g transform="rotate(-42 16 16)"><rect x="13" y="3" width="6" height="18" rx="2" fill="#e8e8e8" stroke="#111"/><path d="M12 20h8l-2 8h-4z" fill="#67e8f9" stroke="#111"/></g></svg>`,
+  eraser:`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><g transform="rotate(-35 16 16)"><rect x="7" y="10" width="20" height="12" rx="3" fill="#ffb5c8" stroke="#111" stroke-width="2"/><path d="M18 10v12" stroke="#fff" stroke-width="2"/></g></svg>`,
+  delete:`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><g transform="rotate(-35 16 16)"><rect x="6" y="9" width="19" height="12" rx="3" fill="#ff7070" stroke="#111" stroke-width="2"/></g><path d="M21 5l7 7m0-7l-7 7" stroke="#fff" stroke-width="2.5"/></svg>`
+ };
+ const raw=svgs[kind]||svgs.brush;return `url("data:image/svg+xml,${encodeURIComponent(raw)}") 5 27`;
+}
+function gm2updateCursor_(){
+ const svg=document.getElementById('gm2svg');if(!svg)return;
+ if(gm2.tool==='select')svg.style.cursor='default';
+ else if(gm2.tool==='object')svg.style.cursor='grab';
+ else if(gm2.tool==='deleteTouch')svg.style.cursor=gm2cursorData_('delete')+', auto';
+ else if(gm2.tool==='brush'&&gm2.brush==='borracha')svg.style.cursor=gm2cursorData_('eraser')+', auto';
+ else if(gm2.tool==='brush')svg.style.cursor=gm2cursorData_('brush')+', crosshair';
+ else if(gm2.tool==='shape'||gm2.tool==='line')svg.style.cursor='crosshair';
+ else svg.style.cursor='default';
+}
 function gm2updateToolbarState(){
  const tool=document.getElementById('gm2tool');if(tool){
    tool.value=gm2.tool==='brush'?`brush:${gm2.brush}`:gm2.tool==='select'?'select':'select';
  }
  document.querySelectorAll('#gm2side [data-shape]').forEach(b=>b.classList.toggle('active',gm2.tool==='shape'&&b.dataset.shape===gm2.shape));
  document.getElementById('gm2selectBtn')?.classList.toggle('active',gm2.tool==='select');
+ document.getElementById('gm2eraseAll')?.classList.toggle('active',gm2.tool==='deleteTouch');
  const lk=document.getElementById('gm2lock'),pr=gm2el(gm2.primary);if(lk)lk.textContent=pr?.locked?'🔓':'🔒';
  const crop=document.getElementById('gm2crop');if(crop)crop.style.display=pr?.type==='image'?'inline-block':'none';
+ gm2updateCursor_();
 }
 
 function gm2setHex(key,v){
@@ -29132,11 +29338,17 @@ function gm2wire(){
  setStyle('gm2shadow','shadow');setStyle('gm2shadowdir','shadowDir');setStyle('gm2shadowdist','shadowDist',Number);
  document.querySelectorAll('#gm2swatches [data-color]').forEach(b=>b.onclick=()=>{gm2.defaults.fill=b.dataset.color;gm2styleChanged();});
 
- $('gm2front').onclick=()=>gm2Layer(true);$('gm2back').onclick=()=>gm2Layer(false);$('gm2dup').onclick=gm2duplicate;$('gm2del').onclick=gm2delete;
+ $('gm2front').onclick=()=>gm2Layer(true);$('gm2up1').onclick=()=>gm2LayerStep(1);$('gm2down1').onclick=()=>gm2LayerStep(-1);$('gm2back').onclick=()=>gm2Layer(false);
+ $('gm2dup').onclick=gm2duplicate;$('gm2del').onclick=gm2delete;
  $('gm2lock').onclick=gm2toggleLock;$('gm2crop').onclick=gm2toggleCrop;
+ $('gm2eraseAll').onclick=()=>{gm2clearSelection();gm2.tool='deleteTouch';gm2updateToolbarState();gm2render();};
 
  $('gm2allobj').onchange=e=>document.querySelectorAll('.gm2objcheck').forEach(c=>c.checked=e.target.checked);
- $('gm2addobj').onclick=()=>{const ids=[...document.querySelectorAll('.gm2objcheck:checked')].map(c=>c.value);if(!ids.length)return;gm2.tool='object';gm2.objectIds=ids;gm2clearSelection();gm2updateToolbarState();gm2status();};
+ $('gm2addobj').onclick=()=>{const ids=[...document.querySelectorAll('.gm2objcheck:checked')].map(c=>c.value);if(!ids.length)return;
+   gm2.tool='object';gm2.objectIds=ids;gm2clearSelection();
+   gm2placeObjects({x:gm2.st.w/2,y:gm2.st.h/2});
+   gm2.tool='object';gm2.objectIds=ids;gm2updateToolbarState();gm2status();
+ };
 
  $('gm2upload').onclick=()=>$('gm2file').click();$('gm2file').onchange=e=>{const f=e.target.files?.[0];if(f)gm2importImageFile(f);e.target.value='';};
 
@@ -29159,17 +29371,21 @@ function gm2pointerDown(ev){
  if(crop){ev.preventDefault();ev.stopPropagation();gm2cropStart(ev,crop.dataset.eid,crop.dataset.crop);return;}
  const node=ev.target.closest?.('.gm2-el'),id=node?.dataset.eid,e=id?gm2el(id):null,p=gm2point(ev);
 
- if(e&&!e.locked){
+ if(gm2.tool==='deleteTouch'){ev.preventDefault();gm2deleteTouchDrag(ev,p);return;}
+ if(gm2.tool==='brush'&&gm2.brush==='borracha'){ev.preventDefault();gm2eraserStroke(ev,p);return;}
+
+ if(e){
    if(gm2.tool==='select'||gm2.tool==='shape'||gm2.tool==='line'||gm2.tool==='object'){
      ev.preventDefault();gm2select(id,ev.ctrlKey||ev.metaKey);
-     if(!(ev.ctrlKey||ev.metaKey))gm2moveStart(ev,id);return;
+     if(!e.locked&&!(ev.ctrlKey||ev.metaKey))gm2moveStart(ev,id);
+     return;
    }
  }
  if(gm2.tool==='select'){
    ev.preventDefault();if(!(ev.ctrlKey||ev.metaKey))gm2clearSelection();
    gm2.drag={kind:'marquee',x0:p.x,y0:p.y,x1:p.x,y1:p.y};
    const mv=e2=>{const q=gm2point(e2);gm2.drag.x1=q.x;gm2.drag.y1=q.y;gm2render();};
-   const up=()=>{window.removeEventListener('pointermove',mv);const d=gm2.drag,b={x:Math.min(d.x0,d.x1),y:Math.min(d.y0,d.y1),w:Math.abs(d.x1-d.x0),h:Math.abs(d.y1-d.y0)};gm2.drag=null;if(b.w>.05||b.h>.05){for(const el of gm2.st.elements)if(!el.locked&&gm2intersects(b,gm2bbox(el)))gm2.selected.add(el.id);gm2.primary=[...gm2.selected].at(-1)||'';}gm2render();};
+   const up=()=>{window.removeEventListener('pointermove',mv);const d=gm2.drag,b={x:Math.min(d.x0,d.x1),y:Math.min(d.y0,d.y1),w:Math.abs(d.x1-d.x0),h:Math.abs(d.y1-d.y0)};gm2.drag=null;if(b.w>.05||b.h>.05){for(const el of gm2.st.elements)if(el.type!=='eraser'&&gm2intersects(b,gm2bbox(el)))gm2.selected.add(el.id);gm2.primary=[...gm2.selected].at(-1)||'';}gm2render();};
    window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});gm2render();return;
  }
  if(gm2.tool==='shape'){ev.preventDefault();gm2createShapeDrag(ev,p);return;}
@@ -29178,6 +29394,31 @@ function gm2pointerDown(ev){
  if(gm2.tool==='object'){ev.preventDefault();gm2placeObjects(p);return;}
 }
 
+function gm2eraserStroke(ev,p0){
+ gm2pushHistory();const e=gm2newEraser([p0]);gm2.st.elements.push(e);
+ const mv=e2=>{const p=gm2point(e2),last=e.points.at(-1);if(!last||Math.hypot(p.x-last.x,p.y-last.y)>.025)e.points.push(p);gm2render();};
+ const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();gm2render();};
+ window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
+function gm2pointSegDist_(p,a,b){
+ const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,c1=vx*wx+vy*wy;
+ if(c1<=0)return Math.hypot(p.x-a.x,p.y-a.y);const c2=vx*vx+vy*vy;
+ if(c2<=c1)return Math.hypot(p.x-b.x,p.y-b.y);const t=c1/c2,q={x:a.x+t*vx,y:a.y+t*vy};return Math.hypot(p.x-q.x,p.y-q.y);
+}
+function gm2touches_(e,p,r){
+ if(e.type==='eraser')return false;
+ if(e.type==='path'){const a=e.points||[];for(let i=0;i<a.length;i++){if(Math.hypot(a[i].x-p.x,a[i].y-p.y)<=r)return true;if(i&&gm2pointSegDist_(p,a[i-1],a[i])<=r)return true;}return false;}
+ const b=gm2bbox(e);return p.x>=b.x-r&&p.x<=b.x+b.w+r&&p.y>=b.y-r&&p.y<=b.y+b.h+r;
+}
+function gm2deleteTouchDrag(ev,p0){
+ gm2pushHistory();let changed=false;
+ const r=Math.max(.12,Number(gm2.defaults.size||7)/Math.max(1,gm2.st.ppm)*.8);
+ const erase=p=>{const before=gm2.st.elements.length;gm2.st.elements=gm2.st.elements.filter(e=>e.locked||!gm2touches_(e,p,r));if(gm2.st.elements.length!==before)changed=true;gm2clearSelection();gm2render();};
+ erase(p0);
+ const mv=e2=>erase(gm2point(e2));
+ const up=()=>{window.removeEventListener('pointermove',mv);if(!changed)gm2.history.pop();gm2saveLocal();gm2render();};
+ window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
+}
 function gm2createShapeDrag(ev,p0){
  gm2pushHistory();let e=null,moved=false;
  const mv=e2=>{moved=true;const p=gm2point(e2);if(!e){e=gm2newShape(gm2.shape,p0.x,p0.y,.05,.05);gm2.st.elements.push(e);}
@@ -29223,6 +29464,12 @@ function gm2handleStart(ev,id,h){
    const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
    window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});return;
  }
+ if(h==='uthick'&&e.kind==='u_balcao'){
+   const startT=Math.max(.08,Number(e.thickness||Math.min(e.w,e.h)*.18));
+   const mv=e2=>{const p=gm2point(e2);e.thickness=Math.max(.08,Math.min(Math.min(e.w,e.h)*.45,startT+(p.x-p0.x)));gm2render();};
+   const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
+   window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});return;
+ }
  if(h==='curve'){
    const mv=e2=>{const p=gm2point(e2);e.cx=p.x;e.cy=p.y;gm2render();};
    const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
@@ -29254,6 +29501,27 @@ function gm2cropStart(ev,id,side){
  window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
 }
 
+function gm2LayerStep(dir){
+ const sel=gm2selectedEls();if(!sel.length)return;
+ gm2pushHistory();
+ const ordered=[...gm2.st.elements].sort((a,b)=>(a.z||0)-(b.z||0));
+ ordered.forEach((e,i)=>e.z=i+1);
+ const ids=new Set(sel.map(e=>e.id));
+ if(dir>0){
+   for(let i=ordered.length-2;i>=0;i--){
+     if(ids.has(ordered[i].id)&&!ids.has(ordered[i+1].id)){
+       const z=ordered[i].z;ordered[i].z=ordered[i+1].z;ordered[i+1].z=z;
+     }
+   }
+ }else{
+   for(let i=1;i<ordered.length;i++){
+     if(ids.has(ordered[i].id)&&!ids.has(ordered[i-1].id)){
+       const z=ordered[i].z;ordered[i].z=ordered[i-1].z;ordered[i-1].z=z;
+     }
+   }
+ }
+ gm2saveLocal();gm2render();
+}
 function gm2Layer(front){
  const a=gm2selectedEls();if(!a.length)return;gm2pushHistory();
  if(front){let z=gm2zNext();a.forEach(e=>e.z=z++);}
@@ -29342,826 +29610,6 @@ window.gm2render=gm2render;
 setTimeout(gm2installTab,900);
 })();
 
-
-
-// ============================================================
-// V46.70.3 — Oficina 2: escala métrica + ferramentas persistentes
-// + objetos adicionados + pincéis confiáveis + destravar elementos
-// ============================================================
-(function(){
-'use strict';
-
-function gm271_panelOpen_(){
-  const p=document.getElementById('gm-sub-oficina2');
-  return !!(p && !p.classList.contains('hidden'));
-}
-
-function gm271_svg_(){ return document.getElementById('gm2svg'); }
-
-function gm271_point_(ev){
-  const svg=gm271_svg_(),r=svg.getBoundingClientRect();
-  const vb=svg.viewBox.baseVal;
-  const sx=(vb.width||r.width)/Math.max(1,r.width);
-  const sy=(vb.height||r.height)/Math.max(1,r.height);
-  const p=gm2.st.ppm;
-  return {x:(ev.clientX-r.left)*sx/p,y:(ev.clientY-r.top)*sy/p};
-}
-
-// ------------------------------------------------------------
-// ESCALA MÉTRICA REAL
-// Elementos continuam guardados em metros.
-// Para desenhos, a espessura também passa a ser guardada em metros.
-// Assim 2 m continuam ocupando 2 quadrados em qualquer px/m.
-// ------------------------------------------------------------
-const gm271_newPathBase_=gm2newPath;
-gm2newPath=function(points){
-  const e=gm271_newPathBase_(points);
-  e.strokeWidthM=Math.max(.01,Number(gm2.defaults.size||1)/Math.max(1,gm2.st.ppm));
-  return e;
-};
-
-const gm271_newLineBase_=gm2newLine;
-gm2newLine=function(kind,x,y,x2,y2){
-  const e=gm271_newLineBase_(kind,x,y,x2,y2);
-  e.strokeWidthM=Math.max(.01,Number(gm2.defaults.size||1)/Math.max(1,gm2.st.ppm));
-  return e;
-};
-
-gm2pathInner=function(e){
-  const p=gm2.st.ppm;
-  const pts=(e.points||[]).map(q=>`${q.x*p},${q.y*p}`).join(' ');
-  const dash=gm2dash(e);
-  const cap=['quadrado','caligrafico'].includes(e.brush)?'square':'round';
-
-  if(e.strokeWidthM==null){
-    e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,p));
-  }
-  const sw=Math.max(1,e.strokeWidthM*p);
-
-  if(e.brush==='spray'){
-    return `<polyline points="${pts}" fill="none" stroke="${e.stroke}" stroke-opacity="${Math.min(.42,Number(e.strokeOpacity??1))}" stroke-width="${Math.max(2,sw*1.8)}" stroke-linecap="round" stroke-dasharray="1 5"/>`;
-  }
-  return `<polyline points="${pts}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="${cap}" stroke-linejoin="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
-};
-
-gm2lineInner=function(e){
-  const p=gm2.st.ppm,x=e.x*p,y=e.y*p,x2=e.x2*p,y2=e.y2*p;
-  if(e.strokeWidthM==null){
-    e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,p));
-  }
-  const sw=Math.max(1,e.strokeWidthM*p);
-  const dash=e.kind==='linha_pontilhada'?'6 7':'';
-
-  if(e.kind==='linha_ondulada'){
-    const dx=x2-x,dy=y2-y,len=Math.hypot(dx,dy),steps=Math.max(8,Math.floor(len/18)),pts=[];
-    for(let i=0;i<=steps;i++){
-      const t=i/steps,px=x+dx*t,py=y+dy*t,amp=8*Math.sin(t*Math.PI*steps/2),
-            nx=-dy/(len||1),ny=dx/(len||1);
-      pts.push(`${px+nx*amp},${py+ny*amp}`);
-    }
-    return `<polyline points="${pts.join(' ')}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
-  }
-  if(e.kind==='linha_curva'){
-    return `<path d="M ${x} ${y} Q ${e.cx*p} ${e.cy*p} ${x2} ${y2}" fill="none" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round"/>`;
-  }
-  return `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="${e.stroke}" stroke-opacity="${e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
-};
-
-// Migra o rascunho já existente sem alterar seu tamanho no mapa.
-for(const e of (gm2.st.elements||[])){
-  if((e.type==='path'||e.type==='line') && e.strokeWidthM==null){
-    e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,gm2.st.ppm));
-  }
-}
-
-// ------------------------------------------------------------
-// SELEÇÃO DE ELEMENTO FIXADO
-// O cadeado impede movimento, não impede seleção.
-// Assim basta selecionar o elemento fixado e clicar 🔓.
-// ------------------------------------------------------------
-const gm271_elementSvgBase_=gm2elementSvg;
-gm2elementSvg=function(e){
-  let h=gm271_elementSvgBase_(e);
-  if(e.locked){
-    h=h.replace(/cursor:default/g,'cursor:pointer');
-  }
-  return h;
-};
-
-// ------------------------------------------------------------
-// OBJETOS DO BANCO
-// "Adicionar marcados" agora:
-// 1) já coloca uma cópia no centro do mapa;
-// 2) mantém a ferramenta ativa para clicar e repetir no mapa.
-// ------------------------------------------------------------
-function gm271_placeSelectedObjectsAt_(x,y){
-  const ids=gm2.objectIds||[];
-  if(!ids.length)return false;
-
-  gm2pushHistory();
-  let off=0,created=[];
-  for(const id of ids){
-    const m=(objetosMapaDB||[]).find(o=>String(o.id)===String(id));
-    if(!m)continue;
-
-    const w=Math.max(.35,Number(m.larguraM||m.largura||1));
-    const h=Math.max(.35,Number(m.alturaM||m.altura||1));
-    const src=m.imagem||m.image||m.urlImagem||'';
-
-    const e={
-      id:gm2id('o'),type:'object',modeloId:m.id,name:getNome(m)||m.id,src,
-      x:x+off,y:y+off,w,h,rot:0,z:gm2zNext(),locked:false,opacity:1,
-      shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist
-    };
-    gm2.st.elements.push(e);created.push(e);off+=.25;
-  }
-  if(!created.length){
-    gm2.history.pop(); // não cria passo vazio
-    return false;
-  }
-  gm2clearSelection();
-  created.forEach(e=>gm2.selected.add(e.id));
-  gm2.primary=created.at(-1).id;
-  gm2saveLocal();gm2render();
-  return true;
-}
-
-gm2placeObjects=function(p){
-  gm271_placeSelectedObjectsAt_(p.x,p.y);
-};
-
-const gm271_oldAddObj=document.getElementById('gm2addobj');
-if(gm271_oldAddObj){
-  gm271_oldAddObj.onclick=()=>{
-    const ids=[...document.querySelectorAll('.gm2objcheck:checked')].map(c=>c.value);
-    if(!ids.length)return;
-    gm2.tool='object';gm2.objectIds=ids;gm2clearSelection();
-    let totalW=0,maxH=1;
-    for(const id of ids){
-      const m=(objetosMapaDB||[]).find(o=>String(o.id)===String(id));
-      if(m){totalW+=Math.max(.35,Number(m.larguraM||m.largura||1));maxH=Math.max(maxH,Number(m.alturaM||m.altura||1));}
-    }
-    const x=Math.max(.2,(gm2.st.w-Math.min(totalW,gm2.st.w*.8))/2);
-    const y=Math.max(.2,(gm2.st.h-maxH)/2);
-    gm271_placeSelectedObjectsAt_(x,y);
-    gm2.tool='object';gm2.objectIds=ids;
-    gm2updateToolbarState();gm2status();
-  };
-}
-
-// ------------------------------------------------------------
-// CONTROLADOR ÚNICO DA OFICINA 2
-// Captura o pointerdown antes de qualquer listener externo.
-// Resolve pincéis que não iniciavam e formas que "morriam"
-// depois de alternar entre ferramentas.
-// ------------------------------------------------------------
-function gm271_pointerDown_(ev){
-  if(!gm271_panelOpen_()||ev.button===2)return;
-
-  const svg=gm271_svg_();
-  if(!svg||!svg.contains(ev.target))return;
-
-  const handle=ev.target.closest?.('.gm2-handle');
-  const crop=ev.target.closest?.('.gm2-crop-handle');
-
-  if(handle){
-    ev.preventDefault();ev.stopImmediatePropagation();
-    gm2handleStart(ev,handle.dataset.eid,handle.dataset.handle);
-    return;
-  }
-  if(crop){
-    ev.preventDefault();ev.stopImmediatePropagation();
-    gm2cropStart(ev,crop.dataset.eid,crop.dataset.crop);
-    return;
-  }
-
-  const node=ev.target.closest?.('.gm2-el');
-  const id=node?.dataset.eid;
-  const e=id?gm2el(id):null;
-  const p=gm271_point_(ev);
-
-  // ELEMENTO EXISTENTE
-  if(e){
-    // elementos fixados podem ser selecionados para serem destravados
-    if(gm2.tool==='select'){
-      ev.preventDefault();ev.stopImmediatePropagation();
-      gm2select(id,ev.ctrlKey||ev.metaKey);
-      if(!e.locked && !(ev.ctrlKey||ev.metaKey)) gm2moveStart(ev,id);
-      return;
-    }
-
-    // forma/linha/objeto ativos: clicar num elemento existente apenas seleciona.
-    if(['shape','line','object'].includes(gm2.tool)){
-      ev.preventDefault();ev.stopImmediatePropagation();
-      gm2select(id,ev.ctrlKey||ev.metaKey);
-      if(!e.locked && !(ev.ctrlKey||ev.metaKey)) gm2moveStart(ev,id);
-      return;
-    }
-
-    // com pincel ativo, permitir desenhar por cima inclusive de elementos fixados.
-    if(gm2.tool!=='brush'){
-      return;
-    }
-  }
-
-  if(gm2.tool==='select'){
-    ev.preventDefault();ev.stopImmediatePropagation();
-    if(!(ev.ctrlKey||ev.metaKey))gm2clearSelection();
-    gm2.drag={kind:'marquee',x0:p.x,y0:p.y,x1:p.x,y1:p.y};
-
-    const mv=e2=>{
-      const q=gm271_point_(e2);
-      gm2.drag.x1=q.x;gm2.drag.y1=q.y;gm2render();
-    };
-    const up=()=>{
-      window.removeEventListener('pointermove',mv);
-      const d=gm2.drag;
-      const b={x:Math.min(d.x0,d.x1),y:Math.min(d.y0,d.y1),w:Math.abs(d.x1-d.x0),h:Math.abs(d.y1-d.y0)};
-      gm2.drag=null;
-      if(b.w>.05||b.h>.05){
-        for(const el of gm2.st.elements){
-          if(gm2intersects(b,gm2bbox(el)))gm2.selected.add(el.id);
-        }
-        gm2.primary=[...gm2.selected].at(-1)||'';
-      }
-      gm2render();
-    };
-    window.addEventListener('pointermove',mv,{passive:true});
-    window.addEventListener('pointerup',up,{once:true});
-    gm2render();
-    return;
-  }
-
-  if(gm2.tool==='shape'){
-    ev.preventDefault();ev.stopImmediatePropagation();
-    gm2createShapeDrag(ev,p);
-    return;
-  }
-
-  if(gm2.tool==='line'){
-    ev.preventDefault();ev.stopImmediatePropagation();
-    gm2createLineDrag(ev,p);
-    return;
-  }
-
-  if(gm2.tool==='brush'){
-    ev.preventDefault();ev.stopImmediatePropagation();
-    gm2drawPath(ev,p);
-    return;
-  }
-
-  if(gm2.tool==='object'){
-    ev.preventDefault();ev.stopImmediatePropagation();
-    gm2placeObjects(p);
-    return;
-  }
-}
-
-// O listener antigo fica, mas este em captura chega primeiro e interrompe.
-document.addEventListener('pointerdown',gm271_pointerDown_,true);
-
-// ------------------------------------------------------------
-// PERSISTÊNCIA EXPLÍCITA DAS FERRAMENTAS
-// A interface pode atualizar, mas o modo não é trocado sozinho.
-// ------------------------------------------------------------
-const gm271_setToolBase_=gm2setTool;
-gm2setTool=function(t,val=''){
-  gm271_setToolBase_(t,val);
-  if(t==='shape'&&val) gm2.shape=val;
-  if(t==='line'&&val) gm2.line=val;
-  if(t==='brush'&&val) gm2.brush=val;
-  gm2.tool=t;
-  gm2updateToolbarState();gm2status();
-};
-
-// reforça botões de forma por delegação, sem depender do onclick inicial
-document.addEventListener('click',ev=>{
-  if(!gm271_panelOpen_())return;
-  const b=ev.target.closest?.('#gm2side [data-shape]');
-  if(b){
-    ev.preventDefault();ev.stopPropagation();
-    gm2setTool('shape',b.dataset.shape);
-  }
-},true);
-
-// ------------------------------------------------------------
-// CONTROLES DE ESCALA
-// ppm é zoom visual. NÃO altera coordenadas/dimensões em metros.
-// ------------------------------------------------------------
-const ppm=document.getElementById('gm2ppm');
-if(ppm){
-  ppm.onchange=e=>{
-    gm2.st.ppm=Number(e.target.value)||32;
-    // nenhuma conversão de x/y/w/h
-    gm2saveLocal();gm2render();
-  };
-}
-
-// ------------------------------------------------------------
-// FEEDBACK VISUAL PARA FIXADOS
-// ------------------------------------------------------------
-const gm271_handlesBase_=gm2handlesSvg;
-gm2handlesSvg=function(e){
-  if(!e)return'';
-  if(e.locked){
-    const p=gm2.st.ppm,b=gm2bbox(e),x=b.x*p,y=b.y*p,w=b.w*p,h=b.h*p;
-    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="#ffd166" stroke-width="1.5" stroke-dasharray="5 4" pointer-events="none"/>
-            <g pointer-events="none"><rect x="${x+w-23}" y="${y+5}" width="18" height="18" rx="4" fill="#111827" stroke="#ffd166"/><text x="${x+w-14}" y="${y+18}" font-size="12" text-anchor="middle">🔒</text></g>`;
-  }
-  return gm271_handlesBase_(e);
-};
-
-// ------------------------------------------------------------
-// UI: texto do botão banco deixa explícito que ele insere e repete.
-// ------------------------------------------------------------
-const addBtn=document.getElementById('gm2addobj');
-if(addBtn){
-  addBtn.textContent='＋ Adicionar marcados ao mapa';
-  addBtn.title='Adiciona no centro e mantém a ferramenta ativa para repetir clicando no mapa';
-}
-
-gm2saveLocal();
-gm2render();
-
-})();
-
-
-
-// ============================================================
-// V46.70.3 — Oficina 2
-// pincéis distintos + borracha real + remove textura problemática
-// + banco de objetos corrigido após montagem da aba
-// + U balcão oco com arredondamento + camadas passo a passo
-// ============================================================
-(function(){
-'use strict';
-
-function gm272whenReady_(fn, tries=40){
-  const ok=document.getElementById('gm2svg') && document.getElementById('gm2addobj');
-  if(ok){try{fn();}catch(e){console.warn('Oficina 2.70.2',e)};return;}
-  if(tries>0)setTimeout(()=>gm272whenReady_(fn,tries-1),150);
-}
-
-// ---------- remove o seletor de textura da Oficina 2 ----------
-gm272whenReady_(()=>{
-  const tex=document.getElementById('gm2texture');
-  const lab=tex?.closest('label');
-  if(lab) lab.remove();
-});
-
-// ---------- U oco, quadrado por padrão e arredondável ----------
-const gm272_shapeInnerBase_=gm2shapeInner;
-gm2shapeInner=function(e){
-  if(e?.type==='shape' && e.kind==='u_balcao'){
-    const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p;
-    const t=Math.max(0.08,Math.min(e.thickness||Math.min(e.w,e.h)*.18,Math.min(e.w,e.h)*.45))*p;
-    const r=Math.max(0,Number(e.radius||0))*p;
-    const fill=e.fill||'#59e391',fo=Number(e.fillOpacity??1),stroke=e.stroke||'#111',sw=Math.max(0,Number(e.strokeWidth||0)),so=sw===0?0:Number(e.strokeOpacity??1);
-
-    // U formado por três barras, com cantos externos/internos arredondáveis.
-    // O interior permanece vazio.
-    const rr=Math.min(r, Math.max(0, t/2));
-    const d=[
-      `M ${x+rr} ${y}`,
-      `H ${x+t-rr}`, `Q ${x+t} ${y} ${x+t} ${y+rr}`,
-      `V ${y+h-t-rr}`, `Q ${x+t} ${y+h-t} ${x+t+rr} ${y+h-t}`,
-      `H ${x+w-t-rr}`, `Q ${x+w-t} ${y+h-t} ${x+w-t} ${y+h-t-rr}`,
-      `V ${y+rr}`, `Q ${x+w-t} ${y} ${x+w-t+rr} ${y}`,
-      `H ${x+w-rr}`, `Q ${x+w} ${y} ${x+w} ${y+rr}`,
-      `V ${y+h-rr}`, `Q ${x+w} ${y+h} ${x+w-rr} ${y+h}`,
-      `H ${x+rr}`, `Q ${x} ${y+h} ${x} ${y+h-rr}`,
-      `V ${y+rr}`, `Q ${x} ${y} ${x+rr} ${y}`, 'Z'
-    ].join(' ');
-    const cx=x+w/2,cy=y+h/2,tr=e.rot?` transform="rotate(${e.rot} ${cx} ${cy})"`:'';
-    return `<path d="${d}" fill="${fill}" fill-opacity="${fo}" stroke="${stroke}" stroke-width="${sw}" stroke-opacity="${so}" vector-effect="non-scaling-stroke"${tr}/>`;
-  }
-  return gm272_shapeInnerBase_(e);
-};
-
-// adiciona opção do U ao seletor "Outras"
-gm272whenReady_(()=>{
-  const sel=document.getElementById('gm2other');
-  if(sel && ![...sel.options].some(o=>o.value==='u_balcao')){
-    const o=document.createElement('option');o.value='u_balcao';o.textContent='U balcão (oco)';
-    sel.appendChild(o);
-  }
-});
-
-// alça extra para espessura/concavidade do U
-const gm272_handlesBase_=gm2handlesSvg;
-gm2handlesSvg=function(e){
-  let h=gm272_handlesBase_(e);
-  if(e?.type==='shape' && e.kind==='u_balcao' && !e.locked){
-    const p=gm2.st.ppm,b=gm2bbox(e),t=Math.max(.08,Number(e.thickness||Math.min(e.w,e.h)*.18));
-    const cx=(b.x+t)*p,cy=(b.y+b.h*.5)*p;
-    h+=`<circle class="gm2-handle" data-handle="uthick" data-eid="${gm2esc(e.id)}" cx="${cx}" cy="${cy}" r="5.5" fill="#fff5b8" stroke="#23c7dc" stroke-width="1.6"/>`;
-  }
-  return h;
-};
-
-const gm272_handleStartBase_=gm2handleStart;
-gm2handleStart=function(ev,id,h){
-  const e=gm2el(id);
-  if(h==='uthick' && e?.kind==='u_balcao'){
-    ev.preventDefault();ev.stopPropagation();gm2pushHistory();
-    const p0=gm2point(ev),s=Number(e.thickness||Math.min(e.w,e.h)*.18);
-    const mv=e2=>{
-      const p=gm2point(e2);
-      e.thickness=Math.max(.08,Math.min(Math.min(e.w,e.h)*.45,s+(p.x-p0.x)));
-      gm2render();
-    };
-    const up=()=>{window.removeEventListener('pointermove',mv);gm2saveLocal();};
-    window.addEventListener('pointermove',mv,{passive:true});
-    window.addEventListener('pointerup',up,{once:true});
-    return;
-  }
-  return gm272_handleStartBase_(ev,id,h);
-};
-
-// ---------- pincéis realmente diferentes ----------
-function gm272pathD_(pts,p){
-  if(!pts?.length)return'';
-  let d=`M ${pts[0].x*p} ${pts[0].y*p}`;
-  for(let i=1;i<pts.length;i++)d+=` L ${pts[i].x*p} ${pts[i].y*p}`;
-  return d;
-}
-function gm272normal_(e,p,sw,dash='',cap='round',opacity=null){
-  const d=gm272pathD_(e.points,p);
-  return `<path d="${d}" fill="none" stroke="${e.stroke}" stroke-opacity="${opacity??e.strokeOpacity??1}" stroke-width="${sw}" stroke-linecap="${cap}" stroke-linejoin="round" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
-}
-function gm272offset_(e,p,sw,dx,dy,op=.45){
-  const pts=(e.points||[]).map(q=>({x:q.x+dx/p,y:q.y+dy/p}));
-  return gm272normal_({...e,points:pts},p,sw,'','round',op);
-}
-
-gm2pathInner=function(e){
-  const p=gm2.st.ppm;
-  if(e.strokeWidthM==null)e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,p));
-  const sw=Math.max(1,e.strokeWidthM*p),b=e.brush||'redondo';
-
-  if(b==='borracha') return ''; // borracha atua nos dados, não desenha.
-
-  if(b==='quadrado') return gm272normal_(e,p,sw,'','square');
-  if(b==='caligrafico') return gm272normal_(e,p,Math.max(1,sw*.65),'','square')+gm272offset_(e,p,Math.max(1,sw*.28),3,-2,.65);
-  if(b==='lapis') return gm272normal_(e,p,Math.max(1,sw*.45),'2 2','round',Math.min(.72,e.strokeOpacity??1));
-  if(b==='caneta') return gm272normal_(e,p,Math.max(1,sw*.72),'','round');
-  if(b==='espelhado') return gm272normal_(e,p,sw)+gm272offset_(e,p,sw,0,Math.max(5,sw*1.5),.48);
-  if(b==='serpentina') return gm272normal_(e,p,Math.max(1,sw*.55),'7 4','round')+gm272offset_(e,p,Math.max(1,sw*.25),4,0,.7);
-  if(b==='seta'){
-    let base=gm272normal_(e,p,sw);
-    const pts=e.points||[];if(pts.length>1){const a=pts.at(-2),z=pts.at(-1),ang=Math.atan2(z.y-a.y,z.x-a.x),L=Math.max(.18,e.strokeWidthM*3.2),q1={x:z.x-Math.cos(ang-.55)*L,y:z.y-Math.sin(ang-.55)*L},q2={x:z.x-Math.cos(ang+.55)*L,y:z.y-Math.sin(ang+.55)*L};
-      base+=`<path d="M ${q1.x*p} ${q1.y*p} L ${z.x*p} ${z.y*p} L ${q2.x*p} ${q2.y*p}" fill="none" stroke="${e.stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>`;}
-    return base;
-  }
-  if(b==='curso') return gm272normal_(e,p,Math.max(1,sw*.75),'','round');
-  if(b==='giz_cera') return gm272normal_(e,p,sw,'3 2','round',Math.min(.72,e.strokeOpacity??1))+gm272offset_(e,p,Math.max(1,sw*.28),2,1,.35);
-  if(b==='spray') return gm272normal_(e,p,Math.max(2,sw*1.7),'1 6','round',Math.min(.32,e.strokeOpacity??1))+gm272offset_(e,p,Math.max(1,sw*.8),4,-3,.2);
-  if(b==='carimbo') return gm272normal_(e,p,Math.max(3,sw),'1 12','round',e.strokeOpacity??1);
-  if(b==='pele') return gm272normal_(e,p,Math.max(1,sw*.25),'1 4','round',.65)+gm272offset_(e,p,Math.max(1,sw*.22),3,-2,.5)+gm272offset_(e,p,Math.max(1,sw*.2),-3,2,.45);
-  if(b==='esboco') return gm272normal_(e,p,Math.max(1,sw*.4),'','round',.55)+gm272offset_(e,p,Math.max(1,sw*.32),2,1,.36);
-  if(b==='espirografo') return gm272normal_(e,p,Math.max(1,sw*.35),'3 5','round',.8)+gm272offset_(e,p,Math.max(1,sw*.2),5,0,.4);
-  if(b==='teia') return gm272normal_(e,p,Math.max(1,sw*.25),'8 4','round',.72)+gm272offset_(e,p,Math.max(1,sw*.18),0,5,.35);
-  if(b==='irregular') return gm272normal_(e,p,sw,'9 2 2 4','round',.9);
-  if(b==='pontilhada') return gm272normal_(e,p,Math.max(2,sw),'1 8','round');
-  if(b==='giz') return gm272normal_(e,p,Math.max(1,sw*.7),'5 3','round',.58)+gm272offset_(e,p,Math.max(1,sw*.18),1.5,0,.28);
-  if(b==='ranhura') return gm272normal_(e,p,Math.max(1,sw*.5),'12 4','butt',.75);
-  if(b==='areia') return gm272normal_(e,p,Math.max(2,sw),'1 5','round',.42);
-  if(b==='cascalho') return gm272normal_(e,p,Math.max(3,sw),'2 7','round',.7);
-  if(b==='grama') return gm272normal_(e,p,Math.max(1,sw*.45),'5 3','butt',.8)+gm272offset_(e,p,Math.max(1,sw*.18),2,-3,.55);
-  if(b==='folhas') return gm272normal_(e,p,Math.max(3,sw*.9),'1 10','round',.78);
-  if(b==='neve') return gm272normal_(e,p,Math.max(4,sw),'1 12','round',.82);
-  if(b==='fumaca') return gm272normal_(e,p,Math.max(5,sw*1.6),'15 9','round',.24);
-  return gm272normal_(e,p,sw);
-};
-
-// ---------- borracha real para traços ----------
-// Apaga o traço inteiro quando a borracha toca nele.
-// É deliberadamente simples e previsível nesta versão.
-function gm272eraseAt_(p){
-  const radiusM=Math.max(.12,Number(gm2.defaults.size||7)/Math.max(1,gm2.st.ppm)*1.4);
-  const hit=[];
-  for(const e of gm2.st.elements){
-    if(e.type!=='path'||e.locked)continue;
-    const pts=e.points||[];
-    if(pts.some(q=>Math.hypot(q.x-p.x,q.y-p.y)<=radiusM))hit.push(e.id);
-  }
-  if(hit.length)gm2.st.elements=gm2.st.elements.filter(e=>!hit.includes(e.id));
-  return hit.length>0;
-}
-const gm272_drawPathBase_=gm2drawPath;
-gm2drawPath=function(ev,p0){
-  if(gm2.brush!=='borracha')return gm272_drawPathBase_(ev,p0);
-  gm2pushHistory();let changed=gm272eraseAt_(p0);
-  const mv=e2=>{const p=gm2point(e2);if(gm272eraseAt_(p))changed=true;gm2render();};
-  const up=()=>{window.removeEventListener('pointermove',mv);if(!changed)gm2.history.pop();gm2saveLocal();gm2render();};
-  window.addEventListener('pointermove',mv,{passive:true});
-  window.addEventListener('pointerup',up,{once:true});
-  gm2render();
-};
-
-// ---------- banco de objetos: instalar DEPOIS da criação da aba ----------
-function gm272wireBank_(){
-  const btn=document.getElementById('gm2addobj');
-  if(!btn)return;
-  btn.textContent='＋ Adicionar marcados ao mapa';
-  btn.onclick=()=>{
-    const ids=[...document.querySelectorAll('.gm2objcheck:checked')].map(c=>c.value);
-    if(!ids.length)return;
-    gm2.objectIds=ids;gm2.tool='object';gm2clearSelection();
-
-    const x=gm2.st.w/2,y=gm2.st.h/2;
-    gm2placeObjects({x,y});
-    gm2.tool='object';gm2.objectIds=ids;
-    gm2updateToolbarState();gm2status();
-  };
-}
-
-// ---------- camadas: mais que só frente/trás ----------
-// ↑/↓ existentes continuam "frente" e "trás".
-// Acrescentamos subir 1 camada e descer 1 camada.
-function gm272stepLayer_(dir){
-  const sel=gm2selectedEls();if(!sel.length)return;
-  gm2pushHistory();
-
-  const ordered=[...gm2.st.elements].sort((a,b)=>(a.z||0)-(b.z||0));
-  const ids=new Set(sel.map(e=>e.id));
-
-  if(dir>0){
-    for(let i=ordered.length-2;i>=0;i--){
-      if(ids.has(ordered[i].id)&&!ids.has(ordered[i+1].id)){
-        const z=ordered[i].z;ordered[i].z=ordered[i+1].z;ordered[i+1].z=z;
-      }
-    }
-  }else{
-    for(let i=1;i<ordered.length;i++){
-      if(ids.has(ordered[i].id)&&!ids.has(ordered[i-1].id)){
-        const z=ordered[i].z;ordered[i].z=ordered[i-1].z;ordered[i-1].z=z;
-      }
-    }
-  }
-  gm2saveLocal();gm2render();
-}
-gm272whenReady_(()=>{
-  const front=document.getElementById('gm2front');
-  if(front&&!document.getElementById('gm2up1')){
-    const up=document.createElement('button');up.id='gm2up1';up.title='Subir uma camada';up.textContent='⇧';
-    const down=document.createElement('button');down.id='gm2down1';down.title='Descer uma camada';down.textContent='⇩';
-    up.onclick=()=>gm272stepLayer_(1);down.onclick=()=>gm272stepLayer_(-1);
-    front.insertAdjacentElement('afterend',up);up.insertAdjacentElement('afterend',down);
-  }
-});
-
-// ---------- U também aceita alça de arredondamento ----------
-const gm272_handles2Base_=gm2handlesSvg;
-gm2handlesSvg=function(e){
-  let h=gm272_handles2Base_(e);
-  if(e?.type==='shape' && e.kind==='u_balcao' && !e.locked){
-    // garante radius handle no U, pois base só cria em retângulo/quadrado
-    const p=gm2.st.ppm,b=gm2bbox(e),x=b.x*p,y=b.y*p,w=b.w*p;
-    h+=`<circle class="gm2-handle" data-handle="radius" data-eid="${gm2esc(e.id)}" cx="${x+Math.max(12,Math.min(w/2,(Number(e.radius||0)*p)+12))}" cy="${y+12}" r="5.5" fill="#d9fbff" stroke="#23c7dc" stroke-width="1.6"/>`;
-  }
-  return h;
-};
-
-// ---------- inicialização pós-montagem ----------
-gm272whenReady_(()=>{
-  gm272wireBank_();
-
-  // neutraliza de vez eventual onchange antigo da textura caso ela ainda exista
-  const tex=document.getElementById('gm2texture');
-  if(tex){tex.onchange=null;tex.disabled=true;tex.closest('label')?.remove();}
-
-  gm2render();
-});
-
-})();
-
-
-
-// ============================================================
-// V46.70.3 — Oficina 2
-// camada ±1 inequívoca + borracha-pincel por área + apagador total
-// + cursores/previews de ferramenta + textura vira textura do fundo
-// ============================================================
-(function(){
-'use strict';
-
-function gm273ready_(fn,n=50){
-  if(document.getElementById('gm2svg')&&document.getElementById('gm2del')){fn();return;}
-  if(n)setTimeout(()=>gm273ready_(fn,n-1),120);
-}
-function gm273open_(){
-  const p=document.getElementById('gm-sub-oficina2');
-  return !!(p&&!p.classList.contains('hidden'));
-}
-function gm273pt_(ev){
-  const svg=document.getElementById('gm2svg'),r=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal,p=gm2.st.ppm;
-  return{x:(ev.clientX-r.left)*(vb.width||r.width)/Math.max(1,r.width)/p,
-         y:(ev.clientY-r.top)*(vb.height||r.height)/Math.max(1,r.height)/p};
-}
-
-// ---------- textura agora é do FUNDO, não uma ferramenta ----------
-function gm273installTexture_(){
-  let tex=document.getElementById('gm2texture');
-  if(!tex){
-    const bg=document.getElementById('gm2bgcolor')?.closest('label');
-    if(bg){
-      const lab=document.createElement('label');
-      lab.innerHTML='Textura do fundo<select id="gm2texture"><option value="nenhuma">Nenhuma</option><option value="papel">Papel</option><option value="pedra">Pedra</option><option value="terra">Terra</option></select>';
-      bg.insertAdjacentElement('afterend',lab);tex=lab.querySelector('select');
-    }
-  }
-  if(tex){
-    tex.closest('label')?.querySelector('select')?.removeAttribute('disabled');
-    tex.value=gm2.st.texture||'nenhuma';
-    tex.onchange=e=>{gm2.st.texture=e.target.value;gm2saveLocal();gm2render();};
-  }
-}
-const gm273renderBase_=gm2render;
-gm2render=function(){
-  gm273renderBase_();
-  requestAnimationFrame(()=>{
-    const svg=document.getElementById('gm2svg');if(!svg)return;
-    let pat=document.getElementById('gm273textureOverlay');
-    if(!pat){
-      pat=document.createElementNS('http://www.w3.org/2000/svg','g');pat.id='gm273textureOverlay';
-      const grid=svg.querySelector('g#gm2elements'); if(grid) svg.insertBefore(pat,grid); else svg.appendChild(pat);
-    }
-    const w=gm2.st.w*gm2.st.ppm,h=gm2.st.h*gm2.st.ppm,t=gm2.st.texture||'nenhuma';
-    if(t==='nenhuma'){pat.innerHTML='';return;}
-    const defs=t==='papel'
-      ? `<filter id="gm273f"><feTurbulence baseFrequency=".035" numOctaves="3" seed="8"/><feColorMatrix type="saturate" values="0"/></filter><rect width="${w}" height="${h}" filter="url(#gm273f)" opacity=".055" pointer-events="none"/>`
-      : t==='pedra'
-      ? `<filter id="gm273f"><feTurbulence baseFrequency=".018" numOctaves="4" seed="13"/><feColorMatrix type="saturate" values="0"/></filter><rect width="${w}" height="${h}" filter="url(#gm273f)" opacity=".10" pointer-events="none"/>`
-      : `<filter id="gm273f"><feTurbulence baseFrequency=".055" numOctaves="2" seed="21"/><feColorMatrix type="saturate" values="0"/></filter><rect width="${w}" height="${h}" filter="url(#gm273f)" opacity=".075" pointer-events="none"/>`;
-    pat.innerHTML=defs;
-  });
-};
-
-// ---------- camada exatamente ±1 ----------
-function gm273normalizeZ_(){
-  [...gm2.st.elements].sort((a,b)=>(a.z||0)-(b.z||0)).forEach((e,i)=>e.z=i+1);
-}
-function gm273step_(dir){
-  if(!gm2.selected.size)return;
-  gm2pushHistory();gm273normalizeZ_();
-  const arr=[...gm2.st.elements].sort((a,b)=>a.z-b.z),sel=new Set(gm2.selected);
-  if(dir>0){
-    for(let i=arr.length-2;i>=0;i--)if(sel.has(arr[i].id)&&!sel.has(arr[i+1].id)){
-      [arr[i].z,arr[i+1].z]=[arr[i+1].z,arr[i].z];
-    }
-  }else{
-    for(let i=1;i<arr.length;i++)if(sel.has(arr[i].id)&&!sel.has(arr[i-1].id)){
-      [arr[i].z,arr[i-1].z]=[arr[i-1].z,arr[i].z];
-    }
-  }
-  gm2saveLocal();gm2render();
-}
-
-// ---------- geometria para apagadores ----------
-function gm273segDist_(p,a,b){
-  const vx=b.x-a.x,vy=b.y-a.y,wx=p.x-a.x,wy=p.y-a.y,c1=vx*wx+vy*wy;
-  if(c1<=0)return Math.hypot(p.x-a.x,p.y-a.y);
-  const c2=vx*vx+vy*vy;if(c2<=c1)return Math.hypot(p.x-b.x,p.y-b.y);
-  const t=c1/c2,q={x:a.x+t*vx,y:a.y+t*vy};return Math.hypot(p.x-q.x,p.y-q.y);
-}
-function gm273pathNear_(e,p,r){
-  const a=e.points||[];for(let i=0;i<a.length;i++){
-    if(Math.hypot(a[i].x-p.x,a[i].y-p.y)<=r)return true;
-    if(i&&gm273segDist_(p,a[i-1],a[i])<=r)return true;
-  }return false;
-}
-function gm273bboxHit_(e,p,r){
-  const b=gm2bbox(e);return p.x>=b.x-r&&p.x<=b.x+b.w+r&&p.y>=b.y-r&&p.y<=b.y+b.h+r;
-}
-
-// Borracha do menu de pincéis: apaga ÁREA dos traços.
-// Divide a polilinha onde a borracha passa, preservando o restante.
-function gm273eraseBrushAt_(p){
-  const r=Math.max(.08,Number(gm2.defaults.size||7)/Math.max(1,gm2.st.ppm)*.75);
-  let changed=false,newEls=[];
-  for(const e of gm2.st.elements){
-    if(e.type!=='path'||e.locked){newEls.push(e);continue;}
-    const pts=e.points||[];let chunks=[],cur=[];
-    for(const q of pts){
-      if(Math.hypot(q.x-p.x,q.y-p.y)>r)cur.push(q);
-      else{changed=true;if(cur.length>1)chunks.push(cur);cur=[];}
-    }
-    if(cur.length>1)chunks.push(cur);
-    if(!changed || chunks.length){
-      if(chunks.length){
-        chunks.forEach((c,i)=>{const ne=gm2clone(e);ne.id=i===0?e.id:gm2id('p');ne.points=c;ne.z=e.z+i*.0001;newEls.push(ne);});
-      }else if(!changed)newEls.push(e);
-    }
-  }
-  if(changed)gm2.st.elements=newEls;
-  return changed;
-}
-
-// Apagador total: remove qualquer elemento tocado.
-function gm273deleteAt_(p){
-  const r=Math.max(.12,Number(gm2.defaults.size||7)/Math.max(1,gm2.st.ppm)*.8);
-  const before=gm2.st.elements.length;
-  gm2.st.elements=gm2.st.elements.filter(e=>{
-    if(e.locked)return true;
-    if(e.type==='path')return !gm273pathNear_(e,p,r);
-    return !gm273bboxHit_(e,p,r);
-  });
-  return gm2.st.elements.length!==before;
-}
-function gm273eraserDrag_(ev,total){
-  gm2pushHistory();let changed=false;
-  const act=p=>{changed=(total?gm273deleteAt_(p):gm273eraseBrushAt_(p))||changed;gm2render();};
-  act(gm273pt_(ev));
-  const mv=e=>act(gm273pt_(e));
-  const up=()=>{window.removeEventListener('pointermove',mv);if(!changed)gm2.history.pop();gm2saveLocal();gm2render();};
-  window.addEventListener('pointermove',mv,{passive:true});window.addEventListener('pointerup',up,{once:true});
-}
-
-// intercepta antes do controlador 70.1
-document.addEventListener('pointerdown',ev=>{
-  if(!gm273open_()||ev.button===2)return;
-  const svg=document.getElementById('gm2svg');if(!svg||!svg.contains(ev.target))return;
-  if(gm2.tool==='deleteTouch'){
-    ev.preventDefault();ev.stopImmediatePropagation();gm273eraserDrag_(ev,true);return;
-  }
-  if(gm2.tool==='brush'&&gm2.brush==='borracha'){
-    ev.preventDefault();ev.stopImmediatePropagation();gm273eraserDrag_(ev,false);return;
-  }
-},true);
-
-// ---------- cursor/previsão dentro da grid ----------
-function gm273cursorSvg_(){
-  const svg=document.getElementById('gm2svg');if(!svg)return;
-  svg.style.cursor='crosshair';
-  if(gm2.tool==='select')svg.style.cursor='default';
-  else if(gm2.tool==='object')svg.style.cursor='copy';
-  else if(gm2.tool==='deleteTouch')svg.style.cursor='none';
-  else if(gm2.tool==='brush')svg.style.cursor='none';
-}
-function gm273cursorMove_(ev){
-  if(!gm273open_())return;
-  const svg=document.getElementById('gm2svg');if(!svg||!svg.contains(ev.target))return;
-  let c=document.getElementById('gm273cursor');
-  if(!c){c=document.createElementNS('http://www.w3.org/2000/svg','g');c.id='gm273cursor';c.setAttribute('pointer-events','none');svg.appendChild(c);}
-  const p=gm273pt_(ev),x=p.x*gm2.st.ppm,y=p.y*gm2.st.ppm;
-  if(gm2.tool==='brush'){
-    const rad=Math.max(3,Number(gm2.defaults.size||7)/2);
-    if(gm2.brush==='borracha')c.innerHTML=`<circle cx="${x}" cy="${y}" r="${rad}" fill="rgba(255,255,255,.22)" stroke="#fff" stroke-width="1.5"/><path d="M ${x-rad*.5} ${y+rad*.4} L ${x+rad*.4} ${y-rad*.5}" stroke="#fff" stroke-width="2"/>`;
-    else c.innerHTML=`<circle cx="${x}" cy="${y}" r="${rad}" fill="none" stroke="${gm2.defaults.fill}" stroke-width="1.5"/><circle cx="${x}" cy="${y}" r="1.5" fill="${gm2.defaults.fill}"/>`;
-  }else if(gm2.tool==='deleteTouch'){
-    const rad=Math.max(7,Number(gm2.defaults.size||7)/2);
-    c.innerHTML=`<circle cx="${x}" cy="${y}" r="${rad}" fill="rgba(255,90,90,.12)" stroke="#ff6969" stroke-width="1.7"/><path d="M ${x-rad*.45} ${y-rad*.45} L ${x+rad*.45} ${y+rad*.45} M ${x+rad*.45} ${y-rad*.45} L ${x-rad*.45} ${y+rad*.45}" stroke="#ff6969" stroke-width="2"/>`;
-  }else if(gm2.tool==='shape'){
-    c.innerHTML=`<path d="M ${x-7} ${y} H ${x+7} M ${x} ${y-7} V ${y+7}" stroke="#67e8f9" stroke-width="1.5"/>`;
-  }else if(gm2.tool==='line'){
-    c.innerHTML=`<path d="M ${x-7} ${y+5} L ${x+7} ${y-5}" stroke="#67e8f9" stroke-width="1.7"/>`;
-  }else c.innerHTML='';
-}
-document.addEventListener('pointermove',gm273cursorMove_,true);
-document.addEventListener('pointerleave',()=>document.getElementById('gm273cursor')?.remove(),true);
-
-// render apaga SVG inteiro, então reanexa cursor no próximo movimento
-const gm273statusBase_=gm2status;
-gm2status=function(){gm273statusBase_();gm273cursorSvg_();};
-
-// ---------- UI ----------
-gm273ready_(()=>{
-  gm273installTexture_();
-
-  // substitui os dois botões intermediários antigos por botões inequívocos
-  document.getElementById('gm2up1')?.remove();
-  document.getElementById('gm2down1')?.remove();
-  const front=document.getElementById('gm2front');
-  if(front&&!document.getElementById('gm273up')){
-    front.title='Trazer para a frente de tudo';front.textContent='⤒';
-    const up=document.createElement('button');up.id='gm273up';up.title='Subir UMA camada';up.textContent='↑1';
-    const down=document.createElement('button');down.id='gm273down';down.title='Descer UMA camada';down.textContent='↓1';
-    front.insertAdjacentElement('afterend',up);up.insertAdjacentElement('afterend',down);
-    up.onclick=()=>gm273step_(1);down.onclick=()=>gm273step_(-1);
-    const back=document.getElementById('gm2back');if(back){back.title='Enviar para trás de tudo';back.textContent='⤓';}
-  }
-
-  // apagador total ao lado da lixeira
-  const del=document.getElementById('gm2del');
-  if(del&&!document.getElementById('gm273eraseAll')){
-    const er=document.createElement('button');er.id='gm273eraseAll';er.textContent='⌫';er.title='Apagador total: remove qualquer elemento que tocar';
-    del.insertAdjacentElement('beforebegin',er);
-    er.onclick=()=>{gm2clearSelection();gm2.tool='deleteTouch';gm2updateToolbarState();gm2render();};
-  }
-
-  // ao trocar de ferramenta, botão do apagador deixa de ativo
-  const baseUpdate=gm2updateToolbarState;
-  gm2updateToolbarState=function(){
-    baseUpdate();
-    document.getElementById('gm273eraseAll')?.classList.toggle('active',gm2.tool==='deleteTouch');
-    gm273cursorSvg_();
-  };
-
-  gm2render();
-});
-})();
-
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -30178,6 +29626,6 @@ gm273ready_(()=>{
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.70.3: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.71.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
