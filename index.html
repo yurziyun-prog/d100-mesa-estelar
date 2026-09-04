@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.60.1 ===== */
+/* ===== V46.61.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.60.1 ===== */
+/* ===== V46.61.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -18615,51 +18615,23 @@ function gmOficinaV2Status_(){
 function gmOficinaV2ConstruirUI_(){
     const root=document.getElementById('gm-sub-oficina-mapas');if(!root)return false;
     root.innerHTML=`
-      <div style="padding:4px 0 10px;">
+      <div id="gmOficinaV2Shell" style="padding:4px 0 10px;">
         <h3 style="margin:0 0 5px;color:#8ee7ff">🗺️ Oficina de Mapas</h3>
         <div style="color:#aeb7c8;margin-bottom:10px">Editor privado do mestre. Usa o mesmo formato de desenho da Mesa da Mesa; mapas salvos aqui podem ser carregados normalmente depois.</div>
-        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px">
+
+        <div id="gmOficinaV2TopActions" style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px">
           <button class="btn-small" onclick="gmOficinaV2Novo_()">🆕 Novo</button>
           <button class="btn-small btn-select" onclick="gmOficinaSalvarComoMapa_()">💾 Salvar na biblioteca</button>
           <button class="btn-small" onclick="gmOficinaPublicarMesa_()">📡 Publicar na Mesa</button>
         </div>
-        <div style="display:flex;gap:7px;align-items:end;flex-wrap:wrap;padding:10px;border:1px solid rgba(126,231,255,.18);border-radius:10px;background:rgba(0,0,0,.13);margin-bottom:10px">
-          <label style="margin:0"><small>Tamanho</small><select id="gmOficinaV2Size" onchange="gmOficinaV2Tamanho_(this.value)" style="margin:3px 0 0">
-            <option value="10x10">10 × 10 m</option><option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option><option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option><option value="50x40">50 × 40 m</option>
-          </select></label>
-          <label style="margin:0"><small>Fundo</small><input id="gmOficinaV2Fundo" type="color" onchange="gmOficinaV2Fundo_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
-          <label style="margin:0"><small>Grade</small><input id="gmOficinaV2GradeCor" type="color" onchange="gmOficinaV2GradeCor_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
-          <label style="display:flex;align-items:center;gap:5px;margin:0 2px 7px 0"><input id="gmOficinaV2GradeVis" type="checkbox" onchange="gmOficinaV2GradeVis_(this.checked)"> Mostrar grade</label>
-          <label style="margin:0"><small>Textura do terreno</small><select id="gmOficinaV2Terreno" onchange="gmOficinaV2Terreno_(this.value)" style="margin:3px 0 0">
-            <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option><option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option><option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option><option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
-          </select></label>
-          <span style="height:30px;border-left:1px solid rgba(255,255,255,.18)"></span>
-          <button id="gmOficinaV2DrawBtn" class="btn-small" onclick="gmOficinaV2Toggle_()" style="height:38px">✏️ Desenhar</button>
-          <button class="btn-small" onclick="gmOficinaV2Tool_('borracha')" style="height:38px">🧽 Borracha</button>
-          <button class="btn-small" onclick="gmOficinaV2Undo_()" style="height:38px">↶</button>
-          <button class="btn-small" onclick="gmOficinaV2Redo_()" style="height:38px">↷</button>
-          <label style="margin:0"><small>Ferramenta</small><select id="gmOficinaV2Tool" onchange="gmOficinaV2Tool_(this.value)" style="margin:3px 0 0"><option value="traco">Traço</option><option value="textura">Textura</option><option value="borracha">Borracha</option></select></label>
-          <label style="margin:0"><small>Cor</small><input id="gmOficinaV2Color" type="color" onchange="gmOficinaV2Color_(this.value)" style="width:58px;height:38px;margin:3px 0 0;padding:2px"></label>
-          <label style="margin:0"><small>RGB</small><input id="gmOficinaV2Rgb" type="text" oninput="gmOficinaV2Rgb_(this.value)" style="width:92px;margin:3px 0 0;padding:6px 8px"></label><label style="margin:0"><small>HEX</small><input id="gmOficinaV2HexInput555" type="text" maxlength="7" onchange="gm555DrawHex_(this.value)" style="width:86px;margin:3px 0 0;padding:6px 8px" placeholder="#35383A"></label>
-          <span style="display:flex;gap:3px;align-items:center;padding-bottom:6px">
-            ${['#ffffff','#111111','#ff5252','#ffcf4d','#56f08a','#45b7ff','#b56cff'].map(c=>`<button onclick="gmOficinaV2Color_('${c}')" style="width:20px;height:20px;min-width:20px;padding:0;border-radius:50%;background:${c}"></button>`).join('')}
-          </span>
-          <label style="margin:0"><small>Tamanho</small><input id="gmOficinaV2BrushSize" type="range" min="2" max="48" value="7" oninput="gmOficinaV2BrushSize_(this.value)" style="width:90px;margin:8px 0"><span id="gmOficinaV2BrushSizeVal" style="font-size:.78em;color:#bbb">7</span></label>
-          <label style="margin:0"><small>Opacidade</small><input id="gmOficinaV2Opacity" type="range" min="5" max="100" step="5" value="100" oninput="gmOficinaV2Opacity_(this.value)" style="width:90px;margin:8px 0"><span id="gmOficinaV2OpacityVal" style="font-size:.78em;color:#bbb">100%</span></label>
-          <label style="margin:0"><small>Estilo do traço</small><select id="gmOficinaV2StrokeStyle" onchange="gmOficinaV2StrokeStyle_(this.value)" style="margin:3px 0 0;min-width:150px"><option value="redondo">Sólido redondo</option><option value="quadrado">Sólido quadrado</option><option value="irregular">Irregular</option><option value="caligrafico">Caligráfico</option><option value="spray">Spray</option><option value="pontilhada">Pontilhado</option><option value="giz">Giz</option><option value="ranhura">Ranhura</option><option value="areia">Areia</option><option value="cascalho">Cascalho</option><option value="grama">Grama</option><option value="folhas">Folhas</option><option value="neve">Neve</option><option value="fumaca">Fumaça</option></select></label>
-          <label style="margin:0"><small>Prévia</small><canvas id="gmOficinaV2BrushPreview" width="150" height="38" style="display:block;margin-top:3px;width:150px;height:38px;border:1px solid rgba(255,255,255,.18);border-radius:7px;background:rgba(255,255,255,.06)"></canvas></label>
-          <button class="btn-small" onclick="gmOficinaV2Clear_()" style="height:38px">🗑️ Limpar pintura</button>
-          <span style="height:30px;border-left:1px solid rgba(255,255,255,.18)"></span>
-          <select id="gmOficinaV2Objeto" style="min-width:220px;margin:0"></select>
-          <button class="btn-small" onclick="gmOficinaV2AddObjeto_()" style="height:38px">➕ Objeto</button>
-          <button class="btn-small" onclick="gmOficinaV2Repeat_()" style="height:38px">⧉ Repetir ao lado</button>
-        </div>
+
         <div id="gmOficinaV2Viewport" style="overflow:auto;max-width:100%;min-height:520px;padding:10px;border:1px solid rgba(126,231,255,.25);border-radius:12px;background:rgba(0,0,0,.20)">
           <div id="gmOficinaV2Map" style="position:relative;touch-action:none">
             <canvas id="gmOficinaV2Canvas" onpointerdown="gmOficinaV2PointerDown_(event)" style="position:absolute;inset:0;z-index:3;touch-action:none"></canvas>
             <div id="gmOficinaV2Objects" style="position:absolute;inset:0;z-index:8;pointer-events:none"></div>
           </div>
         </div>
+
         <div id="gmOficinaV2Status" style="margin-top:8px;color:#9fc6d8;font-size:.86em"></div>
       </div>`;
     return true;
@@ -22045,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.60.1 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.61.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22204,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.60.1
+// V46.61.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22561,7 +22533,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.60.1
+// V46.61.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22846,7 +22818,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.60.1 — Oficina: estilos de traço exclusivos + prévia real
+// V46.61.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22922,7 +22894,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.60.1
+// V46.61.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23007,7 +22979,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.60.1 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.61.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23148,7 +23120,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.60.1 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.61.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23390,7 +23362,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.60.1 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.61.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23549,7 +23521,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.60.1 — Oficina simplificada
+// V46.61.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23894,7 +23866,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.60.1 — Oficina: objetos realmente opacos + painel de camadas
+// V46.61.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24067,7 +24039,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.60.1 — Oficina: composição real por ordem de adição
+// V46.61.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24290,7 +24262,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.60.1',e);}
+    }catch(e){console.warn('Oficina v46.61.0',e);}
     return r;
 };
 
@@ -24300,7 +24272,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.60.1 — REFORMA DA OFICINA
+// V46.61.0 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25053,8 +25025,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.60.1 — reconstrução limpa da barra da Oficina
-// Base: 46.60.1 funcional. Não usa varredura agressiva do DOM.
+// V46.61.0 — reconstrução limpa da barra da Oficina
+// Base: 46.61.0 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25283,8 +25255,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.60.1 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.60.1
+// V46.61.0 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.61.0
 // ============================================================
 
 const gm580_ = {
@@ -25509,20 +25481,15 @@ function gm580BuildUI_(){
   document.getElementById('gm573Toolbar')?.remove();
   document.getElementById('gm580Toolbar')?.remove();
 
-  // Esconde SOMENTE o painel antigo conhecido, sem tocar no restante do Escudo.
-  const legacy=document.getElementById('gmVet490Tools');
-  if(legacy)legacy.style.display='none';
+  // Remove apenas painéis antigos conhecidos da Oficina.
+  ['gmVet490Tools','gm570Toolbar'].forEach(id=>document.getElementById(id)?.remove());
 
-  // O painel original de controles é o irmão imediatamente anterior ao viewport.
-  const prev=view.previousElementSibling;
-  if(prev && prev.id!=='gm580Toolbar' && prev.id!=='gmVet490Tools') prev.style.display='none';
-
+  // Uma única barra de ferramentas, imediatamente antes do mapa.
   view.insertAdjacentHTML('beforebegin',gm580ToolbarHtml_());
   gm580PopulateObjects_();
   gm580Sync_();
   gm580Tool_('select');
 }
-
 function gm580PopulateObjects_(){
   const box=document.getElementById('gm580ObjectBank');if(!box)return;
   const checked=new Set([...box.querySelectorAll('input:checked')].map(x=>x.value));
@@ -25956,14 +25923,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.60.1 — OFICINA REESTRUTURADA
+// V46.61.0 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.60.1'
+  version:'46.61.0'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26187,7 +26154,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.60.1 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.61.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26294,6 +26261,62 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
   },900);
 })();
 
+
+
+// ============================================================
+// V46.61.0 — Oficina realmente única
+// ============================================================
+(function(){
+  function gm610CleanLegacy_(){
+    ['gmVet490Tools','gm570Toolbar','gm573Toolbar'].forEach(id=>document.getElementById(id)?.remove());
+
+    // Remove SOMENTE controles antigos identificáveis caso alguma rotina histórica os injete.
+    const oldIds=[
+      'gmOficinaV2DrawBtn','gmOficinaV2Tool','gmOficinaV2Color','gmOficinaV2Rgb',
+      'gmOficinaV2HexInput555','gmOficinaV2BrushSize','gmOficinaV2Opacity',
+      'gmOficinaV2StrokeStyle','gmOficinaV2BrushPreview','gmOficinaV2Objeto'
+    ];
+    oldIds.forEach(id=>{
+      const el=document.getElementById(id);
+      if(!el)return;
+      const panel=el.closest('[data-gm-old-workshop-panel]');
+      if(panel)panel.remove();
+    });
+  }
+
+  const oldInstall=window.gm600Install_;
+  window.gm600Install_=function(){
+    const view=document.getElementById('gmOficinaV2Viewport');if(!view)return;
+    gm610CleanLegacy_();
+
+    let tb=document.getElementById('gm580Toolbar');
+    if(!tb && typeof gm580BuildUI_==='function')gm580BuildUI_();
+    tb=document.getElementById('gm580Toolbar');
+
+    if(tb && tb.nextElementSibling!==view)view.parentNode.insertBefore(tb,view);
+    if(tb)tb.style.display='flex';
+
+    if(typeof gm600NormalizeStack_==='function')gm600NormalizeStack_();
+    gm600_.installed=true;
+  };
+
+  if(!document.getElementById('gm610Css')){
+    const st=document.createElement('style');st.id='gm610Css';
+    st.textContent=`
+      #gm580Toolbar{display:flex!important}
+      #gmVet490Tools,#gm570Toolbar,#gm573Toolbar{display:none!important}
+    `;
+    document.head.appendChild(st);
+  }
+
+  setTimeout(()=>{
+    try{
+      gm610CleanLegacy_();
+      gm600Install_();
+    }catch(e){console.warn('Oficina 46.61 init',e)}
+  },950);
+})();
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -26310,6 +26333,6 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.60.1: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.61.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
