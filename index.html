@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.71.0 ===== */
+/* ===== V46.72.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.71.0 ===== */
+/* ===== V46.72.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22017,7 +22017,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.71.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.72.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22176,7 +22176,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.71.0
+// V46.72.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22533,7 +22533,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.71.0
+// V46.72.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22818,7 +22818,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.71.0 — Oficina: estilos de traço exclusivos + prévia real
+// V46.72.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22894,7 +22894,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.71.0
+// V46.72.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22979,7 +22979,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.71.0 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.72.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23120,7 +23120,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.71.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.72.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23362,7 +23362,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.71.0 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.72.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23521,7 +23521,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.71.0 — Oficina simplificada
+// V46.72.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23866,7 +23866,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.71.0 — Oficina: objetos realmente opacos + painel de camadas
+// V46.72.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24039,7 +24039,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.71.0 — Oficina: composição real por ordem de adição
+// V46.72.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24262,7 +24262,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.71.0',e);}
+    }catch(e){console.warn('Oficina v46.72.0',e);}
     return r;
 };
 
@@ -24272,7 +24272,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.71.0 — REFORMA DA OFICINA
+// V46.72.0 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -24358,7 +24358,7 @@ function gm570ToolbarHtml_(){
       ['seta','Seta'],['curso','Curso / curva'],['linha','Linha livre'],['giz_cera','Giz de cera'],
       ['spray','Tinta spray'],['carimbo','Carimbo'],['pele','Pele / pelos'],['esboco','Esboço'],
       ['espirografo','Espirógrafo'],['teia','Teia'],['irregular','Irregular'],
-      ['pontilhada','Pontilhado'],['giz','Giz'],['ranhura','Ranhura'],['areia','Areia'],
+      ['pontilhada','Pontilhado'],['ranhura','Ranhura'],['areia','Areia'],
       ['cascalho','Cascalho'],['grama','Grama'],['folhas','Folhas'],['neve','Neve'],
       ['fumaca','Fumaça'],['borracha','Borracha']
     ];
@@ -25025,8 +25025,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.71.0 — reconstrução limpa da barra da Oficina
-// Base: 46.71.0 funcional. Não usa varredura agressiva do DOM.
+// V46.72.0 — reconstrução limpa da barra da Oficina
+// Base: 46.72.0 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25058,7 +25058,7 @@ function gm573ToolbarHtml_(){
  ['select','Selecionar'],
  ['redondo','Pincel'],['quadrado','Pincel de ladrilhos'],['espelhado','Pincel espelhado'],
  ['caligrafico','Caligrafia'],['caneta','Caneta'],['lapis','Lápis'],['serpentina','Serpentina'],
- ['seta','Seta'],['curso','Curso / curva livre'],['giz_cera','Giz de cera'],['spray','Tinta spray'],
+ ['seta','Seta'],['curso','Curso / curva livre'],['giz_cera','Giz'],['spray','Tinta spray'],
  ['carimbo','Carimbo'],['pele','Pele / pelos'],['esboco','Esboço'],['espirografo','Espirógrafo'],
  ['teia','Teia'],['irregular','Irregular'],['pontilhada','Pontilhado'],['giz','Giz'],
  ['ranhura','Ranhura'],['areia','Areia'],['cascalho','Cascalho'],['grama','Grama'],
@@ -25255,8 +25255,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.71.0 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.71.0
+// V46.72.0 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.72.0
 // ============================================================
 
 const gm580_ = {
@@ -25923,14 +25923,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.71.0 — OFICINA REESTRUTURADA
+// V46.72.0 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.71.0'
+  version:'46.72.0'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26154,7 +26154,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.71.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.72.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26246,7 +26246,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — Oficina realmente única
+// V46.72.0 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26302,7 +26302,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — edição persistente de formas/objetos + histórico completo
+// V46.72.0 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26707,7 +26707,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — estados separados, undo/redo real, sombra persistente,
+// V46.72.0 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27122,7 +27122,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.72.0 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27260,7 +27260,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.72.0 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27715,7 +27715,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — layout da Oficina baseado no mockup do usuário
+// V46.72.0 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -27953,7 +27953,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — corrige aplicação real do layout 46.65
+// V46.72.0 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -27966,7 +27966,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.71.0: falha ao substituir bindings',e);
+    console.warn('Oficina 46.72.0: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -27989,7 +27989,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.71.0 rebuild',e);
+      console.warn('Oficina 46.72.0 rebuild',e);
     }
   }
 
@@ -28014,7 +28014,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — arrumação visual da Oficina
+// V46.72.0 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28125,7 +28125,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — remove conta-gotas extras e coloca HEX compacto
+// V46.72.0 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28202,7 +28202,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — estabilização funcional da Oficina
+// V46.72.0 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28666,7 +28666,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.71.0 — OFICINA 2 EXPERIMENTAL
+// V46.72.0 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -28679,7 +28679,7 @@ const gm2={
     w:28,h:14,ppm:32,bg:'#d7d7d7',grid:'#777777',showGrid:true,texture:'nenhuma',
     elements:[]
   },
-  tool:'select', shape:'retangulo', line:'linha_reta', brush:'redondo',
+  tool:'select', shape:'retangulo', line:'linha_reta', brush:'redondo', stamp:'montanha',
   selected:new Set(), primary:'',
   defaults:{
     fill:'#59e391',fillOpacity:1,stroke:'#111111',strokeWidth:0,strokeOpacity:1,
@@ -28695,12 +28695,15 @@ function gm2esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':
 function gm2saveLocal(){try{localStorage.setItem(GM2_KEY,JSON.stringify(gm2.st));}catch(e){console.warn(e);}}
 function gm2loadLocal(){try{const x=JSON.parse(localStorage.getItem(GM2_KEY)||'null');if(x&&Array.isArray(x.elements))gm2.st={...gm2.st,...x};}catch(e){console.warn(e);}}
 gm2loadLocal();
+if(gm2.st.texture==='pedra')gm2.st.texture='rocha';
 
 
 // Migração do rascunho 2 anterior: espessuras passam a acompanhar a escala em metros.
 for(const e of gm2.st.elements||[]){
  if((e.type==='path'||e.type==='line')&&e.strokeWidthM==null)e.strokeWidthM=Math.max(.01,Number(e.strokeWidth||1)/Math.max(1,gm2.st.ppm));
+ if(e.type==='path'&&e.brush==='giz')e.brush='giz_cera';
 }
+if(gm2.brush==='giz')gm2.brush='giz_cera';
 function gm2snap(){return gm2clone(gm2.st);}
 function gm2pushHistory(){
   gm2.history.push(gm2snap());
@@ -28981,18 +28984,60 @@ function gm2pathInner(e){
    return gm2baseStroke_(e,p,Math.max(1,sw*.25))+heads.join('');
  }
  if(b==='giz_cera'||b==='giz'){
-   const a=gm2sample_(pts,.07),dots=[],density=b==='giz'?8:13;
-   for(const q of a)for(let i=0;i<density;i++){const ang=rnd()*Math.PI*2,rr=rnd()*sw*.55;dots.push(`<circle cx="${q.x*p+Math.cos(ang)*rr}" cy="${q.y*p+Math.sin(ang)*rr}" r="${.35+rnd()*1.2}" fill="${e.stroke}" opacity="${op*(b==='giz'?.18:.28)}"/>`);}
-   return gm2baseStroke_(e,p,Math.max(1,sw*.35))+dots.join('');
+   // Giz único: corpo macio + grão seco nas bordas e no miolo.
+   const a=gm2sample_(pts,.055),out=[];
+   const d=gm2smoothPath_(pts,p);
+   out.push(`<path d="${d}" fill="none" stroke="${e.stroke}" stroke-opacity="${op*.22}" stroke-width="${Math.max(3,sw*1.15)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+   out.push(`<path d="${d}" fill="none" stroke="${e.stroke}" stroke-opacity="${op*.36}" stroke-width="${Math.max(2,sw*.72)}" stroke-linecap="round" stroke-linejoin="round"/>`);
+   for(const q of a){
+     const density=Math.max(8,Math.floor(sw*.75));
+     for(let i=0;i<density;i++){
+       const ang=rnd()*Math.PI*2;
+       const rr=Math.pow(rnd(),.72)*sw*.62;
+       const x=q.x*p+Math.cos(ang)*rr,y=q.y*p+Math.sin(ang)*rr;
+       const rw=.35+rnd()*1.35,rh=.25+rnd()*.7;
+       out.push(`<ellipse cx="${x}" cy="${y}" rx="${rw}" ry="${rh}" transform="rotate(${rnd()*180} ${x} ${y})" fill="${e.stroke}" opacity="${op*(.06+rnd()*.22)}"/>`);
+     }
+   }
+   return out.join('');
  }
  if(b==='spray'){
-   const a=gm2sample_(pts,.09),dots=[];
-   for(const q of a)for(let i=0;i<22;i++){const ang=rnd()*Math.PI*2,rr=Math.sqrt(rnd())*sw*1.8;dots.push(`<circle cx="${q.x*p+Math.cos(ang)*rr}" cy="${q.y*p+Math.sin(ang)*rr}" r="${.35+rnd()*.7}" fill="${e.stroke}" opacity="${op*(.12+rnd()*.25)}"/>`);}
+   // Aerógrafo: densidade muito maior no centro e queda suave até a borda.
+   const a=gm2sample_(pts,.065),dots=[];
+   const radius=Math.max(7,sw*2.2);
+   for(const q of a){
+     const density=Math.max(26,Math.floor(sw*2.4));
+     for(let i=0;i<density;i++){
+       const u=rnd(), ang=rnd()*Math.PI*2;
+       const rr=radius*Math.pow(u,1.85); // concentra partículas no núcleo
+       const fade=Math.max(.018,(1-rr/radius)*.20);
+       const x=q.x*p+Math.cos(ang)*rr,y=q.y*p+Math.sin(ang)*rr;
+       const r=.22+rnd()*.62;
+       dots.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${e.stroke}" opacity="${op*fade}"/>`);
+     }
+   }
    return dots.join('');
  }
  if(b==='carimbo'){
-   const a=gm2sample_(pts,Math.max(.45,e.strokeWidthM*5)),out=[];
-   for(const q of a){const S=Math.max(5,sw*1.7),x=q.x*p,y=q.y*p;out.push(`<path d="M ${x} ${y-S} L ${x+S} ${y+S} L ${x-S} ${y+S} Z" fill="none" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${Math.max(1,sw*.2)}"/>`);}
+   // Carimbo cartográfico selecionável: não é mais só uma sequência de triângulos.
+   const a=gm2sample_(pts,Math.max(.55,e.strokeWidthM*6)),out=[],kind=gm2.stamp||'montanha';
+   for(const q of a){
+     const S=Math.max(6,sw*1.65),x=q.x*p,y=q.y*p,lw=Math.max(1,sw*.16);
+     if(kind==='arvore'){
+       out.push(`<path d="M ${x} ${y+S*.72} L ${x} ${y+S*.08}" stroke="${e.stroke}" stroke-width="${lw}" stroke-opacity="${op}"/>
+                 <circle cx="${x}" cy="${y-S*.18}" r="${S*.42}" fill="${e.stroke}" fill-opacity="${op*.22}" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${lw}"/>`);
+     }else if(kind==='rocha'){
+       out.push(`<path d="M ${x-S*.7} ${y+S*.45} L ${x-S*.38} ${y-S*.35} L ${x+S*.15} ${y-S*.58} L ${x+S*.72} ${y+S*.22} L ${x+S*.28} ${y+S*.62} Z" fill="${e.stroke}" fill-opacity="${op*.14}" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${lw}"/>`);
+     }else if(kind==='casa'){
+       out.push(`<path d="M ${x-S*.65} ${y-S*.05} L ${x} ${y-S*.68} L ${x+S*.65} ${y-S*.05} M ${x-S*.5} ${y-S*.04} V ${y+S*.55} H ${x+S*.5} V ${y-S*.04} M ${x-S*.1} ${y+S*.55} V ${y+S*.1} H ${x+S*.12} V ${y+S*.55}" fill="none" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${lw}" stroke-linejoin="round"/>`);
+     }else if(kind==='ruina'){
+       out.push(`<path d="M ${x-S*.65} ${y+S*.55} V ${y-S*.45} H ${x-S*.18} V ${y-S*.05} H ${x+S*.18} V ${y-S*.62} H ${x+S*.6} V ${y+S*.55} M ${x-S*.78} ${y+S*.55} H ${x+S*.76}" fill="none" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${lw}" stroke-linejoin="round"/>`);
+     }else{
+       // Montanha desenhada, com segunda crista interna.
+       out.push(`<path d="M ${x-S} ${y+S*.62} L ${x-S*.18} ${y-S*.72} L ${x+S*.12} ${y-S*.2} L ${x+S*.42} ${y-S*.55} L ${x+S} ${y+S*.62} Z" fill="${e.stroke}" fill-opacity="${op*.08}" stroke="${e.stroke}" stroke-opacity="${op}" stroke-width="${lw}" stroke-linejoin="round"/>
+                 <path d="M ${x-S*.18} ${y-S*.72} L ${x-S*.02} ${y-S*.25} L ${x+S*.12} ${y-S*.2}" fill="none" stroke="${e.stroke}" stroke-opacity="${op*.55}" stroke-width="${lw*.8}"/>`);
+     }
+   }
    return out.join('');
  }
  if(b==='pele'){
@@ -29097,11 +29142,858 @@ function gm2handlesSvg(e){
  return out;
 }
 
+
+// ===== Gerador de texturas incorporado a partir do arquivo fornecido pelo usuário =====
+/**
+ * RPG Canvas Texture Generator v1.0.0
+ * Códigos prontos para gerar texturas matemáticas, procedurais e realistas em Canvas HTML5.
+ * Ideal para fundos de mapas e grids de RPG hospedados no GitHub Pages.
+ */
+
+class RPGTextureGenerator {
+    /**
+     * @param {HTMLCanvasElement|string} canvasElementOrId - O canvas principal ou o ID dele.
+     */
+    constructor(canvasElementOrId) {
+        this.canvas = typeof canvasElementOrId === 'string' ? document.getElementById(canvasElementOrId) : canvasElementOrId;
+        if (!this.canvas) {
+            throw new Error("Canvas não encontrado. Verifique o ID fornecido.");
+        }
+        this.ctx = this.canvas.getContext('2d');
+    }
+
+    /**
+     * Limpa o canvas e renderiza uma textura preenchendo toda a área.
+     * @param {string} textureName - Nome da textura desejada.
+     * @param {Object} options - Parâmetros customizados opcionais.
+     */
+    applyTexture(textureName, options = {}) {
+        if (typeof this[textureName] === 'function') {
+            this[textureName](options);
+        } else {
+            console.error(`A textura "${textureName}" não foi implementada.`);
+        }
+    }
+
+    /**
+     * Utilitário para desenhar a grade (Grid) de RPG clássica por cima da textura.
+     * @param {number} size - Tamanho de cada quadrado da grade em pixels (padrão: 50).
+     * @param {string} color - Cor das linhas (padrão: preto semitransparente).
+     * @param {string} style - 'solid' ou 'dashed' (linhas contínuas ou tracejadas).
+     */
+    drawGrid(size = 50, color = 'rgba(0, 0, 0, 0.15)', style = 'solid') {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+
+        if (style === 'dashed') {
+            ctx.setLineDash([4, 4]);
+        } else {
+            ctx.setLineDash([]);
+        }
+
+        ctx.beginPath();
+        // Linhas verticais
+        for (let x = 0; x <= w; x += size) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+        }
+        // Linhas horizontais
+        for (let y = 0; y <= h; y += size) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // ==========================================
+    // 1. TERRENOS NATURAIS E BIOMAS
+    // ==========================================
+
+    /** Terra Batida / Lamaço Orgânico */
+    terra(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Base marrom terrosa escura
+        ctx.fillStyle = options.baseColor || '#4a3525';
+        ctx.fillRect(0, 0, w, h);
+
+        // Ruído fractal para manchas de umidade/densidade da terra
+        for (let i = 0; i < 400; i++) {
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(54, 38, 26, 0.4)' : 'rgba(92, 69, 52, 0.2)';
+            ctx.beginPath();
+            ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 60 + 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Grãos finos de terra/areia misturada
+        for (let i = 0; i < 15000; i++) {
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.12)';
+            ctx.fillRect(Math.random() * w, Math.random() * h, 1.5, 1.5);
+        }
+    }
+
+    /** Deserto / Areias Planas */
+    areia(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Base dourada de areia
+        ctx.fillStyle = options.baseColor || '#e6c587';
+        ctx.fillRect(0, 0, w, h);
+
+        // Ondulações suaves geradas por dunas (Gradientes lineares suaves inclinados)
+        for (let i = 0; i < 20; i++) {
+            const grad = ctx.createLinearGradient(0, 0, w * 0.3, h * 0.2);
+            grad.addColorStop(0, 'rgba(255, 245, 220, 0.08)');
+            grad.addColorStop(0.5, 'rgba(196, 160, 98, 0.1)');
+            grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+            ctx.fillStyle = grad;
+            ctx.save();
+            ctx.translate(Math.random() * w - w*0.5, Math.random() * h - h*0.5);
+            ctx.rotate((Math.random() * 20 - 10) * Math.PI / 180);
+            ctx.fillRect(0, 0, w * 1.5, h * 1.5);
+            ctx.restore();
+        }
+
+        // Grãos finos de sílica cintilante
+        for (let i = 0; i < 25000; i++) {
+            ctx.fillStyle = Math.random() > 0.7 ? 'rgba(255,255,255,0.25)' : 'rgba(168,133,74,0.15)';
+            ctx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
+        }
+    }
+
+    /** Deserto Alternativo (Alias para areia) */
+    deserto(options = {}) {
+        this.areia(options);
+    }
+
+    /** Rocha Sólida / Platô Montanhoso */
+    rocha(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        ctx.fillStyle = options.baseColor || '#737373';
+        ctx.fillRect(0, 0, w, h);
+
+        // Manchas minerais escuras e claras
+        for (let i = 0; i < 300; i++) {
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(60,60,60,0.3)' : 'rgba(140,140,140,0.2)';
+            ctx.beginPath();
+            ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 40 + 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Hachuras estruturais e fraturas internas do mineral
+        ctx.strokeStyle = 'rgba(40,40,40,0.25)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 120; i++) {
+            ctx.beginPath();
+            let x = Math.random() * w;
+            let y = Math.random() * h;
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + Math.random() * 40 - 20, y + Math.random() * 40 - 20);
+            ctx.stroke();
+        }
+    }
+
+    /** Cascalho Solto / Leito de Rio Seco */
+    cascalho(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        ctx.fillStyle = '#615a52';
+        ctx.fillRect(0, 0, w, h);
+
+        // Geração algorítmica de milhares de pequenos seixos ovais e poligonais
+        for (let i = 0; i < 3500; i++) {
+            let cx = Math.random() * w;
+            let cy = Math.random() * h;
+            let r = Math.random() * 5 + 2;
+
+            // Sombra projetada do pedrisco
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.arc(cx + 1, cy + 1, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Cor aleatória do pedrisco (variações de cinza, marrom e ocre)
+            const tones = ['#8c8275', '#736b60', '#524b43', '#9e978e', '#6e6151'];
+            ctx.fillStyle = tones[Math.floor(Math.random() * tones.length)];
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Brilho superior de volume no seixo
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.beginPath();
+            ctx.arc(cx - r*0.3, cy - r*0.3, r * 0.4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    /** Floresta Vista de Cima (Densa e Fechada) */
+    floresta(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Solo escuro sob a folhagem
+        ctx.fillStyle = '#1e3313';
+        ctx.fillRect(0, 0, w, h);
+
+        // Copas de árvores sobrepostas (Fractais esféricos de folhagem)
+        for (let i = 0; i < 1800; i++) {
+            let tx = Math.random() * w;
+            let ty = Math.random() * h;
+            let radius = Math.random() * 25 + 15;
+
+            // Sombra profunda da árvore no chão
+            ctx.fillStyle = 'rgba(5, 13, 3, 0.4)';
+            ctx.beginPath();
+            ctx.arc(tx + 4, ty + 6, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Degradê volumétrico da copa (Mais claro no topo/centro devido ao sol)
+            let treeGrad = ctx.createRadialGradient(tx - radius*0.2, ty - radius*0.2, radius * 0.1, tx, ty, radius);
+            const greenTones = [
+                ['#3a6624', '#203d11'],
+                ['#477a2d', '#284718'],
+                ['#2f541c', '#182e0e'],
+                ['#568f37', '#2e541a']
+            ];
+            const pair = greenTones[Math.floor(Math.random() * greenTones.length)];
+            treeGrad.addColorStop(0, pair[0]);
+            treeGrad.addColorStop(1, pair[1]);
+
+            ctx.fillStyle = treeGrad;
+            ctx.beginPath();
+            ctx.arc(tx, ty, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pequenas ranhuras/folhas micro nas copas
+            if (Math.random() > 0.5) {
+                ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                ctx.beginPath();
+                ctx.arc(tx - radius*0.3, ty - radius*0.3, radius * 0.3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+    }
+
+    /** Palha / Telhado Texturizado / Celeiro */
+    palha(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Fundo ocre escuro de palha seca antiga
+        ctx.fillStyle = '#8c703f';
+        ctx.fillRect(0, 0, w, h);
+
+        // Geração de milhares de fibras e hastes individuais entrelaçadas
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 22000; i++) {
+            let x = Math.random() * w;
+            let y = Math.random() * h;
+            let length = Math.random() * 25 + 10;
+            // Direção semi-alinhada (comum em telhados de colmo ou ninhos)
+            let angle = (Math.random() * 30 - 15) * Math.PI / 180; 
+
+            ctx.strokeStyle = Math.random() > 0.4 ? 'rgba(230, 197, 124, 0.25)' : 'rgba(74, 56, 27, 0.35)';
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + Math.cos(angle) * length, y + Math.sin(angle) * length);
+            ctx.stroke();
+        }
+    }
+
+    /** Terreno Acidentado / Lamaçal Quebrado ou Pântano Seco */
+    terreno_acidentado(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        ctx.fillStyle = '#524336';
+        ctx.fillRect(0, 0, w, h);
+
+        // Sombreado de declives abruptos e crateras
+        for (let i = 0; i < 150; i++) {
+            let x = Math.random() * w;
+            let y = Math.random() * h;
+            let rx = Math.random() * 60 + 20;
+            let ry = Math.random() * 30 + 10;
+
+            let grad = ctx.createLinearGradient(x - rx, y - ry, x + rx, y + ry);
+            grad.addColorStop(0, 'rgba(0,0,0,0.4)');
+            grad.addColorStop(0.5, 'rgba(0,0,0,0)');
+            grad.addColorStop(1, 'rgba(255,255,255,0.08)');
+
+            ctx.fillStyle = grad;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(Math.random() * Math.PI);
+            ctx.beginPath();
+            ctx.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+        
+        // Pequenas fendas no terreno
+        ctx.strokeStyle = 'rgba(23, 18, 14, 0.5)';
+        ctx.lineWidth = 2;
+        for(let i=0; i<40; i++) {
+            ctx.beginPath();
+            ctx.moveTo(Math.random()*w, Math.random()*h);
+            ctx.lineTo(Math.random()*w, Math.random()*h);
+            ctx.stroke();
+        }
+    }
+
+    // ==========================================
+    // 2. MISTURAS NATURAIS AVANÇADAS
+    // ==========================================
+
+    /** Terreno com Musgos Avançado (Rocha + Fungos Verdes) */
+    terreno_com_musgos(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Primeiro gera a rocha basal
+        this.rocha({ baseColor: '#5c5c5c' });
+
+        // Camada biológica de musgo (Manchas de veludo verde)
+        for (let i = 0; i < 500; i++) {
+            let x = Math.random() * w;
+            let y = Math.random() * h;
+            let rad = Math.random() * 45 + 15;
+
+            let mossGrad = ctx.createRadialGradient(x, y, 2, x, y, rad);
+            mossGrad.addColorStop(0, 'rgba(56, 102, 35, 0.7)');
+            mossGrad.addColorStop(0.6, 'rgba(40, 77, 23, 0.4)');
+            mossGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+            ctx.fillStyle = mossGrad;
+            ctx.beginPath();
+            ctx.arc(x, y, rad, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Esferas micro texturizadas para dar relevo ao musgo
+        for (let i = 0; i < 4000; i++) {
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(106, 166, 68, 0.3)' : 'rgba(29, 54, 17, 0.4)';
+            ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+        }
+    }
+
+    /** Terra com Rochas Misturadas */
+    terra_com_rochas(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Renderiza a base de terra
+        this.terra();
+
+        // Insere blocos de pedras semi-enterradas pelo mapa
+        for (let i = 0; i < 40; i++) {
+            let rx = Math.random() * w;
+            let ry = Math.random() * h;
+            let size = Math.random() * 20 + 10;
+
+            // Sombra oclusiva na base da pedra
+            ctx.fillStyle = 'rgba(20, 14, 10, 0.6)';
+            ctx.beginPath();
+            ctx.arc(rx + 3, ry + 4, size, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Corpo da rocha poligonal
+            ctx.fillStyle = Math.random() > 0.5 ? '#7a7571' : '#595552';
+            ctx.beginPath();
+            ctx.moveTo(rx - size, ry);
+            ctx.lineTo(rx - size*0.5, ry - size);
+            ctx.lineTo(rx + size*0.7, ry - size*0.7);
+            ctx.lineTo(rx + size, ry + size*0.3);
+            ctx.lineTo(rx, ry + size);
+            ctx.closePath();
+            ctx.fill();
+
+            // Vincos e iluminação de aresta na rocha
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(rx - size, ry);
+            ctx.lineTo(rx - size*0.5, ry - size);
+            ctx.lineTo(rx + size*0.7, ry - size*0.7);
+            ctx.stroke();
+        }
+    }
+
+    // ==========================================
+    // 3. AMBIENTES SOTURNOS E ARQUEOLOGIA
+    // ==========================================
+
+    /** Parede ou Solo de Caverna Natural */
+    caverna(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Escuridão total de caverna
+        ctx.fillStyle = '#262422';
+        ctx.fillRect(0, 0, w, h);
+
+        // Manchas de estalagmites e erosão subterrânea
+        for (let i = 0; i < 250; i++) {
+            let x = Math.random() * w;
+            let y = Math.random() * h;
+            let grad = ctx.createRadialGradient(x, y, 5, x, y, Math.random() * 80 + 30);
+            grad.addColorStop(0, 'rgba(64, 57, 51, 0.35)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(x, y, 120, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Rachaduras profundas de placas tectônicas
+        ctx.strokeStyle = 'rgba(10, 8, 7, 0.8)';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 15; i++) {
+            ctx.beginPath();
+            let sx = Math.random() * w;
+            let sy = Math.random() * h;
+            ctx.moveTo(sx, sy);
+            for (let j = 0; j < 6; j++) {
+                sx += Math.random() * 60 - 30;
+                sy += Math.random() * 60 - 30;
+                ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+        }
+    }
+
+    /** Masmorra Antiga / Dungeon de Blocos de Pedra Escuros */
+    masmorra(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Base de pedra úmida escura
+        ctx.fillStyle = '#303336';
+        ctx.fillRect(0, 0, w, h);
+
+        // Ruído de limo e infiltração nas pedras
+        for (let i = 0; i < 150; i++) {
+            ctx.fillStyle = 'rgba(38, 54, 34, 0.15)';
+            ctx.beginPath();
+            ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 50 + 20, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Divisão estrutural de blocos de alvenaria lapidados (Estilo lajota medieval)
+        const blockW = options.blockWidth || 100;
+        const blockH = options.blockHeight || 50;
+
+        ctx.lineWidth = 2.5;
+        
+        // Primeira passagem: Sombra das juntas (Profundidade)
+        ctx.strokeStyle = '#17191a';
+        this._drawBrickLines(w, h, blockW, blockH, 0, 0);
+
+        // Segunda passagem: Chanfro e luz superior nas quinas das pedras para tridimensionalidade
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        this._drawBrickLines(w, h, blockW, blockH, -1, -1);
+    }
+
+    /** Alvenaria Tradicional de Tijolos de Pedra Limpos */
+    alvenaria(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        ctx.fillStyle = '#948a7c';
+        ctx.fillRect(0, 0, w, h);
+
+        const blockW = options.brickWidth || 80;
+        const blockH = options.brickHeight || 40;
+
+        // Juntas de argamassa cinza escura
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#47423b';
+        this._drawBrickLines(w, h, blockW, blockH, 0, 0);
+
+        // Textura interna porosa de cada tijolo
+        for (let i = 0; i < 8000; i++) {
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)';
+            ctx.fillRect(Math.random() * w, Math.random() * h, 2, 1);
+        }
+    }
+
+    /** Função interna auxiliar para desenhar malhas de tijolos amarrados (intercalados) */
+    _drawBrickLines(w, h, bw, bh, offsetX, offsetY) {
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(offsetX, offsetY);
+        ctx.beginPath();
+        
+        let row = 0;
+        for (let y = 0; y <= h + bh; y += bh) {
+            // Linha horizontal
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            
+            // Linhas verticais intercaladas (Amarração clássica de parede)
+            const shift = (row % 2) * (bw / 2);
+            for (let x = -bw; x <= w + bw; x += bw) {
+                ctx.moveTo(x + shift, y);
+                ctx.lineTo(x + shift, y + bh);
+            }
+            row++;
+        }
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // ==========================================
+    // 4. ESTRUTURAS URBANAS, RIQUEZA E TECNOLOGIA
+    // ==========================================
+
+    /** Piso de Mármore Nobre Realista */
+    piso_de_marmore(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Base luxuosa de mármore Carrara (Branco acinzentado sutil)
+        let baseGrad = ctx.createLinearGradient(0, 0, w, h);
+        baseGrad.addColorStop(0, '#f5f5f5');
+        baseGrad.addColorStop(0.5, '#eadecc');
+        baseGrad.addColorStop(1, '#ebebeb');
+        ctx.fillStyle = baseGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Desenho procedural de veios minerais orgânicos e ramificados
+        const numVeins = options.veinsCount || 12;
+        for (let i = 0; i < numVeins; i++) {
+            ctx.strokeStyle = Math.random() > 0.4 ? 'rgba(112, 105, 94, 0.25)' : 'rgba(166, 155, 141, 0.15)';
+            ctx.lineWidth = Math.random() * 2.5 + 0.5;
+            
+            ctx.beginPath();
+            let vx = Math.random() * w;
+            let vy = 0;
+            ctx.moveTo(vx, vy);
+
+            // Caminhada aleatória guiada para criar o zigue-zague natural do mármore
+            while (vy < h) {
+                vx += Math.random() * 40 - 20; // Oscilação X
+                vy += Math.random() * 30 + 10; // Avanço Y
+                ctx.lineTo(vx, vy);
+            }
+            ctx.stroke();
+        }
+
+        // Linhas de rejunte douradas ou escuras dividindo as placas de mármore majestosas
+        const tileSize = options.tileSize || 150;
+        ctx.strokeStyle = 'rgba(184, 134, 11, 0.3)'; // Toque de Ouro/Bronze no rejunte
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += tileSize) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+        for (let y = 0; y <= h; y += tileSize) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+        ctx.stroke();
+    }
+
+    /** Concreto Industrial, Moderno ou Masmorra Tecnológica */
+    concreto(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Base cinza de cimento fundido
+        ctx.fillStyle = '#a6a6a6';
+        ctx.fillRect(0, 0, w, h);
+
+        // Manchas de secagem química e umidade do concreto
+        for (let i = 0; i < 200; i++) {
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(138,138,138,0.25)' : 'rgba(194,194,194,0.3)';
+            ctx.beginPath();
+            ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 70 + 30, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Porosidades e microbolhas estouradas na cura do material
+        for (let i = 0; i < 18000; i++) {
+            ctx.fillStyle = 'rgba(0,0,0,0.18)';
+            ctx.fillRect(Math.random() * w, Math.random() * h, 1, 1);
+        }
+
+        // Linhas divisórias de fôrmas de placas de concreto
+        ctx.strokeStyle = 'rgba(64,64,64,0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        // Divisões amplas industriais (ex: quadrantes de 300px)
+        for (let x = 300; x < w; x += 300) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+        for (let y = 300; y < h; y += 300) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+        ctx.stroke();
+    }
+
+    /** Placas de Metal Reforçadas / Chão de Nave Sci-Fi ou Fortaleza */
+    metal(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Brilho metálico cinza escuro/azulado
+        let iron = ctx.createLinearGradient(0, 0, w, 0);
+        iron.addColorStop(0, '#40454a');
+        iron.addColorStop(0.5, '#565d63');
+        iron.addColorStop(1, '#34383c');
+        ctx.fillStyle = iron;
+        ctx.fillRect(0, 0, w, h);
+
+        // Linhas de painéis rebitados estilo industrial
+        const pSize = 100; // tamanho do painel
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += pSize) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+        for (let y = 0; y <= h; y += pSize) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+        ctx.stroke();
+
+        // Linhas de luz reflexiva nas bordas dos painéis (Chanfro metálico)
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (let x = 1; x <= w; x += pSize) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+        for (let y = 1; y <= h; y += pSize) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+        ctx.stroke();
+
+        // Rebites / Parafusos metálicos nos cantos de cada quadrante
+        ctx.fillStyle = 'rgba(10,10,10,0.6)';
+        for (let x = pSize; x < w; x += pSize) {
+            for (let y = pSize; y < h; y += pSize) {
+                // Desenha 4 pequenos rebites ao redor da interseção
+                ctx.fillRect(x - 8, y - 8, 3, 3);
+                ctx.fillRect(x + 5, y - 8, 3, 3);
+                ctx.fillRect(x - 8, y + 5, 3, 3);
+                ctx.fillRect(x + 5, y + 5, 3, 3);
+            }
+        }
+    }
+
+    // ==========================================
+    // 5. CLIMAS EXTREMOS E AMBIENTES FANTÁSTICOS
+    // ==========================================
+
+    /** Terreno Congelado / Lago de Gelo Glacial */
+    congelado(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Base azul gélida profunda
+        let iceGrad = ctx.createLinearGradient(0, 0, 0, h);
+        iceGrad.addColorStop(0, '#a3d1e0');
+        iceGrad.addColorStop(0.5, '#bee3ed');
+        iceGrad.addColorStop(1, '#81b9cc');
+        ctx.fillStyle = iceGrad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Manchas brancas de neve e geada interna aprisionada no gelo
+        for (let i = 0; i < 180; i++) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            ctx.beginPath();
+            ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 50 + 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Fissuras térmicas profundas na calota de gelo
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 1.5;
+        for (let i = 0; i < 20; i++) {
+            ctx.beginPath();
+            let ix = Math.random() * w;
+            let iy = Math.random() * h;
+            ctx.moveTo(ix, iy);
+            for (let j = 0; j < 5; j++) {
+                ix += Math.random() * 80 - 40;
+                iy += Math.random() * 80 - 40;
+                ctx.lineTo(ix, iy);
+            }
+            ctx.stroke();
+        }
+    }
+
+    /** Espaço Sideral Profundo com Estrelas e Nebulosas Cósmicas */
+    espacio_sideral(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Vácuo negro absoluto
+        ctx.fillStyle = '#05050d';
+        ctx.fillRect(0, 0, w, h);
+
+        // Nuvens de poeira cósmica / Nebulosas coloridas (Galáxias de fundo)
+        const nebulaColors = ['rgba(110, 37, 143, 0.15)', 'rgba(23, 73, 143, 0.12)', 'rgba(161, 35, 88, 0.1)'];
+        for (let i = 0; i < 8; i++) {
+            let nx = Math.random() * w;
+            let ny = Math.random() * h;
+            let rad = Math.random() * 250 + 100;
+
+            let nGrad = ctx.createRadialGradient(nx, ny, 10, nx, ny, rad);
+            nGrad.addColorStop(0, nebulaColors[i % nebulaColors.length]);
+            nGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+            ctx.fillStyle = nGrad;
+            ctx.beginPath();
+            ctx.arc(nx, ny, rad, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Estrelas distantes em pontos fixos matemáticos
+        for (let i = 0; i < 400; i++) {
+            let opacity = Math.random();
+            ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+            let size = Math.random() * 1.8;
+            ctx.fillRect(Math.random() * w, Math.random() * h, size, size);
+        }
+
+        // Estrelas brilhantes com reflexo de cruz cruzada (Lens Flare cósmico)
+        for (let i = 0; i < 12; i++) {
+            let sx = Math.random() * w;
+            let sy = Math.random() * h;
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            ctx.beginPath();
+            ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Feixes de luz da estrela
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 0.8;
+            ctx.beginPath();
+            ctx.moveTo(sx - 10, sy); ctx.lineTo(sx + 10, sy);
+            ctx.moveTo(sx, sy - 10); ctx.lineTo(sx, sy + 10);
+            ctx.stroke();
+        }
+    }
+
+    // ==========================================
+    // 6. PERGAMINHOS E DOCUMENTAÇÃO DO MESTRE
+    // ==========================================
+
+    /** Papel Envelhecido Clássico para Mapas Antigos */
+    papel(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Tom amarelado/creme de pergaminho vegetal
+        ctx.fillStyle = '#ebdcb9';
+        ctx.fillRect(0, 0, w, h);
+
+        // Manchas de oxidação causadas pelo tempo (Efeito chá ou café derramado)
+        for (let i = 0; i < 180; i++) {
+            ctx.fillStyle = Math.random() > 0.5 ? 'rgba(194, 169, 120, 0.25)' : 'rgba(156, 131, 84, 0.15)';
+            ctx.beginPath();
+            ctx.arc(Math.random() * w, Math.random() * h, Math.random() * 90 + 30, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Fibras de celulose visíveis na polpa do papel antigo
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = 'rgba(115, 93, 53, 0.12)';
+        for (let i = 0; i < 3000; i++) {
+            let px = Math.random() * w;
+            let py = Math.random() * h;
+            ctx.beginPath();
+            ctx.moveTo(px, py);
+            ctx.lineTo(px + Math.random() * 8 - 4, py + Math.random() * 8 - 4);
+            ctx.stroke();
+        }
+    }
+
+    /** Papiro Egípcio / Fibras de Junco Cruzadas Cruas */
+    papiro(options = {}) {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+
+        // Base crua de talo de papiro
+        ctx.fillStyle = '#dfcaa0';
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.lineWidth = 1;
+        
+        // Camada 1: Fibras de junco verticais prensadas
+        for (let x = 0; x < w; x += Math.random() * 4 + 2) {
+            ctx.strokeStyle = Math.random() > 0.4 ? 'rgba(163, 138, 93, 0.3)' : 'rgba(240, 227, 197, 0.4)';
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, h);
+            ctx.stroke();
+        }
+
+        // Camada 2: Fibras horizontais sobrepostas na prensa antiga
+        for (let y = 0; y < h; y += Math.random() * 4 + 2) {
+            ctx.strokeStyle = Math.random() > 0.4 ? 'rgba(143, 118, 74, 0.25)' : 'rgba(245, 235, 208, 0.35)';
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+        }
+
+        // Imperfeições e nós de casca escura esmagados no papiro
+        for(let i=0; i<400; i++) {
+            ctx.fillStyle = 'rgba(92, 72, 39, 0.4)';
+            ctx.fillRect(Math.random()*w, Math.random()*h, Math.random()*8+2, Math.random()*3+1);
+        }
+    }
+}
+
+
+const gm2textureCache_=new Map();
+function gm2textureData_(name){
+ if(!name||name==='nenhuma')return'';
+ const basePPM=24;
+ const cw=Math.max(64,Math.round(gm2.st.w*basePPM));
+ const ch=Math.max(64,Math.round(gm2.st.h*basePPM));
+ const key=`${name}|${cw}|${ch}`;
+ if(gm2textureCache_.has(key))return gm2textureCache_.get(key);
+ try{
+   const c=document.createElement('canvas');c.width=cw;c.height=ch;
+   const gen=new RPGTextureGenerator(c);
+   gen.applyTexture(name);
+   const url=c.toDataURL('image/jpeg',.86);
+   gm2textureCache_.set(key,url);
+   if(gm2textureCache_.size>12){
+     const first=gm2textureCache_.keys().next().value;
+     gm2textureCache_.delete(first);
+   }
+   return url;
+ }catch(err){
+   console.warn('Oficina 2: textura não pôde ser gerada',name,err);
+   return'';
+ }
+}
+
 function gm2textureSvg_(p,w,h){
  const t=gm2.st.texture||'nenhuma';if(t==='nenhuma')return'';
- const bf=t==='papel'?'.035':t==='pedra'?'.018':'.055',oct=t==='pedra'?4:2,op=t==='papel'?.055:t==='pedra'?.10:.075,seed=t==='papel'?8:t==='pedra'?13:21;
- return `<defs><filter id="gm2tex"><feTurbulence baseFrequency="${bf}" numOctaves="${oct}" seed="${seed}"/><feColorMatrix type="saturate" values="0"/></filter></defs>
- <rect x="0" y="0" width="${w}" height="${h}" filter="url(#gm2tex)" opacity="${op}" pointer-events="none"/>`;
+ const url=gm2textureData_(t);if(!url)return'';
+ return `<image href="${url}" x="0" y="0" width="${w}" height="${h}" preserveAspectRatio="none" opacity="1" pointer-events="none"/>`;
 }
 function gm2eraserPathSvg_(er,p,color='black'){
  return `<path d="${gm2smoothPath_(er.points,p)}" fill="none" stroke="${color}" stroke-width="${Math.max(1,Number(er.widthM||.2)*p)}" stroke-linecap="round" stroke-linejoin="round"/>`;
@@ -29162,10 +30054,34 @@ function gm2panelHtml(){
     <label>Escala<select id="gm2ppm"><option>24</option><option selected>32</option><option>40</option><option>48</option></select></label>
     <label>Fundo<input id="gm2bgcolor" type="color"></label><label>Grade<input id="gm2gridcolor" type="color"></label>
     <label class="gm2-check"><span>Grade</span><input id="gm2gridshow" type="checkbox" checked></label>
-    <label>Textura do mapa<select id="gm2texture"><option value="nenhuma">Nenhuma</option><option value="papel">Papel</option><option value="pedra">Pedra</option><option value="terra">Terra</option></select></label>
+    <label>Textura do mapa<select id="gm2texture">
+<option value="nenhuma">Nenhuma</option>
+<optgroup label="Natureza">
+<option value="terra">Terra</option><option value="areia">Areia / deserto</option><option value="rocha">Rocha</option>
+<option value="cascalho">Cascalho</option><option value="floresta">Floresta</option><option value="palha">Palha</option>
+<option value="terreno_acidentado">Terreno acidentado</option><option value="terreno_com_musgos">Terreno com musgos</option>
+<option value="terra_com_rochas">Terra com rochas</option>
+</optgroup>
+<optgroup label="Aventura">
+<option value="caverna">Caverna</option><option value="masmorra">Masmorra</option><option value="alvenaria">Alvenaria</option>
+</optgroup>
+<optgroup label="Construções">
+<option value="piso_de_marmore">Piso de mármore</option><option value="concreto">Concreto</option><option value="metal">Metal</option>
+</optgroup>
+<optgroup label="Fantasia">
+<option value="congelado">Congelado</option><option value="espacio_sideral">Espaço sideral</option>
+</optgroup>
+<optgroup label="Mapas antigos">
+<option value="papel">Papel envelhecido</option><option value="papiro">Papiro</option>
+</optgroup>
+</select></label>
     <button id="gm2undo" title="Desfazer (Ctrl+Z)">↶</button><button id="gm2redo" title="Refazer (Ctrl+Y)">↷</button>
     <label>Ferramenta<select id="gm2tool">
       <option value="select">Selecionar</option>${brushOpts.map(x=>`<option value="brush:${x[0]}">${x[1]}</option>`).join('')}
+    </select></label>
+    <label id="gm2stampWrap" style="display:none">Carimbo<select id="gm2stamp">
+      <option value="montanha">Montanha</option><option value="arvore">Árvore</option>
+      <option value="rocha">Rocha</option><option value="casa">Casa</option><option value="ruina">Ruína</option>
     </select></label>
     <div class="gm2-preview"><small>Prévia</small><span id="gm2preview"></span></div>
    </div>
@@ -29299,6 +30215,8 @@ function gm2updateToolbarState(){
  }
  document.querySelectorAll('#gm2side [data-shape]').forEach(b=>b.classList.toggle('active',gm2.tool==='shape'&&b.dataset.shape===gm2.shape));
  document.getElementById('gm2selectBtn')?.classList.toggle('active',gm2.tool==='select');
+ const swrap=document.getElementById('gm2stampWrap');if(swrap)swrap.style.display=(gm2.tool==='brush'&&gm2.brush==='carimbo')?'flex':'none';
+ const ssel=document.getElementById('gm2stamp');if(ssel)ssel.value=gm2.stamp||'montanha';
  document.getElementById('gm2eraseAll')?.classList.toggle('active',gm2.tool==='deleteTouch');
  const lk=document.getElementById('gm2lock'),pr=gm2el(gm2.primary);if(lk)lk.textContent=pr?.locked?'🔓':'🔒';
  const crop=document.getElementById('gm2crop');if(crop)crop.style.display=pr?.type==='image'?'inline-block':'none';
@@ -29325,6 +30243,7 @@ function gm2wire(){
  $('gm2gridshow').onchange=e=>{gm2.st.showGrid=e.target.checked;gm2saveLocal();gm2render();};
  $('gm2texture').onchange=e=>{gm2.st.texture=e.target.value;gm2saveLocal();gm2render();};
  $('gm2tool').onchange=e=>{const v=e.target.value;if(v==='select')gm2setTool('select');else if(v.startsWith('brush:'))gm2setTool('brush',v.slice(6));};
+ $('gm2stamp').onchange=e=>{gm2.stamp=e.target.value;gm2updateToolbarState();};
  $('gm2selectBtn').onclick=()=>gm2setTool('select');
  document.querySelectorAll('#gm2side [data-shape]').forEach(b=>b.onclick=()=>gm2setTool('shape',b.dataset.shape));
  $('gm2other').onchange=e=>{if(e.target.value)gm2setTool('shape',e.target.value);};
@@ -29626,6 +30545,6 @@ setTimeout(gm2installTab,900);
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.71.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.72.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
