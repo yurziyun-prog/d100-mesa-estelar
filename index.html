@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.57.2 ===== */
+/* ===== V46.57.3 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.57.2 ===== */
+/* ===== V46.57.3 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22045,7 +22045,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.57.2 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.57.3 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22204,7 +22204,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.57.2
+// V46.57.3
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22561,7 +22561,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.57.2
+// V46.57.3
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22846,7 +22846,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.57.2 — Oficina: estilos de traço exclusivos + prévia real
+// V46.57.3 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22922,7 +22922,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.57.2
+// V46.57.3
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23007,7 +23007,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.57.2 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.57.3 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23148,7 +23148,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.57.2 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.57.3 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23390,7 +23390,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.57.2 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.57.3 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23549,7 +23549,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.57.2 — Oficina simplificada
+// V46.57.3 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23894,7 +23894,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.57.2 — Oficina: objetos realmente opacos + painel de camadas
+// V46.57.3 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24067,7 +24067,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.57.2 — Oficina: composição real por ordem de adição
+// V46.57.3 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24290,7 +24290,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.57.2',e);}
+    }catch(e){console.warn('Oficina v46.57.3',e);}
     return r;
 };
 
@@ -24300,7 +24300,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.57.2 — REFORMA DA OFICINA
+// V46.57.3 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25053,594 +25053,232 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.57.2 — Oficina sem redundância
-// 1 toolbar, 1 seletor de preenchimento, 1 seletor de borda,
-// 1 menu Ferramenta, 1 banco de objetos, seleção múltipla por caixa.
+// V46.57.3 — reconstrução limpa da barra da Oficina
+// Base: 46.57.3 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
-
-gm570_.mode='select';
-gm570_.selection=new Set();
-
-function gm571Key_(type,id){return `${type}§${id}`;}
-function gm571SelectedItems_(){
-    const all=gm570Items_();
-    return all.filter(x=>gm570_.selection.has(gm571Key_(x.type,x.id)));
-}
-function gm571SyncPrimary_(){
-    const a=gm571SelectedItems_();
-    const last=a.at(-1);
-    gm570_.selected=last?{type:last.type,id:String(last.id)}:{type:'',id:''};
-    gmVet490_.selectedId=last?.type==='shape'?String(last.id):'';
-    gmOficinaObjSel553_=last?.type==='object'?String(last.id):'';
-}
-function gm571Select_(type,id,add=false){
-    const k=gm571Key_(type,id);
-    if(!add)gm570_.selection.clear();
-    if(add&&gm570_.selection.has(k))gm570_.selection.delete(k);else gm570_.selection.add(k);
-    gm571SyncPrimary_();gm570Render_();gm570Inspector_();
-}
-function gm571ClearSelection_(){gm570_.selection.clear();gm571SyncPrimary_();gm570Render_();gm570Inspector_();}
-
-function gm571BBox_(it){
-    const r=it.ref;
-    if(it.type==='object'){
-        const w=Math.max(.05,Number(r.larguraM||1)),h=Math.max(.05,Number(r.alturaM||1));
-        return {x:Number(r.x||0)-w/2,y:Number(r.y||0)-h/2,w,h};
-    }
-    if(it.type==='shape'){
-        if(String(r.tipo||'').startsWith('linha')){
-            const x1=Number(r.x||0),y1=Number(r.y||0),x2=Number(r.x2??x1),y2=Number(r.y2??y1);
-            return {x:Math.min(x1,x2),y:Math.min(y1,y2),w:Math.abs(x2-x1)||.05,h:Math.abs(y2-y1)||.05};
-        }
-        return {x:Number(r.x||0),y:Number(r.y||0),w:Math.abs(Number(r.w||.05)),h:Math.abs(Number(r.h||.05))};
-    }
-    const pts=r.pts||[]; if(!pts.length)return {x:0,y:0,w:0,h:0};
-    const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y);
-    return {x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};
-}
-function gm571Intersects_(a,b){
-    return a.x<=b.x+b.w&&a.x+a.w>=b.x&&a.y<=b.y+b.h&&a.y+a.h>=b.y;
-}
-
-window.gm571Tool_=function(v){
-    gm570_.mode=String(v||'select');
-    gm570_.edit=false;
-    gmOficinaV2Cfg_.ativo=false;
-    const brushStyles=new Set(['redondo','quadrado','espelhado','caligrafico','caneta','lapis','serpentina','seta','curso','giz_cera','spray','carimbo','pele','esboco','espirografo','teia','irregular','pontilhada','giz','ranhura','areia','cascalho','grama','folhas','neve','fumaca','borracha']);
-    if(v==='select'){
-        gmVet490_.tool='select';
-    }else if(brushStyles.has(v)){
-        gm570BrushConfig_(v);
-        gmOficinaV2Cfg_.ativo=true;
-    }else if(['retangulo','arredondado','quadrado','triangulo','circulo','elipse','hexagono','pentagono','losango','estrela','pentagrama','hexagrama','heptagrama','u','coracao','meialua','semicirculo'].includes(v)){
-        gm570ShapeTool_(v);
-    }else if(['linha','linha_sinuosa','linha_pontilhada','linha_curva'].includes(v)){
-        gm570LineTool_(v);
-    }
-    gm571UpdateMode_();gm570Render_();
-};
-function gm571UpdateMode_(){
-    const sel=document.getElementById('gm571Tool');
-    if(sel)sel.value=gm570_.mode;
-    const cv=document.getElementById('gmOficinaV2Canvas');
-    if(cv){
-        cv.style.pointerEvents=gmOficinaV2Cfg_.ativo?'auto':'none';
-        cv.style.cursor=gmOficinaV2Cfg_.ativo?(gmOficinaV2Cfg_.ferramenta==='borracha'?'cell':'crosshair'):'default';
-    }
-}
-
-function gm571ToolbarHtml_(){
-    const basic=['#FFFFFF','#111111','#FF5252','#FFCF4D','#56F08A','#45B7FF','#B56CFF'];
-    const tools=[
-      ['select','Selecionar'],
-      ['redondo','Pincel'],['quadrado','Pincel de ladrilhos'],['espelhado','Pincel espelhado'],['caligrafico','Caligrafia'],['caneta','Caneta'],['lapis','Lápis'],['serpentina','Serpentina'],['seta','Seta'],['curso','Curso / curva'],['giz_cera','Giz de cera'],['spray','Tinta spray'],['carimbo','Carimbo'],['pele','Pele / pelos'],['esboco','Esboço'],['espirografo','Espirógrafo'],['teia','Teia'],['irregular','Irregular'],['pontilhada','Pontilhado'],['giz','Giz'],['ranhura','Ranhura'],['areia','Areia'],['cascalho','Cascalho'],['grama','Grama'],['folhas','Folhas'],['neve','Neve'],['fumaca','Fumaça'],['borracha','Borracha'],
-      ['linha','Linha reta'],['linha_sinuosa','Linha sinuosa'],['linha_pontilhada','Linha pontilhada'],['linha_curva','Linha com ponto de curva'],
-      ['retangulo','Retângulo'],['arredondado','Retângulo arredondado'],['quadrado','Quadrado'],['triangulo','Triângulo'],['circulo','Círculo'],['elipse','Elipse'],
-      ['hexagono','Hexágono'],['pentagono','Pentágono'],['losango','Losango'],['estrela','Estrela'],['pentagrama','Pentagrama'],['hexagrama','Hexagrama'],['heptagrama','Heptagrama'],['u','U'],['coracao','Coração'],['meialua','Meia-lua'],['semicirculo','Semicírculo']
-    ];
-    return `<div id="gm571Toolbar" style="display:flex;flex-direction:column;gap:9px;margin:8px 0 10px;padding:10px;border:1px solid rgba(126,231,255,.20);border-radius:11px;background:rgba(0,0,0,.13)">
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
-        <label><small>Tamanho do mapa</small><select id="gmOficinaV2Size" onchange="gmOficinaV2Tamanho_(this.value)">
-          <option value="10x10">10 × 10 m</option><option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option><option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option><option value="50x40">50 × 40 m</option>
-        </select></label>
-        <label><small>Escala</small><select id="gmOficinaV2Scale" onchange="gmOficinaV2Escala_(this.value)">${[18,24,32,40,48,60,72].map(x=>`<option value="${x}">${x} px/m</option>`).join('')}</select></label>
-        <label><small>Fundo</small><input id="gmOficinaV2Fundo" type="color" onchange="gmOficinaV2Fundo_(this.value)"></label>
-        <label><small>Grade</small><input id="gmOficinaV2GradeCor" type="color" onchange="gmOficinaV2GradeCor_(this.value)"></label>
-        <label style="display:flex;align-items:center;gap:5px"><input id="gmOficinaV2GradeVis" type="checkbox" onchange="gmOficinaV2GradeVis_(this.checked)"> Mostrar grade</label>
-        <label><small>Textura do terreno</small><select id="gmOficinaV2Terreno" onchange="gmOficinaV2Terreno_(this.value)" style="width:190px">
-          <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option><option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option><option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option><option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
-        </select></label>
-        <button class="btn-small" onclick="gmOficinaV2Undo_()">↶</button><button class="btn-small" onclick="gmOficinaV2Redo_()">↷</button>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)">
-        <label><small>Ferramenta</small><select id="gm571Tool" onchange="gm571Tool_(this.value)" style="min-width:210px">${tools.map((x,i)=>`<option value="${x[0]}" ${i===0?'selected':''}>${x[1]}</option>`).join('')}</select></label>
-        <label><small>Prévia</small><canvas id="gmOficinaV2BrushPreview" width="150" height="38" style="width:150px;height:38px;border:1px solid rgba(255,255,255,.18);border-radius:7px;background:rgba(255,255,255,.06)"></canvas></label>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
-        <strong style="align-self:center;color:#cfeeff">Preenchimento</strong>
-        <label><small>Cor</small><input id="gmOficinaV2Color" type="color" onchange="gm570Color_(this.value)"></label>
-        <label><small>RGB</small><input id="gmOficinaV2Rgb" type="text" onchange="gm570RgbInput_(this.value)" style="width:100px"></label>
-        <label><small>HEX</small><input id="gmOficinaV2HexInput555" type="text" maxlength="7" onchange="gm570Color_(this.value)" style="width:86px"></label>
-        <span style="display:flex;gap:3px;padding-bottom:7px">${basic.map(c=>`<button onclick="gm570Color_('${c}')" style="width:21px;height:21px;min-width:21px;padding:0;border-radius:50%;background:${c}"></button>`).join('')}</span>
-        <label><small>Tamanho</small><input id="gmOficinaV2BrushSize" type="range" min="1" max="100" value="7" oninput="gmOficinaV2BrushSize_(this.value);gm570Sync_()" style="width:110px"><span id="gmOficinaV2BrushSizeVal">7</span></label>
-        <label><small>Opacidade</small><input id="gmOficinaV2Opacity" type="range" min="0" max="100" step="5" value="100" oninput="gmOficinaV2Opacity_(this.value);gm570Sync_()" style="width:100px"><span id="gmOficinaV2OpacityVal">100%</span></label>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
-        <strong style="align-self:center;color:#ffd54a">Borda</strong>
-        <label><small>Cor</small><input id="gm570BorderColor" type="color" value="${gm570_.borderColor}" onchange="gm570BorderColor_(this.value)"></label>
-        <label><small>RGB</small><input id="gm570BorderRgb" type="text" onchange="gm570BorderRgb_(this.value)" style="width:100px"></label>
-        <label><small>HEX</small><input id="gm570BorderHex" type="text" maxlength="7" onchange="gm570BorderColor_(this.value)" style="width:86px"></label>
-        <label><small>Grossura</small><input id="gm570BorderWidth" type="range" min="0" max="20" step="1" value="${gm570_.borderWidth}" oninput="gm570_.borderWidth=Number(this.value);gm570Sync_()" style="width:100px"><span id="gm570BorderWidthVal">${gm570_.borderWidth}</span></label>
-        <label><small>Opacidade</small><input id="gm570BorderOpacity" type="range" min="0" max="100" step="5" value="${gm570_.borderOpacity*100}" oninput="gm570_.borderOpacity=Number(this.value)/100;gm570Sync_()" style="width:100px"><span id="gm570BorderOpacityVal">${Math.round(gm570_.borderOpacity*100)}%</span></label>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:start;flex-wrap:wrap;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)">
-        <div style="min-width:320px;max-width:540px;flex:1">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><strong style="color:#cfeeff">Objetos do banco</strong>
-            <label style="font-size:.82em"><input type="checkbox" onchange="gm571CheckAllObjects_(this.checked)"> Selecionar todos</label>
-          </div>
-          <div id="gm571ObjectChecklist" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-height:150px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.1);border-radius:7px"></div>
-          <button class="btn-small" style="margin-top:6px" onclick="gm571AddCheckedObjects_()">＋ Adicionar marcados</button>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)">
-        <button id="gm570EditBtn" class="btn-small" onclick="gm570ToggleEdit_()">✥ Editar forma</button>
-        <button class="btn-small" onclick="gm571Front_()">⬆ Frente</button>
-        <button class="btn-small" onclick="gm571Back_()">⬇ Trás</button>
-        <button class="btn-small" onclick="gm571Duplicate_()">⧉ Duplicar</button>
-        <button class="btn-small btn-danger" onclick="gm571Delete_()">🗑 Excluir</button>
-        <span style="font-size:.82em;color:#9fb4c8">Selecionar: clique, Ctrl+clique ou arraste uma caixa vazia. Ctrl+arrastar move. Ctrl+C / Ctrl+V copia e cola.</span>
-      </div>
-      <div id="gm570Inspector"></div>
-
-      <select id="gmOficinaV2Objeto" style="display:none"></select>
-      <select id="gmOficinaV2Tool" style="display:none"><option value="traco">Traço</option></select>
-      <select id="gmOficinaV2StrokeStyle" style="display:none"><option value="redondo">redondo</option></select>
-      <div id="gmVet490Inspector" style="display:none"></div>
-    </div>`;
-}
-
-function gm571BuildUI_(){
-    const root=document.getElementById('gm-sub-oficina-mapas'),viewport=document.getElementById('gmOficinaV2Viewport');
-    if(!root||!viewport)return;
-    // remove TODA interface antiga da Oficina, inclusive a 46.57.2
-    ['gm570Toolbar','gm571Toolbar'].forEach(id=>document.getElementById(id)?.remove());
-    const oldTools=document.getElementById('gmVet490Tools');if(oldTools)oldTools.style.display='none';
-    // oculta o painel legado acima do viewport
-    let p=viewport.previousElementSibling;
-    while(p && p.id!=='gm-sub-oficina-mapas'){
-        if(p.id!=='gm571Toolbar' && p.id!=='gmVet490Tools')p.style.display='none';
-        p=p.previousElementSibling;
-    }
-    viewport.insertAdjacentHTML('beforebegin',gm571ToolbarHtml_());
-    gm571PopulateObjects_();gm570Sync_();gm571UpdateMode_();
-}
-function gm571PopulateObjects_(){
-    const box=document.getElementById('gm571ObjectChecklist');if(!box)return;
-    const lista=[...(objetosMapaDB||[])].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
-    box.innerHTML=lista.map(o=>`<label style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px">
-      <input type="checkbox" class="gm571ObjCheck" value="${gm570Esc_(o.id)}"> <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gm570Esc_(o.nome||o.id)}</span>
-    </label>`).join('');
-}
-window.gm571CheckAllObjects_=function(v){
-    document.querySelectorAll('.gm571ObjCheck').forEach(x=>x.checked=!!v);
-};
-window.gm571AddCheckedObjects_=function(){
-    const ids=[...document.querySelectorAll('.gm571ObjCheck:checked')].map(x=>x.value);if(!ids.length)return;
-    gmOficinaV2Historico_();let n=0;
-    for(const id of ids){
-        const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(id));if(!m)continue;
-        const o={...JSON.parse(JSON.stringify(m)),id:gm570Id_('ofobj'),modeloId:m.id,x:gmOficinaEstado_.larguraM/2+(n%5)*.65,y:gmOficinaEstado_.alturaM/2+Math.floor(n/5)*.65,angulo:0,ordemOficina:Date.now()+n};
-        gmOficinaEstado_.objetos.push(o);n++;
-    }
-    gmOficinaPersistir_();gm570Render_();
+const gm573_ = {
+  mode:'select',
+  selection:new Set(),
+  borderColor:'#111111',
+  borderWidth:0,
+  borderOpacity:1
 };
 
-// Caixa de seleção por arraste em área vazia.
-function gm571InstallMarquee_(){
-    const svg=document.getElementById('gmOficinaVectorLayer');if(!svg||svg.dataset.marquee571)return;
-    svg.dataset.marquee571='1';
-    svg.addEventListener('pointerdown',ev=>{
-        if(gm570_.mode!=='select'||ev.target!==svg)return;
-        ev.preventDefault();
-        const r=svg.getBoundingClientRect(),ppm=gmOficinaV2Ppm_();
-        const x0=(ev.clientX-r.left)/ppm,y0=(ev.clientY-r.top)/ppm;
-        const box=document.createElementNS('http://www.w3.org/2000/svg','rect');
-        box.setAttribute('fill','rgba(65,217,245,.10)');box.setAttribute('stroke','#41d9f5');box.setAttribute('stroke-dasharray','6 4');box.setAttribute('vector-effect','non-scaling-stroke');
-        box.style.pointerEvents='none';svg.appendChild(box);
-        const move=e=>{
-            const x=(e.clientX-r.left)/ppm,y=(e.clientY-r.top)/ppm;
-            const rx=Math.min(x0,x),ry=Math.min(y0,y),rw=Math.abs(x-x0),rh=Math.abs(y-y0);
-            box.setAttribute('x',rx*ppm);box.setAttribute('y',ry*ppm);box.setAttribute('width',rw*ppm);box.setAttribute('height',rh*ppm);
-        };
-        const up=e=>{
-            window.removeEventListener('pointermove',move);box.remove();
-            const x=(e.clientX-r.left)/ppm,y=(e.clientY-r.top)/ppm;
-            const selBox={x:Math.min(x0,x),y:Math.min(y0,y),w:Math.abs(x-x0),h:Math.abs(y-y0)};
-            if(selBox.w<.08&&selBox.h<.08){gm571ClearSelection_();return;}
-            const found=gm570Items_().filter(it=>gm571Intersects_(gm571BBox_(it),selBox));
-            gm571SetSelection_(found);gm570Render_();gm570Inspector_();
-        };
-        window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
-    });
+function gm573Key_(t,id){ return `${t}§${id}`; }
+function gm573Esc_(v){ return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function gm573LegacyPanel_(){
+  // Painel original imediatamente antes do viewport. Escondemos SOMENTE ele.
+  const view=document.getElementById('gmOficinaV2Viewport');
+  if(!view)return null;
+  let p=view.previousElementSibling;
+  while(p){
+    if(p.id==='gm573Toolbar') return null;
+    if(p.id==='gmVet490Tools' || p.querySelector?.('#gmOficinaV2Size,#gmOficinaV2Tool,#gmOficinaV2Objeto')) return p;
+    p=p.previousElementSibling;
+  }
+  return null;
 }
 
-function gm571SelectionOutlines_(ppm){
-    return gm571SelectedItems_().map(it=>{
-        const b=gm571BBox_(it);
-        return `<rect x="${b.x*ppm}" y="${b.y*ppm}" width="${Math.max(1,b.w*ppm)}" height="${Math.max(1,b.h*ppm)}" fill="none" stroke="#41d9f5" stroke-width="1.2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" pointer-events="none"/>`;
-    }).join('');
-}
-const gm570Render571Base_=gm570Render_;
-gm570Render_=function(){
-    gm570Render571Base_();
-    const svg=document.getElementById('gmOficinaVectorLayer');
-    if(svg){
-        const ppm=gmOficinaV2Ppm_();
-        svg.insertAdjacentHTML('beforeend',gm571SelectionOutlines_(ppm));
-        gm571InstallMarquee_();
-    }
-    gm571UpdateMode_();
-};
+function gm573ToolbarHtml_(){
+ const basic=['#FFFFFF','#111111','#FF5252','#FFCF4D','#56F08A','#45B7FF','#B56CFF'];
+ const tools=[
+ ['select','Selecionar'],
+ ['redondo','Pincel'],['quadrado','Pincel de ladrilhos'],['espelhado','Pincel espelhado'],
+ ['caligrafico','Caligrafia'],['caneta','Caneta'],['lapis','Lápis'],['serpentina','Serpentina'],
+ ['seta','Seta'],['curso','Curso / curva livre'],['giz_cera','Giz de cera'],['spray','Tinta spray'],
+ ['carimbo','Carimbo'],['pele','Pele / pelos'],['esboco','Esboço'],['espirografo','Espirógrafo'],
+ ['teia','Teia'],['irregular','Irregular'],['pontilhada','Pontilhado'],['giz','Giz'],
+ ['ranhura','Ranhura'],['areia','Areia'],['cascalho','Cascalho'],['grama','Grama'],
+ ['folhas','Folhas'],['neve','Neve'],['fumaca','Fumaça'],['borracha','Borracha']
+ ];
+ const other=[
+ ['hexagono','Hexágono'],['pentagono','Pentágono'],['losango','Losango'],['estrela','Estrela'],
+ ['pentagrama','Pentagrama'],['hexagrama','Hexagrama'],['heptagrama','Heptagrama'],['u','U'],
+ ['coracao','Coração'],['meialua','Meia-lua'],['semicirculo','Semicírculo']
+ ];
+ return `<div id="gm573Toolbar" style="display:flex;flex-direction:column;gap:9px;margin:8px 0 10px;padding:10px;border:1px solid rgba(126,231,255,.20);border-radius:11px;background:rgba(0,0,0,.13)">
+ <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+   <label><small>Tamanho</small><select id="gm573Size" onchange="gmOficinaV2Tamanho_(this.value)">
+    <option value="10x10">10 × 10 m</option><option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option><option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option><option value="50x40">50 × 40 m</option>
+   </select></label>
+   <label><small>Escala</small><select id="gm573Scale" onchange="gmOficinaV2Escala_(this.value)">${[18,24,32,40,48,60,72].map(x=>`<option value="${x}">${x} px/m</option>`).join('')}</select></label>
+   <label><small>Fundo</small><input id="gm573Bg" type="color" onchange="gmOficinaV2Fundo_(this.value)"></label>
+   <label><small>Grade</small><input id="gm573GridColor" type="color" onchange="gmOficinaV2GradeCor_(this.value)"></label>
+   <label style="display:flex;gap:5px;align-items:center"><input id="gm573Grid" type="checkbox" onchange="gmOficinaV2GradeVis_(this.checked)"> Mostrar grade</label>
+   <label><small>Textura do terreno</small><select id="gm573Terrain" onchange="gmOficinaV2Terreno_(this.value)" style="width:190px">
+    <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option><option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option><option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option><option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
+   </select></label>
+   <button class="btn-small" onclick="gmOficinaV2Undo_()">↶</button><button class="btn-small" onclick="gmOficinaV2Redo_()">↷</button>
+ </div>
 
-// seleção simples/múltipla
-window.gm570ShapeDown_=function(ev,id){
-    ev.preventDefault();ev.stopPropagation();const f=gmVet490Forma_(id);if(!f)return;
-    gm571Select_('shape',id,ev.ctrlKey||ev.metaKey);
-    if(!(ev.ctrlKey||ev.metaKey))return;
-    gmVet490Hist_();const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY;
-    const selected=gm571SelectedItems_();
-    const starts=selected.map(it=>({it,data:JSON.parse(JSON.stringify(it.ref))}));
-    const move=e=>{const dx=(e.clientX-sx)/ppm,dy=(e.clientY-sy)/ppm;
-        for(const q of starts){const r=q.it.ref,st=q.data;
-            if(q.it.type==='shape'){r.x=Number(st.x||0)+dx;r.y=Number(st.y||0)+dy;if(String(r.tipo||'').startsWith('linha')){r.x2=Number(st.x2||0)+dx;r.y2=Number(st.y2||0)+dy;if(r.tipo==='linha_curva'){r.cx=Number(st.cx||0)+dx;r.cy=Number(st.cy||0)+dy;}}}
-            else if(q.it.type==='object'){r.x=Number(st.x||0)+dx;r.y=Number(st.y||0)+dy;}
-            else r.pts=(st.pts||[]).map(p=>({x:p.x+dx,y:p.y+dy}));
-        }gm570_.strokeCache.clear();gm570Render_();};
-    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
-    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
-};
-window.gm570ObjectDown_=function(ev,id){ev.preventDefault();ev.stopPropagation();gm571Select_('object',id,ev.ctrlKey||ev.metaKey);};
-window.gm570DrawDown_=function(ev,id){ev.preventDefault();ev.stopPropagation();gm571Select_('draw',id,ev.ctrlKey||ev.metaKey);};
+ <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08);padding-top:7px">
+   <label><small>Ferramenta</small><select id="gm573Tool" onchange="gm573Tool_(this.value)" style="min-width:220px">${tools.map((x,i)=>`<option value="${x[0]}" ${i===0?'selected':''}>${x[1]}</option>`).join('')}</select></label>
+   <label><small>Prévia</small><canvas id="gm573Preview" width="150" height="38" style="width:150px;height:38px;border:1px solid rgba(255,255,255,.18);border-radius:7px;background:rgba(255,255,255,.06)"></canvas></label>
+ </div>
 
-// mudanças de cor afetam seleção inteira quando em Selecionar
-const gm570Color571Base_=window.gm570Color_;
-window.gm570Color_=function(v){
-    gm570Color571Base_(v);
-    if(gm570_.mode==='select'){
-        const c=gm570Hex_(v,gmOficinaV2Cfg_.cor);
-        for(const it of gm571SelectedItems_()){
-            if(it.type==='shape'){it.ref.fill=c;if(String(it.ref.tipo||'').startsWith('linha'))it.ref.stroke=c;}
-            if(it.type==='draw')it.ref.color=c;
-        }
-        gm570_.strokeCache.clear();gmOficinaPersistir_();gm570Render_();
-    }
-};
+ <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+   <strong style="color:#cfeeff;align-self:center">Preenchimento / traço</strong>
+   <label><small>Cor</small><input id="gm573Color" type="color" value="#111111" onchange="gm573Color_(this.value)"></label>
+   <label><small>RGB</small><input id="gm573Rgb" type="text" value="17/17/17" onchange="gm573Rgb_(this.value)" style="width:100px"></label>
+   <label><small>HEX</small><input id="gm573Hex" type="text" value="#111111" maxlength="7" onchange="gm573Color_(this.value)" style="width:86px"></label>
+   <span style="display:flex;gap:3px;padding-bottom:7px">${basic.map(c=>`<button onclick="gm573Color_('${c}')" style="width:21px;height:21px;min-width:21px;padding:0;border-radius:50%;background:${c}"></button>`).join('')}</span>
+   <label><small>Tamanho</small><input id="gm573BrushSize" type="range" min="1" max="100" value="7" oninput="gm573BrushSize_(this.value)" style="width:110px"><span id="gm573BrushSizeVal">7</span></label>
+   <label><small>Opacidade</small><input id="gm573Opacity" type="range" min="0" max="100" value="100" oninput="gm573Opacity_(this.value)" style="width:100px"><span id="gm573OpacityVal">100%</span></label>
+ </div>
 
-// ações em grupo
-function gm571ShiftOrder_(dir){
-    const arr=gm570Items_(),sel=gm571SelectedItems_();if(!sel.length)return;
-    const set=new Set(sel.map(x=>gm571Key_(x.type,x.id)));
-    if(dir>0){
-        for(let i=arr.length-2;i>=0;i--){if(set.has(gm571Key_(arr[i].type,arr[i].id))&&!set.has(gm571Key_(arr[i+1].type,arr[i+1].id))){const t=arr[i].ref.ordemOficina;arr[i].ref.ordemOficina=arr[i+1].ref.ordemOficina;arr[i+1].ref.ordemOficina=t;}}
-    }else{
-        for(let i=1;i<arr.length;i++){if(set.has(gm571Key_(arr[i].type,arr[i].id))&&!set.has(gm571Key_(arr[i-1].type,arr[i-1].id))){const t=arr[i].ref.ordemOficina;arr[i].ref.ordemOficina=arr[i-1].ref.ordemOficina;arr[i-1].ref.ordemOficina=t;}}
-    }
-    gmOficinaPersistir_();gm570Render_();
-}
-window.gm571Front_=()=>gm571ShiftOrder_(1);
-window.gm571Back_=()=>gm571ShiftOrder_(-1);
-window.gm571Delete_=function(){
-    const sel=gm571SelectedItems_();if(!sel.length)return;
-    const keys=new Set(sel.map(x=>gm571Key_(x.type,x.id)));
-    gmOficinaEstado_.formas=(gmVet490Formas_()||[]).filter(x=>!keys.has(gm571Key_('shape',x.id)));
-    gmOficinaEstado_.objetos=(gmOficinaEstado_.objetos||[]).filter(x=>!keys.has(gm571Key_('object',x.id)));
-    gmOficinaEstado_.desenhos=(gmOficinaEstado_.desenhos||[]).filter(x=>!keys.has(gm571Key_('draw',x.id)));
-    gm570_.selection.clear();gm571SyncPrimary_();gm570_.strokeCache.clear();gmOficinaPersistir_();gm570Render_();
-};
-window.gm571Duplicate_=function(){
-    const sel=gm571SelectedItems_();if(!sel.length)return;
-    const made=[];
-    sel.forEach((it,n)=>{const d=JSON.parse(JSON.stringify(it.ref));d.id=gm570Id_(it.type);d.ordemOficina=Date.now()+n;
-        if(it.type==='shape'){d.x=Number(d.x||0)+.5;d.y=Number(d.y||0)+.5;if(d.x2!=null){d.x2+=.5;d.y2+=.5;}gmVet490Formas_().push(d);}
-        else if(it.type==='object'){d.x=Number(d.x||0)+.5;d.y=Number(d.y||0)+.5;gmOficinaEstado_.objetos.push(d);}
-        else{d.pts=(d.pts||[]).map(p=>({x:p.x+.5,y:p.y+.5}));gmOficinaEstado_.desenhos.push(d);}
-        made.push({type:it.type,id:d.id,ref:d});
-    });
-    gm571SetSelection_(made);gmOficinaPersistir_();gm570Render_();
-};
+ <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+   <strong style="color:#ffd54a;align-self:center">Borda</strong>
+   <label><small>Cor</small><input id="gm573BorderColor" type="color" value="#111111" onchange="gm573BorderColor_(this.value)"></label>
+   <label><small>RGB</small><input id="gm573BorderRgb" type="text" value="17/17/17" onchange="gm573BorderRgb_(this.value)" style="width:100px"></label>
+   <label><small>HEX</small><input id="gm573BorderHex" type="text" value="#111111" maxlength="7" onchange="gm573BorderColor_(this.value)" style="width:86px"></label>
+   <label><small>Grossura</small><input id="gm573BorderWidth" type="range" min="0" max="20" value="0" oninput="gm573BorderWidth_(this.value)" style="width:100px"><span id="gm573BorderWidthVal">0</span></label>
+   <label><small>Opacidade</small><input id="gm573BorderOpacity" type="range" min="0" max="100" value="100" oninput="gm573BorderOpacity_(this.value)" style="width:100px"><span id="gm573BorderOpacityVal">100%</span></label>
+ </div>
 
-// Copy/paste interno em grupo.
-function gm571CopyGroup_(){
-    const sel=gm571SelectedItems_();if(!sel.length)return false;
-    gm570_.internalClipboard={group:sel.map(it=>({type:it.type,data:JSON.parse(JSON.stringify(it.ref))}))};return true;
-}
-function gm571PasteGroup_(){
-    const g=gm570_.internalClipboard?.group;if(!g?.length)return false;
-    const made=[];
-    g.forEach((it,n)=>{const d=JSON.parse(JSON.stringify(it.data));d.id=gm570Id_(it.type);d.ordemOficina=Date.now()+n;
-      if(it.type==='shape'){d.x=Number(d.x||0)+.5;d.y=Number(d.y||0)+.5;if(d.x2!=null){d.x2+=.5;d.y2+=.5;}gmVet490Formas_().push(d);}
-      else if(it.type==='object'){d.x=Number(d.x||0)+.5;d.y=Number(d.y||0)+.5;gmOficinaEstado_.objetos.push(d);}
-      else{d.pts=(d.pts||[]).map(p=>({x:p.x+.5,y:p.y+.5}));gmOficinaEstado_.desenhos.push(d);}
-      made.push({type:it.type,id:d.id,ref:d});
-    });
-    gm571SetSelection_(made);gmOficinaPersistir_();gm570Render_();return true;
-}
-document.addEventListener('copy',e=>{if(document.getElementById('gm571Toolbar')&&gm571CopyGroup_()){e.preventDefault();try{e.clipboardData.setData('text/plain','MesaEstelar:Group')}catch(_){}}},true);
-document.addEventListener('paste',e=>{
-    if(!document.getElementById('gm571Toolbar'))return;
-    const items=[...(e.clipboardData?.items||[])],img=items.find(i=>i.type?.startsWith('image/'));
-    if(img){e.preventDefault();const f=img.getAsFile();if(f)gm570AddClipboardImage_(f);return;}
-    if(gm570_.internalClipboard?.group){e.preventDefault();gm571PasteGroup_();}
-},true);
+ <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08);padding-top:7px">
+   <strong style="color:#cfeeff;align-self:center">Linhas</strong>
+   <select id="gm573Line" onchange="gm573Line_(this.value)"><option value="">— escolher —</option><option value="linha">Linha reta</option><option value="linha_sinuosa">Linha sinuosa</option><option value="linha_pontilhada">Linha pontilhada</option><option value="linha_curva">Linha com ponto de curva</option></select>
+ </div>
 
-// Inspector simplificado para seleção múltipla.
-const gm570Inspector571Base_=gm570Inspector_;
-gm570Inspector_=function(){
-    const box=document.getElementById('gm570Inspector');if(!box)return;
-    const n=gm571SelectedItems_().length;
-    if(n>1){box.innerHTML=`<strong style="color:#ffd54a">${n} elementos selecionados</strong><span style="color:#9fb4c8"> Cor, Frente, Trás, Duplicar, Excluir, Ctrl+C e Ctrl+V agem sobre todos.</span>`;return;}
-    gm570Inspector571Base_();
-};
+ <div style="display:flex;gap:7px;align-items:end;flex-wrap:wrap">
+   <strong style="color:#cfeeff;align-self:center">Formas</strong>
+   <button class="btn-small" onclick="gm573Shape_('retangulo')">▭ Retângulo</button>
+   <button class="btn-small" onclick="gm573Shape_('arredondado')">▢ Retângulo arredondado</button>
+   <button class="btn-small" onclick="gm573Shape_('quadrado')">□ Quadrado</button>
+   <button class="btn-small" onclick="gm573Shape_('triangulo')">△ Triângulo</button>
+   <button class="btn-small" onclick="gm573Shape_('circulo')">○ Círculo</button>
+   <button class="btn-small" onclick="gm573Shape_('elipse')">⬭ Elipse</button>
+   <label><small>Outras formas</small><select id="gm573Other" onchange="if(this.value){gm573Shape_(this.value);this.value=''}"><option value="">— escolher —</option>${other.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></label>
+ </div>
 
-// install
-const gmOficinaRender571Base_=gmOficinaRender_;
-gmOficinaRender_=function(){
-    const r=gmOficinaRender571Base_();
-    try{
-        const root=document.getElementById('gm-sub-oficina-mapas'),view=document.getElementById('gmOficinaV2Viewport');
-        if(root&&view&&!document.getElementById('gm571Toolbar'))gm571BuildUI_();
-        document.getElementById('gm570Toolbar')?.remove();
-        const legacy=document.getElementById('gmVet490Tools');if(legacy)legacy.style.display='none';
-        gm571PopulateObjects_();gm570Sync_();gm571UpdateMode_();gm570Render_();
-    }catch(e){console.warn('Oficina 46.57.2',e);}
-    return r;
-};
+ <div style="border-top:1px solid rgba(255,255,255,.08);padding-top:7px">
+   <div style="display:flex;justify-content:space-between;align-items:center;max-width:650px"><strong style="color:#cfeeff">Objetos do banco</strong><label style="font-size:.82em"><input type="checkbox" onchange="gm573CheckAll_(this.checked)"> Selecionar todos</label></div>
+   <div id="gm573ObjectBank" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-width:650px;max-height:150px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.1);border-radius:7px"></div>
+   <button class="btn-small" style="margin-top:6px" onclick="gm573AddObjects_()">＋ Adicionar marcados</button>
+ </div>
 
-if(!document.getElementById('gm571Css')){
-    const st=document.createElement('style');st.id='gm571Css';
-    st.textContent=`#gm571Toolbar small{display:block;color:#b9c9d6;margin-bottom:2px}#gm571Toolbar label{margin:0}#gm571Toolbar button{white-space:nowrap}`;
-    document.head.appendChild(st);
-}
-setTimeout(()=>{try{gm571BuildUI_();gm571Tool_('select');gm570Render_();}catch(e){console.warn(e)}},450);
-
-
-
-// ============================================================
-// V46.57.2 — Corrige a organização conceitual da Oficina
-// Ferramenta = Selecionar + desenho à mão livre / pincéis / estilos / borracha
-// Linhas = seção própria
-// Formas = seção própria
-// ============================================================
-
-function gm572ToolbarHtml_(){
-    const basic=['#FFFFFF','#111111','#FF5252','#FFCF4D','#56F08A','#45B7FF','#B56CFF'];
-
-    const freeTools=[
-      ['select','Selecionar'],
-      ['redondo','Pincel'],
-      ['quadrado','Pincel de ladrilhos'],
-      ['espelhado','Pincel espelhado'],
-      ['caligrafico','Caligrafia'],
-      ['caneta','Caneta'],
-      ['lapis','Lápis'],
-      ['serpentina','Serpentina'],
-      ['seta','Seta'],
-      ['curso','Curso / curva livre'],
-      ['giz_cera','Giz de cera'],
-      ['spray','Tinta spray'],
-      ['carimbo','Carimbo'],
-      ['pele','Pele / pelos'],
-      ['esboco','Esboço'],
-      ['espirografo','Espirógrafo'],
-      ['teia','Teia'],
-      ['irregular','Irregular'],
-      ['pontilhada','Pontilhado'],
-      ['giz','Giz'],
-      ['ranhura','Ranhura'],
-      ['areia','Areia'],
-      ['cascalho','Cascalho'],
-      ['grama','Grama'],
-      ['folhas','Folhas'],
-      ['neve','Neve'],
-      ['fumaca','Fumaça'],
-      ['borracha','Borracha']
-    ];
-
-    const otherShapes=[
-      ['hexagono','Hexágono'],
-      ['pentagono','Pentágono'],
-      ['losango','Losango'],
-      ['estrela','Estrela'],
-      ['pentagrama','Pentagrama'],
-      ['hexagrama','Hexagrama'],
-      ['heptagrama','Heptagrama'],
-      ['u','U'],
-      ['coracao','Coração'],
-      ['meialua','Meia-lua'],
-      ['semicirculo','Semicírculo']
-    ];
-
-    return `<div id="gm572Toolbar" style="display:flex;flex-direction:column;gap:9px;margin:8px 0 10px;padding:10px;border:1px solid rgba(126,231,255,.20);border-radius:11px;background:rgba(0,0,0,.13)">
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
-        <label><small>Tamanho do mapa</small><select id="gmOficinaV2Size" onchange="gmOficinaV2Tamanho_(this.value)">
-          <option value="10x10">10 × 10 m</option><option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option><option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option><option value="50x40">50 × 40 m</option>
-        </select></label>
-        <label><small>Escala</small><select id="gmOficinaV2Scale" onchange="gmOficinaV2Escala_(this.value)">${[18,24,32,40,48,60,72].map(x=>`<option value="${x}">${x} px/m</option>`).join('')}</select></label>
-        <label><small>Fundo</small><input id="gmOficinaV2Fundo" type="color" onchange="gmOficinaV2Fundo_(this.value)"></label>
-        <label><small>Grade</small><input id="gmOficinaV2GradeCor" type="color" onchange="gmOficinaV2GradeCor_(this.value)"></label>
-        <label style="display:flex;align-items:center;gap:5px"><input id="gmOficinaV2GradeVis" type="checkbox" onchange="gmOficinaV2GradeVis_(this.checked)"> Mostrar grade</label>
-        <label><small>Textura do terreno</small><select id="gmOficinaV2Terreno" onchange="gmOficinaV2Terreno_(this.value)" style="width:190px">
-          <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option><option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option><option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option><option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
-        </select></label>
-        <button class="btn-small" onclick="gmOficinaV2Undo_()">↶</button><button class="btn-small" onclick="gmOficinaV2Redo_()">↷</button>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)">
-        <label><small>Ferramenta</small><select id="gm571Tool" onchange="gm571Tool_(this.value)" style="min-width:220px">
-          ${freeTools.map((x,i)=>`<option value="${x[0]}" ${i===0?'selected':''}>${x[1]}</option>`).join('')}
-        </select></label>
-        <label><small>Prévia</small><canvas id="gmOficinaV2BrushPreview" width="150" height="38" style="width:150px;height:38px;border:1px solid rgba(255,255,255,.18);border-radius:7px;background:rgba(255,255,255,.06)"></canvas></label>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
-        <strong style="align-self:center;color:#cfeeff">Preenchimento / traço</strong>
-        <label><small>Cor</small><input id="gmOficinaV2Color" type="color" onchange="gm570Color_(this.value)"></label>
-        <label><small>RGB</small><input id="gmOficinaV2Rgb" type="text" onchange="gm570RgbInput_(this.value)" style="width:100px"></label>
-        <label><small>HEX</small><input id="gmOficinaV2HexInput555" type="text" maxlength="7" onchange="gm570Color_(this.value)" style="width:86px"></label>
-        <span style="display:flex;gap:3px;padding-bottom:7px">${basic.map(c=>`<button onclick="gm570Color_('${c}')" style="width:21px;height:21px;min-width:21px;padding:0;border-radius:50%;background:${c}"></button>`).join('')}</span>
-        <label><small>Tamanho</small><input id="gmOficinaV2BrushSize" type="range" min="1" max="100" value="7" oninput="gmOficinaV2BrushSize_(this.value);gm570Sync_()" style="width:110px"><span id="gmOficinaV2BrushSizeVal">7</span></label>
-        <label><small>Opacidade</small><input id="gmOficinaV2Opacity" type="range" min="0" max="100" step="5" value="100" oninput="gmOficinaV2Opacity_(this.value);gm570Sync_()" style="width:100px"><span id="gmOficinaV2OpacityVal">100%</span></label>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
-        <strong style="align-self:center;color:#ffd54a">Borda</strong>
-        <label><small>Cor</small><input id="gm570BorderColor" type="color" value="${gm570_.borderColor}" onchange="gm570BorderColor_(this.value)"></label>
-        <label><small>RGB</small><input id="gm570BorderRgb" type="text" onchange="gm570BorderRgb_(this.value)" style="width:100px"></label>
-        <label><small>HEX</small><input id="gm570BorderHex" type="text" maxlength="7" onchange="gm570BorderColor_(this.value)" style="width:86px"></label>
-        <label><small>Grossura</small><input id="gm570BorderWidth" type="range" min="0" max="20" step="1" value="${gm570_.borderWidth}" oninput="gm570_.borderWidth=Number(this.value);gm570Sync_()" style="width:100px"><span id="gm570BorderWidthVal">${gm570_.borderWidth}</span></label>
-        <label><small>Opacidade</small><input id="gm570BorderOpacity" type="range" min="0" max="100" step="5" value="${gm570_.borderOpacity*100}" oninput="gm570_.borderOpacity=Number(this.value)/100;gm570Sync_()" style="width:100px"><span id="gm570BorderOpacityVal">${Math.round(gm570_.borderOpacity*100)}%</span></label>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)">
-        <strong style="align-self:center;color:#cfeeff">Linhas</strong>
-        <select id="gm572Line" onchange="gm572LineChoose_(this.value)" style="min-width:180px">
-          <option value="">— escolher —</option>
-          <option value="linha">Linha reta</option>
-          <option value="linha_sinuosa">Linha sinuosa</option>
-          <option value="linha_pontilhada">Linha pontilhada</option>
-          <option value="linha_curva">Linha com ponto de curva</option>
-        </select>
-      </div>
-
-      <div style="display:flex;gap:7px;align-items:end;flex-wrap:wrap">
-        <strong style="align-self:center;color:#cfeeff">Formas</strong>
-        <button class="btn-small" onclick="gm572ShapeChoose_('retangulo')">▭ Retângulo</button>
-        <button class="btn-small" onclick="gm572ShapeChoose_('arredondado')">▢ Retângulo arredondado</button>
-        <button class="btn-small" onclick="gm572ShapeChoose_('quadrado')">□ Quadrado</button>
-        <button class="btn-small" onclick="gm572ShapeChoose_('triangulo')">△ Triângulo</button>
-        <button class="btn-small" onclick="gm572ShapeChoose_('circulo')">○ Círculo</button>
-        <button class="btn-small" onclick="gm572ShapeChoose_('elipse')">⬭ Elipse</button>
-        <label><small>Outras formas</small><select id="gm572OtherShape" onchange="if(this.value){gm572ShapeChoose_(this.value);this.value=''}">
-          <option value="">— escolher —</option>
-          ${otherShapes.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}
-        </select></label>
-      </div>
-
-      <div style="display:flex;gap:8px;align-items:start;flex-wrap:wrap;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)">
-        <div style="min-width:320px;max-width:540px;flex:1">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><strong style="color:#cfeeff">Objetos do banco</strong>
-            <label style="font-size:.82em"><input type="checkbox" onchange="gm571CheckAllObjects_(this.checked)"> Selecionar todos</label>
-          </div>
-          <div id="gm571ObjectChecklist" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-height:150px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.1);border-radius:7px"></div>
-          <button class="btn-small" style="margin-top:6px" onclick="gm571AddCheckedObjects_()">＋ Adicionar marcados</button>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding-top:6px;border-top:1px solid rgba(255,255,255,.08)">
-        <button id="gm570EditBtn" class="btn-small" onclick="gm570ToggleEdit_()">✥ Editar forma</button>
-        <button class="btn-small" onclick="gm571Front_()">⬆ Frente</button>
-        <button class="btn-small" onclick="gm571Back_()">⬇ Trás</button>
-        <button class="btn-small" onclick="gm571Duplicate_()">⧉ Duplicar</button>
-        <button class="btn-small btn-danger" onclick="gm571Delete_()">🗑 Excluir</button>
-        <span style="font-size:.82em;color:#9fb4c8">Selecionar: clique, Ctrl+clique ou arraste uma caixa vazia. Ctrl+arrastar move. Ctrl+C / Ctrl+V copia e cola.</span>
-      </div>
-
-      <div id="gm570Inspector"></div>
-      <select id="gmOficinaV2Objeto" style="display:none"></select>
-      <select id="gmOficinaV2Tool" style="display:none"><option value="traco">Traço</option></select>
-      <select id="gmOficinaV2StrokeStyle" style="display:none"><option value="redondo">redondo</option></select>
-      <div id="gmVet490Inspector" style="display:none"></div>
-    </div>`;
+ <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.08);padding-top:7px">
+   <button id="gm573EditBtn" class="btn-small" onclick="gm570ToggleEdit_?.()">✥ Editar forma</button>
+   <button class="btn-small" onclick="gm570Front_?.()">⬆ Frente</button><button class="btn-small" onclick="gm570Back_?.()">⬇ Trás</button>
+   <button class="btn-small" onclick="gm570Duplicate_?.()">⧉ Duplicar</button><button class="btn-small btn-danger" onclick="gm570Delete_?.()">🗑 Excluir</button>
+   <span style="font-size:.82em;color:#9fb4c8">Selecionar é o padrão. Ctrl+arrastar move. Ctrl+C / Ctrl+V copia e cola.</span>
+ </div>
+ <div id="gm573Inspector"></div>
+ </div>`;
 }
 
-window.gm572LineChoose_=function(v){
-    if(!v)return;
-    gm570_.mode='line';
-    gmOficinaV2Cfg_.ativo=false;
-    gm570LineTool_(v);
-    const tool=document.getElementById('gm571Tool');
-    if(tool)tool.value='select';
-    gm570Render_();
-};
-
-window.gm572ShapeChoose_=function(v){
-    if(!v)return;
-    gm570_.mode='shape';
-    gmOficinaV2Cfg_.ativo=false;
-    gm570ShapeTool_(v);
-    const tool=document.getElementById('gm571Tool');
-    if(tool)tool.value='select';
-    gm570Render_();
-};
-
-function gm572BuildUI_(){
-    const root=document.getElementById('gm-sub-oficina-mapas'),viewport=document.getElementById('gmOficinaV2Viewport');
-    if(!root||!viewport)return;
-
-    ['gm570Toolbar','gm571Toolbar','gm572Toolbar'].forEach(id=>document.getElementById(id)?.remove());
-
-    const legacy=document.getElementById('gmVet490Tools');
-    if(legacy)legacy.style.display='none';
-
-    // Esconde a interface antiga, mantendo apenas o viewport e a nova barra.
-    let p=viewport.previousElementSibling;
-    while(p && p.id!=='gm-sub-oficina-mapas'){
-        if(!['gm572Toolbar','gmVet490Tools'].includes(p.id))p.style.display='none';
-        p=p.previousElementSibling;
-    }
-
-    viewport.insertAdjacentHTML('beforebegin',gm572ToolbarHtml_());
-    gm571PopulateObjects_();
-    gm570Sync_();
-    const tool=document.getElementById('gm571Tool');
-    if(tool)tool.value='select';
-    gm570_.mode='select';
-    gmOficinaV2Cfg_.ativo=false;
-    gm571UpdateMode_();
+function gm573Build_(){
+ const view=document.getElementById('gmOficinaV2Viewport');
+ if(!view || document.getElementById('gm573Toolbar')) return;
+ const legacy=gm573LegacyPanel_();
+ if(legacy) legacy.style.display='none';
+ view.insertAdjacentHTML('beforebegin',gm573ToolbarHtml_());
+ gm573PopulateBank_();
+ gm573Sync_();
+ gm573Tool_('select');
 }
 
-// Corrige o indicador do modo atual: linhas e formas não pertencem ao menu Ferramenta.
-const gm571UpdateMode572Base_=gm571UpdateMode_;
-gm571UpdateMode_=function(){
-    const sel=document.getElementById('gm571Tool');
-    if(sel){
-        const valid=[...sel.options].map(o=>o.value);
-        sel.value=valid.includes(gm570_.mode)?gm570_.mode:'select';
-    }
-    const cv=document.getElementById('gmOficinaV2Canvas');
-    if(cv){
-        cv.style.pointerEvents=gmOficinaV2Cfg_.ativo?'auto':'none';
-        cv.style.cursor=gmOficinaV2Cfg_.ativo?(gmOficinaV2Cfg_.ferramenta==='borracha'?'cell':'crosshair'):'default';
-    }
+function gm573PopulateBank_(){
+ const box=document.getElementById('gm573ObjectBank'); if(!box)return;
+ const lista=[...(window.objetosMapaDB||[])].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+ box.innerHTML=lista.map(o=>`<label style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px"><input class="gm573Obj" type="checkbox" value="${gm573Esc_(o.id)}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${gm573Esc_(o.nome||o.id)}</span></label>`).join('');
+}
+window.gm573CheckAll_=v=>document.querySelectorAll('.gm573Obj').forEach(x=>x.checked=!!v);
+window.gm573AddObjects_=function(){
+ const ids=[...document.querySelectorAll('.gm573Obj:checked')].map(x=>x.value); if(!ids.length)return;
+ ids.forEach((id,i)=>{
+   const sel=document.getElementById('gmOficinaV2Objeto'); if(sel){sel.value=id; gmOficinaV2AdicionarObjeto_?.();}
+ });
+ gm573PopulateBank_();
 };
 
-// Instala somente a interface 57.2.
-const gmOficinaRender572Base_=gmOficinaRender_;
-gmOficinaRender_=function(){
-    const r=gmOficinaRender572Base_();
-    try{
-        const root=document.getElementById('gm-sub-oficina-mapas'),view=document.getElementById('gmOficinaV2Viewport');
-        document.getElementById('gm570Toolbar')?.remove();
-        document.getElementById('gm571Toolbar')?.remove();
-        if(root&&view&&!document.getElementById('gm572Toolbar'))gm572BuildUI_();
-        const legacy=document.getElementById('gmVet490Tools');if(legacy)legacy.style.display='none';
-        gm571PopulateObjects_();gm570Sync_();gm571UpdateMode_();gm570Render_();
-    }catch(e){console.warn('Oficina 46.57.2',e);}
-    return r;
+function gm573SetLegacy_(id,val,evt='change'){
+ const el=document.getElementById(id); if(!el)return;
+ el.value=val; el.dispatchEvent(new Event(evt,{bubbles:true}));
+}
+window.gm573Tool_=function(v){
+ gm573_.mode=v;
+ const free=v!=='select';
+ if(v==='select'){
+   if(window.gm570_) gm570_.mode='select';
+   if(window.gmOficinaV2Cfg_) gmOficinaV2Cfg_.ativo=false;
+   gm573SetLegacy_('gmOficinaV2Tool','traco');
+ } else {
+   gm573SetLegacy_('gmOficinaV2Tool','traco');
+   gm573SetLegacy_('gmOficinaV2StrokeStyle',v);
+   if(window.gmOficinaV2Cfg_) gmOficinaV2Cfg_.ativo=true;
+ }
+ const cv=document.getElementById('gmOficinaV2Canvas');
+ if(cv)cv.style.pointerEvents=free?'auto':'none';
+ gm573Preview_();
+};
+window.gm573Line_=function(v){
+ if(!v)return;
+ if(typeof gm570LineTool_==='function')gm570LineTool_(v);
+ else if(typeof gmVet490Tool_==='function')gmVet490Tool_(v);
+};
+window.gm573Shape_=function(v){
+ if(!v)return;
+ if(typeof gm570ShapeTool_==='function')gm570ShapeTool_(v);
+ else if(typeof gmVet490Tool_==='function')gmVet490Tool_(v);
 };
 
-if(!document.getElementById('gm572Css')){
-    const st=document.createElement('style');st.id='gm572Css';
-    st.textContent=`#gm572Toolbar small{display:block;color:#b9c9d6;margin-bottom:2px}#gm572Toolbar label{margin:0}#gm572Toolbar button{white-space:nowrap}`;
-    document.head.appendChild(st);
+function gm573HexRgb_(hex){
+ hex=String(hex||'#000000').replace('#',''); if(hex.length===3)hex=hex.split('').map(x=>x+x).join('');
+ const n=parseInt(hex,16)||0; return [(n>>16)&255,(n>>8)&255,n&255];
+}
+function gm573RgbHex_(v){
+ const a=String(v||'').match(/\d+/g)?.slice(0,3).map(x=>Math.max(0,Math.min(255,+x)))||[0,0,0];
+ return '#'+a.map(x=>x.toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+window.gm573Color_=function(v){
+ if(!/^#[0-9a-f]{6}$/i.test(v))return;
+ const [r,g,b]=gm573HexRgb_(v);
+ ['gm573Color','gm573Hex'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=v;});
+ const rgb=document.getElementById('gm573Rgb');if(rgb)rgb.value=`${r}/${g}/${b}`;
+ gm573SetLegacy_('gmOficinaV2Color',v);
+};
+window.gm573Rgb_=v=>gm573Color_(gm573RgbHex_(v));
+window.gm573BrushSize_=function(v){document.getElementById('gm573BrushSizeVal').textContent=v;gm573SetLegacy_('gmOficinaV2BrushSize',v,'input');gm573Preview_();};
+window.gm573Opacity_=function(v){document.getElementById('gm573OpacityVal').textContent=v+'%';gm573SetLegacy_('gmOficinaV2Opacity',v,'input');};
+window.gm573BorderColor_=function(v){gm573_.borderColor=v;const [r,g,b]=gm573HexRgb_(v);document.getElementById('gm573BorderHex').value=v;document.getElementById('gm573BorderRgb').value=`${r}/${g}/${b}`; if(window.gm570_)gm570_.borderColor=v;};
+window.gm573BorderRgb_=v=>gm573BorderColor_(gm573RgbHex_(v));
+window.gm573BorderWidth_=function(v){gm573_.borderWidth=+v;document.getElementById('gm573BorderWidthVal').textContent=v;if(window.gm570_)gm570_.borderWidth=+v;};
+window.gm573BorderOpacity_=function(v){gm573_.borderOpacity=+v/100;document.getElementById('gm573BorderOpacityVal').textContent=v+'%';if(window.gm570_)gm570_.borderOpacity=+v/100;};
+
+function gm573Preview_(){
+ const c=document.getElementById('gm573Preview');if(!c)return;const x=c.getContext('2d');x.clearRect(0,0,c.width,c.height);
+ x.globalAlpha=+(document.getElementById('gm573Opacity')?.value||100)/100;
+ x.strokeStyle=document.getElementById('gm573Color')?.value||'#111';x.lineWidth=Math.min(26,Math.max(1,+document.getElementById('gm573BrushSize')?.value||7));x.lineCap='round';
+ x.beginPath();x.moveTo(8,22);x.bezierCurveTo(42,8,85,31,142,17);x.stroke();x.globalAlpha=1;
+}
+function gm573Sync_(){
+ const st=window.gmOficinaEstado_||{};
+ const size=document.getElementById('gm573Size');if(size){const k=`${st.larguraM||50}x${st.alturaM||30}`;if([...size.options].some(o=>o.value===k))size.value=k;}
+ const sc=document.getElementById('gm573Scale');if(sc)sc.value=String(st.pxPorMetro||24);
+ const bg=document.getElementById('gm573Bg');if(bg)bg.value=st.fundo||'#d0d0d0';
+ const gc=document.getElementById('gm573GridColor');if(gc)gc.value=st.corGrade||'#808080';
+ const gr=document.getElementById('gm573Grid');if(gr)gr.checked=st.mostrarGrade!==false;
+ const tr=document.getElementById('gm573Terrain');if(tr)tr.value=st.texturaTerreno||'nenhuma';
+ gm573Preview_();
 }
 
-setTimeout(()=>{try{gm572BuildUI_();gm571Tool_('select');gm570Render_();}catch(e){console.warn(e)}},500);
+// A barra nova é inserida sem alterar a estrutura do Escudo do Mestre.
+const gmOficinaRender573Base_=window.gmOficinaRender_;
+if(typeof gmOficinaRender573Base_==='function'){
+ window.gmOficinaRender_=function(){
+   const r=gmOficinaRender573Base_.apply(this,arguments);
+   setTimeout(()=>{try{gm573Build_();gm573PopulateBank_();gm573Sync_();}catch(e){console.warn('Oficina 57.3',e)}},0);
+   return r;
+ };
+}
+if(!document.getElementById('gm573Css')){
+ const st=document.createElement('style');st.id='gm573Css';
+ st.textContent=`#gm573Toolbar small{display:block;color:#b9c9d6;margin-bottom:2px}#gm573Toolbar label{margin:0}#gm573Toolbar button{white-space:nowrap}`;
+ document.head.appendChild(st);
+}
+setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 57.3 init',e)}},500);
 
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
@@ -25658,6 +25296,6 @@ setTimeout(()=>{try{gm572BuildUI_();gm571Tool_('select');gm570Render_();}catch(e
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.57.2: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.57.3: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
