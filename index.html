@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.56.0 ===== */
+/* ===== V46.57.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.56.0 ===== */
+/* ===== V46.57.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22045,7 +22045,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.56.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.57.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22204,7 +22204,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.56.0
+// V46.57.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22561,7 +22561,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.56.0
+// V46.57.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22846,7 +22846,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.56.0 — Oficina: estilos de traço exclusivos + prévia real
+// V46.57.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22922,7 +22922,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.56.0
+// V46.57.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23007,7 +23007,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.56.0 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.57.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23148,7 +23148,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.56.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.57.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23390,7 +23390,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.56.0 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.57.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23549,7 +23549,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.56.0 — Oficina simplificada
+// V46.57.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23894,7 +23894,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.56.0 — Oficina: objetos realmente opacos + painel de camadas
+// V46.57.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24067,7 +24067,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.56.0 — Oficina: composição real por ordem de adição
+// V46.57.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24290,12 +24290,765 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.56.0',e);}
+    }catch(e){console.warn('Oficina v46.57.0',e);}
     return r;
 };
 
 // Garantia inicial/migração.
 setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnificado_();}catch(_){}},300);
+
+
+
+// ============================================================
+// V46.57.0 — REFORMA DA OFICINA
+// Interface única + pilha cronológica real para desenho, formas e objetos.
+// ============================================================
+
+const gm570_ = {
+    borderColor:'#111111',
+    borderOpacity:1,
+    borderWidth:0,
+    edit:false,
+    selected:{type:'',id:''},
+    strokeCache:new Map(),
+    internalClipboard:null,
+    lineType:'linha',
+    mode:'brush'
+};
+
+function gm570Id_(prefix='el'){ return `${prefix}:${Date.now()}:${Math.random().toString(36).slice(2,7)}`; }
+function gm570Hex_(v,fb='#000000'){
+    let x=String(v||'').trim();
+    if(!x)return fb;
+    if(!x.startsWith('#'))x='#'+x;
+    if(/^#[0-9a-f]{3}$/i.test(x)) x='#'+x[1]+x[1]+x[2]+x[2]+x[3]+x[3];
+    return /^#[0-9a-f]{6}$/i.test(x)?x.toUpperCase():fb;
+}
+function gm570Rgb_(hex){
+    const h=gm570Hex_(hex).slice(1);
+    return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];
+}
+function gm570RgbHex_(v){
+    const m=String(v||'').match(/(\d{1,3})\D+(\d{1,3})\D+(\d{1,3})/);
+    if(!m)return null;
+    return '#'+[m[1],m[2],m[3]].map(n=>Math.max(0,Math.min(255,Number(n)||0)).toString(16).padStart(2,'0')).join('').toUpperCase();
+}
+function gm570Esc_(x){ return escaparHtmlInventario_(String(x??'')); }
+
+function gm570EnsureOrder_(){
+    let seq=Date.now()-100000;
+    const shapes=gmVet490Formas_()||[], objs=gmOficinaEstado_.objetos||[], draws=gmOficinaEstado_.desenhos||[];
+    const known=[...shapes,...objs].map(x=>Number(x.ordemOficina||gm560TimestampId_(x.id)||0)).filter(Boolean);
+    let maxKnown=known.length?Math.max(...known):seq;
+
+    for(const f of shapes){
+        if(!f.id)f.id=gm570Id_('vet');
+        if(!Number.isFinite(Number(f.ordemOficina))) f.ordemOficina=Number(gm560TimestampId_(f.id)||++seq);
+    }
+    for(const o of objs){
+        if(!o.id)o.id=gm570Id_('ofobj');
+        if(!Number.isFinite(Number(o.ordemOficina))) o.ordemOficina=Number(gm560TimestampId_(o.id)||++seq);
+    }
+    // Migração dos desenhos antigos: coloca-os acima das formas/objetos existentes.
+    // Isso recupera os riscos que "sumiram" na 46.56.
+    for(const d of draws){
+        if(!d.id)d.id=gm570Id_('draw');
+        if(!Number.isFinite(Number(d.ordemOficina))) d.ordemOficina=++maxKnown;
+    }
+}
+function gm570Items_(){
+    gm570EnsureOrder_();
+    const a=[];
+    (gmOficinaEstado_.desenhos||[]).forEach(x=>a.push({type:'draw',id:x.id,ref:x,nome:'Desenho'}));
+    (gmVet490Formas_()||[]).forEach(x=>a.push({type:'shape',id:x.id,ref:x,nome:x.tipo||'Forma'}));
+    (gmOficinaEstado_.objetos||[]).forEach(x=>a.push({type:'object',id:x.id,ref:x,nome:x.nome||'Objeto'}));
+    return a.sort((a,b)=>Number(a.ref.ordemOficina||0)-Number(b.ref.ordemOficina||0));
+}
+function gm570SelectedRef_(){
+    const s=gm570_.selected;
+    if(!s?.id)return null;
+    return gm570Items_().find(x=>x.type===s.type&&String(x.id)===String(s.id))||null;
+}
+function gm570Select_(type,id){
+    gm570_.selected={type:String(type||''),id:String(id||'')};
+    gmVet490_.selectedId=type==='shape'?String(id):'';
+    gmOficinaObjSel553_=type==='object'?String(id):'';
+    gm570Render_();
+    gm570Inspector_();
+}
+
+// ---------- NOVA INTERFACE ----------
+function gm570ToolbarHtml_(){
+    const basic=['#FFFFFF','#111111','#FF5252','#FFCF4D','#56F08A','#45B7FF','#B56CFF'];
+    const brushOpts=[
+      ['redondo','Pincel'],['quadrado','Pincel de ladrilhos'],['espelhado','Pincel espelhado'],
+      ['caligrafico','Caligrafia'],['caneta','Caneta'],['lapis','Lápis'],['serpentina','Serpentina'],
+      ['seta','Seta'],['curso','Curso / curva'],['linha','Linha livre'],['giz_cera','Giz de cera'],
+      ['spray','Tinta spray'],['carimbo','Carimbo'],['pele','Pele / pelos'],['esboco','Esboço'],
+      ['espirografo','Espirógrafo'],['teia','Teia'],['irregular','Irregular'],
+      ['pontilhada','Pontilhado'],['giz','Giz'],['ranhura','Ranhura'],['areia','Areia'],
+      ['cascalho','Cascalho'],['grama','Grama'],['folhas','Folhas'],['neve','Neve'],
+      ['fumaca','Fumaça'],['borracha','Borracha']
+    ];
+    const otherShapes=[
+      ['hexagono','Hexágono'],['pentagono','Pentágono'],['losango','Losango'],
+      ['estrela','Estrela'],['pentagrama','Pentagrama'],['hexagrama','Hexagrama'],
+      ['heptagrama','Heptagrama'],['u','U'],['coracao','Coração'],['meialua','Meia-lua'],
+      ['semicirculo','Semicírculo']
+    ];
+    return `
+    <div id="gm570Toolbar" style="display:flex;flex-direction:column;gap:8px;margin:8px 0 10px;padding:10px;border:1px solid rgba(126,231,255,.20);border-radius:11px;background:rgba(0,0,0,.13)">
+      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+        <label style="margin:0"><small>Tamanho</small><select id="gmOficinaV2Size" onchange="gmOficinaV2Tamanho_(this.value)" style="margin:3px 0 0">
+          <option value="10x10">10 × 10 m</option><option value="20x12">20 × 12 m</option><option value="28x14">28 × 14 m</option><option value="36x20">36 × 20 m</option><option value="50x30">50 × 30 m</option><option value="50x40">50 × 40 m</option>
+        </select></label>
+        <label style="margin:0"><small>Escala</small><select id="gmOficinaV2Scale" onchange="gmOficinaV2Escala_(this.value)" style="margin:3px 0 0">
+          ${[18,24,32,40,48,60,72].map(x=>`<option value="${x}">${x} px/m</option>`).join('')}
+        </select></label>
+        <label style="margin:0"><small>Fundo</small><input id="gmOficinaV2Fundo" type="color" onchange="gmOficinaV2Fundo_(this.value)" style="width:50px;height:36px;padding:2px"></label>
+        <label style="margin:0"><small>Grade</small><input id="gmOficinaV2GradeCor" type="color" onchange="gmOficinaV2GradeCor_(this.value)" style="width:50px;height:36px;padding:2px"></label>
+        <label style="display:flex;align-items:center;gap:5px;margin:0 4px 7px 0"><input id="gmOficinaV2GradeVis" type="checkbox" onchange="gmOficinaV2GradeVis_(this.checked)"> Grade</label>
+        <label style="margin:0"><small>Textura do terreno</small><select id="gmOficinaV2Terreno" onchange="gmOficinaV2Terreno_(this.value)" style="width:220px;margin:3px 0 0">
+          <option value="nenhuma">Nenhuma</option><option value="concreto">Concreto</option><option value="areia">Areia</option><option value="terra">Terra</option><option value="grama">Grama</option><option value="floresta">Floresta</option><option value="rochas">Rochas</option><option value="neve">Neve</option><option value="agua">Água</option><option value="vulcanico">Vulcânico</option><option value="metal">Metal / nave</option><option value="ruinas">Ruínas</option><option value="alien">Biomassa alienígena</option><option value="nevoa">Névoa</option>
+        </select></label>
+        <button class="btn-small" onclick="gmOficinaV2Undo_()">↶</button>
+        <button class="btn-small" onclick="gmOficinaV2Redo_()">↷</button>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap">
+        <label style="margin:0"><small>Pincel / estilo</small><select id="gm570Brush" onchange="gm570Brush_(this.value)" style="min-width:180px;margin:3px 0 0">
+          ${brushOpts.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}
+        </select></label>
+        <label style="margin:0"><small>Prévia</small><canvas id="gmOficinaV2BrushPreview" width="150" height="38" style="display:block;width:150px;height:38px;border:1px solid rgba(255,255,255,.18);border-radius:7px;background:rgba(255,255,255,.06)"></canvas></label>
+        <label style="margin:0"><small>Cor</small><input id="gmOficinaV2Color" type="color" onchange="gm570Color_(this.value)" style="width:48px;height:36px;padding:2px"></label>
+        <label style="margin:0"><small>RGB</small><input id="gmOficinaV2Rgb" type="text" onchange="gm570RgbInput_(this.value)" style="width:100px"></label>
+        <label style="margin:0"><small>HEX</small><input id="gmOficinaV2HexInput555" type="text" maxlength="7" onchange="gm570Color_(this.value)" style="width:86px"></label>
+        <span style="display:flex;gap:3px;padding-bottom:7px">${basic.map(c=>`<button onclick="gm570Color_('${c}')" style="width:21px;height:21px;min-width:21px;padding:0;border-radius:50%;background:${c}"></button>`).join('')}</span>
+        <label style="margin:0"><small>Tamanho</small><input id="gmOficinaV2BrushSize" type="range" min="1" max="100" value="7" oninput="gmOficinaV2BrushSize_(this.value);gm570Sync_()" style="width:110px"><span id="gmOficinaV2BrushSizeVal">7</span></label>
+        <label style="margin:0"><small>Opacidade</small><input id="gmOficinaV2Opacity" type="range" min="0" max="100" step="5" value="100" oninput="gmOficinaV2Opacity_(this.value);gm570Sync_()" style="width:100px"><span id="gmOficinaV2OpacityVal">100%</span></label>
+      </div>
+
+      <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding-top:5px;border-top:1px solid rgba(255,255,255,.08)">
+        <strong style="align-self:center;color:#cfeeff">Borda</strong>
+        <label style="margin:0"><small>Cor</small><input id="gm570BorderColor" type="color" value="${gm570_.borderColor}" onchange="gm570BorderColor_(this.value)" style="width:48px;height:36px;padding:2px"></label>
+        <label style="margin:0"><small>RGB</small><input id="gm570BorderRgb" type="text" onchange="gm570BorderRgb_(this.value)" style="width:100px"></label>
+        <label style="margin:0"><small>HEX</small><input id="gm570BorderHex" type="text" maxlength="7" onchange="gm570BorderColor_(this.value)" style="width:86px"></label>
+        <label style="margin:0"><small>Grossura</small><input id="gm570BorderWidth" type="range" min="0" max="20" step="1" value="${gm570_.borderWidth}" oninput="gm570_.borderWidth=Number(this.value);gm570Sync_()" style="width:100px"><span id="gm570BorderWidthVal">${gm570_.borderWidth}</span></label>
+        <label style="margin:0"><small>Opacidade</small><input id="gm570BorderOpacity" type="range" min="0" max="100" step="5" value="${gm570_.borderOpacity*100}" oninput="gm570_.borderOpacity=Number(this.value)/100;gm570Sync_()" style="width:100px"><span id="gm570BorderOpacityVal">${Math.round(gm570_.borderOpacity*100)}%</span></label>
+      </div>
+
+      <div style="display:flex;gap:7px;align-items:end;flex-wrap:wrap;padding-top:5px;border-top:1px solid rgba(255,255,255,.08)">
+        <strong style="align-self:center;color:#ffd54a">Formas</strong>
+        <button class="btn-small" onclick="gm570ShapeTool_('retangulo')">▭ Retângulo</button>
+        <button class="btn-small" onclick="gm570ShapeTool_('arredondado')">▢ Retângulo arredondado</button>
+        <button class="btn-small" onclick="gm570ShapeTool_('quadrado')">□ Quadrado</button>
+        <button class="btn-small" onclick="gm570ShapeTool_('triangulo')">△ Triângulo</button>
+        <button class="btn-small" onclick="gm570ShapeTool_('circulo')">○ Círculo</button>
+        <button class="btn-small" onclick="gm570ShapeTool_('elipse')">⬭ Elipse</button>
+        <label style="margin:0"><small>Outras formas</small><select id="gm570OtherShape" onchange="if(this.value){gm570ShapeTool_(this.value);this.value=''}" style="margin:3px 0 0"><option value="">— escolher —</option>${otherShapes.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></label>
+        <label style="margin:0"><small>Linhas</small><select id="gm570LineType" onchange="gm570LineTool_(this.value)" style="margin:3px 0 0">
+          <option value="">— escolher —</option><option value="linha">Linha reta</option><option value="linha_sinuosa">Linha sinuosa</option><option value="linha_pontilhada">Linha pontilhada</option><option value="linha_curva">Linha com ponto de curva</option>
+        </select></label>
+      </div>
+
+      <div style="display:flex;gap:7px;align-items:end;flex-wrap:wrap;padding-top:5px;border-top:1px solid rgba(255,255,255,.08)">
+        <strong style="align-self:center;color:#cfeeff">Objetos do banco</strong>
+        <select id="gm570ObjMulti" multiple size="4" style="min-width:280px;max-width:420px"></select>
+        <button class="btn-small" onclick="gm570AddObjects_()">＋ Adicionar selecionados</button>
+        <span style="font-size:.82em;color:#9fb4c8">Ctrl/⌘ para múltipla seleção</span>
+      </div>
+
+      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;padding-top:5px;border-top:1px solid rgba(255,255,255,.08)">
+        <button id="gm570EditBtn" class="btn-small" onclick="gm570ToggleEdit_()">✥ Editar forma</button>
+        <button class="btn-small" onclick="gm570Front_()">⬆ Frente</button>
+        <button class="btn-small" onclick="gm570Back_()">⬇ Trás</button>
+        <button class="btn-small" onclick="gm570Duplicate_()">⧉ Duplicar</button>
+        <button class="btn-small btn-danger" onclick="gm570Delete_()">🗑 Excluir</button>
+        <span style="font-size:.82em;color:#9fb4c8">Ctrl + arrastar move • Ctrl+C / Ctrl+V copia e cola • Ctrl+V também aceita imagem externa</span>
+      </div>
+      <div id="gm570Inspector" style="display:flex;gap:7px;align-items:end;flex-wrap:wrap"></div>
+      <div id="gmVet490Inspector" style="display:none"></div>
+      <select id="gmOficinaV2Objeto" style="display:none"></select>
+      <select id="gmOficinaV2Tool" style="display:none"><option value="traco">Traço</option></select>
+      <select id="gmOficinaV2StrokeStyle" style="display:none"><option value="redondo">redondo</option></select>
+    </div>`;
+}
+function gm570BuildUI_(){
+    const root=document.getElementById('gm-sub-oficina-mapas'), viewport=document.getElementById('gmOficinaV2Viewport');
+    if(!root||!viewport)return;
+    const old=document.getElementById('gm570Toolbar');if(old)old.remove();
+    viewport.insertAdjacentHTML('beforebegin',gm570ToolbarHtml_());
+    const legacy=document.getElementById('gmVet490Tools');if(legacy)legacy.style.display='none';
+    gm570PopulateObjects_();gm570Sync_();
+}
+function gm570PopulateObjects_(){
+    const sel=document.getElementById('gm570ObjMulti');if(!sel)return;
+    const selected=new Set([...sel.selectedOptions].map(o=>o.value));
+    const lista=[...(objetosMapaDB||[])].sort((a,b)=>String(a.nome||'').localeCompare(String(b.nome||''),'pt-BR'));
+    sel.innerHTML=lista.map(o=>`<option value="${gm570Esc_(o.id)}">${gm570Esc_(o.nome||o.id)}</option>`).join('');
+    [...sel.options].forEach(o=>{if(selected.has(o.value))o.selected=true;});
+}
+function gm570Sync_(){
+    const set=(id,val,prop='value')=>{const e=document.getElementById(id);if(e&&document.activeElement!==e)e[prop]=val;};
+    set('gmOficinaV2Color',gm570Hex_(gmOficinaV2Cfg_.cor||'#FFCF4D'));
+    set('gmOficinaV2HexInput555',gm570Hex_(gmOficinaV2Cfg_.cor||'#FFCF4D'));
+    set('gmOficinaV2Rgb',gm570Rgb_(gmOficinaV2Cfg_.cor||'#FFCF4D').join('/'));
+    set('gmOficinaV2BrushSize',gmOficinaV2Cfg_.tamanho);
+    const bsv=document.getElementById('gmOficinaV2BrushSizeVal');if(bsv)bsv.textContent=String(gmOficinaV2Cfg_.tamanho);
+    set('gmOficinaV2Opacity',Math.round(gmOficinaV2Cfg_.opacidade*100));
+    const opv=document.getElementById('gmOficinaV2OpacityVal');if(opv)opv.textContent=`${Math.round(gmOficinaV2Cfg_.opacidade*100)}%`;
+    set('gm570BorderColor',gm570_.borderColor);set('gm570BorderHex',gm570_.borderColor);set('gm570BorderRgb',gm570Rgb_(gm570_.borderColor).join('/'));
+    set('gm570BorderWidth',gm570_.borderWidth);const bw=document.getElementById('gm570BorderWidthVal');if(bw)bw.textContent=String(gm570_.borderWidth);
+    set('gm570BorderOpacity',Math.round(gm570_.borderOpacity*100));const bo=document.getElementById('gm570BorderOpacityVal');if(bo)bo.textContent=`${Math.round(gm570_.borderOpacity*100)}%`;
+    const sc=document.getElementById('gmOficinaV2Scale');if(sc)sc.value=String(gmOficinaV2Ppm_());
+    const size=document.getElementById('gmOficinaV2Size');if(size){const v=`${gmOficinaEstado_.larguraM}x${gmOficinaEstado_.alturaM}`;if([...size.options].some(o=>o.value===v))size.value=v;}
+    const f=document.getElementById('gmOficinaV2Fundo');if(f)f.value=gmOficinaEstado_.fundo||'#d7d7d7';
+    const g=document.getElementById('gmOficinaV2GradeCor');if(g)g.value=gmOficinaEstado_.corGrade||'#777';
+    const gv=document.getElementById('gmOficinaV2GradeVis');if(gv)gv.checked=gmOficinaEstado_.gradeVisivel!==false;
+    const tr=document.getElementById('gmOficinaV2Terreno');if(tr)tr.value=gmOficinaEstado_.textura||'nenhuma';
+    try{gmOficinaV2Preview550_();}catch(_){}
+}
+window.gm570Color_=function(v){gmOficinaV2Cfg_.cor=gm570Hex_(v,gmOficinaV2Cfg_.cor);gm570Sync_();};
+window.gm570RgbInput_=function(v){const h=gm570RgbHex_(v);if(h)gm570Color_(h);};
+window.gm570BorderColor_=function(v){gm570_.borderColor=gm570Hex_(v,gm570_.borderColor);gm570Sync_();};
+window.gm570BorderRgb_=function(v){const h=gm570RgbHex_(v);if(h)gm570BorderColor_(h);};
+
+// ---------- PINCÉIS ----------
+function gm570BrushConfig_(v){
+    const x=String(v||'redondo');
+    gmOficinaV2Cfg_.ferramenta=x==='borracha'?'borracha':'traco';
+    gmOficinaV2Cfg_.pincel=['quadrado','spray','irregular','caligrafico'].includes(x)?x:'redondo';
+    gmOficinaV2Cfg_.texturaTraco=['pontilhada','giz','ranhura','areia','cascalho','grama','folhas','neve','fumaca'].includes(x)?x:'solida';
+    gmOficinaV2Cfg_.estilo570=x;
+}
+window.gm570Brush_=function(v){
+    gm570_.mode='brush';gm570BrushConfig_(v);gmOficinaV2Cfg_.ativo=true;
+    gm570_.edit=false;gm570Sync_();gm570Render_();
+};
+const gmOficinaV2BrushSize570Base_=window.gmOficinaV2BrushSize_;
+window.gmOficinaV2BrushSize_=function(v){gmOficinaV2Cfg_.tamanho=Math.max(1,Math.min(100,Number(v)||7));gm570Sync_();};
+const gmOficinaV2Opacity570Base_=window.gmOficinaV2Opacity_;
+window.gmOficinaV2Opacity_=function(v){gmOficinaV2Cfg_.opacidade=Math.max(0,Math.min(1,Number(v)/100));gm570Sync_();};
+
+// ---------- FORMAS E LINHAS ----------
+function gm570PrepareShape_(){
+    gm570_.mode='shape';gmOficinaV2Cfg_.ativo=false;
+    gmVet490_.stroke=gm570_.borderColor;
+    gmVet490_.fill=gmOficinaV2Cfg_.cor;
+    gmVet490_.opacity=gmOficinaV2Cfg_.opacidade;
+    gmVet490_.strokeWidth=gm570_.borderWidth;
+}
+window.gm570ShapeTool_=function(tipo){
+    gm570PrepareShape_();
+    gmVet490Tool_(tipo);
+    gmVetSelectAtivo501_=true;
+    try{gmVet501AtualizarCamadas_();}catch(_){}
+};
+window.gm570LineTool_=function(tipo){
+    if(!tipo)return;
+    gm570PrepareShape_();gm570_.lineType=tipo;
+    gmVet490Tool_(tipo==='linha'?'linha':tipo);
+};
+
+function gm570Poly_(tipo,x,y,w,h){
+    const cx=x+w/2,cy=y+h/2;
+    const pts=(n,shift=-Math.PI/2,r2=null)=>{
+        const a=[];const count=r2?n*2:n;
+        for(let i=0;i<count;i++){
+            const a0=shift+i*Math.PI*2/count;
+            const rr=r2?(i%2===0?1:r2):1;
+            a.push(`${cx+Math.cos(a0)*w/2*rr},${cy+Math.sin(a0)*h/2*rr}`);
+        }return a.join(' ');
+    };
+    if(tipo==='pentagono')return pts(5);
+    if(tipo==='losango')return `${cx},${y} ${x+w},${cy} ${cx},${y+h} ${x},${cy}`;
+    if(tipo==='pentagrama'||tipo==='estrela')return pts(5,-Math.PI/2,.43);
+    if(tipo==='heptagrama')return pts(7,-Math.PI/2,.48);
+    if(tipo==='hexagono')return pts(6);
+    return '';
+}
+function gm570ExtraShapeSvg_(f,ppm){
+    const op=gmVet530Opacidades_(f),stroke=f.stroke||gm570_.borderColor,fill=f.fill||gmOficinaV2Cfg_.cor;
+    const sw=Math.max(0,Number(f.strokeWidth??0))*gm554Zoom_();
+    const x=Number(f.x||0)*ppm,y=Number(f.y||0)*ppm,w=Number(f.w||0)*ppm,h=Number(f.h||0)*ppm,cx=x+w/2,cy=y+h/2,rot=Number(f.rot||0);
+    const id=String(f.id).replace(/'/g,"\\'"),common=`stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${sw}" fill="${fill}" fill-opacity="${op.fill}" transform="rotate(${rot} ${cx} ${cy})" data-vet-id="${gm570Esc_(f.id)}" onpointerdown="gm570ShapeDown_(event,'${id}')"`;
+    if(['hexagono','pentagono','losango','estrela','pentagrama','heptagrama'].includes(f.tipo)){
+        if(f.tipo==='hexagrama'){
+            const p1=gm570Poly_('triangulo',x,y,w,h); // fallback below
+        }
+        return `<polygon points="${gm570Poly_(f.tipo,x,y,w,h)}" ${common}/>`;
+    }
+    if(f.tipo==='hexagrama'){
+        const pA=`${cx},${y} ${x+w},${y+h*.75} ${x},${y+h*.75}`;
+        const pB=`${cx},${y+h} ${x+w},${y+h*.25} ${x},${y+h*.25}`;
+        return `<g ${common.replace(/fill="[^"]*"/,'fill="none"')}><polygon points="${pA}" fill="${fill}" fill-opacity="${op.fill}"/><polygon points="${pB}" fill="${fill}" fill-opacity="${op.fill}"/></g>`;
+    }
+    if(f.tipo==='u'){
+        const t=Math.max(2,Math.min(Math.abs(w),Math.abs(h))*.22);
+        const p=`${x},${y} ${x+t},${y} ${x+t},${y+h-t} ${x+w-t},${y+h-t} ${x+w-t},${y} ${x+w},${y} ${x+w},${y+h} ${x},${y+h}`;
+        return `<polygon points="${p}" ${common}/>`;
+    }
+    if(f.tipo==='coracao'){
+        const d=`M ${cx} ${y+h*.92} C ${x+w*.05} ${y+h*.52}, ${x+w*.05} ${y+h*.12}, ${cx} ${y+h*.34} C ${x+w*.95} ${y+h*.12}, ${x+w*.95} ${y+h*.52}, ${cx} ${y+h*.92} Z`;
+        return `<path d="${d}" ${common}/>`;
+    }
+    if(f.tipo==='semicirculo'){
+        const d=`M ${x} ${y+h} A ${Math.abs(w)/2} ${Math.abs(h)} 0 0 1 ${x+w} ${y+h} L ${x} ${y+h} Z`;
+        return `<path d="${d}" ${common}/>`;
+    }
+    if(f.tipo==='meialua'){
+        const d=`M ${x+w*.78} ${y+h*.05} A ${w*.48} ${h*.48} 0 1 0 ${x+w*.78} ${y+h*.95} A ${w*.38} ${h*.42} 0 0 1 ${x+w*.78} ${y+h*.05} Z`;
+        return `<path d="${d}" ${common}/>`;
+    }
+    return '';
+}
+function gm570LineSvg_(f,ppm){
+    const op=gmVet530Opacidades_(f),stroke=f.stroke||gm570_.borderColor,sw=Math.max(1,Number(f.strokeWidth||gmOficinaV2Cfg_.tamanho))*gm554Zoom_();
+    const x1=Number(f.x||0)*ppm,y1=Number(f.y||0)*ppm,x2=Number(f.x2??f.x)*ppm,y2=Number(f.y2??f.y)*ppm;
+    const id=String(f.id).replace(/'/g,"\\'"),sel=gm570_.selected.type==='shape'&&String(gm570_.selected.id)===String(f.id);
+    const common=`fill="none" stroke="${stroke}" stroke-opacity="${op.stroke}" stroke-width="${sw}" stroke-linecap="round" data-vet-id="${gm570Esc_(f.id)}" onpointerdown="gm570ShapeDown_(event,'${id}')"`;
+    if(f.tipo==='linha_pontilhada')return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${common} stroke-dasharray="${sw*.3} ${sw*1.8}"/>`;
+    if(f.tipo==='linha_sinuosa'){
+        const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L,parts=10,amp=Math.min(18,L*.07);
+        let d=`M ${x1} ${y1}`;
+        for(let i=1;i<=parts;i++){const t=i/parts,off=Math.sin(t*Math.PI*6)*amp;d+=` L ${x1+dx*t+nx*off} ${y1+dy*t+ny*off}`;}
+        return `<path d="${d}" ${common}/>`;
+    }
+    if(f.tipo==='linha_curva'){
+        const mx=Number(f.cx??((Number(f.x||0)+Number(f.x2??f.x))/2))*ppm,my=Number(f.cy??((Number(f.y||0)+Number(f.y2??f.y))/2))*ppm;
+        return `<path d="M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}" ${common}/>`;
+    }
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${common}/>`;
+}
+
+// Criação de formas customizadas.
+const gmVet490PointerCanvas570Base_=gmVet490PointerCanvas_;
+gmVet490PointerCanvas_=function(ev){
+    const tipo=String(gmVet490_.tool||'');
+    const customs=['hexagono','pentagono','losango','estrela','pentagrama','hexagrama','heptagrama','u','coracao','meialua','semicirculo','linha_sinuosa','linha_pontilhada','linha_curva'];
+    if(!customs.includes(tipo))return gmVet490PointerCanvas570Base_(ev);
+    ev.preventDefault();ev.stopPropagation();gmVet490Hist_();
+    const svg=ev.currentTarget,r=svg.getBoundingClientRect(),ppm=gmVet490Ppm_();
+    const point=e=>({x:gmVet490Clamp_((e.clientX-r.left)/ppm,0,gmOficinaEstado_.larguraM),y:gmVet490Clamp_((e.clientY-r.top)/ppm,0,gmOficinaEstado_.alturaM)});
+    const p0=point(ev),id=gm570Id_('vet');
+    const line=tipo.startsWith('linha_');
+    const f={id,tipo,x:p0.x,y:p0.y,w:.1,h:.1,x2:p0.x+.1,y2:p0.y+.1,rot:0,
+      stroke:gm570_.borderWidth>0?gm570_.borderColor:gmOficinaV2Cfg_.cor,
+      fill:gmOficinaV2Cfg_.cor,strokeWidth:line?Math.max(1,gmOficinaV2Cfg_.tamanho):gm570_.borderWidth,
+      strokeOpacity:line?gmOficinaV2Cfg_.opacidade:gm570_.borderOpacity,fillOpacity:gmOficinaV2Cfg_.opacidade,
+      opacity:1,ordemOficina:Date.now(),radius:.25};
+    gmVet490Formas_().push(f);gmVet490Criando_=f;gm570Select_('shape',id);
+    const move=e=>{const p=point(e);if(line){f.x2=p.x;f.y2=p.y;if(tipo==='linha_curva'){f.cx=(p0.x+p.x)/2;f.cy=(p0.y+p.y)/2-.5;}}else{f.w=p.x-f.x;f.h=p.y-f.y;}gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmVet490Criando_=null;gmVet490_.tool='select';gmOficinaPersistir_();gm570Render_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+
+// Após criação de formas normais, sincroniza propriedades compartilhadas.
+const gmVet490Tool570Base_=gmVet490Tool_;
+gmVet490Tool_=function(tool){
+    gm570PrepareShape_();
+    return gmVet490Tool570Base_(tool);
+};
+
+// ---------- DESENHOS COMO ELEMENTOS DA MESMA PILHA ----------
+function gm570DrawStroke_(ctx,st,ppm,ox=0,oy=0){
+    const pts=(st.pts||[]).map(p=>({x:p.x*ppm-ox,y:p.y*ppm-oy}));
+    if(!pts.length)return;
+    const z=gm554Zoom_(),base=Math.max(1,Number(st.size||7)),size=base*z,color=st.color||'#000',alpha=Math.max(0,Math.min(1,Number(st.opacity??1)));
+    const style=st.estilo570||st.brush||st.texture||'redondo';
+    ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineCap='round';ctx.lineJoin='round';
+
+    const path=(lw=size,jitter=0)=>{
+        ctx.lineWidth=lw;ctx.beginPath();
+        pts.forEach((p,i)=>{let x=p.x,y=p.y;if(jitter){x+=(labDesenhoRand_(i*71+3)-.5)*jitter;y+=(labDesenhoRand_(i*53+9)-.5)*jitter;}i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
+        if(pts.length===1)ctx.lineTo(pts[0].x+.1,pts[0].y+.1);ctx.stroke();
+    };
+    if(style==='giz'){ // usa algoritmo de giz restaurado
+        const mpts=(st.pts||[]).map(p=>({x:p.x-ox/ppm,y:p.y-oy/ppm}));
+        gm555Giz_(ctx,mpts,size,color,ppm,base);
+    }else if(style==='spray'){
+        for(let i=0;i<pts.length;i+=1){const p=pts[i],n=Math.max(5,Math.round(base*.9));for(let k=0;k<n;k++){const a=labDesenhoRand_(i*97+k*13)*Math.PI*2,r=Math.sqrt(labDesenhoRand_(i*193+k*29))*size*.75;ctx.globalAlpha=alpha*(.25+.45*labDesenhoRand_(i*17+k));ctx.beginPath();ctx.arc(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r,Math.max(.5,size*.04),0,Math.PI*2);ctx.fill();}}
+    }else if(style==='quadrado'){
+        for(const p of pts)ctx.fillRect(p.x-size/2,p.y-size/2,size,size);
+    }else if(style==='caligrafico'){ctx.lineCap='butt';path(Math.max(1,size*.38));}
+    else if(style==='caneta'){path(Math.max(1,size*.32));}
+    else if(style==='lapis'){ctx.globalAlpha*=.55;path(Math.max(1,size*.26),size*.08);path(Math.max(.6,size*.12),size*.16);}
+    else if(style==='serpentina'){
+        if(pts.length>1){ctx.lineWidth=Math.max(1,size*.35);ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++){const p=pts[i],q=pts[i-1],dx=p.x-q.x,dy=p.y-q.y,L=Math.hypot(dx,dy)||1,off=Math.sin(i*.9)*size*.45;ctx.lineTo(p.x-dy/L*off,p.y+dx/L*off);}ctx.stroke();}
+    }else if(style==='seta'){path(Math.max(1,size*.35));if(pts.length>1){const a=pts[pts.length-1],b=pts[Math.max(0,pts.length-4)],ang=Math.atan2(a.y-b.y,a.x-b.x),r=size*.9;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(a.x-Math.cos(ang-.55)*r,a.y-Math.sin(ang-.55)*r);ctx.moveTo(a.x,a.y);ctx.lineTo(a.x-Math.cos(ang+.55)*r,a.y-Math.sin(ang+.55)*r);ctx.stroke();}}
+    else if(style==='curso'){ctx.lineWidth=Math.max(1,size*.28);ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length-1;i++){const mx=(pts[i].x+pts[i+1].x)/2,my=(pts[i].y+pts[i+1].y)/2;ctx.quadraticCurveTo(pts[i].x,pts[i].y,mx,my);}ctx.stroke();}
+    else if(style==='giz_cera'){ctx.globalAlpha*=.65;path(size*.72,size*.05);ctx.globalAlpha*=.6;path(size*.35,size*.16);}
+    else if(style==='carimbo'){for(let i=0;i<pts.length;i+=Math.max(1,Math.round(base/3))){const p=pts[i];ctx.globalAlpha=alpha*.85;ctx.beginPath();ctx.arc(p.x,p.y,size*.36,0,Math.PI*2);ctx.fill();}}
+    else if(style==='pele'){for(let i=0;i<pts.length;i+=2){const p=pts[i];for(let k=0;k<5;k++){const a=(-1.7+labDesenhoRand_(i*11+k)*.9),r=size*(.45+.45*labDesenhoRand_(i*19+k));ctx.globalAlpha=alpha*.45;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+Math.cos(a)*r,p.y+Math.sin(a)*r);ctx.stroke();}}}
+    else if(style==='esboco'){ctx.globalAlpha*=.35;for(let k=0;k<4;k++)path(Math.max(.6,size*.16),size*.28);}
+    else if(style==='espirografo'){for(let i=0;i<pts.length;i+=4){const p=pts[i];ctx.globalAlpha=alpha*.28;ctx.beginPath();ctx.ellipse(p.x,p.y,size*.45,size*.18,i*.37,0,Math.PI*2);ctx.stroke();}}
+    else if(style==='teia'){ctx.globalAlpha*=.35;path(Math.max(.6,size*.12));for(let i=6;i<pts.length;i+=7){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[Math.max(0,i-6)].x,pts[Math.max(0,i-6)].y);ctx.stroke();}}
+    else if(style==='pontilhada'){for(let i=0;i<pts.length;i+=3){const p=pts[i];ctx.beginPath();ctx.arc(p.x,p.y,Math.max(.6,size*.18),0,Math.PI*2);ctx.fill();}}
+    else if(['ranhura','areia','cascalho','grama','folhas','neve','fumaca'].includes(style)){
+        // Usa a rotina procedural existente.
+        const orig=(st.pts||[]).map(p=>({x:p.x-ox/ppm,y:p.y-oy/ppm}));
+        labDesenhoAplicarTextura_(ctx,style,orig,0,size,color,ppm,'redondo');
+    }else if(style==='espelhado'){
+        path(size);ctx.save();ctx.translate((gmOficinaEstado_.larguraM*ppm)-2*ox,0);ctx.scale(-1,1);path(size);ctx.restore();
+    }else if(style==='irregular'){path(size,size*.35);}
+    else path(size);
+    ctx.restore();
+}
+function gm570StrokeRaster_(st,ppm){
+    const pts=st.pts||[];if(!pts.length)return null;
+    const pad=Math.max(12,(Number(st.size||7)*gm554Zoom_())*2.2);
+    const xs=pts.map(p=>p.x*ppm),ys=pts.map(p=>p.y*ppm);
+    const minX=Math.max(0,Math.min(...xs)-pad),minY=Math.max(0,Math.min(...ys)-pad);
+    const maxX=Math.min(gmOficinaEstado_.larguraM*ppm,Math.max(...xs)+pad),maxY=Math.min(gmOficinaEstado_.alturaM*ppm,Math.max(...ys)+pad);
+    const w=Math.max(2,Math.ceil(maxX-minX)),h=Math.max(2,Math.ceil(maxY-minY));
+    const last=pts[pts.length-1],key=`${st.id}:${ppm}:${st.size}:${st.color}:${st.opacity}:${st.estilo570||st.brush||st.texture}:${pts.length}:${last.x.toFixed(3)}:${last.y.toFixed(3)}`;
+    const c=gm570_.strokeCache.get(key);if(c)return c;
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;const ctx=cv.getContext('2d');
+    gm570DrawStroke_(ctx,st,ppm,minX,minY);
+    const out={href:cv.toDataURL('image/png'),x:minX,y:minY,w,h};
+    if(gm570_.strokeCache.size>120)gm570_.strokeCache.clear();
+    gm570_.strokeCache.set(key,out);return out;
+}
+function gm570EraserMask_(ppm,w,h){
+    const er=(gmOficinaEstado_.desenhos||[]).filter(d=>(d.estilo570||d.tool)==='borracha'||d.tool==='borracha');
+    if(!er.length)return '';
+    return `<mask id="gm570EraserMask"><rect x="0" y="0" width="${w}" height="${h}" fill="white"/>${er.map(st=>{
+        const pts=st.pts||[];if(!pts.length)return '';
+        const d=pts.map((p,i)=>`${i?'L':'M'} ${p.x*ppm} ${p.y*ppm}`).join(' ');
+        return `<path d="${d}" fill="none" stroke="black" stroke-width="${Math.max(1,Number(st.size||7)*gm554Zoom_())}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }).join('')}</mask>`;
+}
+function gm570DrawSvg_(d,ppm){
+    if((d.estilo570||d.tool)==='borracha'||d.tool==='borracha')return '';
+    const r=gm570StrokeRaster_(d,ppm);if(!r)return '';
+    const id=String(d.id).replace(/'/g,"\\'"),sel=gm570_.selected.type==='draw'&&String(gm570_.selected.id)===String(d.id);
+    const sh=gm553ShadowCss_(d);
+    return `<g data-draw-id="${gm570Esc_(d.id)}" onpointerdown="gm570DrawDown_(event,'${id}')" style="pointer-events:auto;cursor:default;${sh?`filter:${sh};`:''}">
+      <image href="${r.href}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" opacity="1" mask="url(#gm570EraserMask)"/>
+      ${sel?`<rect x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" fill="none" stroke="#41d9f5" stroke-width="1.2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke" pointer-events="none"/>`:''}
+    </g>`;
+}
+
+// Nova gravação: cada traço recebe id + ordem + estilo.
+window.gmOficinaV2PointerDown_=function(ev){
+    if(!gmOficinaV2Cfg_.ativo||ev.button===2)return;
+    ev.preventDefault();ev.stopPropagation();gmOficinaV2Historico_();
+    const cv=document.getElementById('gmOficinaV2Canvas'),rect=cv.getBoundingClientRect(),ppm=gmOficinaV2Ppm_();
+    const point=e=>({x:Math.max(0,Math.min(gmOficinaEstado_.larguraM,(e.clientX-rect.left)/ppm)),y:Math.max(0,Math.min(gmOficinaEstado_.alturaM,(e.clientY-rect.top)/ppm))});
+    gmOficinaV2Stroke_={id:gm570Id_('draw'),ordemOficina:Date.now(),tool:gmOficinaV2Cfg_.ferramenta,color:gmOficinaV2Cfg_.cor,size:gmOficinaV2Cfg_.tamanho,opacity:gmOficinaV2Cfg_.opacidade,brush:gmOficinaV2Cfg_.pincel,texture:gmOficinaV2Cfg_.texturaTraco,estilo570:gmOficinaV2Cfg_.estilo570||'redondo',pts:[point(ev)]};
+    gmOficinaEstado_.desenhos.push(gmOficinaV2Stroke_);
+    const move=e=>{const p=point(e),last=gmOficinaV2Stroke_.pts.at(-1),dx=(p.x-last.x)*ppm,dy=(p.y-last.y)*ppm;if(dx*dx+dy*dy<2.2)return;gmOficinaV2Stroke_.pts.push(p);gm570_.strokeCache.clear();gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaV2Stroke_=null;gmOficinaPersistir_();gm570Render_();gmOficinaV2Status_();};
+    window.addEventListener('pointermove',move,{passive:false});window.addEventListener('pointerup',up,{once:true});
+};
+
+// O canvas antigo vira apenas superfície de captura; não pinta conteúdo final.
+gmOficinaV2DesenharCanvas_=function(){
+    const cv=document.getElementById('gmOficinaV2Canvas');if(!cv)return;
+    const ppm=gmOficinaV2Ppm_(),w=Math.round(gmOficinaEstado_.larguraM*ppm),h=Math.round(gmOficinaEstado_.alturaM*ppm);
+    if(cv.width!==w)cv.width=w;if(cv.height!==h)cv.height=h;
+    cv.getContext('2d').clearRect(0,0,w,h);
+};
+
+// ---------- RENDER UNIFICADO ----------
+function gm570ObjectSvg_(o,ppm){
+    const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(o.modeloId)),img=o.imagem||m?.imagem||'';
+    const w=Math.max(.05,Number(o.larguraM||1))*ppm,h=Math.max(.05,Number(o.alturaM||1))*ppm,x=Number(o.x||0)*ppm-w/2,y=Number(o.y||0)*ppm-h/2,cx=x+w/2,cy=y+h/2;
+    const id=String(o.id).replace(/'/g,"\\'"),rot=Number(o.angulo||0),sel=gm570_.selected.type==='object'&&String(gm570_.selected.id)===String(o.id),sh=gm553ShadowCss_(o);
+    return `<g data-of2="${gm570Esc_(o.id)}" transform="rotate(${rot} ${cx} ${cy})" onpointerdown="gm570ObjectDown_(event,'${id}')" style="pointer-events:auto;cursor:default;${sh?`filter:${sh};`:''}">
+      ${img?`<image href="${gm570Esc_(img)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" opacity="1"/>`:`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#777"/>`}
+      ${sel?`<rect x="${x-2}" y="${y-2}" width="${w+4}" height="${h+4}" fill="none" stroke="#41d9f5" stroke-width="1.2" stroke-dasharray="6 4" vector-effect="non-scaling-stroke"/>`:''}
+    </g>`;
+}
+function gm570BaseShapeSvg_(f,ppm){
+    if(f.tipo.startsWith('linha'))return gm570LineSvg_(f,ppm);
+    const extra=gm570ExtraShapeSvg_(f,ppm);if(extra)return extra;
+    // força evento novo no SVG já produzido
+    let h=gmVet490SvgEl_(f,ppm);
+    const id=String(f.id).replace(/'/g,"\\'");
+    h=h.replace(/onpointerdown="[^"]*"/,`onpointerdown="gm570ShapeDown_(event,'${id}')"`);
+    return h;
+}
+function gm570Handles_(f,ppm){
+    if(!f||f.tipo.startsWith('linha')){
+        if(f?.tipo==='linha_curva'&&gm570_.edit){
+            const cx=Number(f.cx??((Number(f.x)+Number(f.x2))/2))*ppm,cy=Number(f.cy??((Number(f.y)+Number(f.y2))/2))*ppm;
+            return `<circle cx="${cx}" cy="${cy}" r="7" fill="#fff" stroke="#19cfe8" stroke-width="2" onpointerdown="gm570CurveHandle_(event,'${String(f.id).replace(/'/g,"\\'")}')" style="cursor:move"/>`;
+        }
+        return '';
+    }
+    const x=Number(f.x||0)*ppm,y=Number(f.y||0)*ppm,w=Number(f.w||0)*ppm,h=Number(f.h||0)*ppm,cx=x+w/2,cy=y+h/2;
+    let out=`<line x1="${cx}" y1="${y}" x2="${cx}" y2="${y-28}" stroke="#19cfe8" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
+      <circle cx="${cx}" cy="${y-32}" r="7" fill="#fff" stroke="#19cfe8" stroke-width="2" onpointerdown="gm570RotateHandle_(event,'${String(f.id).replace(/'/g,"\\'")}')" style="cursor:grab"/>`;
+    if(gm570_.edit){
+        const hs=[['nw',x,y],['n',cx,y],['ne',x+w,y],['e',x+w,cy],['se',x+w,y+h],['s',cx,y+h],['sw',x,y+h],['w',x,cy]];
+        out+=hs.map(q=>`<circle cx="${q[1]}" cy="${q[2]}" r="6" fill="#fff" stroke="#19cfe8" stroke-width="2" onpointerdown="gm570ResizeHandle_(event,'${String(f.id).replace(/'/g,"\\'")}','${q[0]}')" style="cursor:nwse-resize"/>`).join('');
+        if(f.tipo==='arredondado'||f.tipo==='retangulo'){
+            const rr=Math.max(0,Number(f.radius||0))*ppm;
+            out+=`<circle cx="${x+Math.min(Math.abs(w)/2,rr+12)}" cy="${y+12}" r="6" fill="#ffd54a" stroke="#222" stroke-width="1.5" onpointerdown="gm570RadiusHandle_(event,'${String(f.id).replace(/'/g,"\\'")}')" style="cursor:ew-resize"/>`;
+        }
+    }
+    return out;
+}
+function gm570Render_(){
+    const map=document.getElementById('gmOficinaV2Map');if(!map)return;
+    gm570EnsureOrder_();
+    let svg=document.getElementById('gmOficinaVectorLayer');
+    if(!svg){svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.id='gmOficinaVectorLayer';map.appendChild(svg);}
+    const ppm=gmOficinaV2Ppm_(),w=gmOficinaEstado_.larguraM*ppm,h=gmOficinaEstado_.alturaM*ppm;
+    svg.setAttribute('width',w);svg.setAttribute('height',h);svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    svg.style.cssText=`position:absolute;inset:0;width:${w}px;height:${h}px;z-index:8;pointer-events:auto;touch-action:none`;
+    svg.onpointerdown=gmVet490PointerCanvas_;
+    const defs=`<defs>${gm570EraserMask_(ppm,w,h)}</defs>`;
+    const items=gm570Items_().map(it=>it.type==='draw'?gm570DrawSvg_(it.ref,ppm):it.type==='shape'?gm570BaseShapeSvg_(it.ref,ppm):gm570ObjectSvg_(it.ref,ppm)).join('');
+    const sel=gm570SelectedRef_();
+    const handles=sel?.type==='shape'?gm570Handles_(sel.ref,ppm):'';
+    svg.innerHTML=defs+items+handles;
+
+    const cv=document.getElementById('gmOficinaV2Canvas');
+    if(cv){cv.style.zIndex='20';cv.style.pointerEvents=gmOficinaV2Cfg_.ativo?'auto':'none';cv.style.cursor=gmOficinaV2Cfg_.ativo?(gmOficinaV2Cfg_.ferramenta==='borracha'?'cell':'crosshair'):'default';}
+    const old=document.getElementById('gmOficinaV2Objects');if(old){old.style.display='none';old.innerHTML='';}
+    gm570Inspector_();
+}
+
+// Override renderers antigos.
+gmVet490Render_=gm570Render_;
+gmOficinaV2RenderObjetos_=gm570Render_;
+
+// ---------- SELEÇÃO, MOVIMENTO, EDIÇÃO ----------
+window.gm570ShapeDown_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();const f=gmVet490Forma_(id);if(!f)return;
+    gm570Select_('shape',id);
+    if(!ev.ctrlKey)return;
+    gmVet490Hist_();
+    const map=document.getElementById('gmOficinaV2Map'),r=map.getBoundingClientRect(),ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY;
+    const start={x:Number(f.x||0),y:Number(f.y||0),x2:Number(f.x2??f.x),y2:Number(f.y2??f.y),cx:Number(f.cx||0),cy:Number(f.cy||0)};
+    const move=e=>{const dx=(e.clientX-sx)/ppm,dy=(e.clientY-sy)/ppm;f.x=start.x+dx;f.y=start.y+dy;if(f.tipo.startsWith('linha')){f.x2=start.x2+dx;f.y2=start.y2+dy;if(f.tipo==='linha_curva'){f.cx=start.cx+dx;f.cy=start.cy+dy;}}gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+window.gm570ObjectDown_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();const o=(gmOficinaEstado_.objetos||[]).find(x=>String(x.id)===String(id));if(!o)return;
+    gm570Select_('object',id);if(!ev.ctrlKey)return;
+    gmOficinaV2Historico_();const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY,ox=Number(o.x||0),oy=Number(o.y||0);
+    const move=e=>{o.x=ox+(e.clientX-sx)/ppm;o.y=oy+(e.clientY-sy)/ppm;gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+window.gm570DrawDown_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();const d=(gmOficinaEstado_.desenhos||[]).find(x=>String(x.id)===String(id));if(!d)return;
+    gm570Select_('draw',id);if(!ev.ctrlKey)return;
+    gmOficinaV2Historico_();const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY,orig=(d.pts||[]).map(p=>({...p}));
+    const move=e=>{const dx=(e.clientX-sx)/ppm,dy=(e.clientY-sy)/ppm;d.pts=orig.map(p=>({x:p.x+dx,y:p.y+dy}));gm570_.strokeCache.clear();gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+window.gm570RotateHandle_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();const f=gmVet490Forma_(id);if(!f)return;
+    gmVet490Hist_();const map=document.getElementById('gmOficinaV2Map'),r=map.getBoundingClientRect(),ppm=gmOficinaV2Ppm_();
+    const cx=(Number(f.x||0)+Number(f.w||0)/2)*ppm+r.left,cy=(Number(f.y||0)+Number(f.h||0)/2)*ppm+r.top;
+    const move=e=>{f.rot=(Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI+90+360)%360;gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+window.gm570ResizeHandle_=function(ev,id,which){
+    ev.preventDefault();ev.stopPropagation();const f=gmVet490Forma_(id);if(!f)return;
+    gmVet490Hist_();const ppm=gmOficinaV2Ppm_(),sx=ev.clientX,sy=ev.clientY,st={x:Number(f.x),y:Number(f.y),w:Number(f.w),h:Number(f.h)};
+    const move=e=>{const dx=(e.clientX-sx)/ppm,dy=(e.clientY-sy)/ppm;
+      if(which.includes('e'))f.w=Math.max(.05,st.w+dx);
+      if(which.includes('s'))f.h=Math.max(.05,st.h+dy);
+      if(which.includes('w')){f.x=st.x+dx;f.w=Math.max(.05,st.w-dx);}
+      if(which.includes('n')){f.y=st.y+dy;f.h=Math.max(.05,st.h-dy);}
+      gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+window.gm570RadiusHandle_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();const f=gmVet490Forma_(id);if(!f)return;
+    gmVet490Hist_();const map=document.getElementById('gmOficinaV2Map'),r=map.getBoundingClientRect(),ppm=gmOficinaV2Ppm_(),x=Number(f.x)*ppm+r.left,max=Math.min(Math.abs(Number(f.w)),Math.abs(Number(f.h)))/2;
+    const move=e=>{f.radius=Math.max(0,Math.min(max,(e.clientX-x)/ppm));gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+window.gm570CurveHandle_=function(ev,id){
+    ev.preventDefault();ev.stopPropagation();const f=gmVet490Forma_(id);if(!f)return;
+    const map=document.getElementById('gmOficinaV2Map'),r=map.getBoundingClientRect(),ppm=gmOficinaV2Ppm_();
+    const move=e=>{f.cx=(e.clientX-r.left)/ppm;f.cy=(e.clientY-r.top)/ppm;gm570Render_();};
+    const up=()=>{window.removeEventListener('pointermove',move);gmOficinaPersistir_();};
+    window.addEventListener('pointermove',move,{passive:true});window.addEventListener('pointerup',up,{once:true});
+};
+window.gm570ToggleEdit_=function(){gm570_.edit=!gm570_.edit;const b=document.getElementById('gm570EditBtn');if(b)b.classList.toggle('btn-select',gm570_.edit);gm570Render_();};
+
+// ---------- AÇÕES COMUNS ----------
+function gm570MoveOrder_(dir){
+    const sel=gm570SelectedRef_();if(!sel)return;
+    const a=gm570Items_(),i=a.findIndex(x=>x.type===sel.type&&String(x.id)===String(sel.id)),j=Math.max(0,Math.min(a.length-1,i+dir));if(i<0||i===j)return;
+    const t=a[i].ref.ordemOficina;a[i].ref.ordemOficina=a[j].ref.ordemOficina;a[j].ref.ordemOficina=t;gmOficinaPersistir_();gm570Render_();
+}
+window.gm570Front_=()=>gm570MoveOrder_(1);
+window.gm570Back_=()=>gm570MoveOrder_(-1);
+window.gm570Duplicate_=function(){
+    const sel=gm570SelectedRef_();if(!sel)return;const cp=JSON.parse(JSON.stringify(sel.ref));cp.id=gm570Id_(sel.type);cp.ordemOficina=Date.now()+1;
+    if(sel.type==='shape'){cp.x=Number(cp.x||0)+.5;cp.y=Number(cp.y||0)+.5;if(cp.x2!=null){cp.x2+=.5;cp.y2+=.5;}gmVet490Formas_().push(cp);}
+    if(sel.type==='object'){cp.x=Number(cp.x||0)+.5;cp.y=Number(cp.y||0)+.5;(gmOficinaEstado_.objetos||[]).push(cp);}
+    if(sel.type==='draw'){cp.pts=(cp.pts||[]).map(p=>({x:p.x+.5,y:p.y+.5}));(gmOficinaEstado_.desenhos||[]).push(cp);}
+    gm570Select_(sel.type,cp.id);gmOficinaPersistir_();
+};
+window.gm570Delete_=function(){
+    const sel=gm570SelectedRef_();if(!sel)return;
+    if(sel.type==='shape')gmOficinaEstado_.formas=(gmVet490Formas_()||[]).filter(x=>String(x.id)!==String(sel.id));
+    if(sel.type==='object')gmOficinaEstado_.objetos=(gmOficinaEstado_.objetos||[]).filter(x=>String(x.id)!==String(sel.id));
+    if(sel.type==='draw')gmOficinaEstado_.desenhos=(gmOficinaEstado_.desenhos||[]).filter(x=>String(x.id)!==String(sel.id));
+    gm570_.selected={type:'',id:''};gm570_.strokeCache.clear();gmOficinaPersistir_();gm570Render_();
+};
+
+// ---------- MULTI-OBJETO ----------
+window.gm570AddObjects_=function(){
+    const sel=document.getElementById('gm570ObjMulti');if(!sel)return;
+    const ids=[...sel.selectedOptions].map(o=>o.value);if(!ids.length)return;
+    gmOficinaV2Historico_();
+    let n=0;
+    for(const id of ids){
+        const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(id));if(!m)continue;
+        const o={...JSON.parse(JSON.stringify(m)),id:gm570Id_('ofobj'),modeloId:m.id,x:gmOficinaEstado_.larguraM/2+(n%5)*.65,y:gmOficinaEstado_.alturaM/2+Math.floor(n/5)*.65,angulo:0,ordemOficina:Date.now()+n};
+        gmOficinaEstado_.objetos.push(o);n++;
+    }
+    gmOficinaPersistir_();gm570Render_();
+};
+
+// ---------- CLIPBOARD INTERNO + IMAGEM EXTERNA ----------
+function gm570CopySelected_(){
+    const s=gm570SelectedRef_();if(!s)return false;
+    gm570_.internalClipboard={type:s.type,data:JSON.parse(JSON.stringify(s.ref))};return true;
+}
+function gm570PasteInternal_(){
+    const c=gm570_.internalClipboard;if(!c)return false;
+    const d=JSON.parse(JSON.stringify(c.data));d.id=gm570Id_(c.type);d.ordemOficina=Date.now();
+    if(c.type==='shape'){d.x=Number(d.x||0)+.5;d.y=Number(d.y||0)+.5;if(d.x2!=null){d.x2+=.5;d.y2+=.5;}gmVet490Formas_().push(d);}
+    else if(c.type==='object'){d.x=Number(d.x||0)+.5;d.y=Number(d.y||0)+.5;gmOficinaEstado_.objetos.push(d);}
+    else {d.pts=(d.pts||[]).map(p=>({x:p.x+.5,y:p.y+.5}));gmOficinaEstado_.desenhos.push(d);}
+    gm570Select_(c.type,d.id);gmOficinaPersistir_();return true;
+}
+async function gm570AddClipboardImage_(file){
+    const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file);});
+    const dims=await new Promise(res=>{const im=new Image();im.onload=()=>res([im.naturalWidth||1,im.naturalHeight||1]);im.onerror=()=>res([1,1]);im.src=data;});
+    const base=3,ratio=dims[0]/dims[1],w=ratio>=1?base:base*ratio,h=ratio>=1?base/ratio:base;
+    const o={id:gm570Id_('ofobj'),nome:'Imagem colada',imagem:data,x:gmOficinaEstado_.larguraM/2,y:gmOficinaEstado_.alturaM/2,larguraM:Math.max(.4,w),alturaM:Math.max(.4,h),angulo:0,ordemOficina:Date.now(),sombraOficina:'nenhuma'};
+    gmOficinaEstado_.objetos.push(o);gm570Select_('object',o.id);gmOficinaPersistir_();
+}
+document.addEventListener('copy',e=>{
+    if(!document.getElementById('gmOficinaV2Map'))return;
+    if(gm570CopySelected_()){e.preventDefault();try{e.clipboardData.setData('text/plain','MesaEstelar:Object');}catch(_){}}
+});
+document.addEventListener('cut',e=>{
+    if(!document.getElementById('gmOficinaV2Map'))return;
+    if(gm570CopySelected_()){e.preventDefault();gm570Delete_();}
+});
+document.addEventListener('paste',e=>{
+    if(!document.getElementById('gmOficinaV2Map'))return;
+    const items=[...(e.clipboardData?.items||[])];
+    const img=items.find(i=>i.type?.startsWith('image/'));
+    if(img){e.preventDefault();const f=img.getAsFile();if(f)gm570AddClipboardImage_(f);return;}
+    if(gm570_.internalClipboard){e.preventDefault();gm570PasteInternal_();}
+});
+document.addEventListener('keydown',e=>{
+    if(!document.getElementById('gmOficinaV2Map'))return;
+    if((e.ctrlKey||e.metaKey)&&String(e.key).toLowerCase()==='d'){e.preventDefault();gm570Duplicate_();}
+    if(e.key==='Delete'&&document.activeElement?.tagName!=='INPUT'&&document.activeElement?.tagName!=='TEXTAREA'){e.preventDefault();gm570Delete_();}
+});
+
+// ---------- INSPECTOR + SOMBRA PRESERVADA ----------
+function gm570Inspector_(){
+    const box=document.getElementById('gm570Inspector');if(!box)return;
+    const sel=gm570SelectedRef_();
+    if(!sel){box.innerHTML='<span style="color:#9fb4c8">Selecione uma forma, desenho ou objeto. Segure Ctrl para arrastar.</span>';return;}
+    const x=sel.ref;
+    const hasShadow=sel.type!=='draw'||true;
+    box.innerHTML=`
+      <strong style="color:#ffd54a">${sel.type==='shape'?'Forma':sel.type==='object'?'Objeto':'Desenho'}: ${gm570Esc_(x.nome||x.tipo||'selecionado')}</strong>
+      <label style="margin:0"><small>Sombra</small><select onchange="gm570Shadow_('sombraOficina',this.value)">
+        ${['nenhuma','suave','media','forte'].map(v=>`<option value="${v}" ${String(x.sombraOficina||'nenhuma')===v?'selected':''}>${v==='media'?'média':v}</option>`).join('')}
+      </select></label>
+      <label style="margin:0"><small>Direção</small><select onchange="gm570Shadow_('sombraDirecao',this.value)">
+        ${['N','NE','E','SE','S','SO','O','NO'].map(v=>`<option ${String(x.sombraDirecao||'SE')===v?'selected':''}>${v}</option>`).join('')}
+      </select></label>
+      <label style="margin:0"><small>Distância</small><input type="number" min="1" max="30" value="${Number(x.sombraDist||4)}" onchange="gm570Shadow_('sombraDist',this.value)" style="width:70px"></label>
+      ${sel.type==='object'?`<label style="margin:0"><small>Rotação°</small><input type="number" value="${Number(x.angulo||0)}" onchange="gm570ObjectRot_(this.value)" style="width:76px"></label>`:''}
+      ${sel.type==='shape'&&!String(x.tipo).startsWith('linha')?`<label style="margin:0"><small>Rotação°</small><input type="number" value="${Number(x.rot||0)}" onchange="gm570ShapeRot_(this.value)" style="width:76px"></label>`:''}`;
+}
+window.gm570Shadow_=function(k,v){const s=gm570SelectedRef_();if(!s)return;s.ref[k]=k==='sombraDist'?Number(v):v;gmOficinaPersistir_();gm570Render_();};
+window.gm570ObjectRot_=function(v){const s=gm570SelectedRef_();if(s?.type==='object'){s.ref.angulo=Number(v)||0;gmOficinaPersistir_();gm570Render_();}};
+window.gm570ShapeRot_=function(v){const s=gm570SelectedRef_();if(s?.type==='shape'){s.ref.rot=Number(v)||0;gmOficinaPersistir_();gm570Render_();}};
+
+// ---------- PATCH DE CRIAÇÃO NORMAL ----------
+const gmVet490PointerCanvas571Base_=gmVet490PointerCanvas_;
+gmVet490PointerCanvas_=function(ev){
+    const before=new Set((gmVet490Formas_()||[]).map(x=>String(x.id)));
+    gmVet490PointerCanvas571Base_(ev);
+    setTimeout(()=>{
+        const novo=(gmVet490Formas_()||[]).find(x=>!before.has(String(x.id)));
+        if(novo){
+            novo.ordemOficina=Date.now();
+            novo.fill=gmOficinaV2Cfg_.cor;
+            novo.fillOpacity=gmOficinaV2Cfg_.opacidade;
+            novo.stroke=gm570_.borderColor;
+            novo.strokeOpacity=gm570_.borderOpacity;
+            novo.strokeWidth=gm570_.borderWidth;
+            novo.opacity=1;
+            if(novo.tipo==='linha'){novo.stroke=gmOficinaV2Cfg_.cor;novo.strokeOpacity=gmOficinaV2Cfg_.opacidade;novo.strokeWidth=Math.max(1,gmOficinaV2Cfg_.tamanho);}
+            gm570Select_('shape',novo.id);gmOficinaPersistir_();
+        }
+    },0);
+};
+
+// ---------- RENDER/INSTALAÇÃO ----------
+const gmOficinaRender570Base_=gmOficinaRender_;
+gmOficinaRender_=function(){
+    const r=gmOficinaRender570Base_();
+    try{
+        const root=document.getElementById('gm-sub-oficina-mapas'),view=document.getElementById('gmOficinaV2Viewport');
+        if(root&&view&&!document.getElementById('gm570Toolbar'))gm570BuildUI_();
+        const legacy=document.getElementById('gmVet490Tools');if(legacy)legacy.style.display='none';
+        gm570EnsureOrder_();gmOficinaV2DesenharCanvas_();gm570Render_();gm570PopulateObjects_();gm570Sync_();
+    }catch(e){console.warn('Oficina 46.57',e);}
+    return r;
+};
+
+// Esconde os controles antigos assim que a nova barra existir.
+const gmVet490InstalarUI570Base_=gmVet490InstalarUI_;
+gmVet490InstalarUI_=function(){
+    try{gmVet490InstalarUI570Base_();}catch(_){}
+    const p=document.getElementById('gmVet490Tools');if(p)p.style.display='none';
+    if(!document.getElementById('gm570Toolbar'))gm570BuildUI_();
+};
+
+// Novo mapa mantém os novos defaults.
+const gmOficinaV2Novo570Base_=window.gmOficinaV2Novo_;
+window.gmOficinaV2Novo_=function(){
+    gm570_.edit=false;gm570_.selected={type:'',id:''};gm570_.strokeCache.clear();
+    return gmOficinaV2Novo570Base_();
+};
+
+// Salvar encerra edição.
+const gmOficinaSalvar570Base_=window.gmOficinaSalvarComoMapa_;
+window.gmOficinaSalvarComoMapa_=async function(){
+    gm570_.edit=false;gm570_.selected={type:'',id:''};gm570Render_();
+    return gmOficinaSalvar570Base_();
+};
+
+// CSS
+if(!document.getElementById('gm570Css')){
+    const st=document.createElement('style');st.id='gm570Css';
+    st.textContent=`
+      #gm570Toolbar select,#gm570Toolbar input{max-width:100%}
+      #gm570Toolbar small{display:block;color:#b9c9d6;margin-bottom:2px}
+      #gm570Toolbar button{white-space:nowrap}
+      #gmOficinaV2Canvas{background:transparent!important}
+    `;
+    document.head.appendChild(st);
+}
+
+setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm570Render_();}catch(e){console.warn(e)}},400);
 
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
@@ -24313,6 +25066,6 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.56.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.57.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
