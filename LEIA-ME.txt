@@ -1,0 +1,20 @@
+# Mesa Estelar v46.83.0
+
+Primeira etapa da separação estrutural.
+
+Estrutura:
+- index.html
+- js/app.js
+
+O conteúdo do antigo `<script type="module">` foi movido **verbatim** para `js/app.js`.
+Nenhuma função da Oficina 2 foi extraída ou reescrita nesta etapa.
+
+Objetivo do teste:
+1. Login continua funcionando.
+2. Áudio continua funcionando.
+3. Mapa da Mesa abre.
+4. Oficina 2 ainda desenha e cria formas.
+5. Banco de objetos continua carregando.
+
+Se esses pontos passarem, a próxima etapa será extrair a Oficina 2 de `app.js`
+para `js/oficina2.js` de forma controlada.
