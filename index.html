@@ -9016,17 +9016,26 @@ window.labMicroExecutar_=function(){
     }
     window.labRolarAtaque_();
 };
+// V46.79.0 — painéis contextuais nunca ficam escondidos para fora da borda inferior do mapa.
+function labMicroPosicaoVertical_(centroPx,meiaAlturaPx,ppm,alturaPainelPx=62){
+    const mapaH=Math.max(0,Number(labEstado_?.alturaM||0)*Number(ppm||0));
+    const baixo=Number(centroPx||0)+Number(meiaAlturaPx||0)+14;
+    const precisaSubir=mapaH>0 && baixo+Math.max(36,Number(alturaPainelPx||62))>mapaH-4;
+    return precisaSubir
+      ? {top:Math.max(2,Number(centroPx||0)-Number(meiaAlturaPx||0)-10),transform:'translate(-50%,-100%)'}
+      : {top:baixo,transform:'translateX(-50%)'};
+}
 function labMicroPainelHtml_(alvoVisual,ppm,d){
     if(labEstado_.fase!=='combate'||!alvoVisual)return '';
     const ator=labTokenAtual_();if(!ator||!labPodeControlarToken_(ator))return '';
     const pend=labEstado_.pendenciaLab,dp=labEstado_.danoPendenteLab;
-    const topBaixo=alvoVisual.y*ppm+d/2+14,left=alvoVisual.x*ppm;
+    const posMicro=labMicroPosicaoVertical_(alvoVisual.y*ppm,d/2,ppm,68),topBaixo=posMicro.top,left=alvoVisual.x*ppm;
 
     if(pend&&String(pend.defensorId)===String(alvoVisual.id)&&labPodeControlarToken_(alvoVisual)){
         const defs=labDefesasDisponiveis_(alvoVisual),c=labCharToken_(alvoVisual);
         if(defs.length&&!defs.some(x=>batalhaTokenPericia_(x)===alvoVisual.defesaLab))alvoVisual.defesaLab=batalhaTokenPericia_(defs[0]);
         const per=labPericiaPorToken_(alvoVisual,alvoVisual.defesaLab),valor=per?labValorDefesa_(c,per):0;
-        return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${topBaixo}px;transform:translateX(-50%);z-index:24;padding:4px;border-radius:8px;background:rgba(10,13,30,.96);border:1px solid rgba(255,117,117,.62);display:flex;gap:4px;white-space:nowrap;">
+        return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${topBaixo}px;transform:${posMicro.transform};z-index:24;padding:4px;border-radius:8px;background:rgba(10,13,30,.96);border:1px solid rgba(255,117,117,.62);display:flex;gap:4px;white-space:nowrap;">
           <button class="btn-small btn-select" onclick="labResponderDefesa_(true)" ${Number(alvoVisual.acoesAtuaisLab||0)<=0&&Number(alvoVisual.acoesDefensivasPsiLab||0)<=0?'disabled':''} title="${escaparHtmlInventario_(per?getNome(per):'Defesa')} ${valor}%" style="min-height:27px;padding:2px 7px;font-size:.72em;">🛡️ Defender</button>
           <button class="btn-small" onclick="labResponderDefesa_(false)" style="min-height:27px;padding:2px 7px;font-size:.72em;">✋ Não</button>
         </div>`;
@@ -9044,7 +9053,7 @@ function labMicroPainelHtml_(alvoVisual,ppm,d){
     const psiCtx=labPsiPoderesParaAlvo_(ator,alvoVisual),psi=psiCtx.length>0,ps=!!labPrimeirosSocorrosPericia_(ator),modo=labMicroModo_(ator);
     const ehProprio=String(alvoVisual.id)===String(ator.id),item=labItemSelecionado_(ator),ataqueNome=item?.natural===true?(getNome(item)||'Atacar'):'Atacar';
     const podePS=ps&&labFeridasTrataveis_(alvoVisual).length>0&&(ehProprio||labDistanciaEntre_(ator,alvoVisual)<=1.5);
-    return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${topBaixo}px;transform:translateX(-50%);z-index:20;padding:4px;border-radius:8px;background:rgba(10,13,30,.95);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:310px;">
+    return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${topBaixo}px;transform:${posMicro.transform};z-index:20;padding:4px;border-radius:8px;background:rgba(10,13,30,.95);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:310px;">
       ${!ehProprio?`<button class="btn-small btn-select" onclick="labMicroModoSelecionar_('ataque');labMicroExecutar_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">⚔️ ${escaparHtmlInventario_(ataqueNome)}</button>`:''}
       ${psi?psiCtx.map(p=>`<button class="btn-small lab-psi-action" onclick="${labPsiEhCura_(p)?`labAbrirPsiContextual_('${String(p.id).replace(/'/g,"\'")}','${String(alvoVisual.id).replace(/'/g,"\'")}')`:`labUsarPsiContextualRapido_('${String(p.id).replace(/'/g,"\'")}','${String(alvoVisual.id).replace(/'/g,"\'")}')`}" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 ${escaparHtmlInventario_(getNome(p))}</button>`).join(''):''}
       ${podePS?`<button class="btn-small ${modo==='socorros'?'btn-select':''}" onclick="${modo==='socorros'?'labMicroExecutar_()':"labMicroModoSelecionar_('socorros')"}" style="min-height:27px;padding:2px 7px;font-size:.72em;">🩹 ${modo==='socorros'?escaparHtmlInventario_(labMicroNomeAcao_(ator)):'Primeiros Socorros'}</button>`:''}
@@ -17128,8 +17137,8 @@ function labObjetoMicroPainelHtml_(o,ppm){
     if(labEstado_.fase!=='combate'||!o||o.destruido||String(labEstado_.objetoSelecionadoId||'')!==String(o.id))return '';
     const ator=labTokenAtual_();if(!ator||!labPodeControlarToken_(ator)||Number(ator.acoesAtuaisLab||0)<=0)return '';
     const psis=labPsiPoderesParaAlvo_(ator,o),nat=labObjetoNatureza_(o),perMin=labPericiaRegex_(ator,/mineracao|mineração|mining|采矿/),pic=labEquipadoRegex_(ator,/picareta|pickaxe|mining pick/),axe=labEquipadoRegex_(ator,/machado|axe|斧/);
-    const top=o.y*ppm+Math.max(18,Number(o.alturaM||1)*ppm)/2+10,left=o.x*ppm;
-    return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${top}px;transform:translateX(-50%);z-index:28;padding:4px;border-radius:8px;background:rgba(10,13,30,.96);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:410px;">${o.destrutivel!==false?`<button class="btn-small btn-select" onclick="labAtacarObjetoContextual_('${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">⚔️ Atacar</button>`:''}<button class="btn-small" onclick="labObjetoAcao_('mover','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">💪 Mover</button>${nat==='rocha'&&perMin&&pic?`<button class="btn-small" onclick="labObjetoAcao_('minerar','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">⛏️ Minerar</button>`:''}${nat==='arvore'&&axe?`<button class="btn-small" onclick="labObjetoAcao_('cortar','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🪓 Cortar</button>`:''}${psis.map(p=>`<button class="btn-small lab-psi-action" onclick="${p.id==='mover_objeto'?`labUsarPsiContextualRapido_('${String(p.id).replace(/'/g,"\\'")}','${String(o.id).replace(/'/g,"\\'")}')`:`labAbrirPsiContextual_('${String(p.id).replace(/'/g,"\\'")}','${String(o.id).replace(/'/g,"\\'")}')`}" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 ${escaparHtmlInventario_(getNome(p))}</button>`).join('')}</div>`;
+    const meiaH=Math.max(18,Number(o.alturaM||1)*ppm)/2,posMicro=labMicroPosicaoVertical_(o.y*ppm,meiaH,ppm,72),top=posMicro.top,left=o.x*ppm;
+    return `<div class="lab-micro-actions" onclick="event.stopPropagation()" onpointerdown="event.stopPropagation()" style="position:absolute;left:${left}px;top:${top}px;transform:${posMicro.transform};z-index:28;padding:4px;border-radius:8px;background:rgba(10,13,30,.96);border:1px solid rgba(126,231,255,.45);display:flex;gap:3px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:410px;">${o.destrutivel!==false?`<button class="btn-small btn-select" onclick="labAtacarObjetoContextual_('${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">⚔️ Atacar</button>`:''}<button class="btn-small" onclick="labObjetoAcao_('mover','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">💪 Mover</button>${nat==='rocha'&&perMin&&pic?`<button class="btn-small" onclick="labObjetoAcao_('minerar','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">⛏️ Minerar</button>`:''}${nat==='arvore'&&axe?`<button class="btn-small" onclick="labObjetoAcao_('cortar','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">🪓 Cortar</button>`:''}${psis.map(p=>`<button class="btn-small lab-psi-action" onclick="${p.id==='mover_objeto'?`labUsarPsiContextualRapido_('${String(p.id).replace(/'/g,"\\'")}','${String(o.id).replace(/'/g,"\\'")}')`:`labAbrirPsiContextual_('${String(p.id).replace(/'/g,"\\'")}','${String(o.id).replace(/'/g,"\\'")}')`}" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔮 ${escaparHtmlInventario_(getNome(p))}</button>`).join('')}</div>`;
 }
 function labObjetoHtml_(o,ppm){
     const w=Math.max(18,Number(o.larguraM||1)*ppm),h=Math.max(18,Number(o.alturaM||1)*ppm),cfg=labDesenhoConfig_(),sel=!!labEstado_.modoCriacaoMapa&&!cfg.ativo&&String(o.id)===String(labEstado_.objetoSelecionadoId),dead=!!o.destruido;
@@ -29247,14 +29256,15 @@ function gm2pathInner(e){
 function gm2imageInner(e){
  const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p,c=e.crop||{l:0,t:0,r:0,b:0},
        fullW=w/Math.max(.03,1-c.l-c.r),fullH=h/Math.max(.03,1-c.t-c.b),
-       ix=x-c.l*fullW,iy=y-c.t*fullH,clip=`gm2clip_${String(e.id).replace(/\W/g,'_')}`;
- return `<defs><clipPath id="${clip}"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath></defs>
- <image href="${gm2esc(e.src)}" x="${ix}" y="${iy}" width="${fullW}" height="${fullH}" preserveAspectRatio="none" clip-path="url(#${clip})" opacity="${e.opacity??1}"/>`;
+       ix=x-c.l*fullW,iy=y-c.t*fullH,clip=`gm2clip_${String(e.id).replace(/\W/g,'_')}`,
+       cx=x+w/2,cy=y+h/2,rot=Number(e.rot||0),tr=rot?` transform="rotate(${rot} ${cx} ${cy})"`:'';
+ return `<g${tr}><defs><clipPath id="${clip}"><rect x="${x}" y="${y}" width="${w}" height="${h}"/></clipPath></defs>
+ <image href="${gm2esc(e.src)}" x="${ix}" y="${iy}" width="${fullW}" height="${fullH}" preserveAspectRatio="none" clip-path="url(#${clip})" opacity="${e.opacity??1}"/></g>`;
 }
 function gm2objectInner(e){
- const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p;
- if(e.src)return `<image href="${gm2esc(e.src)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" opacity="${e.opacity??1}"/>`;
- return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#445"/><text x="${x+w/2}" y="${y+h/2}" text-anchor="middle" fill="white" font-size="12">obj</text>`;
+ const p=gm2.st.ppm,x=e.x*p,y=e.y*p,w=e.w*p,h=e.h*p,cx=x+w/2,cy=y+h/2,rot=Number(e.rot||0),tr=rot?` transform="rotate(${rot} ${cx} ${cy})"`:'';
+ if(e.src)return `<image href="${gm2esc(e.src)}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" opacity="${e.opacity??1}"${tr}/>`;
+ return `<g${tr}><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#445"/><text x="${x+w/2}" y="${y+h/2}" text-anchor="middle" fill="white" font-size="12">obj</text></g>`;
 }
 
 function gm2elementSvg(e){
@@ -32320,6 +32330,14 @@ setTimeout(()=>{try{lab780HidratarMesa_();labRender_();}catch(_){}},1200);
 })();
 </script>
 <!-- Mesa Estelar v46.78.0: objetos da Oficina 2 preservam PV, dureza, inflamabilidade e propriedades funcionais na Mesa -->
+
+<script>
+// ============================================================
+// V46.79.0 — rotação real de imagens/objetos na Oficina 2
+// + ações contextuais sobem quando o alvo está na borda inferior.
+// ============================================================
+</script>
+<!-- Mesa Estelar v46.79.0: rotação de objetos/imagens na Oficina 2 e microações adaptativas na borda inferior -->
 
 </body>
 </html>
