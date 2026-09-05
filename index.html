@@ -32972,5 +32972,191 @@ obs.observe(document.body,{childList:true,subtree:true});
 </script>
 <!-- Mesa Estelar v46.83.0: patch final após todos os scripts legados -->
 
+
+
+<script>
+// ============================================================
+// V46.84.0 — visibilidade desenhável, persistência do slider,
+// materiais reidratados, mineração/lenha e bancos atualizados.
+// Patch final absoluto para não ser sobrescrito por blocos legados.
+// ============================================================
+(function(){
+'use strict';
+const V='46.84.0';
+const clamp=(v,a=0,b=100)=>{v=Number(v);return Number.isFinite(v)?Math.max(a,Math.min(b,v)):a;};
+
+// ---------- Material atual do modelo ----------
+function modelFor_(o){
+  const ids=[o?.modeloId,o?.objetoBancoId,o?.dadosBanco?.id].filter(Boolean).map(String);
+  return (window.objetosMapaDB||objetosMapaDB||[]).find(x=>ids.includes(String(x.id)))||null;
+}
+function mat_(o){
+  const m=modelFor_(o);
+  return normalizarTextoCombate_(String(o?.material||o?.dadosBanco?.material||m?.material||''));
+}
+try{
+  lab281EhMadeira_=o=>/madeira|wood|vegetal/.test(mat_(o));
+  lab281EhPedra_=o=>/pedra|rock|stone|concreto|ceram/.test(mat_(o));
+}catch(e){console.warn(V,'material patch',e);}
+
+// Atualiza material das instâncias antigas sem alterar PV/dureza atuais.
+function hydrateMaterials_(){
+  try{
+    for(const o of (labEstado_?.objetosLab||[])){
+      const m=modelFor_(o); if(!m?.material) continue;
+      if(!o.material)o.material=m.material;
+      if(o.dadosBanco&&typeof o.dadosBanco==='object'&&!o.dadosBanco.material)o.dadosBanco.material=m.material;
+    }
+  }catch(_){ }
+}
+
+// ---------- Sons sintéticos curtos ----------
+let ac_;
+function audio_(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;ac_=ac_||new AC();if(ac_.state==='suspended')ac_.resume();return ac_;}catch(_){return null;}}
+function woodSound_(){
+  const ac=audio_();if(!ac)return;const t=ac.currentTime;
+  for(let k=0;k<2;k++){
+    const osc=ac.createOscillator(),g=ac.createGain(),f=ac.createBiquadFilter();
+    osc.type='triangle';osc.frequency.setValueAtTime(k?105:145,t+k*.075);osc.frequency.exponentialRampToValueAtTime(k?62:78,t+k*.075+.12);
+    f.type='lowpass';f.frequency.value=900;g.gain.setValueAtTime(.0001,t+k*.075);g.gain.exponentialRampToValueAtTime(.14,t+k*.075+.008);g.gain.exponentialRampToValueAtTime(.0001,t+k*.075+.16);
+    osc.connect(f);f.connect(g);g.connect(ac.destination);osc.start(t+k*.075);osc.stop(t+k*.075+.18);
+  }
+}
+function mineSound_(){
+  const ac=audio_();if(!ac)return;const t=ac.currentTime;
+  const osc=ac.createOscillator(),g=ac.createGain();osc.type='square';osc.frequency.setValueAtTime(980,t);osc.frequency.exponentialRampToValueAtTime(330,t+.12);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.09,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.16);osc.connect(g);g.connect(ac.destination);osc.start(t);osc.stop(t+.18);
+  const n=Math.floor(ac.sampleRate*.13),buf=ac.createBuffer(1,n,ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n)*.35;
+  const src=ac.createBufferSource(),bp=ac.createBiquadFilter(),ng=ac.createGain();bp.type='bandpass';bp.frequency.value=2100;bp.Q.value=1.7;ng.gain.value=.07;src.buffer=buf;src.connect(bp);bp.connect(ng);ng.connect(ac.destination);src.start(t);
+}
+try{
+  const base=labObjetoAcaoExecutar_;
+  labObjetoAcaoExecutar_=function(ator,obj,tipo){
+    if(tipo==='minerar')mineSound_(); else if(tipo==='cortar')woodSound_();
+    return base.apply(this,arguments);
+  };
+}catch(e){console.warn(V,'som ações',e);}
+
+// ---------- Bancos sempre alfabéticos e Oficina atualizada ----------
+function sortObjects_(){
+  try{objetosMapaDB.sort((a,b)=>String(getNome(a)||a?.nome||a?.id||'').localeCompare(String(getNome(b)||b?.nome||b?.id||''),'pt-BR',{sensitivity:'base'}));}catch(_){ }
+}
+try{
+  const base=window.renderizarBancoObjetosMapa_;
+  window.renderizarBancoObjetosMapa_=function(){
+    sortObjects_();const r=base.apply(this,arguments);
+    try{gm2populateBank?.();}catch(_){ }
+    try{gm580PopulateObjects_?.();}catch(_){ }
+    return r;
+  };
+  try{renderizarBancoObjetosMapa_=window.renderizarBancoObjetosMapa_;}catch(_){ }
+}catch(e){console.warn(V,'ordem banco',e);}
+try{
+  const base=window.salvarObjetoMapaEditor_;
+  window.salvarObjetoMapaEditor_=async function(){const r=await base.apply(this,arguments);sortObjects_();try{window.renderizarBancoObjetosMapa_();}catch(_){}try{gm2populateBank?.();}catch(_){}try{gm580PopulateObjects_?.();}catch(_){}return r;};
+}catch(e){console.warn(V,'refresh banco',e);}
+
+// ---------- Slider da Oficina: valor vivo + persistência ----------
+function slider_(){return document.getElementById('v4683MapVis')||document.getElementById('gm282MapVis');}
+function label_(){return document.getElementById('v4683MapVisValue')||document.getElementById('gm282MapVisValue');}
+function setVis_(v,saveRemote=false){
+  v=clamp(v);try{gm2.st.visibilidadeJogadores=v;gm2saveLocal();}catch(_){ }
+  const l=label_();if(l)l.textContent=Math.round(v)+'%';
+  const r=slider_();if(r&&document.activeElement!==r)r.value=String(v);
+  try{
+    const id=String(gm2?.st?.mapId||'');const m=(mapasDB||[]).find(x=>String(x.id)===id);if(m)m.visibilidadeJogadores=v;
+    if(saveRemote&&id&&typeof setDoc==='function')setDoc(doc(db,'mapas',id),{visibilidadeJogadores:v},{merge:true}).catch(e=>console.warn(V,'visibilidade remota',e));
+  }catch(_){ }
+}
+function wireSlider_(){
+  const r=slider_();if(!r||r.dataset.v4684)return;r.dataset.v4684='1';
+  r.addEventListener('input',ev=>{ev.stopPropagation();const v=clamp(ev.target.value);try{gm2.st.visibilidadeJogadores=v;gm2saveLocal();}catch(_){}const l=label_();if(l)l.textContent=Math.round(v)+'%';},true);
+  r.addEventListener('change',ev=>setVis_(ev.target.value,true),true);
+  r.addEventListener('pointerup',ev=>setVis_(ev.target.value,true),true);
+}
+// O salvamento legado usava primeiro o valor antigo de mapasDB. Atualizamos ambos antes de salvar.
+try{
+  const base=gm2saveLibrary;
+  gm2saveLibrary=async function(){
+    const r=slider_();if(r)setVis_(r.value,false);
+    try{const id=String(gm2?.st?.mapId||'');const m=(mapasDB||[]).find(x=>String(x.id)===id);if(m)m.visibilidadeJogadores=clamp(gm2.st.visibilidadeJogadores||0);}catch(_){ }
+    return await base.apply(this,arguments);
+  };window.gm2saveLibrary=gm2saveLibrary;
+}catch(e){console.warn(V,'save vis',e);}
+
+// ---------- Ferramenta retangular real de visibilidade ----------
+let mode_='';
+function toolbarState_(){
+  document.querySelectorAll('#v4683MesaVisTools button').forEach(b=>b.classList.remove('active'));
+  if(mode_==='hide')document.getElementById('v4683Hide')?.classList.add('active');
+  if(mode_==='clearGM')document.getElementById('v4683Bright')?.classList.add('active');
+  if(mode_==='remove')document.getElementById('v4683Remove')?.classList.add('active');
+}
+function choose_(m){mode_=m;toolbarState_();const txt=m==='hide'?'Arraste no mapa: escuro para jogadores e 50% para o mestre.':m==='clearGM'?'Arraste no mapa: oculto para jogadores, mas claro para o mestre.':m==='remove'?'Clique numa área de ocultação para removê-la.':'Ferramenta cancelada.';try{notificar_(txt,'info',2600);}catch(_){} }
+function point_(map,ev){const rect=map.getBoundingClientRect(),ppm=Number(labEstado_?.pxPorMetro||48);return{x:(ev.clientX-rect.left)/ppm,y:(ev.clientY-rect.top)/ppm};}
+function hit_(p){return [...(labEstado_?.zonasVisibilidadeLab||[])].reverse().find(z=>p.x>=z.x&&p.x<=z.x+z.w&&p.y>=z.y&&p.y<=z.y+z.h);}
+function zonesRender_(){
+  const map=document.getElementById('labMetricMap');if(!map)return;
+  map.querySelectorAll('.lab281-secret,.v4684-secret').forEach(x=>x.remove());
+  const ppm=Number(labEstado_?.pxPorMetro||48),master=batalhaEhMestre_();
+  for(const z of (labEstado_?.zonasVisibilidadeLab||[])){
+    const op=master?(z.gmClear?0:.5):1;if(op<=0)continue;
+    const d=document.createElement('div');d.className='v4684-secret';d.dataset.zoneid=String(z.id||'');
+    d.style.cssText=`position:absolute;left:${z.x*ppm}px;top:${z.y*ppm}px;width:${z.w*ppm}px;height:${z.h*ppm}px;background:#000;opacity:${op};z-index:18;pointer-events:none`;
+    map.appendChild(d);
+  }
+}
+try{
+  const base=labRender_;
+  labRender_=function(){hydrateMaterials_();const r=base.apply(this,arguments);try{zonesRender_();}catch(_){}return r;};window.labRender_=labRender_;
+}catch(e){console.warn(V,'render zones',e);}
+
+document.addEventListener('pointerdown',ev=>{
+  if(!mode_||!batalhaEhMestre_())return;
+  const map=ev.target?.closest?.('#labMetricMap');if(!map)return;
+  // Permite começar sobre terreno/imagens; só tokens, objetos e microações ficam protegidos.
+  if(ev.target.closest?.('.lab-token,.lab-map-object,.lab-micro-actions'))return;
+  ev.preventDefault();ev.stopImmediatePropagation();
+  const a=point_(map,ev);
+  if(mode_==='remove'){
+    const z=hit_(a);if(z){labEstado_.zonasVisibilidadeLab=(labEstado_.zonasVisibilidadeLab||[]).filter(x=>x!==z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}return;
+  }
+  const ghost=document.createElement('div');ghost.className='v4684-ghost';ghost.style.cssText=`position:absolute;left:${a.x*Number(labEstado_.pxPorMetro||48)}px;top:${a.y*Number(labEstado_.pxPorMetro||48)}px;width:1px;height:1px;border:2px dashed #45d7ff;background:rgba(0,0,0,.28);z-index:120;pointer-events:none`;map.appendChild(ghost);
+  const mv=e=>{const b=point_(map,e),ppm=Number(labEstado_.pxPorMetro||48),x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x),h=Math.abs(a.y-b.y);Object.assign(ghost.style,{left:x*ppm+'px',top:y*ppm+'px',width:w*ppm+'px',height:h*ppm+'px'});};
+  const up=e=>{window.removeEventListener('pointermove',mv,true);const b=point_(map,e),z={id:`vis:${Date.now()}`,x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y),gmClear:mode_==='clearGM'};ghost.remove();if(z.w>.08&&z.h>.08){labEstado_.zonasVisibilidadeLab=labEstado_.zonasVisibilidadeLab||[];labEstado_.zonasVisibilidadeLab.push(z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}};
+  window.addEventListener('pointermove',mv,true);window.addEventListener('pointerup',up,{once:true,capture:true});
+},true);
+
+function wireTools_(){
+  const h=document.getElementById('v4683Hide'),b=document.getElementById('v4683Bright'),r=document.getElementById('v4683Remove'),c=document.getElementById('v4683Cancel');
+  if(h&&!h.dataset.v4684){h.dataset.v4684='1';h.onclick=e=>{e.preventDefault();e.stopPropagation();choose_('hide');};}
+  if(b&&!b.dataset.v4684){b.dataset.v4684='1';b.title='Arraste uma área que continuará escura para jogadores, mas ficará clara para o mestre';b.onclick=e=>{e.preventDefault();e.stopPropagation();choose_('clearGM');};}
+  if(r&&!r.dataset.v4684){r.dataset.v4684='1';r.onclick=e=>{e.preventDefault();e.stopPropagation();choose_('remove');};}
+  if(c&&!c.dataset.v4684){c.dataset.v4684='1';c.onclick=e=>{e.preventDefault();e.stopPropagation();choose_('');};}
+  toolbarState_();
+}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode_){mode_='';toolbarState_();}},true);
+
+// ---------- Microações finais com material reidratado ----------
+try{
+  const base=labObjetoMicroPainelHtml_;
+  labObjetoMicroPainelHtml_=function(o,ppm){
+    hydrateMaterials_();let h=base.apply(this,arguments);if(!h)return h;const a=labTokenAtual_();if(!a)return h;
+    const pedra=lab281EhPedra_(o),madeira=lab281EhMadeira_(o),pic=lab281Picareta_(a),axe=lab281Machado_(a),near=lab281DistOk_(a,o,1.5),oid=String(o.id||'').replace(/'/g,"\\'");
+    if((pedra&&pic)||(madeira&&axe))h=h.replace(/<button\b[^>]*>[\s\S]*?⚔️\s*Atacar[\s\S]*?<\/button>/gi,'');
+    h=h.replace(/<button\b[^>]*>[\s\S]*?⛏️\s*Minerar[\s\S]*?<\/button>/gi,'').replace(/<button\b[^>]*>[\s\S]*?🪓\s*(?:Cortar|Lenhar)[\s\S]*?<\/button>/gi,'');
+    let extra='';if(pedra&&pic)extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${oid}')" ${near?'':'disabled'}>⛏️ Minerar</button>`;if(madeira&&axe)extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${oid}')" ${near?'':'disabled'}>🪓 Lenhar</button>`;
+    return extra?h.replace('</div>',extra+'</div>'):h;
+  };window.labObjetoMicroPainelHtml_=labObjetoMicroPainelHtml_;
+}catch(e){console.warn(V,'microações finais',e);}
+
+function install_(){wireSlider_();wireTools_();sortObjects_();try{gm2populateBank?.();}catch(_){}try{gm580PopulateObjects_?.();}catch(_){} }
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install_);else install_();
+setTimeout(install_,300);setTimeout(install_,1100);setInterval(()=>{wireSlider_();wireTools_();},1800);
+})();
+</script>
+<!-- Mesa Estelar v46.84.0 -->
+
 </body>
 </html>
