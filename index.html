@@ -786,7 +786,7 @@
                     <div id="labPlayerPrivateResult" style="display:none"></div>
                     <div id="labMetricMap" onclick="labCliqueFundoMapa_(event)" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
-                    <details id="labLiveObjectBank770" style="display:block;margin-top:10px;padding:9px 11px;border-radius:10px;background:#11152d;border:1px solid #34506d;">
+                    <details id="labLiveObjectBank770" style="display:none!important;margin-top:10px;padding:9px 11px;border-radius:10px;background:#11152d;border:1px solid #34506d;">
                       <summary style="cursor:pointer;font-weight:800;color:#cfeeff;user-select:none;list-style:revert;">Objetos do banco</summary>
                       <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:8px 0 6px;">
                         <label style="margin:0;display:flex;align-items:center;gap:5px;font-size:.9em;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
@@ -794,6 +794,25 @@
                       <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-height:170px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:7px;"></div>
                       <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()" style="margin-top:8px;">＋ Adicionar marcados</button>
                     </details>
+                    
+                    <!-- V46.81.2: painel NOVO, independente do painel legado -->
+                    <details id="mesaObjectBank8112" style="display:block;margin-top:12px;padding:9px 11px;border-radius:10px;background:#11152d;border:1px solid #34506d;">
+                      <summary style="cursor:pointer;font-weight:800;color:#cfeeff;user-select:none;list-style:revert;">
+                        🧱 Objetos do banco <span style="font-size:.72em;color:#7fdfff;font-weight:600;">v46.81.2</span>
+                      </summary>
+                      <div id="mesaObjectBankBody8112" style="padding-top:7px;">
+                        <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:0 0 6px;">
+                          <label style="margin:0;display:flex;align-items:center;gap:5px;font-size:.9em;">
+                            <input id="mesaObjectAll8112" type="checkbox"> Selecionar todos
+                          </label>
+                        </div>
+                        <div id="mesaObjectList8112" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-height:170px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:7px;">
+                          <div style="color:#91a5c7;padding:6px;">Carregando objetos…</div>
+                        </div>
+                        <button class="btn-small btn-select" onclick="mesaObj8112Adicionar_()" style="margin-top:8px;">＋ Adicionar marcados</button>
+                      </div>
+                    </details>
+
                     <div id="labHistoricoMesa" style="display:none;margin-top:22px;padding:10px 12px;border-radius:10px;background:rgba(8,12,29,.68);border:1px solid rgba(0,212,255,.22);max-height:210px;overflow:auto;"></div>
                     <div style="margin-top:8px;color:#888;font-size:.88em;">Área padrão: 28 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
                 </div>
@@ -33135,6 +33154,128 @@ setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
     if(++mesaEnt810RoleChecks_>=20 || (typeof userData!=='undefined' && userData?.role)) clearInterval(mesaEnt810RoleTimer_);
   },500);
 })();
+
+// ============================================================
+// V46.81.2 — PAINEL ESTÁTICO REAL DE OBJETOS DA MESA
+// IDs totalmente novos: nenhum patch legado conhece este painel.
+// ============================================================
+(function(){
+  function mesa8112EhMestre_(){
+    try{
+      if(typeof batalhaEhMestre_==='function' && batalhaEhMestre_()) return true;
+    }catch(_){}
+    try{
+      // Durante bootstrap não escondemos. Só ocultamos quando o papel
+      // estiver explicitamente conhecido e não for mestre.
+      if(typeof userData==='undefined' || !userData || !userData.role) return true;
+      return String(userData.role).toLowerCase()==='mestre';
+    }catch(_){ return true; }
+  }
+
+  function mesa8112Esc_(v){
+    try{return escaparHtmlInventario_(String(v??''));}
+    catch(_){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+  }
+
+  function mesa8112Render_(){
+    const box=document.getElementById('mesaObjectBank8112');
+    const list=document.getElementById('mesaObjectList8112');
+    if(!box||!list)return;
+
+    const master=mesa8112EhMestre_();
+    box.style.setProperty('display', master ? 'block' : 'none', 'important');
+    if(!master)return;
+
+    let arr=[];
+    try{
+      if(typeof garantirObjetosMapaPadrao_==='function')garantirObjetosMapaPadrao_();
+      arr=[...(Array.isArray(objetosMapaDB)?objetosMapaDB:[])];
+    }catch(_){}
+
+    arr.sort((a,b)=>String(a?.nome||a?.id||'').localeCompare(String(b?.nome||b?.id||''),'pt-BR',{sensitivity:'base'}));
+
+    const marcados=new Set([...list.querySelectorAll('input.mesa-obj-8112:checked')].map(x=>String(x.value)));
+    list.innerHTML=arr.length ? arr.map(o=>`
+      <label title="${mesa8112Esc_(o.nome||o.id)}"
+        style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px;min-height:24px;overflow:hidden;">
+        <input class="mesa-obj-8112" type="checkbox" value="${mesa8112Esc_(o.id)}" ${marcados.has(String(o.id))?'checked':''}>
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${mesa8112Esc_(o.nome||o.id)}</span>
+      </label>`).join('')
+      : '<div style="color:#91a5c7;padding:6px;">Banco ainda carregando…</div>';
+
+    const all=document.getElementById('mesaObjectAll8112');
+    if(all && !all.dataset.wired){
+      all.dataset.wired='1';
+      all.addEventListener('change',()=>{
+        document.querySelectorAll('#mesaObjectList8112 .mesa-obj-8112').forEach(c=>c.checked=all.checked);
+      });
+    }
+  }
+
+  window.mesaObj8112Adicionar_=function(){
+    if(!mesa8112EhMestre_())return;
+    const ids=[...document.querySelectorAll('#mesaObjectList8112 .mesa-obj-8112:checked')].map(c=>String(c.value));
+    if(!ids.length){
+      try{notificar_('Marque pelo menos um objeto do banco.','aviso',2500);}catch(_){}
+      return;
+    }
+
+    if(!Array.isArray(labEstado_.objetosLab))labEstado_.objetosLab=[];
+    let off=0,last=null,adicionados=0;
+
+    for(const id of ids){
+      const m=(objetosMapaDB||[]).find(o=>String(o.id)===id);
+      if(!m)continue;
+
+      const snap=JSON.parse(JSON.stringify(m));
+      const pv=Math.max(0,Number(m.pvMax??m.pv??0));
+      const inst={
+        ...snap,
+        dadosBanco:snap,
+        id:`obj:${Date.now()}:${Math.floor(Math.random()*100000)}:${adicionados}`,
+        modeloId:String(m.id),
+        objetoBancoId:String(m.id),
+        nome:m.nome||m.name||m.id||'Objeto',
+        name:m.name||m.nome||m.id||'Objeto',
+        x:Math.max(0,Math.min(Number(labEstado_.larguraM||28),Number(labEstado_.larguraM||28)/2+off)),
+        y:Math.max(0,Math.min(Number(labEstado_.alturaM||14),Number(labEstado_.alturaM||14)/2+off)),
+        angulo:0,
+        pvMax:pv,
+        pvAtual:pv,
+        dureza:Math.max(0,Number(m.dureza??0)),
+        pesoKg:Math.max(0,Number(m.pesoKg??m.peso??0)),
+        destruido:false,
+        pegandoFogoLab:false,
+        fogoUltimaRodadaLab:-1
+      };
+      labEstado_.objetosLab.push(inst);
+      last=inst;off+=.35;adicionados++;
+    }
+
+    if(last){
+      labEstado_.objetoSelecionadoId=last.id;
+      labEstado_.selecionadoId='';
+    }
+    try{labSalvarLocal_();}catch(_){}
+    try{labAgendarSyncRemoto_();}catch(_){}
+    try{labRender_();}catch(_){}
+    try{notificar_(`${adicionados} objeto(s) adicionado(s) diretamente à Mesa.`,'sucesso',2500);}catch(_){}
+  };
+
+  // A posição é estática no HTML. Este código SOMENTE popula/oculta por papel.
+  document.addEventListener('toggle',e=>{
+    if(e.target?.id==='mesaObjectBank8112' && e.target.open)mesa8112Render_();
+  },true);
+
+  let checks=0;
+  const timer=setInterval(()=>{
+    mesa8112Render_();
+    if(++checks>=30)clearInterval(timer);
+  },400);
+  document.addEventListener('DOMContentLoaded',mesa8112Render_,{once:true});
+  setTimeout(mesa8112Render_,0);
+})();
+
 </script>
 <!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
 
