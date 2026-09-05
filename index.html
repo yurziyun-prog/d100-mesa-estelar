@@ -32575,6 +32575,74 @@ if(map806LoadBase_){
   };
 }
 window.map806ReconstruirObjetosMesa_=map806ReconstruirObjetosMesa_;
+
+// ============================================================
+// V46.80.7 — carregador DIRETO de mapas refs-v1 para a Mesa
+// Não passa pelo conversor legado. Cada referência é transformada em uma
+// instância funcional ANTES de entrar em labEstado_.objetosLab.
+// ============================================================
+async function map807InstanciaDaRefMesa_(refObj){
+  const mid=String(refObj?.modeloId||refObj?.objetoBancoId||'').trim();
+  if(!mid||mid==='imagem_importada')return refObj;
+  const m=await map806BuscarModelo_(mid);
+  if(!m)return null;
+  // Reusa o construtor funcional já validado nesta linha de desenvolvimento.
+  const inst=map806InstanciaFuncional_(refObj,m);
+  // refs-v1 são mapas preparados, não estado de combate persistente.
+  // Ao CARREGAR o mapa, o objeto nasce íntegro, como no antigo editor da Mesa.
+  inst.pvMax=Math.max(0,Number(m.pvMax||m.pv||m.vidaMax||m.vida||0));
+  inst.pvAtual=inst.pvMax;
+  inst.dureza=Math.max(0,Number(m.dureza||m.hardness||0));
+  inst.pesoKg=Math.max(0,Number(m.pesoKg||m.peso||m.weightKg||0));
+  inst.destruido=false;inst.pegandoFogoLab=false;inst.fogoUltimaRodadaLab=-1;
+  return inst;
+}
+async function map807CarregarRefsNaMesa_(m){
+  const refs=Array.isArray(m?.objetos)?m.objetos:[];
+  const objs=[];const faltando=[];
+  for(const r of refs){
+    if(r?.imagemImportada||String(r?.modeloId||'')==='imagem_importada')continue;
+    const inst=await map807InstanciaDaRefMesa_(r);
+    if(inst)objs.push(inst);else faltando.push(String(r?.modeloId||r?.objetoBancoId||'?'));
+  }
+  labEstado_.larguraM=Math.max(4,Number(m.larguraM||28));
+  labEstado_.alturaM=Math.max(4,Number(m.alturaM||14));
+  labEstado_.fundo=String(m.fundo||'#d7d7d7');
+  labEstado_.corGrade=String(m.corGrade||'#777777');
+  labEstado_.gradeVisivel=m.gradeVisivel!==false;
+  labEstado_.textura=String(m.textura||'nenhuma');
+  if(m.pxPorMetro)labEstado_.pxPorMetro=Math.max(24,Math.min(96,Number(m.pxPorMetro)||48));
+  labEstado_.oficina2State=m.oficina2State?JSON.parse(JSON.stringify(m.oficina2State)):null;
+  labEstado_.desenhosLab=m.oficina2State?[]:JSON.parse(JSON.stringify(m.desenhos||[]));
+  labEstado_.formasLab=JSON.parse(JSON.stringify(m.formas||[]));
+  labEstado_.objetosLab=objs;
+  labEstado_.objetoSelecionadoId='';
+  labEstado_.selecionadoId='';
+  for(const t of labEstado_.tokens||[]){
+    t.x=Math.max(0,Math.min(labEstado_.larguraM,Number(t.x||0)));
+    t.y=Math.max(0,Math.min(labEstado_.alturaM,Number(t.y||0)));
+  }
+  labDesenhoUndo_=[];labDesenhoRedo_=[];
+  labSalvarLocal_();labRender_();
+  return {ok:objs.length,faltando:[...new Set(faltando)]};
+}
+
+const map807LoadBase_=window.labCarregarMapaBanco_;
+window.labCarregarMapaBanco_=async function(){
+  const base=(mapasDB||[]).find(x=>String(x.id)===String(labMapaSelecionado_));
+  if(!base)return map807LoadBase_.apply(this,arguments);
+  let m=base;
+  try{m=await labMapaHidratar_(base);}catch(e){
+    console.error('V46.80.7 hidratar mapa',e);
+    notificar_('Não foi possível carregar os dados completos deste mapa.','erro',6000);return;
+  }
+  const refs=String(m?.formatoObjetos||'')===MAP803_REF_VERSION_ || String(m?.oficina2State?.formatoObjetos||'')===MAP803_REF_VERSION_;
+  if(!refs)return map807LoadBase_.apply(this,arguments);
+  const rr=await map807CarregarRefsNaMesa_(m);
+  if(rr.faltando.length)notificar_(`⚠️ Mapa carregado com ${rr.ok} objeto(s). Modelos não encontrados: ${rr.faltando.join(', ')}`,'aviso',8500);
+  else notificar_(`✅ Mapa “${m.nome||m.id}” carregado · ${rr.ok} objeto(s) funcionais do Banco.`,'sucesso',3800);
+};
+window.map807CarregarRefsNaMesa_=map807CarregarRefsNaMesa_;
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
