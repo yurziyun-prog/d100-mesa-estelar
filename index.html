@@ -739,6 +739,7 @@
                               <select id="labMapaSalvoSelect" onchange="labSelecionarMapaSalvo_(this.value)"><option value="">— nenhum —</option></select>
                             </label>
                             <button class="btn-small" onclick="labCarregarMapaBanco_()" title="Carrega o mapa selecionado sem alterar os participantes">📂 Carregar</button>
+                            <button class="btn-small btn-select" onclick="labSalvarMapaBanco_()" title="Salva o cenário atual e os objetos interativos exatamente nas posições em que estão">💾 Salvar mapa</button>
                         </div>
                         <label class="lab-control">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
                         <label id="labEditMapToggleWrap" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid rgba(86,240,138,.35);border-radius:8px;background:rgba(86,240,138,.07);" title="Mostra ou esconde as ferramentas de criação do mapa"><input id="labModoCriarMapa" type="checkbox" onchange="labAlternarModoCriacaoMapa_(this.checked)"> 🛠️ Editar mapa</label>
@@ -785,16 +786,15 @@
                     <div id="labPlayerPrivateResult" style="display:none"></div>
                     <div id="labMetricMap" onclick="labCliqueFundoMapa_(event)" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
-                    <details id="labLiveObjectBank770" style="display:none;margin-top:8px;padding:7px 9px;border-radius:9px;background:rgba(9,15,38,.66);border:1px solid rgba(86,240,138,.25);">
-                      <summary style="cursor:pointer;font-weight:800;color:#d8ffe5;user-select:none;">🧰 Objetos do banco</summary>
-                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 6px;">
-                        <label style="margin:0;display:flex;align-items:center;gap:5px;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
-                        <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()">➕ Adicionar marcados</button>
-                        <small style="color:#9fb8c9">Os objetos entram no centro do mapa com PV, dureza, fogo e demais propriedades do banco.</small>
+                    <details id="labLiveObjectBank770" style="display:none;margin-top:10px;padding:9px 11px;border-radius:10px;background:#11152d;border:1px solid #34506d;">
+                      <summary style="cursor:pointer;font-weight:800;color:#cfeeff;user-select:none;list-style:revert;">Objetos do banco</summary>
+                      <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:8px 0 6px;">
+                        <label style="margin:0;display:flex;align-items:center;gap:5px;font-size:.9em;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
                       </div>
-                      <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px;"></div>
+                      <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-height:170px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:7px;"></div>
+                      <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()" style="margin-top:8px;">＋ Adicionar marcados</button>
                     </details>
-                    <div id="labHistoricoMesa" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(8,12,29,.68);border:1px solid rgba(0,212,255,.22);max-height:210px;overflow:auto;"></div>
+                    <div id="labHistoricoMesa" style="display:none;margin-top:22px;padding:10px 12px;border-radius:10px;background:rgba(8,12,29,.68);border:1px solid rgba(0,212,255,.22);max-height:210px;overflow:auto;"></div>
                     <div style="margin-top:8px;color:#888;font-size:.88em;">Área padrão: 28 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
                 </div>
             </div>
@@ -9109,8 +9109,12 @@ function labMapaDadosAtuais_(nome,id=''){
         corGrade:String(labEstado_.corGrade||'#777777'),
         gradeVisivel:labEstado_.gradeVisivel!==false,
         textura:String(labEstado_.textura||'nenhuma'),
+        pxPorMetro:Number(labEstado_.pxPorMetro||48),
         desenhos:labDesenhoSnapshot_(),
         objetos:JSON.parse(JSON.stringify(labEstado_.objetosLab||[])),
+        // O cenário da Oficina 2 continua sendo salvo como camada visual separada.
+        // Objetos interativos são persistidos acima em `objetos`, já como instâncias completas da Mesa.
+        oficina2State:labEstado_.oficina2State?JSON.parse(JSON.stringify(labEstado_.oficina2State)):null,
         criadoPor:currentUserUid||'',
         atualizadoEm:new Date().toISOString()
     };
@@ -30519,11 +30523,6 @@ function gm2panelHtml(){
    </aside>
    <div id="gm2viewport"><svg id="gm2svg"></svg></div>
  </div>
- <div id="gm2bank">
-   <div class="gm2-bankhead"><b>Objetos do banco</b><label><input id="gm2allobj" type="checkbox"> Selecionar todos</label></div>
-   <div id="gm2objlist"></div>
-   <button id="gm2addobj">＋ Adicionar marcados</button>
- </div>
  <div id="gm2status"></div>`;
 }
 
@@ -30531,6 +30530,7 @@ function gm2css(){
  if(document.getElementById('gm2css'))return;
  const st=document.createElement('style');st.id='gm2css';st.textContent=`
  #gm-sub-oficina2{--g2:#67e8f9;--g2b:#11152d}
+ #gm2bank,#gm580ObjectBank,#gm580AddObjects,#gm2objlist,#gm2addobj{display:none!important}
  #gm-sub-oficina2 button,#gm-sub-oficina2 select,#gm-sub-oficina2 input{font:inherit}
  .gm2-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
  .gm2-head h3{margin:0 0 3px;color:#8feaff}.gm2-head h3 span{font-size:.55em;color:#ffcf67;border:1px solid #80651f;border-radius:10px;padding:2px 6px}
@@ -32293,9 +32293,9 @@ function labLiveRenderObjectBank770_(){
  box.style.display=batalhaEhMestre_()?'block':'none';
  if(!batalhaEhMestre_())return;
  garantirObjetosMapaPadrao_();
- list.innerHTML=(objetosMapaDB||[]).map(o=>{
-   const pv=Number(o.pvMax||0),du=Number(o.dureza||0),infl=o.inflamavel?'🔥':'',img=o.imagem||'';
-   return `<label title="${escaparHtmlInventario_(o.nome||o.id)}"><input class="lab-live-obj-check770" type="checkbox" value="${escaparHtmlInventario_(o.id)}">${img?`<img src="${escaparHtmlInventario_(img)}" draggable="false">`:''}<span class="lab-live-obj-meta770"><div class="lab-live-obj-name770">${escaparHtmlInventario_(o.nome||o.id)}</div><small>PV ${pv} · Dur ${du} ${infl}</small></span></label>`;
+ const lista=[...(objetosMapaDB||[])].sort((a,b)=>String(a.nome||a.id||'').localeCompare(String(b.nome||b.id||''),'pt-BR',{sensitivity:'base'}));
+ list.innerHTML=lista.map(o=>{
+   return `<label title="${escaparHtmlInventario_(o.nome||o.id)}" style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px;min-height:24px;overflow:hidden;"><input class="lab-live-obj-check770" type="checkbox" value="${escaparHtmlInventario_(o.id)}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escaparHtmlInventario_(o.nome||o.id)}</span></label>`;
  }).join('');
  const all=document.getElementById('labLiveObjAll770');
  if(all&&!all.dataset.wired){all.dataset.wired='1';all.addEventListener('change',()=>document.querySelectorAll('.lab-live-obj-check770').forEach(c=>c.checked=all.checked));}
@@ -32881,5 +32881,6 @@ setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
 </script>
 <!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
 
+<!-- Mesa Estelar v46.80.8: objetos interativos passam a ser adicionados/salvos diretamente no Mapa da Mesa; banco removido da Oficina 2 -->
 </body>
 </html>
