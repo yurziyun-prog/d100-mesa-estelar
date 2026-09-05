@@ -32936,6 +32936,192 @@ setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
   },500);
   setTimeout(bancoMesa809Montar_,0);
 })();
+
+
+// ============================================================
+// V46.81.0 — MODO DE EMERGÊNCIA ESTÁVEL PARA A SESSÃO
+// Oficina 2 = cenário visual. Mapa da Mesa = entidades funcionais.
+// Não converte mais objetos da Oficina 2 em objetos de combate.
+// ============================================================
+(function(){
+  const MESA_ENT_FIELD_='mesaEntitiesV1';
+  let mesaEnt810Carregando_=false;
+
+  function mesaEnt810Mestre_(){
+    try{return typeof batalhaEhMestre_==='function' && batalhaEhMestre_();}catch(_){return false;}
+  }
+  function mesaEnt810MapaId_(){
+    const sel=document.getElementById('labMapaSalvoSelect');
+    return String((typeof labMapaSelecionado_!=='undefined'&&labMapaSelecionado_)||sel?.value||'').trim();
+  }
+  function mesaEnt810Clone_(v){return JSON.parse(JSON.stringify(v));}
+  function mesaEnt810ModeloLocal_(id){
+    return (objetosMapaDB||[]).find(m=>String(m.id)===String(id))||null;
+  }
+  async function mesaEnt810Modelo_(id){
+    id=String(id||'').trim(); if(!id)return null;
+    const local=mesaEnt810ModeloLocal_(id); if(local)return local;
+    try{
+      const snap=await getDoc(doc(db,'configuracoes',objetoMapaDocId_(id)));
+      if(snap.exists()){
+        const m={id,...snap.data()};
+        if(!(objetosMapaDB||[]).some(x=>String(x.id)===id))objetosMapaDB.push(m);
+        return m;
+      }
+    }catch(e){console.warn('[Mesa entities] modelo',id,e);}
+    return null;
+  }
+  function mesaEnt810Criar_(modelo,inst={}){
+    const m=mesaEnt810Clone_(modelo||{});
+    const pvMax=Number(inst.pvMax ?? m.pvMax ?? 0);
+    return {
+      ...m,
+      dadosBanco:mesaEnt810Clone_(m),
+      id:String(inst.id||`obj:${Date.now()}:${Math.floor(Math.random()*100000)}`),
+      modeloId:String(m.id||inst.modeloId||''),
+      objetoBancoId:String(m.id||inst.modeloId||''),
+      nome:m.nome||m.name||m.id||'Objeto',
+      name:m.name||m.nome||m.id||'Objeto',
+      x:Number(inst.x ?? 0), y:Number(inst.y ?? 0),
+      larguraM:Number(inst.larguraM ?? m.larguraM ?? 1),
+      alturaM:Number(inst.alturaM ?? m.alturaM ?? 1),
+      angulo:Number(inst.angulo ?? 0),
+      pvMax,
+      pvAtual:Number(inst.pvAtual ?? pvMax),
+      dureza:Number(inst.dureza ?? m.dureza ?? 0),
+      pesoKg:Number(inst.pesoKg ?? m.pesoKg ?? 0),
+      material:inst.material ?? m.material ?? '',
+      destrutivel:inst.destrutivel ?? (m.destrutivel!==false),
+      inflamavel:inst.inflamavel ?? !!m.inflamavel,
+      inflamabilidade:Number(inst.inflamabilidade ?? m.inflamabilidade ?? 0),
+      bloqueiaMovimento:inst.bloqueiaMovimento ?? (m.bloqueiaMovimento!==false),
+      bloqueiaVisao:inst.bloqueiaVisao ?? !!m.bloqueiaVisao,
+      destruido:!!inst.destruido,
+      pegandoFogoLab:!!inst.pegandoFogoLab,
+      fogoUltimaRodadaLab:Number(inst.fogoUltimaRodadaLab ?? -1),
+      ligado:inst.ligado ?? m.ligado ?? false,
+      origemMesaEntidadesV1:true
+    };
+  }
+  function mesaEnt810Serializar_(o){
+    const modeloId=String(o?.modeloId||o?.objetoBancoId||o?.dadosBanco?.id||'');
+    if(!modeloId)return null;
+    return {
+      id:String(o.id||''),modeloId,
+      x:Number(o.x||0),y:Number(o.y||0),
+      larguraM:Number(o.larguraM||1),alturaM:Number(o.alturaM||1),angulo:Number(o.angulo||0),
+      pvAtual:Number(o.pvAtual ?? o.pvMax ?? 0),
+      destruido:!!o.destruido,pegandoFogoLab:!!o.pegandoFogoLab,
+      fogoUltimaRodadaLab:Number(o.fogoUltimaRodadaLab ?? -1),
+      ligado:!!o.ligado
+    };
+  }
+  async function mesaEnt810HidratarLista_(lista){
+    const out=[],faltando=[];
+    for(const inst of (Array.isArray(lista)?lista:[])){
+      const modelo=await mesaEnt810Modelo_(inst?.modeloId);
+      if(!modelo){faltando.push(String(inst?.modeloId||'?'));continue;}
+      out.push(mesaEnt810Criar_(modelo,inst));
+    }
+    if(faltando.length)notificar_(`⚠️ Modelos não encontrados: ${[...new Set(faltando)].join(', ')}`,'aviso',6500);
+    return out;
+  }
+
+  // O banco da Mesa é uma interface do mestre e fica sempre entre mapa e histórico.
+  function mesaEnt810MontarBanco_(){
+    const box=document.getElementById('labLiveObjectBank770'),list=document.getElementById('labLiveObjectList770'),hist=document.getElementById('labHistoricoMesa');
+    if(!box||!list)return;
+    const master=mesaEnt810Mestre_();
+    box.style.setProperty('display',master?'block':'none','important');
+    if(!master)return;
+    if(hist&&box.nextElementSibling!==hist)hist.parentNode.insertBefore(box,hist);
+    const marcados=new Set([...list.querySelectorAll('input:checked')].map(x=>String(x.value)));
+    const arr=[...(objetosMapaDB||[])].sort((a,b)=>String(a.nome||a.id||'').localeCompare(String(b.nome||b.id||''),'pt-BR',{sensitivity:'base'}));
+    list.innerHTML=arr.map(o=>`<label style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px;min-height:24px;overflow:hidden"><input class="lab-live-obj-check770" type="checkbox" value="${escaparHtmlInventario_(o.id)}" ${marcados.has(String(o.id))?'checked':''}><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escaparHtmlInventario_(o.nome||o.id)}</span></label>`).join('');
+    const all=document.getElementById('labLiveObjAll770');
+    if(all&&!all.dataset.ent810){all.dataset.ent810='1';all.onchange=()=>document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770').forEach(c=>c.checked=all.checked);}
+    if(hist)hist.style.marginTop='28px';
+  }
+
+  // Adicionar objetos agora é exclusivamente Mesa -> construtor funcional.
+  window.labLiveAdicionarObjetos770_=function(){
+    if(!mesaEnt810Mestre_())return;
+    const ids=[...document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770:checked')].map(c=>String(c.value));
+    if(!ids.length){notificar_('Marque pelo menos um objeto do banco.','aviso',2500);return;}
+    labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
+    let off=0,last=null,adicionados=0;
+    for(const id of ids){
+      const m=mesaEnt810ModeloLocal_(id); if(!m)continue;
+      const inst=mesaEnt810Criar_(m,{x:Math.max(0,Math.min(labEstado_.larguraM,labEstado_.larguraM/2+off)),y:Math.max(0,Math.min(labEstado_.alturaM,labEstado_.alturaM/2+off))});
+      labEstado_.objetosLab.push(inst); last=inst; off+=.35; adicionados++;
+    }
+    if(last){labEstado_.objetoSelecionadoId=last.id;labEstado_.selecionadoId='';}
+    labSalvarLocal_();try{labAgendarSyncRemoto_();}catch(_){}labRender_();
+    notificar_(`${adicionados} objeto(s) funcional(is) adicionado(s) à Mesa.`,'sucesso',2600);
+  };
+
+  // Salva SOMENTE a camada de entidades no cabeçalho do mapa. Não toca no cenário da Oficina 2.
+  window.labSalvarMapaBanco_=async function(){
+    if(!mesaEnt810Mestre_())return;
+    const id=mesaEnt810MapaId_();
+    if(!id){notificar_('Selecione primeiro o mapa ao qual estes objetos pertencem.','aviso',4200);return;}
+    const entidades=(labEstado_.objetosLab||[]).map(mesaEnt810Serializar_).filter(Boolean);
+    try{
+      await setDoc(doc(db,'mapas',id),{[MESA_ENT_FIELD_]:entidades,mesaEntitiesAtualizadoEm:new Date().toISOString()},{merge:true});
+      const base=(mapasDB||[]).find(m=>String(m.id)===id);if(base)base[MESA_ENT_FIELD_]=mesaEnt810Clone_(entidades);
+      localStorage.setItem('mesa_estelar_ultimo_mapa_mesa_v1',id);
+      notificar_(`💾 ${entidades.length} objeto(s) interativo(s) salvo(s) neste mapa.`,'sucesso',4200);
+    }catch(e){console.error('[Mesa entities] salvar',e);notificar_(`Não foi possível salvar os objetos da Mesa. ${e?.message||''}`,'erro',7000);}
+  };
+
+  // Carregador direto: Oficina 2 fornece apenas o cenário; entidades vêm do campo separado.
+  window.labCarregarMapaBanco_=async function(){
+    if(mesaEnt810Carregando_)return;
+    const id=mesaEnt810MapaId_();
+    if(!id){notificar_('Selecione um mapa salvo.','aviso');return;}
+    mesaEnt810Carregando_=true;
+    try{
+      let base=(mapasDB||[]).find(x=>String(x.id)===id);
+      if(!base){notificar_('Mapa não encontrado no banco.','erro',4500);return;}
+      try{const ds=await getDoc(doc(db,'mapas',id));if(ds.exists())base={...base,...ds.data(),id};}catch(e){console.warn('[Mesa entities] cabeçalho',e);}
+      let m=base;try{m=await labMapaHidratar_(base);}catch(e){console.error(e);notificar_('Não foi possível carregar os dados completos do cenário.','erro',6000);return;}
+
+      labMapaSelecionado_=id;const sel=document.getElementById('labMapaSalvoSelect');if(sel)sel.value=id;
+      labEstado_.larguraM=Math.max(4,Number(m.larguraM||28));labEstado_.alturaM=Math.max(4,Number(m.alturaM||14));
+      labEstado_.fundo=String(m.fundo||'#d7d7d7');labEstado_.corGrade=String(m.corGrade||'#777777');labEstado_.gradeVisivel=m.gradeVisivel!==false;labEstado_.textura=String(m.textura||'nenhuma');
+      labEstado_.oficina2State=m.oficina2State?mesaEnt810Clone_(m.oficina2State):null;
+      if(m.oficina2State&&m.pxPorMetro)labEstado_.pxPorMetro=Number(m.pxPorMetro)||labEstado_.pxPorMetro;
+      labEstado_.desenhosLab=m.oficina2State?[]:mesaEnt810Clone_(m.desenhos||[]);labEstado_.formasLab=m.oficina2State?[]:mesaEnt810Clone_(m.formas||[]);
+
+      // ESSENCIAL: não importa nenhum objeto funcional vindo da Oficina 2.
+      // Somente a camada salva diretamente pela Mesa é reconstruída.
+      const entidadesRaw=Array.isArray(base[MESA_ENT_FIELD_])?base[MESA_ENT_FIELD_]:[];
+      labEstado_.objetosLab=await mesaEnt810HidratarLista_(entidadesRaw);
+      labEstado_.objetoSelecionadoId='';
+      for(const t of (labEstado_.tokens||[])){t.x=Math.max(0,Math.min(labEstado_.larguraM,Number(t.x||0)));t.y=Math.max(0,Math.min(labEstado_.alturaM,Number(t.y||0)));}
+      try{labDesenhoUndo_=[];labDesenhoRedo_=[];}catch(_){}
+      labSalvarLocal_();try{labAgendarSyncRemoto_();}catch(_){}labRender_();
+      localStorage.setItem('mesa_estelar_ultimo_mapa_mesa_v1',id);
+      notificar_(`Mapa “${m.nome||id}” carregado · ${labEstado_.objetosLab.length} objeto(s) interativo(s).`,'sucesso',4200);
+      mesaEnt810MontarBanco_();
+    }finally{mesaEnt810Carregando_=false;}
+  };
+
+  // A Oficina 2 não oferece mais o banco de objetos interativos.
+  function mesaEnt810OcultarBancoOficina_(){
+    const bank=document.getElementById('gm580ObjectBank');
+    if(bank){const parent=bank.parentElement;if(parent)parent.style.display='none';bank.style.display='none';}
+    document.querySelectorAll('#gm580Toolbar button').forEach(b=>{if((b.getAttribute('onclick')||'').includes('gm580AddObjects_'))b.style.display='none';});
+  }
+
+  // Mantém o painel vivo quando abas/renders antigos mexerem no DOM.
+  const observer=new MutationObserver(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();});
+  observer.observe(document.body,{childList:true,subtree:true});
+  document.addEventListener('toggle',e=>{if(e.target?.id==='labLiveObjectBank770'&&e.target.open)mesaEnt810MontarBanco_();},true);
+  document.addEventListener('click',()=>setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},0),true);
+  setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},0);
+  setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},1200);
+})();
 </script>
 <!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
 
