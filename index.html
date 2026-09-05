@@ -786,10 +786,10 @@
                     <div id="labMetricMap" onclick="labCliqueFundoMapa_(event)" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
                     <details id="labLiveObjectBank770" style="display:block;margin-top:8px;padding:7px 9px;border-radius:9px;background:rgba(9,15,38,.66);border:1px solid rgba(86,240,138,.25);">
-                      <summary style="cursor:pointer;font-weight:800;color:#d8ffe5;user-select:none;">🧱 Objetos do banco <span style="font-size:.72em;color:#7fdfff">v46.81.4</span></summary>
+                      <summary style="cursor:pointer;font-weight:800;color:#d8ffe5;user-select:none;">🧱 Objetos do banco <span style="font-size:.72em;color:#7fdfff">v46.81.5</span></summary>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 6px;">
                         <label style="margin:0;display:flex;align-items:center;gap:5px;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
-                        <button id="labLiveAddBtn814" class="btn-small btn-select" type="button">➕ Adicionar marcados</button>
+                        <button id="labLiveAddBtn815" class="btn-small btn-select" type="button">➕ Adicionar marcados</button><span id="labLiveAddStatus815" style="margin-left:10px;color:#9fc6d8;font-size:.84em;">Pronto.</span>
                         <small style="color:#9fb8c9">Os objetos entram no centro do mapa com PV, dureza, fogo e demais propriedades do banco.</small>
                       </div>
                       <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px;"></div>
@@ -32320,42 +32320,104 @@ function labInstanciaObjetoBanco770_(m,x,y,offset=0){
 }
 window.labLiveAdicionarObjetos770_=function(){
  try{
-   if(!batalhaEhMestre_()){notificar_('Somente o mestre pode adicionar objetos à Mesa.','aviso',2500);return;}
+   const status=document.getElementById('labLiveAddStatus815');
+   const setStatus=(msg,cor='#9fc6d8')=>{if(status){status.textContent=msg;status.style.color=cor;}};
+
+   if(!batalhaEhMestre_()){
+     setStatus('Bloqueado: conta não reconhecida como mestre.','#ffb4b4');
+     notificar_('Somente o mestre pode adicionar objetos à Mesa.','aviso',2500);
+     return;
+   }
+
    const marcados=[...document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770:checked')];
    const ids=marcados.map(c=>String(c.value));
-   if(!ids.length){notificar_('Marque pelo menos um objeto do banco.','aviso',2500);return;}
+   if(!ids.length){
+     setStatus('Nenhum objeto marcado.','#ffd58a');
+     notificar_('Marque pelo menos um objeto do banco.','aviso',2500);
+     return;
+   }
 
-   labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
+   const antes=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab.length:0;
+   if(!Array.isArray(labEstado_.objetosLab))labEstado_.objetosLab=[];
+
    let off=0,last=null,adicionados=[];
    for(const id of ids){
      const m=(objetosMapaDB||[]).find(o=>String(o.id)===id);
-     if(!m){console.warn('[Mesa 46.81.4] modelo não encontrado',id);continue;}
-     const x=Math.max(.5,Math.min(Number(labEstado_.larguraM||28)-.5,Number(labEstado_.larguraM||28)/2+off));
-     const y=Math.max(.5,Math.min(Number(labEstado_.alturaM||14)-.5,Number(labEstado_.alturaM||14)/2+off));
+     if(!m){
+       console.warn('[Mesa 46.81.5] modelo não encontrado',id);
+       continue;
+     }
+
+     // Nasce perto do canto superior esquerdo para ser inequivocamente visível.
+     const mw=Number(labEstado_.larguraM||28),mh=Number(labEstado_.alturaM||14);
+     const x=Math.max(.7,Math.min(mw-.7,1.5+(off%4)*1.25));
+     const y=Math.max(.7,Math.min(mh-.7,1.5+Math.floor(off/4)*1.25));
+
      const inst=labInstanciaObjetoBanco770_(m,x,y,off);
+     // garante dimensões e imagem imediatamente
+     inst.larguraM=Math.max(.2,Number(m.larguraM||m.largura||1));
+     inst.alturaM=Math.max(.2,Number(m.alturaM||m.altura||1));
+     inst.imagem=m.imagem||m.image||inst.imagem||'';
+
      labEstado_.objetosLab.push(inst);
-     last=inst;adicionados.push(m.nome||m.id);off+=.45;
+     last=inst;
+     adicionados.push(m.nome||m.id);
+     off++;
    }
-   if(!adicionados.length){notificar_('Nenhum objeto pôde ser adicionado. Veja o console.','erro',4000);return;}
-   if(last){labEstado_.objetoSelecionadoId=last.id;labEstado_.selecionadoId='';}
+
+   const depois=labEstado_.objetosLab.length;
+   if(!adicionados.length){
+     setStatus(`Executou, mas 0 modelos encontrados. Estado: ${antes} → ${depois}.`,'#ffb4b4');
+     notificar_('Nenhum objeto pôde ser criado.','erro',4500);
+     return;
+   }
+
+   if(last){
+     labEstado_.objetoSelecionadoId=last.id;
+     labEstado_.selecionadoId='';
+   }
+
+   // Primeiro render, depois persistência, igual ao fluxo funcional dos participantes.
+   labSalvarLocal_();
+   labRender_();
+
+   // Verificação objetiva do DOM depois do render.
+   let apareceu=false;
+   if(last){
+     try{
+       apareceu=!!document.querySelector(`#labMetricMap .lab-map-object[data-id="${CSS.escape(String(last.id))}"]`);
+     }catch(_){}
+   }
+
+   setStatus(
+     `${adicionados.length} criado(s). objetosLab: ${antes} → ${depois}. DOM: ${apareceu?'OK':'NÃO APARECEU'}.`,
+     apareceu?'#9dffb0':'#ffcf8a'
+   );
+
    marcados.forEach(c=>c.checked=false);
    const all=document.getElementById('labLiveObjAll770');if(all)all.checked=false;
-   // Renderiza ANTES de persistir: o objeto precisa aparecer mesmo se Storage/localStorage falhar depois.
-   labRender_();
-   labSalvarLocal_();
-   notificar_(`✅ ${adicionados.length} objeto(s) adicionado(s): ${adicionados.slice(0,3).join(', ')}${adicionados.length>3?'…':''}`,'sucesso',3500);
+
+   try{labAgendarSyncRemoto_();}catch(e){console.warn('[Mesa 46.81.5] sync remoto',e);}
+   notificar_(`✅ ${adicionados.length} objeto(s) criado(s) na Mesa.`,'sucesso',3000);
  }catch(e){
-   console.error('[Mesa 46.81.4] adicionar objetos',e);
+   console.error('[Mesa 46.81.5] adicionar objetos',e);
+   const status=document.getElementById('labLiveAddStatus815');
+   if(status){status.textContent=`ERRO: ${e?.message||e}`;status.style.color='#ff9c9c';}
    try{notificar_(`Erro ao adicionar objeto: ${e?.message||e}`,'erro',6000);}catch(_){}
  }
 };
 
-function lab814LigarBotaoObjetos_(){
- const b=document.getElementById('labLiveAddBtn814');
- if(!b||b.dataset.wired814)return;
- b.dataset.wired814='1';
- b.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();window.labLiveAdicionarObjetos770_();});
-}
+// Captura o clique independentemente de re-render, onclick inline ou wiring anterior.
+document.addEventListener('click',function(ev){
+ const btn=ev.target?.closest?.('#labLiveAddBtn815');
+ if(!btn)return;
+ ev.preventDefault();
+ ev.stopImmediatePropagation();
+ window.labLiveAdicionarObjetos770_();
+},true);
+
+
+function lab814LigarBotaoObjetos_(){ /* v46.81.5: clique capturado por delegação global */ }
 
 
 function labRepararObjetosBanco770_(){
