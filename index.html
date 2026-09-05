@@ -32462,80 +32462,119 @@ setTimeout(()=>{try{if(map804HidratarMesa_()){labSalvarLocal_();labRender_();}}c
 
 
 // ============================================================
-// V46.80.5 — hidratação direta no Firestore para referências da Mesa
-// Não depende do timing de objetosMapaDB. Cada modeloId é resolvido pelo
-// documento individual do Banco de Objetos e cacheado nesta sessão.
+// V46.80.6 — referências da Oficina 2 viram INSTÂNCIAS FUNCIONAIS na Mesa
+// Reusa o princípio do antigo editor da Mesa: o modelo do Banco é soberano
+// para PV/dureza/propriedades; a referência do mapa só fornece geometria/estado.
+// Não cacheia falhas de leitura.
 // ============================================================
-const map805ModeloCache_=new Map();
-async function map805ModeloDireto_(mid){
-  mid=String(mid||'');if(!mid)return null;
-  if(map805ModeloCache_.has(mid))return map805ModeloCache_.get(mid);
-  let m=(objetosMapaDB||[]).find(x=>String(x.id)===mid)||null;
-  // Se o banco em memória parece incompleto, consulta diretamente o documento.
-  if(!m || !(Number(m.pvMax)>0) || !(Number(m.dureza)>0)){
-    try{
-      const ds=await getDoc(doc(db,'configuracoes',objetoMapaDocId_(mid)));
-      if(ds.exists()){
-        const remoto={id:mid,...ds.data()};
-        // Remoto é soberano para os campos funcionais atuais.
-        m={...(m||{}),...remoto,id:mid};
-        const i=(objetosMapaDB||[]).findIndex(x=>String(x.id)===mid);
-        if(i>=0)objetosMapaDB[i]=m; else objetosMapaDB.push(m);
-      }
-    }catch(e){console.warn('V46.80.5 modelo direto',mid,e);}
+async function map806BuscarModelo_(mid){
+  mid=String(mid||'').trim();
+  if(!mid)return null;
+  let local=(objetosMapaDB||[]).find(x=>String(x?.id)===mid)||null;
+  let remoto=null;
+  try{
+    const ds=await getDoc(doc(db,'configuracoes',objetoMapaDocId_(mid)));
+    if(ds.exists())remoto={id:mid,...ds.data()};
+  }catch(e){
+    console.warn('V46.80.6 leitura direta do modelo',mid,e);
   }
-  map805ModeloCache_.set(mid,m);return m;
+  const m=remoto?{...(local||{}),...remoto,id:mid}:local;
+  if(m){
+    const i=(objetosMapaDB||[]).findIndex(x=>String(x?.id)===mid);
+    if(i>=0)objetosMapaDB[i]=m;else objetosMapaDB.push(m);
+  }
+  return m||null;
 }
-function map805AplicarModelo_(o,m){
-  if(!o||!m)return false;
-  const pvMax=Math.max(0,Number(m.pvMax??m.pv??m.vidaMax??m.vida??0));
-  const dureza=Math.max(0,Number(m.dureza??m.hardness??0));
-  const peso=Math.max(0,Number(m.pesoKg??m.peso??m.weightKg??0));
-  o.modeloId=String(m.id||o.modeloId||o.objetoBancoId||'');
-  o.objetoBancoId=o.modeloId;
-  o.nome=m.nome||m.name||o.nome||o.modeloId||'Objeto';o.name=o.nome;
-  if(m.imagem||m.image)o.imagem=m.imagem||m.image;
-  o.pvMax=pvMax;o.dureza=dureza;o.pesoKg=peso;
-  o.material=m.material||o.material||'';
-  o.destrutivel=m.destrutivel!==false;o.inflamavel=!!m.inflamavel;
-  o.inflamabilidade=Math.max(0,Math.min(5,Number(m.inflamabilidade||0)));
-  o.bloqueiaMovimento=m.bloqueiaMovimento!==false;o.bloqueiaVisao=!!m.bloqueiaVisao;
-  if(m.fixoAoMapa!==undefined)o.fixoAoMapa=!!m.fixoAoMapa;
-  if(m.fonteLuz!==undefined)o.fonteLuz=!!m.fonteLuz;
-  if(m.luzLarguraM!==undefined)o.luzLarguraM=Number(m.luzLarguraM||0);
-  if(m.luzAlturaM!==undefined)o.luzAlturaM=Number(m.luzAlturaM||0);
-  if(m.luzRaioM!==undefined)o.luzRaioM=Number(m.luzRaioM||0);
-  // Uma referência recém-carregada nasce íntegra. Estado realmente destruído
-  // continua respeitado.
-  const pa=Number(o.pvAtual);
-  if(!Number.isFinite(pa) || (o.mapRef && !o.destruido && pa<=0))o.pvAtual=pvMax;
-  else o.pvAtual=Math.max(0,Math.min(pa,pvMax||pa));
-  o.dadosBanco=JSON.parse(JSON.stringify(m));
-  return true;
+function map806Num_(...vals){
+  for(const v of vals){const n=Number(v);if(Number.isFinite(n))return n;}
+  return 0;
 }
-async function map805HidratarMesaDireto_(){
-  if(!labEstado_||!Array.isArray(labEstado_.objetosLab))return 0;
-  let n=0;
+function map806InstanciaFuncional_(refObj,m){
+  if(!refObj||!m)return refObj;
+  const ref=JSON.parse(JSON.stringify(refObj));
+  const snap=JSON.parse(JSON.stringify(m));
+  const pvMax=Math.max(0,map806Num_(m.pvMax,m.pv,m.vidaMax,m.vida));
+  const tinhaEstadoDinamico=ref.pvAtual!==undefined||ref.destruido===true||ref.pegandoFogoLab===true;
+  const pvAtual=tinhaEstadoDinamico&&Number.isFinite(Number(ref.pvAtual))
+    ?Math.max(0,Math.min(pvMax,Number(ref.pvAtual)))
+    :pvMax;
+  return {
+    ...snap,
+    // identidade/ligação ao Banco
+    id:String(ref.id||`obj:${Date.now()}:${Math.floor(Math.random()*100000)}`),
+    modeloId:String(m.id||ref.modeloId||ref.objetoBancoId||''),
+    objetoBancoId:String(m.id||ref.objetoBancoId||ref.modeloId||''),
+    dadosBanco:snap,
+    nome:m.nome||m.name||ref.nome||ref.name||m.id||'Objeto',
+    name:m.name||m.nome||ref.name||ref.nome||m.id||'Objeto',
+    imagem:m.imagem||m.image||ref.imagem||'',
+    // geometria é propriedade da instância do mapa
+    x:map806Num_(ref.x,0),y:map806Num_(ref.y,0),
+    larguraM:Math.max(.05,map806Num_(ref.larguraM,m.larguraM,m.largura,1)),
+    alturaM:Math.max(.05,map806Num_(ref.alturaM,m.alturaM,m.altura,1)),
+    angulo:map806Num_(ref.angulo,0),
+    ordemOficina:map806Num_(ref.ordemOficina,0),
+    fixada:ref.fixada!==undefined?!!ref.fixada:!!m.fixoAoMapa,
+    opacity:Number.isFinite(Number(ref.opacity))?Number(ref.opacity):1,
+    sombraOficina:ref.sombraOficina||'nenhuma',
+    sombraDirecao:ref.sombraDirecao||'SE',
+    sombraDist:map806Num_(ref.sombraDist,4),
+    mapRef:true,
+    // propriedades funcionais SEMPRE vêm do modelo atual do Banco
+    pvMax,pvAtual,
+    dureza:Math.max(0,map806Num_(m.dureza,m.hardness)),
+    pesoKg:Math.max(0,map806Num_(m.pesoKg,m.peso,m.weightKg)),
+    material:m.material||'',
+    destrutivel:m.destrutivel!==false,
+    inflamavel:!!m.inflamavel,
+    inflamabilidade:Math.max(0,Math.min(5,map806Num_(m.inflamabilidade,m.inflamabilidadeLab))),
+    bloqueiaMovimento:m.bloqueiaMovimento!==false,
+    bloqueiaVisao:!!m.bloqueiaVisao,
+    fixoAoMapa:m.fixoAoMapa!==undefined?!!m.fixoAoMapa:!!ref.fixoAoMapa,
+    fonteLuz:!!m.fonteLuz,
+    luzLarguraM:map806Num_(m.luzLarguraM,0),
+    luzAlturaM:map806Num_(m.luzAlturaM,0),
+    luzRaioM:map806Num_(m.luzRaioM,0),
+    // preserva estado dinâmico apenas se ele realmente veio na instância
+    destruido:!!ref.destruido,
+    pegandoFogoLab:!!ref.pegandoFogoLab,
+    fogoUltimaRodadaLab:map806Num_(ref.fogoUltimaRodadaLab,-1),
+    despedacadoLab:!!ref.despedacadoLab,
+    explodindoLab:!!ref.explodindoLab
+  };
+}
+async function map806ReconstruirObjetosMesa_(){
+  if(!labEstado_||!Array.isArray(labEstado_.objetosLab))return {ok:0,fail:[]};
+  const nova=[];let ok=0;const fail=[];
   for(const o of labEstado_.objetosLab){
-    const mid=String(o?.modeloId||o?.objetoBancoId||'');if(!mid||mid==='imagem_importada')continue;
-    const m=await map805ModeloDireto_(mid);
-    if(map805AplicarModelo_(o,m))n++;
+    const mid=String(o?.modeloId||o?.objetoBancoId||o?.dadosBanco?.id||'').trim();
+    if(!mid||mid==='imagem_importada'){nova.push(o);continue;}
+    const m=await map806BuscarModelo_(mid);
+    if(!m){nova.push(o);fail.push(mid);continue;}
+    nova.push(map806InstanciaFuncional_(o,m));ok++;
   }
-  return n;
+  labEstado_.objetosLab=nova;
+  return {ok,fail:[...new Set(fail)]};
 }
-const map805LoadBase_=window.labCarregarMapaBanco_;
-if(map805LoadBase_){
+
+// A reconstrução ocorre DEPOIS do carregador inteiro legado terminar. Assim qualquer
+// wrapper antigo pode fazer sua conversão e, no final, substituímos as refs por objetos
+// idênticos aos que o antigo editor da Mesa criava diretamente do Banco.
+const map806LoadBase_=window.labCarregarMapaBanco_;
+if(map806LoadBase_){
   window.labCarregarMapaBanco_=async function(){
-    const r=await map805LoadBase_.apply(this,arguments);
-    const n=await map805HidratarMesaDireto_();
-    try{labSalvarLocal_();labRender_();}catch(_){ }
-    if(n)notificar_(`Objetos reconstruídos diretamente do Banco: ${n}.`,'info',2400);
+    const r=await map806LoadBase_.apply(this,arguments);
+    const rr=await map806ReconstruirObjetosMesa_();
+    try{labSalvarLocal_();labRender_();}catch(e){console.warn('V46.80.6 render pós-instância',e);}
+    if(rr.fail.length){
+      notificar_(`⚠️ ${rr.ok} objeto(s) reconstruído(s); não encontrei no Banco: ${rr.fail.join(', ')}`,'aviso',8000);
+    }else if(rr.ok){
+      notificar_(`✅ ${rr.ok} objeto(s) reconstruído(s) como instâncias funcionais.`,'sucesso',3000);
+    }
     return r;
   };
 }
-window.map805HidratarMesaDireto_=map805HidratarMesaDireto_;
-setTimeout(async()=>{try{const n=await map805HidratarMesaDireto_();if(n){labSalvarLocal_();labRender_();}}catch(e){console.warn('V46.80.5 hidratação inicial',e);}},1700);
-
+window.map806ReconstruirObjetosMesa_=map806ReconstruirObjetosMesa_;
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
