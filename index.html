@@ -32343,6 +32343,58 @@ const map801Timer_=setInterval(async()=>{
 },700);
 
 
+
+// V46.80.2 — salvamento robusto: Storage + cabeçalho Firestore mínimo
+async function map802PrepararDados_(dados,mapId){ return await map801Externalizar_(dados,mapId,new Map(),{n:1}); }
+function map802ContarDataImages_(v,path='raiz',out=[]){
+  if(typeof v==='string'){ if(v.includes('data:image/'))out.push({path,tamanho:v.length}); return out; }
+  if(Array.isArray(v)){v.forEach((x,i)=>map802ContarDataImages_(x,`${path}[${i}]`,out));return out;}
+  if(v&&typeof v==='object')for(const [k,x] of Object.entries(v))map802ContarDataImages_(x,`${path}.${k}`,out);
+  return out;
+}
+labMapaSepararPayload_=function(dados){
+  const meta={id:String(dados.id||''),nome:String(dados.nome||dados.id||'Mapa'),larguraM:Number(dados.larguraM||0),alturaM:Number(dados.alturaM||0),pxPorMetro:Number(dados.pxPorMetro||0),corGrade:String(dados.corGrade||''),gradeVisivel:dados.gradeVisivel!==false,criadoPor:String(dados.criadoPor||''),atualizadoEm:String(dados.atualizadoEm||new Date().toISOString()),oficina2:!!dados.oficina2,midiaStorage:!!dados.midiaStorage,tipo:'mapa',formato:'partes-v1'};
+  const payload={};
+  for(const [k,v] of Object.entries(dados||{})){
+    if(['id','nome','larguraM','alturaM','pxPorMetro','corGrade','gradeVisivel','criadoPor','atualizadoEm','oficina2','midiaStorage'].includes(k))continue;
+    payload[k]=v;
+  }
+  // URLs pequenas podem ficar no cabeçalho; data URLs nunca.
+  if(typeof dados.fundo==='string'&&!dados.fundo.includes('data:image/'))meta.fundo=dados.fundo;
+  if(typeof dados.textura==='string'&&!dados.textura.includes('data:image/'))meta.textura=dados.textura;
+  const texto=JSON.stringify(payload),partes=[];
+  for(let i=0;i<texto.length;i+=LAB_MAPA_PARTE_CHARS_)partes.push(texto.slice(i,i+LAB_MAPA_PARTE_CHARS_));
+  if(!partes.length)partes.push('{}'); meta.partes=partes.length;meta.tamanhoSerializado=texto.length;
+  return {meta,partes};
+};
+labMapaHidratar_=async function(m){
+  if(!m)return null;if(m.formato!=='partes-v1')return m;
+  const n=Math.max(1,Number(m.partes||1));let texto='';
+  for(let i=0;i<n;i++){const snap=await getDoc(doc(db,'mapas',labMapaParteId_(m.id,i)));if(!snap.exists())throw new Error(`Parte ${i+1}/${n} do mapa não encontrada.`);texto+=String(snap.data()?.dados||'');}
+  const payload=JSON.parse(texto||'{}');return {...m,...payload,id:m.id,nome:m.nome||payload.nome||m.id};
+};
+gm2saveLibrary=async function(){
+  if(!batalhaEhMestre_())return;
+  const input=document.getElementById('gm2mapname'),nome=String(input?.value||gm2.st.name||'').trim();
+  if(!nome){notificar_('Digite um nome para o mapa antes de salvar.','aviso',3200);return;}
+  let id=String(gm2.st.mapId||''),existente=id?(mapasDB||[]).find(m=>String(m.id)===id):null;
+  if(!id){id=labMapaSlug_(nome);let base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;}
+  notificar_(`⏳ Enviando imagens e salvando “${nome}”…`,'info',3000);
+  try{
+    const stateStorage=await map801Externalizar_(gm2clone(gm2.st),id,new Map(),{n:1});
+    const prev=gm2.st;gm2.st=stateStorage;let legacy;try{legacy=gm2toLegacy();}finally{gm2.st=prev;}
+    let dados={id,nome,larguraM:stateStorage.w,alturaM:stateStorage.h,pxPorMetro:stateStorage.ppm,fundo:stateStorage.bg,corGrade:stateStorage.grid,gradeVisivel:stateStorage.showGrid,textura:stateStorage.texture,desenhos:[],formas:[],objetos:legacy.objetos.filter(o=>!o.imagemImportada),oficina2State:stateStorage,criadoPor:existente?.criadoPor||currentUserUid||'',atualizadoEm:new Date().toISOString(),oficina2:true,midiaStorage:true};
+    dados=await map802PrepararDados_(dados,id);
+    const restantes=map802ContarDataImages_(dados);if(restantes.length)console.warn('data:image restantes (isoladas em partes):',restantes);
+    const salvo=await labMapaSalvarFirestore_(dados,Number(existente?.partes||0));
+    const ix=(mapasDB||[]).findIndex(m=>String(m.id)===String(id));if(ix>=0)mapasDB[ix]=salvo;else mapasDB.push(salvo);
+    gm2.st=stateStorage;gm2.st.mapId=id;gm2.st.name=nome;gm2saveLocal();labMapaSelecionado_=id;labAtualizarSelectMapas_();gm2populateMapSelect();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+    notificar_(`💾 “${nome}” salvo. ${salvo.partes||0} parte(s).`,'sucesso',4200);
+  }catch(e){console.error('46.80.2 salvar',e);notificar_(`Não foi possível salvar “${nome}”: ${e?.message||e}`,'erro',9000);}
+};
+window.gm2saveLibrary=gm2saveLibrary;
+function map802Religar_(){const b=document.getElementById('gm2save');if(b){b.onclick=()=>gm2saveLibrary();b.__map802=true;}}
+setInterval(map802Religar_,800);setTimeout(map802Religar_,0);
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
