@@ -1455,14 +1455,10 @@
                               </div>
                             </label>
 <label>Inflamabilidade (0–5)<input id="objMapaInflamabilidade" type="number" min="0" max="5" step="1" value="0" title="0 = não inflamável; 5 = pega fogo com extrema facilidade"></label>
-<label>Área iluminada — largura (m)<input id="objMapaLuzLargura" type="number" min="0" step="0.1" value="0" placeholder="0"></label>
-<label>Área iluminada — altura (m)<input id="objMapaLuzAltura" type="number" min="0" step="0.1" value="0" placeholder="0"></label>
-<label>Área iluminada — raio (m)<input id="objMapaLuzRaio" type="number" min="0" step="0.1" value="0" placeholder="0"></label>
                           </div>
                           <div style="display:flex;gap:14px;flex-wrap:wrap;margin:10px 0;">
                             <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaDestrutivel" type="checkbox" checked> Destrutível</label>
                             <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaInflamavel" type="checkbox"> Inflamável</label>
-                            <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaFonteLuz" type="checkbox"> Fonte de luz</label>
                             <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaBloqueiaMov" type="checkbox" checked> Bloqueia movimento</label>
                             <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaBloqueiaVisao" type="checkbox"> Bloqueia visão</label>
 <label style="display:flex;align-items:center;gap:6px;"><input id="objMapaFixo" type="checkbox"> Fixo ao mapa</label>
@@ -2145,8 +2141,6 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-// Disponibiliza primitivas usadas pelos pequenos módulos de compatibilidade adicionados ao fim do HTML.
-Object.assign(window,{db,setDoc,getDoc,doc});
 
 let currentUserUid = null;
 let userData = null;
@@ -9117,8 +9111,6 @@ function labMapaDadosAtuais_(nome,id=''){
         textura:String(labEstado_.textura||'nenhuma'),
         desenhos:labDesenhoSnapshot_(),
         objetos:JSON.parse(JSON.stringify(labEstado_.objetosLab||[])),
-        visibilidadeJogadores:Number(labEstado_.visibilidadeJogadores||0),
-        zonasVisibilidadeLab:JSON.parse(JSON.stringify(labEstado_.zonasVisibilidadeLab||[])),
         criadoPor:currentUserUid||'',
         atualizadoEm:new Date().toISOString()
     };
@@ -9237,8 +9229,6 @@ window.labCarregarMapaBanco_=async function(){
     labEstado_.corGrade=String(m.corGrade||'#777777');
     labEstado_.gradeVisivel=m.gradeVisivel!==false;
     labEstado_.textura=String(m.textura||'nenhuma');
-    labEstado_.visibilidadeJogadores=Math.max(0,Math.min(100,Number(m.visibilidadeJogadores||0)));
-    labEstado_.zonasVisibilidadeLab=JSON.parse(JSON.stringify(m.zonasVisibilidadeLab||[]));
     labEstado_.oficina2State=m.oficina2State?JSON.parse(JSON.stringify(m.oficina2State)):null;
     if(m.oficina2State&&m.pxPorMetro)labEstado_.pxPorMetro=Number(m.pxPorMetro)||labEstado_.pxPorMetro;
     labEstado_.desenhosLab=m.oficina2State?[]:JSON.parse(JSON.stringify(m.desenhos||[]));
@@ -16969,7 +16959,7 @@ function preencherEditorObjetoMapa_(o){
     document.getElementById('editorObjetoMapaTitulo').textContent=o?.id?'Editar objeto':'Novo objeto';document.getElementById('objMapaEditId').value=o?.id||'';
     document.getElementById('objMapaNome').value=o?.nome||'';document.getElementById('objMapaLargura').value=o?.larguraM||1;document.getElementById('objMapaAltura').value=o?.alturaM||1;
     document.getElementById('objMapaPV').value=o?.pvMax??10;document.getElementById('objMapaDureza').value=o?.dureza??2;document.getElementById('objMapaPesoKg').value=o?.pesoKg??Math.max(1,Number(o?.larguraM||1)*Number(o?.alturaM||1)*20);document.getElementById('objMapaDestrutivel').checked=o?.destrutivel!==false;
-    document.getElementById('objMapaInflamavel').checked=!!o?.inflamavel;document.getElementById('objMapaFonteLuz').checked=!!o?.fonteLuz;document.getElementById('objMapaLuzLargura').value=Number(o?.luzLarguraM||0);document.getElementById('objMapaLuzAltura').value=Number(o?.luzAlturaM||0);document.getElementById('objMapaLuzRaio').value=Number(o?.luzRaioM||0);document.getElementById('objMapaBloqueiaMov').checked=o?.bloqueiaMovimento!==false;document.getElementById('objMapaBloqueiaVisao').checked=!!o?.bloqueiaVisao;
+    document.getElementById('objMapaInflamavel').checked=!!o?.inflamavel;document.getElementById('objMapaBloqueiaMov').checked=o?.bloqueiaMovimento!==false;document.getElementById('objMapaBloqueiaVisao').checked=!!o?.bloqueiaVisao;
     const url=document.getElementById('objMapaImagemUrl'),prev=document.getElementById('objMapaImagemPreview'),file=document.getElementById('objMapaImagemFile');url.value=(o?.imagem&&/^https?:/i.test(o.imagem))?o.imagem:'';
     const img=o?.imagem||objetoSvgData_('caixa');prev.src=img;prev.dataset.imagem=img;if(file)file.value='';e.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -21506,10 +21496,6 @@ window.salvarObjetoMapaEditor_=async function(){
         pesoKg:objetoNumero_(document.getElementById('objMapaPesoKg')?.value,10,.1),
         destrutivel:!!document.getElementById('objMapaDestrutivel')?.checked,
         inflamavel:infl>0,inflamabilidade:infl,
-        fonteLuz:!!document.getElementById('objMapaFonteLuz')?.checked,
-        luzLarguraM:objetoNumero_(document.getElementById('objMapaLuzLargura')?.value,0,0),
-        luzAlturaM:objetoNumero_(document.getElementById('objMapaLuzAltura')?.value,0,0),
-        luzRaioM:objetoNumero_(document.getElementById('objMapaLuzRaio')?.value,0,0),
         bloqueiaMovimento:!!document.getElementById('objMapaBloqueiaMov')?.checked,
         bloqueiaVisao:!!document.getElementById('objMapaBloqueiaVisao')?.checked,
         fixoAoMapa:!!document.getElementById('objMapaFixo')?.checked
@@ -31020,7 +31006,7 @@ function gm2paste(ev){
  if(sig===gm2.lastExternalPasteSig&&Date.now()-gm2.lastExternalPasteAt<1600)return;
  gm2.lastExternalPasteSig=sig;gm2.lastExternalPasteAt=Date.now();gm2importImageFile(f);
 }
-function gm2imagemComprimir_(src,maxPx=3000,quality=.92){
+function gm2imagemComprimir_(src,maxPx=1800,quality=.84){
  return new Promise(resolve=>{
    if(!src||!String(src).startsWith('data:image/')){resolve(src);return;}
    const im=new Image();
@@ -31048,7 +31034,7 @@ async function gm2compactarImagensEstado_(){
  let mudou=false;
  for(const e of (gm2.st.elements||[])){
    if(e.type!=='image'||!String(e.src||'').startsWith('data:image/')||String(e.src).length<450000)continue;
-   const novo=await gm2imagemComprimir_(e.src,2600,.90);
+   const novo=await gm2imagemComprimir_(e.src,1600,.80);
    if(novo&&novo.length<e.src.length){e.src=novo;mudou=true;}
  }
  if(mudou){gm2saveLocal();gm2render();}
@@ -31083,7 +31069,7 @@ function gm2objMetaLegacy_(e){
   'nome','nome_en','nome_zh','categoria','material','descricao','descricao_en','descricao_zh',
   'pvMax','pvAtual','dureza','pesoKg','destrutivel','destruido',
   'inflamavel','inflamabilidade','inflamabilidadeLab','pegandoFogoLab','fogoUltimaRodadaLab',
-  'bloqueiaMovimento','bloqueiaVisao','fixoAoMapa','tipoVisual','rascunho','fonteLuz','luzLarguraM','luzAlturaM','luzRaioM','luzLigada'
+  'bloqueiaMovimento','bloqueiaVisao','fixoAoMapa','tipoVisual','rascunho'
  ];
  const out={};
  for(const k of keys)if(e[k]!==undefined)out[k]=gm2clone(e[k]);
@@ -31116,7 +31102,6 @@ async function gm2saveLibrary(){
  if(!id){
    id=labMapaSlug_(nome);let base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;
  }
- await gm281StoragePrepararEstado_(id);
  const legacy=gm2toLegacy();
  const dados={
    id,nome,larguraM:gm2.st.w,alturaM:gm2.st.h,pxPorMetro:gm2.st.ppm,
@@ -31125,7 +31110,7 @@ async function gm2saveLibrary(){
    desenhos:[],formas:[],
    objetos:legacy.objetos.filter(o=>!o.imagemImportada),
    oficina2State:gm2clone(gm2.st),
-   criadoPor:existente?.criadoPor||currentUserUid||'',atualizadoEm:new Date().toISOString(),oficina2:true,visibilidadeJogadores:Number(existente?.visibilidadeJogadores??gm2.st.visibilidadeJogadores??0)
+   criadoPor:existente?.criadoPor||currentUserUid||'',atualizadoEm:new Date().toISOString(),oficina2:true
  };
  try{
    const salvo=await labMapaSalvarFirestore_(dados,Number(existente?.partes||0));
@@ -32239,6 +32224,125 @@ labRender_=function(){
 window.labRender_=labRender_;
 
 setTimeout(()=>{try{labLiveRenderObjectBank770_();}catch(_){}},900);
+
+// ============================================================
+// V46.80.1 REBUILD — SOMENTE infraestrutura de mapas
+// Base: v46.80.0 confirmada funcional.
+// 1) Imagens da Oficina 2 -> Firebase Storage antes de salvar.
+// 2) Firestore guarda URLs, não data:image/base64.
+// 3) Último mapa da Mesa é persistido e restaurado após recarregar.
+// Este bloco fica DENTRO do script type="module", após todo o código legado.
+// ============================================================
+const MAP801_LAST_KEY_='mesa_estelar_ultimo_mapa_mesa_v1';
+
+function map801ExtFromData_(s){
+ const m=String(s||'').match(/^data:image\/([^;,]+)/i);let x=(m?.[1]||'webp').toLowerCase();
+ if(x==='jpeg')x='jpg';if(!/^(png|webp|jpg|gif)$/.test(x))x='webp';return x;
+}
+async function map801UploadDataUrl_(dataUrl,mapId,cache,seq){
+ if(!String(dataUrl||'').startsWith('data:image/'))return dataUrl;
+ if(cache.has(dataUrl))return cache.get(dataUrl);
+ if(!currentUserUid)throw new Error('Usuário não autenticado para enviar imagens do mapa.');
+ const blob=await (await fetch(dataUrl)).blob();
+ const ext=map801ExtFromData_(dataUrl);
+ const safe=String(mapId||'mapa').replace(/[^a-zA-Z0-9_-]+/g,'_');
+ const caminho=`mapas/${currentUserUid}/${safe}/${Date.now()}_${String(seq.n++).padStart(4,'0')}.${ext}`;
+ const snap=await uploadBytes(ref(storage,caminho),blob,{contentType:blob.type||`image/${ext}`});
+ const url=await getDownloadURL(snap.ref);cache.set(dataUrl,url);return url;
+}
+async function map801Externalizar_(value,mapId,cache=new Map(),seq={n:1}){
+ if(typeof value==='string')return value.startsWith('data:image/')?await map801UploadDataUrl_(value,mapId,cache,seq):value;
+ if(Array.isArray(value)){const out=[];for(const v of value)out.push(await map801Externalizar_(v,mapId,cache,seq));return out;}
+ if(value&&typeof value==='object'){
+   const out={};for(const [k,v] of Object.entries(value))out[k]=await map801Externalizar_(v,mapId,cache,seq);return out;
+ }
+ return value;
+}
+
+// Substitui o salvamento da Oficina 2 no próprio escopo do módulo.
+gm2saveLibrary=async function(){
+ if(!batalhaEhMestre_())return;
+ const input=document.getElementById('gm2mapname');
+ const nome=String(input?.value||gm2.st.name||'').trim();
+ if(!nome){notificar_('Digite um nome para o mapa antes de salvar.','aviso',3200);input?.focus();return;}
+ let id=String(gm2.st.mapId||'');
+ let existente=id?(mapasDB||[]).find(m=>String(m.id)===id):null;
+ if(!id){id=labMapaSlug_(nome);let base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;}
+ notificar_(`⏳ Salvando “${nome}”…`,'info',2500);
+ try{
+   // Clona primeiro. O mapa aberto só troca Base64 por URLs depois que o upload terminou.
+   const stateStorage=await map801Externalizar_(gm2clone(gm2.st),id);
+   const prev=gm2.st;gm2.st=stateStorage;
+   let legacy;
+   try{legacy=gm2toLegacy();}finally{gm2.st=prev;}
+   const dados={
+     id,nome,larguraM:stateStorage.w,alturaM:stateStorage.h,pxPorMetro:stateStorage.ppm,
+     fundo:stateStorage.bg,corGrade:stateStorage.grid,gradeVisivel:stateStorage.showGrid,textura:stateStorage.texture,
+     desenhos:[],formas:[],objetos:legacy.objetos.filter(o=>!o.imagemImportada),
+     oficina2State:stateStorage,criadoPor:existente?.criadoPor||currentUserUid||'',
+     atualizadoEm:new Date().toISOString(),oficina2:true,midiaStorage:true
+   };
+   const salvo=await labMapaSalvarFirestore_(dados,Number(existente?.partes||0));
+   const ix=(mapasDB||[]).findIndex(m=>String(m.id)===String(id));if(ix>=0)mapasDB[ix]=salvo;else mapasDB.push(salvo);
+   gm2.st=stateStorage;gm2.st.mapId=id;gm2.st.name=nome;gm2saveLocal();
+   labMapaSelecionado_=id;labAtualizarSelectMapas_();gm2populateMapSelect();
+   if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+   notificar_(`💾 “${nome}” salvo no Firebase.`,'sucesso',3500);
+ }catch(e){console.error('Oficina 2 / Storage / salvar',e);notificar_(`Não foi possível salvar “${nome}”: ${e?.message||e}`,'erro',8000);}
+};
+window.gm2saveLibrary=gm2saveLibrary;
+
+// O onclick foi atribuído a uma referência antiga durante a montagem da UI.
+// Religamos o botão explicitamente sempre que a Oficina 2 existir.
+function map801ReligarSalvar_(){const b=document.getElementById('gm2save');if(b&&b.__map801!==true){b.onclick=()=>gm2saveLibrary();b.__map801=true;}}
+const map801InstallBase_=gm2installTab;
+gm2installTab=function(){const r=map801InstallBase_.apply(this,arguments);setTimeout(map801ReligarSalvar_,0);return r;};
+window.gm2installTab=gm2installTab;
+setInterval(map801ReligarSalvar_,1500);
+
+function map801GuardarAtivo_(id){try{id=String(id||'');if(id)localStorage.setItem(MAP801_LAST_KEY_,id);else localStorage.removeItem(MAP801_LAST_KEY_);}catch(_){}}
+function map801LerAtivo_(){try{return String(localStorage.getItem(MAP801_LAST_KEY_)||'');}catch(_){return '';}}
+async function map801AplicarMapaMesa_(m0,silencioso=false){
+ if(!m0)return false;let m=m0;
+ try{m=await labMapaHidratar_(m0);}catch(e){console.error('Restaurar mapa ativo',e);return false;}
+ labMapaSelecionado_=String(m.id||m0.id||'');
+ labEstado_.larguraM=Math.max(4,Number(m.larguraM||28));labEstado_.alturaM=Math.max(4,Number(m.alturaM||14));
+ labEstado_.fundo=String(m.fundo||'#d7d7d7');labEstado_.corGrade=String(m.corGrade||'#777777');labEstado_.gradeVisivel=m.gradeVisivel!==false;labEstado_.textura=String(m.textura||'nenhuma');
+ labEstado_.oficina2State=m.oficina2State?JSON.parse(JSON.stringify(m.oficina2State)):null;
+ if(m.oficina2State&&m.pxPorMetro)labEstado_.pxPorMetro=Number(m.pxPorMetro)||labEstado_.pxPorMetro;
+ labEstado_.desenhosLab=m.oficina2State?[]:JSON.parse(JSON.stringify(m.desenhos||[]));labEstado_.formasLab=m.oficina2State?[]:JSON.parse(JSON.stringify(m.formas||[]));
+ labEstado_.objetosLab=JSON.parse(JSON.stringify(m.objetos||[])).filter(o=>!m.oficina2State||!o.imagemImportada);
+ labEstado_.objetoSelecionadoId='';
+ for(const t of labEstado_.tokens||[]){t.x=Math.max(0,Math.min(labEstado_.larguraM,Number(t.x||0)));t.y=Math.max(0,Math.min(labEstado_.alturaM,Number(t.y||0)));}
+ try{labHidratarObjetosMesa780_();}catch(_){}
+ map801GuardarAtivo_(labMapaSelecionado_);labAtualizarSelectMapas_();labSalvarLocal_();labRender_();
+ if(!silencioso)notificar_(`Mapa “${m.nome||m.id}” carregado.`,'info',3000);return true;
+}
+
+// Carregamento manual passa a registrar explicitamente qual mapa é o ativo.
+window.labCarregarMapaBanco_=async function(){
+ const m0=(mapasDB||[]).find(x=>String(x.id)===String(labMapaSelecionado_));
+ if(!m0){notificar_('Selecione um mapa salvo.','aviso');return;}
+ if((labEstado_.desenhosLab||[]).length&&!confirm(`Carregar “${m0.nome||m0.id}”? O terreno/desenho atual será substituído. Os participantes não serão removidos.`))return;
+ await map801AplicarMapaMesa_(m0,false);
+};
+
+// Publicar pela Oficina 2 também define esse mapa como o mapa ativo da Mesa.
+const map801PublishBase_=gm2publish;
+gm2publish=function(){const r=map801PublishBase_.apply(this,arguments);if(gm2.st.mapId){labMapaSelecionado_=String(gm2.st.mapId);map801GuardarAtivo_(gm2.st.mapId);}return r;};
+window.gm2publish=gm2publish;
+
+// Depois que os bancos terminarem de carregar, restaura somente um ID que ainda existe.
+let map801AutoDone_=false;
+const map801Timer_=setInterval(async()=>{
+ if(map801AutoDone_||!currentUserUid||!(mapasDB||[]).length)return;
+ const id=map801LerAtivo_();if(!id){map801AutoDone_=true;clearInterval(map801Timer_);return;}
+ const m=(mapasDB||[]).find(x=>String(x.id)===id);
+ if(!m){map801GuardarAtivo_('');map801AutoDone_=true;clearInterval(map801Timer_);return;}
+ map801AutoDone_=true;clearInterval(map801Timer_);await map801AplicarMapaMesa_(m,true);
+},700);
+
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -32349,351 +32453,8 @@ window.labHidratarObjetoFuncional780_=lab780HidratarObjeto_;
 window.labHidratarObjetosMesa780_=lab780HidratarMesa_;
 setTimeout(()=>{try{lab780HidratarMesa_();labRender_();}catch(_){}},1200);
 })();
-
-
-// ============================================================
-// V46.81.0 — Storage de mapas + materiais/luz + interação material
-// + obscuridade, fontes de luz e zonas secretas do mestre.
-// ============================================================
-
-async function gm281DataUrlBlob_(data){
-    const r=await fetch(data);return await r.blob();
-}
-function gm281SafeName_(v){return String(v||'asset').replace(/[^a-zA-Z0-9_-]+/g,'_').slice(0,80)||'asset';}
-async function gm281StorageUploadData_(data,mapId,key){
-    if(!String(data||'').startsWith('data:image/'))return data;
-    const uid=String(currentUserUid||currentUser?.uid||'');if(!uid)throw new Error('Usuário não autenticado para enviar imagens do mapa.');
-    const blob=await gm281DataUrlBlob_(data),ext=(blob.type||'image/webp').includes('png')?'png':(blob.type||'').includes('jpeg')?'jpg':'webp';
-    const storageRef=ref(storage,`mapas/${uid}/${gm281SafeName_(mapId)}/${gm281SafeName_(key)}_${Date.now()}.${ext}`);
-    const snap=await uploadBytes(storageRef,blob,{contentType:blob.type||'image/webp'});
-    return await getDownloadURL(snap.ref);
-}
-async function gm281StoragePrepararEstado_(mapId){
-    let n=0,uploads=0;
-    for(const e of (gm2.st.elements||[])){
-        if(!['image','object'].includes(e.type))continue;
-        const src=String(e.src||'');
-        if(src.startsWith('data:image/')){
-            const url=await gm281StorageUploadData_(src,mapId,`${e.type}_${e.id||n++}`);e.src=url;uploads++;
-            if(e.dadosBanco&&typeof e.dadosBanco==='object'&&String(e.dadosBanco.imagem||'').startsWith('data:image/'))e.dadosBanco.imagem=url;
-            if(e.imagem&&String(e.imagem).startsWith('data:image/'))e.imagem=url;
-        }else if(e.dadosBanco&&String(e.dadosBanco.imagem||'').startsWith('data:image/')){
-            // O visual já pode estar em URL enquanto o snapshot ainda contém Base64.
-            e.dadosBanco.imagem=src||await gm281StorageUploadData_(e.dadosBanco.imagem,mapId,`obj_${e.id||n++}`);
-        }
-    }
-    if(uploads){gm2saveLocal();gm2render();notificar_(`☁️ ${uploads} imagem(ns) do mapa enviada(s) ao Storage.`,'info',2600);}
-}
-window.gm281StoragePrepararEstado_=gm281StoragePrepararEstado_;
-
-function lab281Material_(o){return normalizarTextoCombate_(String(o?.material||o?.dadosBanco?.material||labObjetoModelo_(o)?.material||''));}
-function lab281EhMadeira_(o){return /madeira|wood|vegetal/.test(lab281Material_(o));}
-function lab281EhPedra_(o){return /pedra|rock|stone|concreto|ceram/.test(lab281Material_(o));}
-function lab281ItemTxt_(i){return normalizarTextoCombate_(`${i?.id||''} ${getNome(i)||i?.nome||''} ${i?.nome_en||''} ${i?.descricao||''}`);}
-function lab281Picareta_(t){return labEquipadoRegex_(t,/picareta|pickaxe|鹤嘴锄/);}
-function lab281Machado_(t){return labEquipadoRegex_(t,/machado|axe|斧/);}
-function lab281Extintor_(t){return labEquipadoRegex_(t,/extintor|extinguisher|灭火器/);}
-function lab281LancaChamas_(t){return labEquipadoRegex_(t,/lanca.?chamas|lança.?chamas|flamethrower|喷火/);}
-function lab281Lanterna_(t){return labEquipadoRegex_(t,/lanterna|flashlight|手电筒/);}
-function lab281EspadaForca_(i){return /espada de forca|espada de força|force sword|力场剑/.test(lab281ItemTxt_(i));}
-function lab281PicIndustrial_(i){return /industrial/.test(lab281ItemTxt_(i));}
-function lab281DurezaEfetiva_(o,item){
-    let d=Math.max(0,Number(o?.dureza||0));const txt=lab281ItemTxt_(item);
-    if(lab281EhPedra_(o)){
-        if(/picareta|pickaxe|鹤嘴锄/.test(txt))d*=lab281PicIndustrial_(item)?1/3:1/2;
-        else if(lab281EspadaForca_(item))d*=1/2;
-        else if(/machado|axe|斧/.test(txt))d*=.8;
-    }else if(lab281EhMadeira_(o)){
-        if(/machado|axe|斧/.test(txt)||lab281EspadaForca_(item))d*=1/3;
-    }
-    return Math.max(0,Math.ceil(d));
-}
-
-// Objetos imóveis são alvos fáceis: até 2 m (ou alcance menor) = Muito Fácil; depois = Fácil.
-const lab281ValorAtaqueBase_=labValorPericiaAtaque_;
-labValorPericiaAtaque_=function(c,per,alvo=null,item=null){
-    let v=Number(lab281ValorAtaqueBase_(c,per,alvo,item)||0);
-    if(alvo&&labEhAlvoObjeto_(alvo)&&item){
-        const t=labTokenAtual_(),dist=t?labDistanciaEntre_(t,alvo):Infinity,alc=t?labAlcanceAtaque_(t,item):0;
-        if(dist<=Math.min(2,alc))v*=2;else if(dist<=alc)v*=1.5;
-    }
-    return Math.max(0,Math.round(v));
-};
-
-// Dureza efetiva por ferramenta/arma sem alterar permanentemente a dureza cadastrada.
-const lab281RolarAtaqueBase_=window.labRolarAtaque_;
-window.labRolarAtaque_=function(){
-    const t=labTokenAtual_(),alvo=t?labAlvoAtaquePorId_(t.alvoLab):null,item=t?labItemSelecionado_(t):null;
-    if(!alvo||!labEhAlvoObjeto_(alvo)||!item)return lab281RolarAtaqueBase_.apply(this,arguments);
-    const original=Number(alvo.dureza||0),ef=lab281DurezaEfetiva_(alvo,item);alvo.dureza=ef;
-    try{return lab281RolarAtaqueBase_.apply(this,arguments);}finally{alvo.dureza=original;try{labSalvarLocal_();labAgendarSyncRemoto_();}catch(_){}}
-};
-
-// Corpo a corpo comum e espada de força nunca causam incêndio/explosão por efeito energético.
-if(typeof labAplicarEfeitoObjetoEnergia481_==='function'){
-    const b=labAplicarEfeitoObjetoEnergia481_;
-    labAplicarEfeitoObjetoEnergia481_=function(alvo,item,acertou,grau){
-        const txt=lab281ItemTxt_(item);
-        if(lab281EspadaForca_(item))return;
-        if(!labAtaqueEhDistancia_(item)&&!/lanca.?chamas|lança.?chamas|flamethrower|喷火/.test(txt))return;
-        return b.apply(this,arguments);
-    };
-}
-const lab281EfeitosBase_=labEfeitosDisponiveis_;
-labEfeitosDisponiveis_=function(p){
-    let a=lab281EfeitosBase_(p)||[];const item=p?.item||{},txt=lab281ItemTxt_(item);
-    if(lab281EspadaForca_(item))a=a.filter(x=>!['pegar_fogo','explodir_objeto'].includes(String(x.id)));
-    if(!labAtaqueEhDistancia_(item)&&!/lanca.?chamas|lança.?chamas|flamethrower|喷火/.test(txt))a=a.filter(x=>String(x.id)!=='pegar_fogo');
-    return a;
-};
-
-function lab281DistOk_(ator,o,max=1.5){return labDistanciaEntre_(ator,o)<=max;}
-function lab281ForcaBruta_(ator){return labPericiaRegex_(ator,/forca bruta|força bruta|brute force|蛮力/);}
-function lab281UsoItem_(i){return Math.max(0,Number(i?.uso??i?.cargas??0));}
-function lab281GastarUso_(i,n=1){if(i&&Number.isFinite(Number(i.uso)))i.uso=Math.max(0,Number(i.uso)-n);else if(i&&Number.isFinite(Number(i.cargas)))i.cargas=Math.max(0,Number(i.cargas)-n);}
-
-// Mineração/lenha agora são Força Bruta e usam a dureza modificada da ferramenta.
-const lab281AcaoObjBase_=labObjetoAcaoExecutar_;
-labObjetoAcaoExecutar_=function(ator,objeto,tipo){
-    if(!['minerar','cortar','apagar','queimar','luz_objeto'].includes(String(tipo)))return lab281AcaoObjBase_.apply(this,arguments);
-    if(!ator||!objeto||Number(ator.acoesAtuaisLab||0)<=0)return;
-    if(tipo==='luz_objeto'){
-        if(!objeto.fonteLuz)return;objeto.luzLigada=!objeto.luzLigada;ator.acoesAtuaisLab=Math.max(0,Number(ator.acoesAtuaisLab||0)-1);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();return;
-    }
-    if(!lab281DistOk_(ator,objeto,1.5)){notificar_('É preciso estar a até 1,5 m do objeto.','aviso',3000);return;}
-    if(tipo==='apagar'){
-        const ext=lab281Extintor_(ator);if(!ext||lab281UsoItem_(ext)<=0){notificar_('É necessário um extintor equipado com uso restante.','aviso',3200);return;}
-        const total=Math.max(1,Math.ceil(Number(objeto.pesoKg||0)/100)),feito=Math.max(0,Number(objeto.extintorProgressoLab||0))+1;lab281GastarUso_(ext,1);objeto.extintorProgressoLab=feito;
-        ator.acoesAtuaisLab=Math.max(0,Number(ator.acoesAtuaisLab||0)-1);
-        if(feito>=total){objeto.pegandoFogoLab=false;objeto.extintorProgressoLab=0;objeto.fogoUltimaRodadaLab=-1;labRegistrarResultadoProprio_(ator,`Extintor: fogo em ${objeto.nome} apagado (${total} uso(s)).`);}else labRegistrarResultadoProprio_(ator,`Extintor: ${feito}/${total} uso(s) necessários para apagar ${objeto.nome}.`);
-        labSalvarLocal_();labAgendarSyncRemoto_();labRender_();labAutoAvancarSeSemAcoes_();return;
-    }
-    if(tipo==='queimar'){
-        const fl=lab281LancaChamas_(ator);if(!fl){notificar_('É necessário um lança-chamas equipado.','aviso',3200);return;}if(!objeto.inflamavel&&Number(objeto.inflamabilidade||0)<=0){notificar_('Este objeto não é inflamável.','aviso',2600);return;}
-        objeto.pegandoFogoLab=true;ator.acoesAtuaisLab=Math.max(0,Number(ator.acoesAtuaisLab||0)-1);labRegistrarResultadoProprio_(ator,`Lança-chamas: ${objeto.nome} pegou fogo.`);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();labAutoAvancarSeSemAcoes_();return;
-    }
-    const madeira=lab281EhMadeira_(objeto),pedra=lab281EhPedra_(objeto),equip=tipo==='minerar'?lab281Picareta_(ator):lab281Machado_(ator);
-    if(tipo==='minerar'&&!pedra)return;if(tipo==='cortar'&&!madeira)return;if(!equip){notificar_(`É necessário ${tipo==='minerar'?'uma picareta':'um machado'} equipado.`,'aviso',3000);return;}
-    const per=lab281ForcaBruta_(ator);if(!per){notificar_('Não encontrei a perícia Força Bruta.','aviso',3000);return;}
-    const c=labCharToken_(ator),base=labValorTeste_(ator,per),valor=Math.max(0,Number(aplicarDificuldadeEFadiga_(c,base,'padrao',0)?.valor||base)),roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll),sucesso=batalhaResultadoGradeValor_(r.grau)>=2;
-    ator.acoesAtuaisLab=Math.max(0,Number(ator.acoesAtuaisLab||0)-1);let efeito=' Nenhum efeito.';
-    if(sucesso){const forca=Number(c?.atributos?.FOR||ator?.attrs?.FOR||10),bruto=1+Math.floor(Math.random()*6)+Math.max(0,Math.floor(forca/5)),duro=lab281DurezaEfetiva_(objeto,equip),final=Math.max(0,bruto-duro);objeto.pvAtual=Math.max(0,Number(objeto.pvAtual??objeto.pvMax??0)-final);if(objeto.pvAtual<=0)objeto.destruido=true;if(final>0)labAdicionarFloat_(objeto,-final,'dano');efeito=` Dano ${bruto} - Dureza efetiva ${duro} = ${final}.${objeto.destruido?' Objeto destruído.':''}`;}
-    const rot=tipo==='minerar'?'Minerar':'Lenhar',txt=`${rot} (Força Bruta): ${roll}/${valor} → ${r.grau}.${efeito}`;labRegistrarResultadoProprio_(ator,txt);labEstado_.logLab.unshift({ts:new Date().toLocaleTimeString(),texto:`${ator.nome}: ${txt}`});labSalvarLocal_();labAgendarSyncRemoto_();labRender_();labAutoAvancarSeSemAcoes_();
-};
-
-// Ações contextuais de objeto segundo material/equipamento.
-const lab281ObjMicroBase_=labObjetoMicroPainelHtml_;
-labObjetoMicroPainelHtml_=function(o,ppm){
-    let h=lab281ObjMicroBase_(o,ppm);if(!h)return h;const a=labTokenAtual_();if(!a)return h;
-    const madeira=lab281EhMadeira_(o),pedra=lab281EhPedra_(o),pic=lab281Picareta_(a),axe=lab281Machado_(a),ext=lab281Extintor_(a),fl=lab281LancaChamas_(a),per=lab281ForcaBruta_(a),near=lab281DistOk_(a,o,1.5);
-    if((madeira&&axe)||(pedra&&pic))h=h.replace(/<button class="btn-small btn-select" onclick="labAtacarObjetoContextual_[\s\S]*?<\/button>/,'');
-    h=h.replace(/<button[^>]*>⛏️ Minerar<\/button>/g,'').replace(/<button[^>]*>🪓 Cortar<\/button>/g,'').replace(/<button[^>]*>🧯 Apagar fogo<\/button>/g,'');
-    let extra='';
-    if(pedra&&pic&&per)extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${String(o.id).replace(/'/g,"\\'")}')" ${near?'':'disabled'} style="min-height:27px;padding:2px 7px;font-size:.72em;">⛏️ Minerar</button>`;
-    if(madeira&&axe&&per)extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${String(o.id).replace(/'/g,"\\'")}')" ${near?'':'disabled'} style="min-height:27px;padding:2px 7px;font-size:.72em;">🪓 Lenhar</button>`;
-    if(o.pegandoFogoLab&&ext)extra+=`<button class="btn-small" onclick="labObjetoAcao_('apagar','${String(o.id).replace(/'/g,"\\'")}')" ${near&&lab281UsoItem_(ext)>0?'':'disabled'} style="min-height:27px;padding:2px 7px;font-size:.72em;">🧯 Apagar</button>`;
-    if(!o.pegandoFogoLab&&fl&&(o.inflamavel||Number(o.inflamabilidade||0)>0))extra+=`<button class="btn-small" onclick="labObjetoAcao_('queimar','${String(o.id).replace(/'/g,"\\'")}')" ${near?'':'disabled'} style="min-height:27px;padding:2px 7px;font-size:.72em;">🔥 Queimar</button>`;
-    if(o.fonteLuz)extra+=`<button class="btn-small ${o.luzLigada?'btn-select':''}" onclick="labObjetoAcao_('luz_objeto','${String(o.id).replace(/'/g,"\\'")}')" style="min-height:27px;padding:2px 7px;font-size:.72em;">💡 ${o.luzLigada?'Desligar':'Ligar'}</button>`;
-    return h.replace('</div>',extra+'</div>');
-};
-
-// Lanterna: ligar/desligar no próprio personagem; cone 45° até 10m.
-window.lab281AlternarLanterna_=function(){const t=labTokenAtual_();if(!t||!lab281Lanterna_(t))return;t.lanternaLigadaLab=!t.lanternaLigadaLab;labSalvarLocal_();labAgendarSyncRemoto_();labRender_();};
-const lab281TokenMicroBase_=labMicroPainelHtml_;
-labMicroPainelHtml_=function(a,ppm,d){let h=lab281TokenMicroBase_(a,ppm,d);const t=labTokenAtual_();if(!h||!t||String(a?.id)!==String(t.id)||!lab281Lanterna_(t))return h;return h.replace('</div>',`<button class="btn-small ${t.lanternaLigadaLab?'btn-select':''}" onclick="lab281AlternarLanterna_()" style="min-height:27px;padding:2px 7px;font-size:.72em;">🔦 ${t.lanternaLigadaLab?'Desligar':'Ligar'}</button></div>`);};
-
-window.lab281ToggleObjectLightGM_=function(id){if(!batalhaEhMestre_())return;const o=labObjetoPorId_(id);if(!o?.fonteLuz)return;o.luzLigada=!o.luzLigada;labSalvarLocal_();labAgendarSyncRemoto_();labRender_();};
-const lab281ObjPanelBase_=labRenderObjetoPainel_;
-labRenderObjetoPainel_=function(){const r=lab281ObjPanelBase_.apply(this,arguments);if(!batalhaEhMestre_())return r;const o=labObjetoPorId_(labEstado_.objetoSelecionadoId),e=document.getElementById('labObjetoPainel');if(o?.fonteLuz&&e&&!e.querySelector('.lab281-light-gm'))e.insertAdjacentHTML('beforeend',`<button class="btn-small lab281-light-gm ${o.luzLigada?'btn-select':''}" onclick="lab281ToggleObjectLightGM_('${String(o.id).replace(/'/g,"\\'")}')">💡 ${o.luzLigada?'Desligar':'Ligar'}</button>`);return r;};
-
-// Visibilidade do mapa e luzes. 0 = totalmente visível; 100 = totalmente escuro.
-function lab281LightShapes_(ppm){
-    const shapes=[];
-    for(const t of (labEstado_.tokens||[]))if(t.lanternaLigadaLab&&lab281Lanterna_(t)){
-        const x=t.x*ppm,y=t.y*ppm,r=10*ppm,a=(Number(t.angulo||0)-90)*Math.PI/180,half=22.5*Math.PI/180;
-        const x1=x+Math.cos(a-half)*r,y1=y+Math.sin(a-half)*r,x2=x+Math.cos(a+half)*r,y2=y+Math.sin(a+half)*r;
-        shapes.push(`<path d="M ${x} ${y} L ${x1} ${y1} A ${r} ${r} 0 0 1 ${x2} ${y2} Z" fill="black"/>`);
-    }
-    for(const o of (labEstado_.objetosLab||[])){
-        if(o.destruido)continue;
-        if(o.pegandoFogoLab){shapes.push(`<circle cx="${o.x*ppm}" cy="${o.y*ppm}" r="${3*ppm}" fill="black"/>`);continue;}
-        if(!o.fonteLuz||!o.luzLigada)continue;
-        const rw=Math.max(0,Number(o.luzLarguraM||0)),rh=Math.max(0,Number(o.luzAlturaM||0)),rr=Math.max(0,Number(o.luzRaioM||0));
-        // Quando área retangular e raio coexistem, a interseção resulta automaticamente na menor região.
-        if(rw>0&&rh>0&&rr>0){const areaRet=rw*rh,areaCirc=Math.PI*rr*rr;if(areaRet<=areaCirc)shapes.push(`<rect x="${(o.x-rw/2)*ppm}" y="${(o.y-rh/2)*ppm}" width="${rw*ppm}" height="${rh*ppm}" fill="black"/>`);else shapes.push(`<circle cx="${o.x*ppm}" cy="${o.y*ppm}" r="${rr*ppm}" fill="black"/>`);}
-        else if(rr>0)shapes.push(`<circle cx="${o.x*ppm}" cy="${o.y*ppm}" r="${rr*ppm}" fill="black"/>`);
-        else if(rw>0&&rh>0)shapes.push(`<rect x="${(o.x-rw/2)*ppm}" y="${(o.y-rh/2)*ppm}" width="${rw*ppm}" height="${rh*ppm}" fill="black"/>`);
-    }
-    return shapes.join('');
-}
-function lab281OverlayHtml_(ppm){
-    const pct=Math.max(0,Math.min(100,Number(labEstado_.visibilidadeJogadores||0)));const w=labEstado_.larguraM*ppm,h=labEstado_.alturaM*ppm;
-    let html='';if(pct>0){const id='lab281mask';html+=`<svg class="lab281-dark" style="position:absolute;inset:0;width:${w}px;height:${h}px;z-index:16;pointer-events:none"><defs><mask id="${id}"><rect width="100%" height="100%" fill="white"/>${lab281LightShapes_(ppm)}</mask></defs><rect width="100%" height="100%" fill="black" fill-opacity="${pct/100}" mask="url(#${id})"/></svg>`;}
-    const zonas=labEstado_.zonasVisibilidadeLab||[];for(const z of zonas){const op=batalhaEhMestre_()?(labEstado_.clarearMestreVisLab?0:.5):1;if(op<=0)continue;html+=`<div class="lab281-secret" style="position:absolute;left:${z.x*ppm}px;top:${z.y*ppm}px;width:${z.w*ppm}px;height:${z.h*ppm}px;background:#000;opacity:${op};z-index:18;pointer-events:none"></div>`;}
-    return html;
-}
-const lab281RenderBase_=labRender_;
-labRender_=function(){const r=lab281RenderBase_.apply(this,arguments);const map=document.getElementById('labMetricMap');if(map){map.querySelectorAll('.lab281-dark,.lab281-secret').forEach(x=>x.remove());map.insertAdjacentHTML('beforeend',lab281OverlayHtml_(Number(labEstado_.pxPorMetro||48)));}return r;};window.labRender_=labRender_;
-
-// Ferramenta retangular para ocultar zonas dos jogadores.
-let lab281VisMode_='';
-window.lab281VisTool_=function(m){lab281VisMode_=String(m||'');notificar_(m==='hide'?'Arraste um retângulo no mapa para ocultá-lo dos jogadores.':m==='remove'?'Clique numa área oculta para removê-la.':'Modo de visibilidade atualizado.','info',2200);};
-window.lab281ClarearMestre_=function(){labEstado_.clarearMestreVisLab=!labEstado_.clarearMestreVisLab;labRender_();};
-function lab281HitZone_(p){return (labEstado_.zonasVisibilidadeLab||[]).find(z=>p.x>=z.x&&p.x<=z.x+z.w&&p.y>=z.y&&p.y<=z.y+z.h);}
-const lab281MapDownBase_=document.getElementById('labMetricMap')?.onpointerdown;
-document.addEventListener('pointerdown',ev=>{if(!lab281VisMode_||!batalhaEhMestre_())return;const map=ev.target?.closest?.('#labMetricMap');if(!map)return;if(ev.target.closest('.lab-token,.lab-map-object,.lab-micro-actions'))return;ev.preventDefault();ev.stopPropagation();const rect=map.getBoundingClientRect(),ppm=Number(labEstado_.pxPorMetro||48),pt=e=>({x:(e.clientX-rect.left)/ppm,y:(e.clientY-rect.top)/ppm});const a=pt(ev);
-    if(lab281VisMode_==='remove'){const z=lab281HitZone_(a);if(z){labEstado_.zonasVisibilidadeLab=(labEstado_.zonasVisibilidadeLab||[]).filter(x=>x!==z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}return;}
-    const ghost=document.createElement('div');ghost.style.cssText=`position:absolute;left:${a.x*ppm}px;top:${a.y*ppm}px;border:2px dashed #ffd54a;background:rgba(0,0,0,.35);z-index:99;pointer-events:none`;map.appendChild(ghost);
-    const mv=e=>{const b=pt(e),x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x),h=Math.abs(a.y-b.y);ghost.style.left=x*ppm+'px';ghost.style.top=y*ppm+'px';ghost.style.width=w*ppm+'px';ghost.style.height=h*ppm+'px';};
-    const up=e=>{window.removeEventListener('pointermove',mv);const b=pt(e),z={id:`vis:${Date.now()}`,x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y)};ghost.remove();if(z.w>.1&&z.h>.1){labEstado_.zonasVisibilidadeLab=labEstado_.zonasVisibilidadeLab||[];labEstado_.zonasVisibilidadeLab.push(z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}};window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up,{once:true});
-},true);
-
-function lab281InstallVisibilityUI_(){const c=document.getElementById('labMapCreationControls');if(c&&!document.getElementById('lab281HideBtn'))c.insertAdjacentHTML('beforeend',`<span style="height:28px;border-left:1px solid rgba(255,255,255,.18);"></span><button id="lab281HideBtn" class="btn-small" onclick="lab281VisTool_('hide')">🌑 Escurecer para jogadores</button><button class="btn-small" onclick="lab281ClarearMestre_()">👁️ Clarear para mim</button><button class="btn-small" onclick="lab281VisTool_('remove')">🧽 Remover ocultação</button>`);}
-setTimeout(lab281InstallVisibilityUI_,700);
-
-// Barra de visibilidade na biblioteca de mapas.
-window.lab281MapaVis_=async function(id,v){const m=(mapasDB||[]).find(x=>String(x.id)===String(id));if(!m)return;v=Math.max(0,Math.min(100,Number(v||0)));m.visibilidadeJogadores=v;if(!m.__local)await setDoc(doc(db,'mapas',String(id)),{visibilidadeJogadores:v},{merge:true});if(String(labMapaSelecionado_||'')===String(id)){labEstado_.visibilidadeJogadores=v;labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}};
-const lab281RenderMapBankBase_=renderizarBancoMapas_;
-renderizarBancoMapas_=function(){const r=lab281RenderMapBankBase_.apply(this,arguments);const rows=[...document.querySelectorAll('#listaBancoMapas tbody tr')],lista=[...(mapasDB||[])].sort((a,b)=>String(a.nome||a.id||'').localeCompare(String(b.nome||b.id||''),'pt-BR',{sensitivity:'base'}));rows.forEach((tr,i)=>{const m=lista[i],td=tr?.querySelector('td.actions');if(!m||!td||td.querySelector('.lab281-vis-range'))return;td.insertAdjacentHTML('afterbegin',`<label style="display:flex;align-items:center;gap:6px;margin:0 0 6px;font-size:.78em;">Visível aos jogadores <input class="lab281-vis-range" type="range" min="0" max="100" value="${Number(m.visibilidadeJogadores||0)}" oninput="this.nextElementSibling.textContent=this.value+'%'" onchange="lab281MapaVis_('${String(m.id).replace(/'/g,"\\'")}',this.value)" style="width:120px"><span>${Number(m.visibilidadeJogadores||0)}%</span></label>`);});return r;};window.renderizarBancoMapas_=renderizarBancoMapas_;
-
-// Garante defaults de luz nas instâncias antigas.
-function lab281HidratarLuz_(){for(const o of (labEstado_.objetosLab||[])){const m=labObjetoModelo_(o);for(const k of ['fonteLuz','luzLarguraM','luzAlturaM','luzRaioM'])if(o[k]===undefined&&m?.[k]!==undefined)o[k]=m[k];if(o.luzLigada===undefined)o.luzLigada=false;} }
-const lab281RenderHydBase_=labRender_;labRender_=function(){try{lab281HidratarLuz_();}catch(_){}return lab281RenderHydBase_.apply(this,arguments);};window.labRender_=labRender_;
-
-
-
-// ============================================================
-// V46.82.0 — correções de integração e polimento da Mesa
-// - feedback de salvamento/erro do Storage
-// - visibilidade do mapa na própria Oficina 2
-// - ferramentas de ocultação na lateral da Mesa
-// - microações materiais robustas
-// - ESC cancela seleção/edição
-// - tooltip do inventário mais compacto
-// - aproximação visual Mesa ↔ Oficina 2
-// ============================================================
-
-// ---- Feedback robusto ao salvar: a etapa de Storage agora também é capturada. ----
-const gm282SaveLibraryBase_=gm2saveLibrary;
-gm2saveLibrary=async function(){
-    try{
-        notificar_('💾 Salvando mapa…','info',1600);
-        return await gm282SaveLibraryBase_.apply(this,arguments);
-    }catch(e){
-        console.error('Oficina 2 salvar / Storage',e);
-        notificar_(`Não foi possível salvar o mapa. ${e?.message||'Falha ao enviar imagem para o Storage.'}`,'erro',7500);
-        throw e;
-    }
-};
-window.gm2saveLibrary=gm2saveLibrary;
-
-// ---- Visibilidade/obscuridade do mapa diretamente na barra superior da Oficina 2. ----
-function gm282VisValor_(){return Math.max(0,Math.min(100,Number(gm2.st?.visibilidadeJogadores||0)));}
-function gm282SyncVisUI_(){
-    const r=document.getElementById('gm282MapVis'),v=document.getElementById('gm282MapVisValue');
-    if(r)r.value=String(gm282VisValor_());if(v)v.textContent=gm282VisValor_()+'%';
-}
-async function gm282SetVis_(v){
-    v=Math.max(0,Math.min(100,Number(v||0)));gm2.st.visibilidadeJogadores=v;gm2saveLocal();gm282SyncVisUI_();
-    const id=String(gm2.st.mapId||'');if(!id)return;
-    const m=(mapasDB||[]).find(x=>String(x.id)===id);if(m)m.visibilidadeJogadores=v;
-    try{await setDoc(doc(db,'mapas',id),{visibilidadeJogadores:v},{merge:true});}
-    catch(e){console.warn('Visibilidade do mapa',e);notificar_('A visibilidade foi alterada localmente, mas ainda não foi sincronizada.','aviso',3500);}
-}
-window.gm282SetVis_=gm282SetVis_;
-function gm282InstallTopVis_(){
-    const sel=document.getElementById('gm2mapselect');if(!sel||document.getElementById('gm282MapVisWrap'))return;
-    sel.insertAdjacentHTML('afterend',`<button id="gm282DeleteMap" type="button" title="Excluir o mapa salvo atualmente aberto" style="min-width:34px;width:34px;height:34px;padding:2px">🗑️</button><label id="gm282MapVisWrap" title="0% = mapa totalmente visível; 100% = totalmente escuro, exceto áreas iluminadas" style="display:flex;align-items:center;gap:5px;margin:0 0 0 6px;color:#b9c2e7;font-size:10px;white-space:nowrap">Visível aos jogadores <input id="gm282MapVis" type="range" min="0" max="100" value="0" style="width:105px;margin:0" oninput="document.getElementById('gm282MapVisValue').textContent=this.value+'%'" onchange="gm282SetVis_(this.value)"><span id="gm282MapVisValue" style="min-width:28px">0%</span></label>`);
-    document.getElementById('gm282DeleteMap').onclick=()=>{const id=String(gm2.st.mapId||'');if(!id){notificar_('Este rascunho ainda não é um mapa salvo.','aviso',2600);return;}if(typeof excluirMapaBancoAdmin_==='function')excluirMapaBancoAdmin_(id);};
-    gm282SyncVisUI_();
-}
-const gm282RenderBase_=gm2render;
-gm2render=function(){const r=gm282RenderBase_.apply(this,arguments);try{gm282InstallTopVis_();gm282SyncVisUI_();}catch(_){}return r;};
-const gm282LoadBase_=gm2loadLibraryMap;
-gm2loadLibraryMap=async function(id){const r=await gm282LoadBase_.apply(this,arguments);const m=(mapasDB||[]).find(x=>String(x.id)===String(id));if(m)gm2.st.visibilidadeJogadores=Number(m.visibilidadeJogadores??gm2.st.visibilidadeJogadores??0);gm2saveLocal();gm282SyncVisUI_();return r;};
-const gm282PublishBase_=gm2publish;
-gm2publish=function(){labEstado_.visibilidadeJogadores=gm282VisValor_();return gm282PublishBase_.apply(this,arguments);};
-
-// ---- Microações de materiais: remove Atacar de modo robusto quando há a ferramenta certa. ----
-const lab282ObjMicroBase_=labObjetoMicroPainelHtml_;
-labObjetoMicroPainelHtml_=function(o,ppm){
-    let h=lab282ObjMicroBase_(o,ppm);if(!h)return h;const a=labTokenAtual_();if(!a)return h;
-    const madeira=lab281EhMadeira_(o),pedra=lab281EhPedra_(o),pic=lab281Picareta_(a),axe=lab281Machado_(a),per=lab281ForcaBruta_(a),near=lab281DistOk_(a,o,1.5);
-    if((madeira&&axe)||(pedra&&pic)){
-        h=h.replace(/<button\b[^>]*onclick="[^"]*labAtacarObjetoContextual_[^"]*"[^>]*>[\s\S]*?<\/button>/gi,'');
-        h=h.replace(/<button\b[^>]*>[\s\S]*?⚔️\s*Atacar[\s\S]*?<\/button>/gi,'');
-    }
-    // Remove duplicatas antigas e reinsere as ações materiais canônicas.
-    h=h.replace(/<button\b[^>]*>[\s\S]*?⛏️\s*Minerar[\s\S]*?<\/button>/gi,'')
-       .replace(/<button\b[^>]*>[\s\S]*?🪓\s*(?:Cortar|Lenhar)[\s\S]*?<\/button>/gi,'');
-    let extra='';
-    if(pedra&&pic&&per)extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${String(o.id).replace(/'/g,"\\'")}')" ${near?'':'disabled'} style="min-height:27px;padding:2px 7px;font-size:.72em;">⛏️ Minerar</button>`;
-    if(madeira&&axe&&per)extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${String(o.id).replace(/'/g,"\\'")}')" ${near?'':'disabled'} style="min-height:27px;padding:2px 7px;font-size:.72em;">🪓 Lenhar</button>`;
-    return h.replace('</div>',extra+'</div>');
-};
-window.labObjetoMicroPainelHtml_=labObjetoMicroPainelHtml_;
-
-// ---- Ferramentas de ocultação na lateral esquerda da Mesa, no estilo da Oficina 2. ----
-function lab282AtualizarVisBtns_(){
-    document.querySelectorAll('#lab282VisTools button').forEach(b=>b.classList.remove('active'));
-    if(lab281VisMode_==='hide')document.getElementById('lab282Hide')?.classList.add('active');
-    if(lab281VisMode_==='remove')document.getElementById('lab282Remove')?.classList.add('active');
-    document.getElementById('lab282Bright')?.classList.toggle('active',!!labEstado_.clarearMestreVisLab);
-}
-const lab282VisToolBase_=window.lab281VisTool_;
-window.lab281VisTool_=function(m){const r=lab282VisToolBase_.apply(this,arguments);lab282AtualizarVisBtns_();return r;};
-const lab282ClarearBase_=window.lab281ClarearMestre_;
-window.lab281ClarearMestre_=function(){const r=lab282ClarearBase_.apply(this,arguments);lab282AtualizarVisBtns_();return r;};
-function lab282InstallMesaTools_(){
-    const map=document.getElementById('labMetricMap');if(!map||document.getElementById('lab282MapWorkspace'))return;
-    const parent=map.parentElement;
-    const ws=document.createElement('div');ws.id='lab282MapWorkspace';
-    const tools=document.createElement('aside');tools.id='lab282VisTools';tools.innerHTML=`<div class="lab282-side-title">Visibilidade</div><button id="lab282Hide" title="Arraste no mapa para ocultar dos jogadores">🌑</button><button id="lab282Bright" title="Alterna entre ver essas zonas a 50% ou totalmente claras para o mestre">👁️</button><button id="lab282Remove" title="Clique numa zona de ocultação para removê-la">🧽</button><button id="lab282Cancel" title="Cancelar ferramenta de visibilidade">↖</button>`;
-    const stage=document.createElement('div');stage.id='lab282MapStage';
-    parent.insertBefore(ws,map);ws.appendChild(tools);ws.appendChild(stage);stage.appendChild(map);
-    document.getElementById('lab282Hide').onclick=()=>lab281VisTool_('hide');
-    document.getElementById('lab282Bright').onclick=()=>lab281ClarearMestre_();
-    document.getElementById('lab282Remove').onclick=()=>lab281VisTool_('remove');
-    document.getElementById('lab282Cancel').onclick=()=>{lab281VisMode_='';lab282AtualizarVisBtns_();};
-    lab282AtualizarVisBtns_();
-}
-const lab282RenderMesaBase_=labRender_;
-labRender_=function(){const r=lab282RenderMesaBase_.apply(this,arguments);try{lab282InstallMesaTools_();lab282AtualizarVisBtns_();}catch(e){console.warn('Mesa toolbar',e);}return r;};window.labRender_=labRender_;
-
-// ---- ESC fecha edição, cancela ferramentas e limpa seleções. ----
-document.addEventListener('keydown',ev=>{
-    if(ev.key!=='Escape')return;let mudou=false;
-    const item=document.getElementById('itemModal');if(item?.classList.contains('active')){try{fecharModal();}catch(_){item.classList.remove('active');}mudou=true;}
-    const dbItem=document.getElementById('dbItemModal');if(dbItem?.classList.contains('active')){try{fecharItemBancoModal();}catch(_){dbItem.classList.remove('active');}mudou=true;}
-    const objEd=document.getElementById('editorObjetoMapaBanco');if(objEd&&objEd.style.display!=='none'){try{fecharEditorObjetoMapa_();}catch(_){objEd.style.display='none';}mudou=true;}
-    if(document.getElementById('gm-sub-oficina2')&&!document.getElementById('gm-sub-oficina2').classList.contains('hidden')&&(gm2.selected.size||gm2.tool!=='select')){gm2clearSelection();gm2.tool='select';gm2render();mudou=true;}
-    if(lab281VisMode_){lab281VisMode_='';lab282AtualizarVisBtns_();mudou=true;}
-    if(labEstado_?.objetoSelecionadoId||labEstado_?.selecionadoId){labEstado_.objetoSelecionadoId='';labEstado_.selecionadoId='';try{labRenderObjetoPainel_();labRender_();}catch(_){}mudou=true;}
-    if(mudou){ev.preventDefault();ev.stopPropagation();}
-},true);
-
-// ---- CSS compacto e visual alinhado à Oficina 2. ----
-(function(){
- const st=document.createElement('style');st.id='gm282Style';st.textContent=`
- .item-tooltip{font-size:.68em!important;line-height:1.22!important;min-width:165px!important;max-width:225px!important;padding:6px 7px!important;border-width:1px!important}
- .item-tooltip h5{font-size:1.02em!important;margin:0 0 3px!important;line-height:1.15!important}.item-tooltip p{font-size:.92em!important;line-height:1.2!important;margin:2px 0!important}
- #laboratorio-combate{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
- #laboratorio-combate #labMasterGameControls,#laboratorio-combate #labMasterMapLoader,#laboratorio-combate #labMapCreationControls{background:#11152d!important;border:1px solid #34506d!important;border-radius:8px!important;padding:7px!important;gap:6px!important}
- #laboratorio-combate #labMasterGameControls button,#laboratorio-combate #labMasterMapLoader button,#laboratorio-combate #labMapCreationControls button{min-height:34px!important;height:34px!important;padding:0 9px!important;border-radius:6px!important;font-size:.82rem!important}
- #laboratorio-combate #labMasterGameControls label,#laboratorio-combate #labMasterMapLoader label,#laboratorio-combate #labMapCreationControls label{font-size:.72rem!important;color:#b9c2e7!important}
- #lab282MapWorkspace{display:flex;align-items:flex-start;width:max-content;min-width:100%;background:#0f142b;border:1px solid #34506d;border-radius:8px;overflow:hidden}
- #lab282MapStage{position:relative;flex:0 0 auto;padding:0;background:#070b18}
- #lab282VisTools{width:54px;flex:0 0 54px;align-self:stretch;background:#11152d;border-right:1px solid #34506d;padding:6px 5px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box}
- #lab282VisTools .lab282-side-title{font-size:8px;line-height:1.1;color:#8fa8d8;text-align:center;word-break:break-word;margin:2px 0 4px}
- #lab282VisTools button{width:42px;height:42px;min-height:42px;padding:0;border:1px solid #34506d;border-radius:7px;background:#f4f4f4;color:#111;font-size:18px;cursor:pointer}
- #lab282VisTools button.active{outline:2px solid #45d7ff;box-shadow:0 0 0 1px #0d6380 inset;background:#dff8ff}
- #gm282MapVisWrap input[type=range]{accent-color:#27c7ee}
- `;document.head.appendChild(st);
-})();
-setTimeout(()=>{try{gm282InstallTopVis_();lab282InstallMesaTools_();}catch(_){}},900);
-
 </script>
-<!-- Mesa Estelar v46.82.0: integração Storage/UI/visibilidade/ESC corrigida -->
+<!-- Mesa Estelar v46.78.0: objetos da Oficina 2 preservam PV, dureza, inflamabilidade e propriedades funcionais na Mesa -->
 
 <script>
 // ============================================================
@@ -32710,7 +32471,7 @@ setTimeout(()=>{try{gm282InstallTopVis_();lab282InstallMesaTools_();}catch(_){}}
 // Base para regras de ferramentas, fogo e resistência por material.
 // ============================================================
 (function(){
-const MAT800_DEFAULTS_=['Madeira','Pedra','Metal','Vidro','Plástico','Papel','Carne','Osso','Gelo','Tecido','Líquido','Borracha','Cerâmica','Concreto','Terra','Vegetal','Composto'];
+const MAT800_DEFAULTS_=['Madeira','Pedra','Metal','Vidro','Plástico','Papel','Carne'];
 let mat800Lista_=[];
 
 function mat800Limpar_(v){return String(v||'').trim().replace(/\s+/g,' ');}
@@ -32818,573 +32579,7 @@ mat800Lista_=mat800LerLocal_();if(!mat800Lista_.length)mat800Lista_=MAT800_DEFAU
 setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
 })();
 </script>
-<!-- Mesa Estelar v46.81.0: material explícito/editável para objetos de mapa -->
-
-
-<script>
-// ============================================================
-// V46.83.0 — patch FINAL, instalado após todos os blocos legados
-// Corrige controles que eram sobrescritos por scripts posteriores.
-// ============================================================
-(function(){
-'use strict';
-
-function v4683Clamp_(v,a,b){v=Number(v);return Number.isFinite(v)?Math.max(a,Math.min(b,v)):a;}
-function v4683Esc_(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c));}
-
-// ---------- Oficina 2: barra Visível aos jogadores ----------
-window.v4683SetMapVisibility_=function(v){
-  v=v4683Clamp_(v,0,100);
-  try{ if(typeof gm2!=='undefined'&&gm2.st){gm2.st.visibilidadeJogadores=v; if(typeof gm2saveLocal==='function')gm2saveLocal();} }catch(_){}
-  const n=document.getElementById('v4683MapVisValue');if(n)n.textContent=Math.round(v)+'%';
-};
-function v4683InstallOficinaVis_(){
-  const sel=document.getElementById('gm2mapselect');
-  if(!sel)return false;
-  let wrap=document.getElementById('v4683MapVisWrap');
-  if(!wrap){
-    wrap=document.createElement('label');wrap.id='v4683MapVisWrap';wrap.title='0% = totalmente visível; 100% = totalmente invisível para os jogadores, exceto onde houver luz.';
-    wrap.innerHTML=`<span>Visível aos jogadores</span><input id="v4683MapVis" type="range" min="0" max="100" step="5" value="0"><b id="v4683MapVisValue">0%</b>`;
-    // Sem lixeira nova: usa apenas os controles que já existem.
-    sel.insertAdjacentElement('afterend',wrap);
-    wrap.querySelector('input').addEventListener('input',e=>v4683SetMapVisibility_(e.target.value));
-  }
-  let v=0;try{v=v4683Clamp_(gm2?.st?.visibilidadeJogadores??0,0,100);}catch(_){}
-  const r=document.getElementById('v4683MapVis');if(r&&document.activeElement!==r)r.value=String(v);
-  const n=document.getElementById('v4683MapVisValue');if(n)n.textContent=Math.round(v)+'%';
-  return true;
-}
-
-// ---------- Mesa: barra lateral de visibilidade ----------
-function v4683ToolState_(){
-  document.querySelectorAll('#v4683MesaVisTools button').forEach(b=>b.classList.remove('active'));
-  const mode=(typeof lab281VisMode_!=='undefined')?lab281VisMode_:'';
-  if(mode==='hide')document.getElementById('v4683Hide')?.classList.add('active');
-  if(mode==='remove')document.getElementById('v4683Remove')?.classList.add('active');
-  try{document.getElementById('v4683Bright')?.classList.toggle('active',!!labEstado_?.clarearMestreVisLab);}catch(_){}
-}
-function v4683InstallMesaTools_(){
-  const map=document.getElementById('labMetricMap');if(!map)return false;
-  if(document.getElementById('v4683MesaMapWrap')){v4683ToolState_();return true;}
-  // desfaz somente wrappers experimentais da 46.82, se existirem
-  const old=document.getElementById('lab282MapWorkspace');
-  if(old&&old.contains(map)){
-    const p=old.parentElement;p.insertBefore(map,old);old.remove();
-  }
-  const wrap=document.createElement('div');wrap.id='v4683MesaMapWrap';
-  const tools=document.createElement('aside');tools.id='v4683MesaVisTools';
-  tools.innerHTML=`<div class="v4683SideTitle">Visibilidade</div>
-    <button id="v4683Hide" title="Escurecer para jogadores">🌑</button>
-    <button id="v4683Bright" title="Clarear zonas ocultas apenas para o mestre">👁️</button>
-    <button id="v4683Remove" title="Remover uma zona de ocultação">🧽</button>
-    <button id="v4683Cancel" title="Cancelar ferramenta">↖</button>`;
-  const parent=map.parentElement;parent.insertBefore(wrap,map);wrap.append(tools,map);
-  document.getElementById('v4683Hide').onclick=()=>{try{window.lab281VisTool_?.('hide');}catch(_){};v4683ToolState_();};
-  document.getElementById('v4683Bright').onclick=()=>{try{window.lab281ClarearMestre_?.();}catch(_){};v4683ToolState_();};
-  document.getElementById('v4683Remove').onclick=()=>{try{window.lab281VisTool_?.('remove');}catch(_){};v4683ToolState_();};
-  document.getElementById('v4683Cancel').onclick=()=>{try{lab281VisMode_='';}catch(_){};v4683ToolState_();};
-  v4683ToolState_();return true;
-}
-
-// ---------- Microações materiais, instaladas por último ----------
-try{
-  const base=labObjetoMicroPainelHtml_;
-  labObjetoMicroPainelHtml_=function(o,ppm){
-    let h=base.apply(this,arguments);if(!h)return h;
-    let ator=null;try{ator=labTokenAtual_();}catch(_){}
-    if(!ator)return h;
-    let madeira=false,pedra=false,pic=false,axe=false,near=true;
-    try{madeira=lab281EhMadeira_(o);pedra=lab281EhPedra_(o);pic=lab281Picareta_(ator);axe=lab281Machado_(ator);near=lab281DistOk_(ator,o,1.5);}catch(_){}
-    const especial=(madeira&&axe)||(pedra&&pic);
-    if(especial){
-      h=h.replace(/<button\b[^>]*onclick=["'][^"']*labAtacarObjetoContextual_[^"']*["'][^>]*>[\s\S]*?<\/button>/gi,'')
-         .replace(/<button\b[^>]*>[\s\S]*?⚔️\s*Atacar[\s\S]*?<\/button>/gi,'');
-    }
-    h=h.replace(/<button\b[^>]*>[\s\S]*?⛏️\s*Minerar[\s\S]*?<\/button>/gi,'')
-       .replace(/<button\b[^>]*>[\s\S]*?🪓\s*(?:Cortar|Lenhar)[\s\S]*?<\/button>/gi,'');
-    let extra='';
-    const oid=String(o?.id||'').replace(/'/g,"\\'");
-    if(pedra&&pic) extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${oid}')" ${near?'':'disabled'}>⛏️ Minerar</button>`;
-    if(madeira&&axe) extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${oid}')" ${near?'':'disabled'}>🪓 Lenhar</button>`;
-    if(extra)h=h.replace('</div>',extra+'</div>');
-    return h;
-  };
-  window.labObjetoMicroPainelHtml_=labObjetoMicroPainelHtml_;
-}catch(e){console.warn('v46.83 microações',e);}
-
-// ---------- Salvamento: feedback garantido e visibilidade embutida ----------
-try{
-  const baseSave=gm2saveLibrary;
-  gm2saveLibrary=async function(){
-    try{
-      if(typeof gm2!=='undefined'&&gm2.st){const r=document.getElementById('v4683MapVis');if(r)gm2.st.visibilidadeJogadores=v4683Clamp_(r.value,0,100);}
-      if(typeof notificar_==='function')notificar_('💾 Salvando mapa…','info',1800);
-      const r=await baseSave.apply(this,arguments);
-      if(typeof notificar_==='function')notificar_('✅ Mapa salvo.','sucesso',2600);
-      return r;
-    }catch(e){
-      console.error('v46.83 salvar mapa',e);
-      if(typeof notificar_==='function')notificar_(`Não foi possível salvar o mapa. ${e?.message||e||'Erro desconhecido.'}`,'erro',8000);
-      return null;
-    }
-  };window.gm2saveLibrary=gm2saveLibrary;
-}catch(e){console.warn('v46.83 save wrapper',e);}
-try{
-  const basePub=gm2publish;
-  gm2publish=function(){try{if(typeof labEstado_!=='undefined')labEstado_.visibilidadeJogadores=v4683Clamp_(gm2?.st?.visibilidadeJogadores??0,0,100);}catch(_){}return basePub.apply(this,arguments);};
-  window.gm2publish=gm2publish;
-}catch(_){}
-
-// ---------- ESC ----------
-document.addEventListener('keydown',ev=>{
-  if(ev.key!=='Escape')return;
-  let acted=false;
-  try{if(typeof lab281VisMode_!=='undefined'&&lab281VisMode_){lab281VisMode_='';acted=true;v4683ToolState_();}}catch(_){}
-  try{if(typeof gm2!=='undefined'&&(gm2.selected?.size||gm2.tool!=='select')){gm2clearSelection();gm2.tool='select';gm2render();acted=true;}}catch(_){}
-  try{const ed=document.getElementById('editorObjetoMapaBanco');if(ed&&getComputedStyle(ed).display!=='none'){window.fecharEditorObjetoMapa_?.();acted=true;}}catch(_){}
-  for(const id of ['itemModal','dbItemModal']){const m=document.getElementById(id);if(m?.classList.contains('active')){m.classList.remove('active');acted=true;}}
-  if(acted){ev.preventDefault();ev.stopPropagation();}
-},true);
-
-// ---------- CSS final ----------
-const css=document.createElement('style');css.id='v4683Css';css.textContent=`
-#v4683MapVisWrap{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 7px;margin-left:6px;border:1px solid #34506d;border-radius:6px;background:#11152d;color:#b9c2e7;font:600 10px/1 'Segoe UI',sans-serif;white-space:nowrap;vertical-align:middle}
-#v4683MapVisWrap input{width:110px;margin:0;accent-color:#27c7ee}#v4683MapVisWrap b{min-width:29px;color:#e5f7ff;font-size:10px}
-#v4683MesaMapWrap{display:flex;align-items:stretch;width:max-content;min-width:100%;background:#0f142b;border:1px solid #34506d;border-radius:8px;overflow:visible}
-#v4683MesaVisTools{width:50px;flex:0 0 50px;background:#11152d;border-right:1px solid #34506d;padding:6px 4px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box}
-#v4683MesaVisTools .v4683SideTitle{font:700 8px/1.1 'Segoe UI',sans-serif;color:#8fa8d8;text-align:center;margin:2px 0 4px;word-break:break-word}
-#v4683MesaVisTools button{width:40px;height:40px;min-height:40px;padding:0;border:1px solid #34506d;border-radius:7px;background:#f4f4f4;color:#111;font-size:18px;cursor:pointer}
-#v4683MesaVisTools button.active{outline:2px solid #45d7ff;background:#dff8ff}
-.item-tooltip{font-size:.58em!important;line-height:1.15!important;min-width:145px!important;max-width:190px!important;padding:5px 6px!important;border-width:1px!important}
-.item-tooltip h5{font-size:1em!important;margin:0 0 2px!important}.item-tooltip p{font-size:.9em!important;line-height:1.15!important;margin:1px 0!important}
-#laboratorio-combate{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
-#laboratorio-combate #labMetricMap{flex:0 0 auto}
-`;
-document.head.appendChild(css);
-
-// Instala após tudo e continua vigiando UI criada dinamicamente.
-function v4683InstallAll_(){try{v4683InstallOficinaVis_();}catch(e){console.warn(e)}try{v4683InstallMesaTools_();}catch(e){console.warn(e)}}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v4683InstallAll_);else v4683InstallAll_();
-setTimeout(v4683InstallAll_,250);setTimeout(v4683InstallAll_,900);setTimeout(v4683InstallAll_,1800);
-const obs=new MutationObserver(()=>{clearTimeout(window.__v4683mo);window.__v4683mo=setTimeout(v4683InstallAll_,30);});
-obs.observe(document.body,{childList:true,subtree:true});
-})();
-</script>
-<!-- Mesa Estelar v46.83.0: patch final após todos os scripts legados -->
-
-
-
-<script>
-// ============================================================
-// V46.84.0 — visibilidade desenhável, persistência do slider,
-// materiais reidratados, mineração/lenha e bancos atualizados.
-// Patch final absoluto para não ser sobrescrito por blocos legados.
-// ============================================================
-(function(){
-'use strict';
-const V='46.84.0';
-const clamp=(v,a=0,b=100)=>{v=Number(v);return Number.isFinite(v)?Math.max(a,Math.min(b,v)):a;};
-
-// ---------- Material atual do modelo ----------
-function modelFor_(o){
-  const ids=[o?.modeloId,o?.objetoBancoId,o?.dadosBanco?.id].filter(Boolean).map(String);
-  return (window.objetosMapaDB||objetosMapaDB||[]).find(x=>ids.includes(String(x.id)))||null;
-}
-function mat_(o){
-  const m=modelFor_(o);
-  return normalizarTextoCombate_(String(o?.material||o?.dadosBanco?.material||m?.material||''));
-}
-try{
-  lab281EhMadeira_=o=>/madeira|wood|vegetal/.test(mat_(o));
-  lab281EhPedra_=o=>/pedra|rock|stone|concreto|ceram/.test(mat_(o));
-}catch(e){console.warn(V,'material patch',e);}
-
-// Atualiza material das instâncias antigas sem alterar PV/dureza atuais.
-function hydrateMaterials_(){
-  try{
-    for(const o of (labEstado_?.objetosLab||[])){
-      const m=modelFor_(o); if(!m?.material) continue;
-      if(!o.material)o.material=m.material;
-      if(o.dadosBanco&&typeof o.dadosBanco==='object'&&!o.dadosBanco.material)o.dadosBanco.material=m.material;
-    }
-  }catch(_){ }
-}
-
-// ---------- Sons sintéticos curtos ----------
-let ac_;
-function audio_(){try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return null;ac_=ac_||new AC();if(ac_.state==='suspended')ac_.resume();return ac_;}catch(_){return null;}}
-function woodSound_(){
-  const ac=audio_();if(!ac)return;const t=ac.currentTime;
-  for(let k=0;k<2;k++){
-    const osc=ac.createOscillator(),g=ac.createGain(),f=ac.createBiquadFilter();
-    osc.type='triangle';osc.frequency.setValueAtTime(k?105:145,t+k*.075);osc.frequency.exponentialRampToValueAtTime(k?62:78,t+k*.075+.12);
-    f.type='lowpass';f.frequency.value=900;g.gain.setValueAtTime(.0001,t+k*.075);g.gain.exponentialRampToValueAtTime(.14,t+k*.075+.008);g.gain.exponentialRampToValueAtTime(.0001,t+k*.075+.16);
-    osc.connect(f);f.connect(g);g.connect(ac.destination);osc.start(t+k*.075);osc.stop(t+k*.075+.18);
-  }
-}
-function mineSound_(){
-  const ac=audio_();if(!ac)return;const t=ac.currentTime;
-  const osc=ac.createOscillator(),g=ac.createGain();osc.type='square';osc.frequency.setValueAtTime(980,t);osc.frequency.exponentialRampToValueAtTime(330,t+.12);
-  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.09,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.16);osc.connect(g);g.connect(ac.destination);osc.start(t);osc.stop(t+.18);
-  const n=Math.floor(ac.sampleRate*.13),buf=ac.createBuffer(1,n,ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n)*.35;
-  const src=ac.createBufferSource(),bp=ac.createBiquadFilter(),ng=ac.createGain();bp.type='bandpass';bp.frequency.value=2100;bp.Q.value=1.7;ng.gain.value=.07;src.buffer=buf;src.connect(bp);bp.connect(ng);ng.connect(ac.destination);src.start(t);
-}
-try{
-  const base=labObjetoAcaoExecutar_;
-  labObjetoAcaoExecutar_=function(ator,obj,tipo){
-    if(tipo==='minerar')mineSound_(); else if(tipo==='cortar')woodSound_();
-    return base.apply(this,arguments);
-  };
-}catch(e){console.warn(V,'som ações',e);}
-
-// ---------- Bancos sempre alfabéticos e Oficina atualizada ----------
-function sortObjects_(){
-  try{objetosMapaDB.sort((a,b)=>String(getNome(a)||a?.nome||a?.id||'').localeCompare(String(getNome(b)||b?.nome||b?.id||''),'pt-BR',{sensitivity:'base'}));}catch(_){ }
-}
-try{
-  const base=window.renderizarBancoObjetosMapa_;
-  window.renderizarBancoObjetosMapa_=function(){
-    sortObjects_();const r=base.apply(this,arguments);
-    try{gm2populateBank?.();}catch(_){ }
-    try{gm580PopulateObjects_?.();}catch(_){ }
-    return r;
-  };
-  try{renderizarBancoObjetosMapa_=window.renderizarBancoObjetosMapa_;}catch(_){ }
-}catch(e){console.warn(V,'ordem banco',e);}
-try{
-  const base=window.salvarObjetoMapaEditor_;
-  window.salvarObjetoMapaEditor_=async function(){const r=await base.apply(this,arguments);sortObjects_();try{window.renderizarBancoObjetosMapa_();}catch(_){}try{gm2populateBank?.();}catch(_){}try{gm580PopulateObjects_?.();}catch(_){}return r;};
-}catch(e){console.warn(V,'refresh banco',e);}
-
-// ---------- Slider da Oficina: valor vivo + persistência ----------
-function slider_(){return document.getElementById('v4683MapVis')||document.getElementById('gm282MapVis');}
-function label_(){return document.getElementById('v4683MapVisValue')||document.getElementById('gm282MapVisValue');}
-function setVis_(v,saveRemote=false){
-  v=clamp(v);try{gm2.st.visibilidadeJogadores=v;gm2saveLocal();}catch(_){ }
-  const l=label_();if(l)l.textContent=Math.round(v)+'%';
-  const r=slider_();if(r&&document.activeElement!==r)r.value=String(v);
-  try{
-    const id=String(gm2?.st?.mapId||'');const m=(mapasDB||[]).find(x=>String(x.id)===id);if(m)m.visibilidadeJogadores=v;
-    if(saveRemote&&id&&typeof setDoc==='function')setDoc(doc(db,'mapas',id),{visibilidadeJogadores:v},{merge:true}).catch(e=>console.warn(V,'visibilidade remota',e));
-  }catch(_){ }
-}
-function wireSlider_(){
-  const r=slider_();if(!r||r.dataset.v4684)return;r.dataset.v4684='1';
-  r.addEventListener('input',ev=>{ev.stopPropagation();const v=clamp(ev.target.value);try{gm2.st.visibilidadeJogadores=v;gm2saveLocal();}catch(_){}const l=label_();if(l)l.textContent=Math.round(v)+'%';},true);
-  r.addEventListener('change',ev=>setVis_(ev.target.value,true),true);
-  r.addEventListener('pointerup',ev=>setVis_(ev.target.value,true),true);
-}
-// O salvamento legado usava primeiro o valor antigo de mapasDB. Atualizamos ambos antes de salvar.
-try{
-  const base=gm2saveLibrary;
-  gm2saveLibrary=async function(){
-    const r=slider_();if(r)setVis_(r.value,false);
-    try{const id=String(gm2?.st?.mapId||'');const m=(mapasDB||[]).find(x=>String(x.id)===id);if(m)m.visibilidadeJogadores=clamp(gm2.st.visibilidadeJogadores||0);}catch(_){ }
-    return await base.apply(this,arguments);
-  };window.gm2saveLibrary=gm2saveLibrary;
-}catch(e){console.warn(V,'save vis',e);}
-
-// ---------- Ferramenta retangular real de visibilidade ----------
-let mode_='';
-function toolbarState_(){
-  document.querySelectorAll('#v4683MesaVisTools button').forEach(b=>b.classList.remove('active'));
-  if(mode_==='hide')document.getElementById('v4683Hide')?.classList.add('active');
-  if(mode_==='clearGM')document.getElementById('v4683Bright')?.classList.add('active');
-  if(mode_==='remove')document.getElementById('v4683Remove')?.classList.add('active');
-}
-function choose_(m){mode_=m;toolbarState_();const txt=m==='hide'?'Arraste no mapa: escuro para jogadores e 50% para o mestre.':m==='clearGM'?'Arraste no mapa: oculto para jogadores, mas claro para o mestre.':m==='remove'?'Clique numa área de ocultação para removê-la.':'Ferramenta cancelada.';try{notificar_(txt,'info',2600);}catch(_){} }
-function point_(map,ev){const rect=map.getBoundingClientRect(),ppm=Number(labEstado_?.pxPorMetro||48);return{x:(ev.clientX-rect.left)/ppm,y:(ev.clientY-rect.top)/ppm};}
-function hit_(p){return [...(labEstado_?.zonasVisibilidadeLab||[])].reverse().find(z=>p.x>=z.x&&p.x<=z.x+z.w&&p.y>=z.y&&p.y<=z.y+z.h);}
-function zonesRender_(){
-  const map=document.getElementById('labMetricMap');if(!map)return;
-  map.querySelectorAll('.lab281-secret,.v4684-secret').forEach(x=>x.remove());
-  const ppm=Number(labEstado_?.pxPorMetro||48),master=batalhaEhMestre_();
-  for(const z of (labEstado_?.zonasVisibilidadeLab||[])){
-    const op=master?(z.gmClear?0:.5):1;if(op<=0)continue;
-    const d=document.createElement('div');d.className='v4684-secret';d.dataset.zoneid=String(z.id||'');
-    d.style.cssText=`position:absolute;left:${z.x*ppm}px;top:${z.y*ppm}px;width:${z.w*ppm}px;height:${z.h*ppm}px;background:#000;opacity:${op};z-index:18;pointer-events:none`;
-    map.appendChild(d);
-  }
-}
-try{
-  const base=labRender_;
-  labRender_=function(){hydrateMaterials_();const r=base.apply(this,arguments);try{zonesRender_();}catch(_){}return r;};window.labRender_=labRender_;
-}catch(e){console.warn(V,'render zones',e);}
-
-document.addEventListener('pointerdown',ev=>{
-  if(!mode_||!batalhaEhMestre_())return;
-  const map=ev.target?.closest?.('#labMetricMap');if(!map)return;
-  // Permite começar sobre terreno/imagens; só tokens, objetos e microações ficam protegidos.
-  if(ev.target.closest?.('.lab-token,.lab-map-object,.lab-micro-actions'))return;
-  ev.preventDefault();ev.stopImmediatePropagation();
-  const a=point_(map,ev);
-  if(mode_==='remove'){
-    const z=hit_(a);if(z){labEstado_.zonasVisibilidadeLab=(labEstado_.zonasVisibilidadeLab||[]).filter(x=>x!==z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}return;
-  }
-  const ghost=document.createElement('div');ghost.className='v4684-ghost';ghost.style.cssText=`position:absolute;left:${a.x*Number(labEstado_.pxPorMetro||48)}px;top:${a.y*Number(labEstado_.pxPorMetro||48)}px;width:1px;height:1px;border:2px dashed #45d7ff;background:rgba(0,0,0,.28);z-index:120;pointer-events:none`;map.appendChild(ghost);
-  const mv=e=>{const b=point_(map,e),ppm=Number(labEstado_.pxPorMetro||48),x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(a.x-b.x),h=Math.abs(a.y-b.y);Object.assign(ghost.style,{left:x*ppm+'px',top:y*ppm+'px',width:w*ppm+'px',height:h*ppm+'px'});};
-  const up=e=>{window.removeEventListener('pointermove',mv,true);const b=point_(map,e),z={id:`vis:${Date.now()}`,x:Math.min(a.x,b.x),y:Math.min(a.y,b.y),w:Math.abs(a.x-b.x),h:Math.abs(a.y-b.y),gmClear:mode_==='clearGM'};ghost.remove();if(z.w>.08&&z.h>.08){labEstado_.zonasVisibilidadeLab=labEstado_.zonasVisibilidadeLab||[];labEstado_.zonasVisibilidadeLab.push(z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}};
-  window.addEventListener('pointermove',mv,true);window.addEventListener('pointerup',up,{once:true,capture:true});
-},true);
-
-function wireTools_(){
-  const h=document.getElementById('v4683Hide'),b=document.getElementById('v4683Bright'),r=document.getElementById('v4683Remove'),c=document.getElementById('v4683Cancel');
-  if(h&&!h.dataset.v4684){h.dataset.v4684='1';h.onclick=e=>{e.preventDefault();e.stopPropagation();choose_('hide');};}
-  if(b&&!b.dataset.v4684){b.dataset.v4684='1';b.title='Arraste uma área que continuará escura para jogadores, mas ficará clara para o mestre';b.onclick=e=>{e.preventDefault();e.stopPropagation();choose_('clearGM');};}
-  if(r&&!r.dataset.v4684){r.dataset.v4684='1';r.onclick=e=>{e.preventDefault();e.stopPropagation();choose_('remove');};}
-  if(c&&!c.dataset.v4684){c.dataset.v4684='1';c.onclick=e=>{e.preventDefault();e.stopPropagation();choose_('');};}
-  toolbarState_();
-}
-
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&mode_){mode_='';toolbarState_();}},true);
-
-// ---------- Microações finais com material reidratado ----------
-try{
-  const base=labObjetoMicroPainelHtml_;
-  labObjetoMicroPainelHtml_=function(o,ppm){
-    hydrateMaterials_();let h=base.apply(this,arguments);if(!h)return h;const a=labTokenAtual_();if(!a)return h;
-    const pedra=lab281EhPedra_(o),madeira=lab281EhMadeira_(o),pic=lab281Picareta_(a),axe=lab281Machado_(a),near=lab281DistOk_(a,o,1.5),oid=String(o.id||'').replace(/'/g,"\\'");
-    if((pedra&&pic)||(madeira&&axe))h=h.replace(/<button\b[^>]*>[\s\S]*?⚔️\s*Atacar[\s\S]*?<\/button>/gi,'');
-    h=h.replace(/<button\b[^>]*>[\s\S]*?⛏️\s*Minerar[\s\S]*?<\/button>/gi,'').replace(/<button\b[^>]*>[\s\S]*?🪓\s*(?:Cortar|Lenhar)[\s\S]*?<\/button>/gi,'');
-    let extra='';if(pedra&&pic)extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${oid}')" ${near?'':'disabled'}>⛏️ Minerar</button>`;if(madeira&&axe)extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${oid}')" ${near?'':'disabled'}>🪓 Lenhar</button>`;
-    return extra?h.replace('</div>',extra+'</div>'):h;
-  };window.labObjetoMicroPainelHtml_=labObjetoMicroPainelHtml_;
-}catch(e){console.warn(V,'microações finais',e);}
-
-function install_(){wireSlider_();wireTools_();sortObjects_();try{gm2populateBank?.();}catch(_){}try{gm580PopulateObjects_?.();}catch(_){} }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install_);else install_();
-setTimeout(install_,300);setTimeout(install_,1100);setInterval(()=>{wireSlider_();wireTools_();},1800);
-})();
-</script>
-<!-- Mesa Estelar v46.84.0 -->
-
-
-
-<script>
-// ============================================================
-// V46.85.0 — correção estrutural: salvar de verdade, último mapa,
-// visibilidade desenhável e mineração por material/modelo.
-// ============================================================
-(function(){
-'use strict';
-const VER='46.85.0', LAST_MAP_KEY='mesaEstelarUltimoMapaMesaId_v4685';
-const clamp=(v,a=0,b=100)=>{v=Number(v);return Number.isFinite(v)?Math.max(a,Math.min(b,v)):a;};
-const norm=v=>{try{return normalizarTextoCombate_(String(v||''));}catch(_){return String(v||'').toLowerCase();}};
-
-// ---------- material robusto, inclusive para instâncias antigas ----------
-function banco_(){try{return Array.isArray(objetosMapaDB)?objetosMapaDB:[];}catch(_){return [];}}
-function modelo_(o){
-  const dbb=banco_();
-  const ids=[o?.modeloId,o?.objetoBancoId,o?.dadosBanco?.id].filter(Boolean).map(String);
-  let m=dbb.find(x=>ids.includes(String(x.id)));
-  if(m)return m;
-  const nomes=[o?.nome,o?.name,o?.dadosBanco?.nome].filter(Boolean).map(norm);
-  m=dbb.find(x=>nomes.includes(norm(x?.nome||x?.name||'')));
-  if(m)return m;
-  const img=String(o?.imagem||o?.src||o?.dadosBanco?.imagem||'');
-  if(img)m=dbb.find(x=>String(x?.imagem||'')===img);
-  return m||null;
-}
-function material_(o){
-  const m=modelo_(o);
-  let v=String(o?.material||o?.dadosBanco?.material||m?.material||'').trim();
-  // somente reparo legado: nunca grava isto no Banco, apenas permite reconhecer
-  // objetos antigos que foram salvos antes da categoria Material existir.
-  if(!v){
-    const t=norm(`${o?.nome||''} ${o?.name||''} ${o?.dadosBanco?.nome||''} ${m?.nome||''}`);
-    if(/pedra|rocha|rock|stone/.test(t))v='Pedra';
-    else if(/arvore|árvore|palmeira|tronco|madeira|tree|wood/.test(t))v='Madeira';
-  }
-  return norm(v);
-}
-window.lab281EhPedra_=o=>/pedra|rock|stone|concreto|ceram/.test(material_(o));
-window.lab281EhMadeira_=o=>/madeira|wood|vegetal/.test(material_(o));
-try{lab281EhPedra_=window.lab281EhPedra_;lab281EhMadeira_=window.lab281EhMadeira_;}catch(_){ }
-function hidratarMaterial_(o){
-  const m=modelo_(o);if(!o)return;
-  if(!o.material&&m?.material)o.material=m.material;
-  if(o.dadosBanco&&typeof o.dadosBanco==='object'&&!o.dadosBanco.material&&m?.material)o.dadosBanco.material=m.material;
-}
-try{
-  const b=labObjetoAcaoExecutar_;
-  labObjetoAcaoExecutar_=function(ator,obj,tipo){if(tipo==='minerar'||tipo==='cortar')hidratarMaterial_(obj);return b.apply(this,arguments);};
-  window.labObjetoAcaoExecutar_=labObjetoAcaoExecutar_;
-}catch(e){console.warn(VER,'ação material',e);}
-
-// ---------- SALVAR Oficina 2: função final, com TODO o fluxo dentro do try ----------
-async function salvarOficinaFinal_(){
-  if(!batalhaEhMestre_())return null;
-  const input=document.getElementById('gm2mapname');
-  const nome=String(input?.value||gm2?.st?.name||'').trim();
-  if(!nome){notificar_('Digite um nome para o mapa antes de salvar.','aviso',3200);input?.focus();return null;}
-  try{
-    notificar_('💾 Salvando mapa…','info',2200);
-    gm2.st.name=nome;
-    let id=String(gm2.st.mapId||'');
-    let existente=id?(mapasDB||[]).find(m=>String(m.id)===id):null;
-    if(!id){id=labMapaSlug_(nome);let base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;}
-
-    // Imagens pesadas saem do Firestore e vão para Storage.
-    await gm281StoragePrepararEstado_(id);
-    const legacy=gm2toLegacy();
-    const vis=clamp(gm2.st.visibilidadeJogadores||0);
-    const dados={
-      id,nome,larguraM:gm2.st.w,alturaM:gm2.st.h,pxPorMetro:gm2.st.ppm,
-      fundo:gm2.st.bg,corGrade:gm2.st.grid,gradeVisivel:gm2.st.showGrid,textura:gm2.st.texture,
-      desenhos:[],formas:[],objetos:legacy.objetos.filter(o=>!o.imagemImportada),
-      oficina2State:gm2clone(gm2.st),
-      criadoPor:existente?.criadoPor||currentUserUid||'',atualizadoEm:new Date().toISOString(),
-      oficina2:true,visibilidadeJogadores:vis
-    };
-    const salvo=await labMapaSalvarFirestore_(dados,Number(existente?.partes||0));
-    const ix=(mapasDB||[]).findIndex(m=>String(m.id)===String(id));
-    if(ix>=0)mapasDB[ix]=salvo;else mapasDB.push(salvo);
-    gm2.st.mapId=id;gm2.st.name=nome;gm2.st.visibilidadeJogadores=vis;gm2saveLocal();
-    labMapaSelecionado_=id;labAtualizarSelectMapas_();gm2populateMapSelect?.();
-    try{renderizarBancoMapas_?.();}catch(_){ }
-    notificar_(`✅ “${nome}” salvo.`,'sucesso',3200);
-    return salvo;
-  }catch(e){
-    console.error('Oficina 2 salvar FINAL',e);
-    notificar_(`Não foi possível salvar o mapa. ${e?.message||String(e)||'Erro desconhecido.'}`,'erro',9000);
-    return null;
-  }
-}
-window.gm2saveLibrary=salvarOficinaFinal_;
-try{gm2saveLibrary=salvarOficinaFinal_;}catch(_){ }
-
-// ---------- slider: evento real e valor do estado como fonte ----------
-window.v4685SetVis_=function(v,remote){
-  v=clamp(v);try{gm2.st.visibilidadeJogadores=v;gm2saveLocal();}catch(_){ }
-  for(const id of ['v4683MapVis','gm282MapVis']){const r=document.getElementById(id);if(r&&document.activeElement!==r)r.value=String(v);}
-  for(const id of ['v4683MapVisValue','gm282MapVisValue']){const n=document.getElementById(id);if(n)n.textContent=Math.round(v)+'%';}
-  const mid=String(gm2?.st?.mapId||'');const m=(mapasDB||[]).find(x=>String(x.id)===mid);if(m)m.visibilidadeJogadores=v;
-  if(remote&&mid)try{setDoc(doc(db,'mapas',mid),{visibilidadeJogadores:v},{merge:true}).catch(e=>console.warn(VER,e));}catch(_){ }
-};
-function ligarControlesOficina_(){
-  const save=document.getElementById('gm2save');
-  if(save&&save.dataset.v4685!=='1'){
-    save.dataset.v4685='1';
-    save.onclick=e=>{e.preventDefault();e.stopPropagation();salvarOficinaFinal_();};
-  }
-  const r=document.getElementById('v4683MapVis')||document.getElementById('gm282MapVis');
-  if(r&&r.dataset.v4685!=='1'){
-    r.dataset.v4685='1';
-    r.oninput=e=>{e.stopPropagation();window.v4685SetVis_(e.target.value,false);};
-    r.onchange=e=>{e.stopPropagation();window.v4685SetVis_(e.target.value,true);};
-    r.onpointerup=e=>{e.stopPropagation();window.v4685SetVis_(e.target.value,true);};
-  }
-  if(r&&document.activeElement!==r){const v=clamp(gm2?.st?.visibilidadeJogadores||0);r.value=String(v);const n=document.getElementById('v4683MapVisValue')||document.getElementById('gm282MapVisValue');if(n)n.textContent=Math.round(v)+'%';}
-}
-
-// ---------- último mapa ativo da Mesa ----------
-function guardarMapaAtivo_(id){id=String(id||'');try{if(id)localStorage.setItem(LAST_MAP_KEY,id);else localStorage.removeItem(LAST_MAP_KEY);}catch(_){ }try{labEstado_.mapaAtivoId=id;}catch(_){ }}
-try{
-  const b=window.labCarregarMapaBanco_;
-  window.labCarregarMapaBanco_=async function(){const id=String(labMapaSelecionado_||document.getElementById('labMapaSalvoSelect')?.value||'');const r=await b.apply(this,arguments);if(id&&(mapasDB||[]).some(m=>String(m.id)===id))guardarMapaAtivo_(id);return r;};
-}catch(e){console.warn(VER,'wrap carregar Mesa',e);}
-try{
-  const b=window.abrirMapaBancoNaMesa_;
-  window.abrirMapaBancoNaMesa_=function(id){guardarMapaAtivo_(id);return b.apply(this,arguments);};
-}catch(_){ }
-try{
-  const b=gm2publish;
-  gm2publish=function(){const id=String(gm2?.st?.mapId||'');if(id)guardarMapaAtivo_(id);labEstado_.mapaAtivoId=id||labEstado_.mapaAtivoId||'';labEstado_.visibilidadeJogadores=clamp(gm2?.st?.visibilidadeJogadores||0);return b.apply(this,arguments);};
-  window.gm2publish=gm2publish;
-  const pub=document.getElementById('gm2publish');if(pub)pub.onclick=e=>{e.preventDefault();e.stopPropagation();gm2publish();};
-}catch(_){ }
-try{
-  const b=window.excluirMapaBancoAdmin_;
-  window.excluirMapaBancoAdmin_=async function(id){const r=await b.apply(this,arguments);let k='';try{k=localStorage.getItem(LAST_MAP_KEY)||'';}catch(_){}if(String(k)===String(id))guardarMapaAtivo_('');return r;};
-}catch(_){ }
-
-let tentouRestaurar_=false;
-async function restaurarUltimoMapa_(){
-  if(tentouRestaurar_)return;
-  if(!Array.isArray(mapasDB)||!mapasDB.length)return;
-  tentouRestaurar_=true;
-  let id='';try{id=localStorage.getItem(LAST_MAP_KEY)||labEstado_?.mapaAtivoId||labEstado_?.oficina2State?.mapId||'';}catch(_){ }
-  id=String(id||'');
-  const existe=id&&(mapasDB||[]).some(m=>String(m.id)===id);
-  if(existe){
-    labMapaSelecionado_=id;labAtualizarSelectMapas_();
-    // remove apenas o gatilho de confirmação do terreno antigo durante restauração automática.
-    const antigos=labEstado_.desenhosLab;labEstado_.desenhosLab=[];
-    try{await window.labCarregarMapaBanco_();}catch(e){console.warn(VER,'restaurar último mapa',e);}finally{if(!labEstado_.mapaAtivoId&&antigos?.length)labEstado_.desenhosLab=antigos;}
-    return;
-  }
-  // Não ressuscita um mapa deletado que ficou serializado no navegador.
-  const stale=String(labEstado_?.oficina2State?.mapId||labEstado_?.mapaAtivoId||'');
-  if(stale&&!(mapasDB||[]).some(m=>String(m.id)===stale)){
-    labEstado_.oficina2State=null;labEstado_.objetosLab=[];labEstado_.desenhosLab=[];labEstado_.formasLab=[];
-    labEstado_.mapaAtivoId='';labEstado_.fundo='#d7d7d7';labEstado_.textura='nenhuma';labSalvarLocal_();labRender_();
-  }
-}
-
-// ---------- ferramenta de visibilidade: ponteiro ligado DIRETAMENTE ao mapa ----------
-let modoVis_='';
-function estadoBotoes_(){
-  const ids={hide:'v4683Hide',clearGM:'v4683Bright',remove:'v4683Remove'};
-  Object.values(ids).forEach(id=>document.getElementById(id)?.classList.remove('active'));
-  if(ids[modoVis_])document.getElementById(ids[modoVis_])?.classList.add('active');
-}
-function escolherVis_(m){modoVis_=m;estadoBotoes_();try{notificar_(m==='hide'?'Arraste um retângulo no mapa para ocultá-lo dos jogadores.':m==='clearGM'?'Arraste um retângulo: escuro para jogadores e claro para o mestre.':m==='remove'?'Clique numa zona para removê-la.':'Ferramenta de visibilidade cancelada.','info',2400);}catch(_){}}
-function instalarFerramentasVis_(){
-  const h=document.getElementById('v4683Hide'),b=document.getElementById('v4683Bright'),r=document.getElementById('v4683Remove'),c=document.getElementById('v4683Cancel');
-  if(h)h.onclick=e=>{e.preventDefault();e.stopPropagation();escolherVis_('hide');};
-  if(b)b.onclick=e=>{e.preventDefault();e.stopPropagation();escolherVis_('clearGM');};
-  if(r)r.onclick=e=>{e.preventDefault();e.stopPropagation();escolherVis_('remove');};
-  if(c)c.onclick=e=>{e.preventDefault();e.stopPropagation();escolherVis_('');};
-  const map=document.getElementById('labMetricMap');if(!map||map.dataset.v4685vis==='1')return;
-  map.dataset.v4685vis='1';
-  map.addEventListener('pointerdown',function(ev){
-    if(!modoVis_||!batalhaEhMestre_())return;
-    if(ev.target.closest?.('.lab-token,.lab-map-object,.lab-micro-actions'))return;
-    ev.preventDefault();ev.stopImmediatePropagation();
-    const rect=map.getBoundingClientRect(),ppm=Number(labEstado_?.pxPorMetro||48),pt=e=>({x:clamp((e.clientX-rect.left)/ppm,0,labEstado_.larguraM),y:clamp((e.clientY-rect.top)/ppm,0,labEstado_.alturaM)}),a=pt(ev);
-    if(modoVis_==='remove'){
-      const z=[...(labEstado_.zonasVisibilidadeLab||[])].reverse().find(z=>a.x>=z.x&&a.x<=z.x+z.w&&a.y>=z.y&&a.y<=z.y+z.h);
-      if(z){labEstado_.zonasVisibilidadeLab=(labEstado_.zonasVisibilidadeLab||[]).filter(x=>x!==z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}
-      return;
-    }
-    const ghost=document.createElement('div');ghost.style.cssText='position:absolute;border:2px dashed #39d7ff;background:rgba(0,0,0,.38);z-index:214;pointer-events:none';map.appendChild(ghost);
-    const mv=e=>{const q=pt(e),x=Math.min(a.x,q.x),y=Math.min(a.y,q.y),w=Math.abs(a.x-q.x),h=Math.abs(a.y-q.y);Object.assign(ghost.style,{left:x*ppm+'px',top:y*ppm+'px',width:w*ppm+'px',height:h*ppm+'px'});};
-    const up=e=>{window.removeEventListener('pointermove',mv,true);const q=pt(e),z={id:`vis:${Date.now()}`,x:Math.min(a.x,q.x),y:Math.min(a.y,q.y),w:Math.abs(a.x-q.x),h:Math.abs(a.y-q.y),gmClear:modoVis_==='clearGM'};ghost.remove();if(z.w>.08&&z.h>.08){labEstado_.zonasVisibilidadeLab=labEstado_.zonasVisibilidadeLab||[];labEstado_.zonasVisibilidadeLab.push(z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}};
-    window.addEventListener('pointermove',mv,true);window.addEventListener('pointerup',up,{once:true,capture:true});
-  },true);
-}
-
-// Zonas com gmClear precisam respeitar o tipo individualmente.
-function renderZonasFinal_(){
-  const map=document.getElementById('labMetricMap');if(!map)return;map.querySelectorAll('.v4685-zone').forEach(n=>n.remove());
-  const ppm=Number(labEstado_?.pxPorMetro||48),master=batalhaEhMestre_();
-  for(const z of (labEstado_.zonasVisibilidadeLab||[])){
-    const op=master?(z.gmClear?0:.5):1;if(op<=0)continue;
-    const n=document.createElement('div');n.className='v4685-zone';n.style.cssText=`position:absolute;left:${z.x*ppm}px;top:${z.y*ppm}px;width:${z.w*ppm}px;height:${z.h*ppm}px;background:#000;opacity:${op};z-index:19;pointer-events:none`;map.appendChild(n);
-  }
-}
-try{const br=labRender_;labRender_=function(){const r=br.apply(this,arguments);renderZonasFinal_();return r;};window.labRender_=labRender_;}catch(_){ }
-
-// ---------- microações finais ----------
-try{
-  const bm=labObjetoMicroPainelHtml_;
-  labObjetoMicroPainelHtml_=function(o,ppm){
-    hidratarMaterial_(o);let h=bm.apply(this,arguments);if(!h)return h;const a=labTokenAtual_();if(!a)return h;
-    const pedra=window.lab281EhPedra_(o),madeira=window.lab281EhMadeira_(o),pic=lab281Picareta_(a),axe=lab281Machado_(a),near=lab281DistOk_(a,o,1.5),oid=String(o.id||'').replace(/'/g,"\\'");
-    if((pedra&&pic)||(madeira&&axe))h=h.replace(/<button\b[^>]*>[\s\S]*?⚔️\s*Atacar[\s\S]*?<\/button>/gi,'');
-    h=h.replace(/<button\b[^>]*>[\s\S]*?⛏️\s*Minerar[\s\S]*?<\/button>/gi,'').replace(/<button\b[^>]*>[\s\S]*?🪓\s*(?:Cortar|Lenhar)[\s\S]*?<\/button>/gi,'');
-    let extra='';if(pedra&&pic)extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${oid}')" ${near?'':'disabled'}>⛏️ Minerar</button>`;if(madeira&&axe)extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${oid}')" ${near?'':'disabled'}>🪓 Lenhar</button>`;
-    return extra?h.replace('</div>',extra+'</div>'):h;
-  };window.labObjetoMicroPainelHtml_=labObjetoMicroPainelHtml_;
-}catch(e){console.warn(VER,'micro painel',e);}
-
-function instalarTudo_(){ligarControlesOficina_();instalarFerramentasVis_();restaurarUltimoMapa_();}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',instalarTudo_);else instalarTudo_();
-setTimeout(instalarTudo_,250);setTimeout(instalarTudo_,900);setTimeout(instalarTudo_,1800);setInterval(instalarTudo_,2200);
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modoVis_){modoVis_='';estadoBotoes_();}},true);
-})();
-</script>
-<!-- Mesa Estelar v46.85.0 -->
+<!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
 
 </body>
 </html>
