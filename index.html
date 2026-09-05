@@ -786,10 +786,10 @@
                     <div id="labMetricMap" onclick="labCliqueFundoMapa_(event)" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
                     <details id="labLiveObjectBank770" style="display:block;margin-top:8px;padding:7px 9px;border-radius:9px;background:rgba(9,15,38,.66);border:1px solid rgba(86,240,138,.25);">
-                      <summary style="cursor:pointer;font-weight:800;color:#d8ffe5;user-select:none;">🧱 Objetos do banco <span style="font-size:.72em;color:#7fdfff">v46.81.3</span></summary>
+                      <summary style="cursor:pointer;font-weight:800;color:#d8ffe5;user-select:none;">🧱 Objetos do banco <span style="font-size:.72em;color:#7fdfff">v46.81.4</span></summary>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 6px;">
                         <label style="margin:0;display:flex;align-items:center;gap:5px;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
-                        <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()">➕ Adicionar marcados</button>
+                        <button id="labLiveAddBtn814" class="btn-small btn-select" type="button">➕ Adicionar marcados</button>
                         <small style="color:#9fb8c9">Os objetos entram no centro do mapa com PV, dureza, fogo e demais propriedades do banco.</small>
                       </div>
                       <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px;"></div>
@@ -32301,6 +32301,7 @@ function labLiveRenderObjectBank770_(){
  }).join('');
  const all=document.getElementById('labLiveObjAll770');
  if(all&&!all.dataset.wired){all.dataset.wired='1';all.addEventListener('change',()=>document.querySelectorAll('.lab-live-obj-check770').forEach(c=>c.checked=all.checked));}
+ try{lab814LigarBotaoObjetos_();}catch(_){}
 }
 
 function labInstanciaObjetoBanco770_(m,x,y,offset=0){
@@ -32318,20 +32319,44 @@ function labInstanciaObjetoBanco770_(m,x,y,offset=0){
  };
 }
 window.labLiveAdicionarObjetos770_=function(){
- if(!batalhaEhMestre_())return;
- const ids=[...document.querySelectorAll('.lab-live-obj-check770:checked')].map(c=>String(c.value));
- if(!ids.length){notificar_('Marque pelo menos um objeto do banco.','aviso',2500);return;}
- labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
- let off=0,last=null;
- for(const id of ids){
-   const m=(objetosMapaDB||[]).find(o=>String(o.id)===id);if(!m)continue;
-   const inst=labInstanciaObjetoBanco770_(m,Math.max(0,Math.min(labEstado_.larguraM,labEstado_.larguraM/2+off)),Math.max(0,Math.min(labEstado_.alturaM,labEstado_.alturaM/2+off)),off);
-   labEstado_.objetosLab.push(inst);last=inst;off+=.35;
+ try{
+   if(!batalhaEhMestre_()){notificar_('Somente o mestre pode adicionar objetos à Mesa.','aviso',2500);return;}
+   const marcados=[...document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770:checked')];
+   const ids=marcados.map(c=>String(c.value));
+   if(!ids.length){notificar_('Marque pelo menos um objeto do banco.','aviso',2500);return;}
+
+   labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
+   let off=0,last=null,adicionados=[];
+   for(const id of ids){
+     const m=(objetosMapaDB||[]).find(o=>String(o.id)===id);
+     if(!m){console.warn('[Mesa 46.81.4] modelo não encontrado',id);continue;}
+     const x=Math.max(.5,Math.min(Number(labEstado_.larguraM||28)-.5,Number(labEstado_.larguraM||28)/2+off));
+     const y=Math.max(.5,Math.min(Number(labEstado_.alturaM||14)-.5,Number(labEstado_.alturaM||14)/2+off));
+     const inst=labInstanciaObjetoBanco770_(m,x,y,off);
+     labEstado_.objetosLab.push(inst);
+     last=inst;adicionados.push(m.nome||m.id);off+=.45;
+   }
+   if(!adicionados.length){notificar_('Nenhum objeto pôde ser adicionado. Veja o console.','erro',4000);return;}
+   if(last){labEstado_.objetoSelecionadoId=last.id;labEstado_.selecionadoId='';}
+   marcados.forEach(c=>c.checked=false);
+   const all=document.getElementById('labLiveObjAll770');if(all)all.checked=false;
+   // Renderiza ANTES de persistir: o objeto precisa aparecer mesmo se Storage/localStorage falhar depois.
+   labRender_();
+   labSalvarLocal_();
+   notificar_(`✅ ${adicionados.length} objeto(s) adicionado(s): ${adicionados.slice(0,3).join(', ')}${adicionados.length>3?'…':''}`,'sucesso',3500);
+ }catch(e){
+   console.error('[Mesa 46.81.4] adicionar objetos',e);
+   try{notificar_(`Erro ao adicionar objeto: ${e?.message||e}`,'erro',6000);}catch(_){}
  }
- if(last){labEstado_.objetoSelecionadoId=last.id;labEstado_.selecionadoId='';}
- labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
- notificar_(`${ids.length} objeto(s) adicionado(s) ao mapa.`,'sucesso',2200);
 };
+
+function lab814LigarBotaoObjetos_(){
+ const b=document.getElementById('labLiveAddBtn814');
+ if(!b||b.dataset.wired814)return;
+ b.dataset.wired814='1';
+ b.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();window.labLiveAdicionarObjetos770_();});
+}
+
 
 function labRepararObjetosBanco770_(){
  const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ');
