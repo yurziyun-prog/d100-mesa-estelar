@@ -31213,6 +31213,142 @@ setTimeout(()=>{
  const editWrap=document.getElementById('labEditMapToggleWrap');if(editWrap)editWrap.style.display='none';
 },1200);
 
+
+// ============================================================
+// V46.80.3 — MAPAS POR REFERÊNCIA
+// Objetos do Banco não duplicam imagem/snapshot no mapa salvo.
+// O mapa guarda modeloId + transformação; ao abrir, reidrata do Banco.
+// Imagens externas continuam independentes e vão para Firebase Storage.
+// ============================================================
+const MAP803_REF_VERSION_='refs-v1';
+
+function map803BancoPorId_(id){
+  id=String(id||'');
+  return (objetosMapaDB||[]).find(x=>String(x.id)===id)||null;
+}
+function map803Clone_(v){return JSON.parse(JSON.stringify(v));}
+function map803Ext_(data){
+  const m=String(data||'').match(/^data:image\/([^;,]+)/i);let x=(m?.[1]||'webp').toLowerCase();
+  if(x==='jpeg')x='jpg';if(!/^(png|webp|jpg|gif)$/.test(x))x='webp';return x;
+}
+async function map803UploadImagem_(data,mapId,cache,seq){
+  data=String(data||'');
+  if(!data.startsWith('data:image/'))return data;
+  if(cache.has(data))return cache.get(data);
+  if(!currentUserUid)throw new Error('Usuário não autenticado para enviar imagens do mapa.');
+  const blob=await (await fetch(data)).blob(),ext=map803Ext_(data);
+  const safe=String(mapId||'mapa').replace(/[^a-zA-Z0-9_-]+/g,'_');
+  const caminho=`mapas/${currentUserUid}/${safe}/externa_${Date.now()}_${String(seq.n++).padStart(3,'0')}.${ext}`;
+  const up=await uploadBytes(ref(storage,caminho),blob,{contentType:blob.type||`image/${ext}`});
+  const url=await getDownloadURL(up.ref);cache.set(data,url);return url;
+}
+function map803ObjetoRef_(e){
+  return {
+    id:String(e.id||gm2id('o')),
+    type:'object',
+    modeloId:String(e.modeloId||e.objetoBancoId||e.dadosBanco?.id||''),
+    objetoBancoId:String(e.objetoBancoId||e.modeloId||e.dadosBanco?.id||''),
+    x:Number(e.x||0),y:Number(e.y||0),w:Number(e.w||1),h:Number(e.h||1),rot:Number(e.rot||0),z:Number(e.z||0),
+    locked:!!e.locked,opacity:Number(e.opacity??1),shadow:e.shadow||'nenhuma',shadowDir:e.shadowDir||'SE',shadowDist:Number(e.shadowDist||4),
+    mapRef:true
+  };
+}
+async function map803EstadoSlim_(state,mapId){
+  const st=map803Clone_(state),cache=new Map(),seq={n:1};
+  const els=[];let refs=0,externas=0;
+  for(const e0 of (st.elements||[])){
+    const e=map803Clone_(e0);
+    if(e.type==='object' && String(e.modeloId||e.objetoBancoId||e.dadosBanco?.id||'')){
+      els.push(map803ObjetoRef_(e));refs++;continue;
+    }
+    if(e.type==='image'){
+      if(String(e.src||'').startsWith('data:image/')){e.src=await map803UploadImagem_(e.src,mapId,cache,seq);externas++;}
+      delete e.dadosBanco;delete e.imagem;els.push(e);continue;
+    }
+    // Formas/desenhos são vetoriais e pequenos; elimina snapshots acidentais.
+    delete e.dadosBanco;delete e.imagem;
+    els.push(e);
+  }
+  st.elements=els;st.formatoObjetos=MAP803_REF_VERSION_;
+  return {state:st,refs,externas};
+}
+function map803HidratarElemento_(e){
+  if(!e||e.type!=='object')return e;
+  const mid=String(e.modeloId||e.objetoBancoId||'');
+  const m=map803BancoPorId_(mid);
+  if(!m)return e;
+  const inst={...map803Clone_(m),...map803Clone_(e)};
+  inst.modeloId=mid;inst.objetoBancoId=mid;inst.dadosBanco=map803Clone_(m);
+  inst.nome=inst.nome||m.nome||mid;inst.name=inst.name||inst.nome;inst.src=m.imagem||m.image||inst.src||'';
+  inst.pvMax=Number(m.pvMax||0);inst.pvAtual=Number(m.pvMax||0);inst.dureza=Number(m.dureza||0);inst.pesoKg=Number(m.pesoKg||0);
+  inst.destrutivel=m.destrutivel!==false;inst.inflamavel=!!m.inflamavel;inst.inflamabilidade=Number(m.inflamabilidade||0);
+  inst.bloqueiaMovimento=m.bloqueiaMovimento!==false;inst.bloqueiaVisao=!!m.bloqueiaVisao;
+  inst.destruido=false;inst.pegandoFogoLab=false;inst.fogoUltimaRodadaLab=-1;
+  return inst;
+}
+function map803HidratarEstado_(st){
+  const out=map803Clone_(st||{});out.elements=(out.elements||[]).map(map803HidratarElemento_);return out;
+}
+function map803LegacyRefs_(state){
+  const objetos=[];
+  for(const e of (state.elements||[])){
+    if(e.type!=='object')continue;
+    objetos.push({
+      id:String(e.id),modeloId:String(e.modeloId||e.objetoBancoId||''),objetoBancoId:String(e.objetoBancoId||e.modeloId||''),
+      x:Number(e.x||0)+Number(e.w||1)/2,y:Number(e.y||0)+Number(e.h||1)/2,
+      larguraM:Number(e.w||1),alturaM:Number(e.h||1),angulo:Number(e.rot||0),ordemOficina:Number(e.z||0),fixada:!!e.locked,
+      opacity:Number(e.opacity??1),sombraOficina:e.shadow||'nenhuma',sombraDirecao:e.shadowDir||'SE',sombraDist:Number(e.shadowDist||4),mapRef:true
+    });
+  }
+  return objetos;
+}
+function map803Bytes_(obj){try{return new Blob([JSON.stringify(obj)]).size;}catch(_){return JSON.stringify(obj).length;}}
+
+// Reidrata mapas refs-v1 ao abrir na Oficina 2.
+const map803LoadBase_=gm2loadLibraryMap;
+gm2loadLibraryMap=async function(id){
+  const base=(mapasDB||[]).find(m=>String(m.id)===String(id));
+  if(!base)return map803LoadBase_.apply(this,arguments);
+  try{
+    const m=await labMapaHidratar_(base);
+    if(m?.oficina2State?.formatoObjetos===MAP803_REF_VERSION_){
+      if(gm2.st.elements?.length&&!confirm(`Abrir “${base.nome||base.id}” na Oficina 2? O rascunho atual será substituído.`))return;
+      gm2pushHistory();gm2.st=map803HidratarEstado_(m.oficina2State);gm2.st.name=String(m.nome||gm2.st.name||'');gm2.st.mapId=String(m.id||id);
+      gm2clearSelection();gm2.tool='select';gm2saveLocal();gm2render();gm2populateMapSelect();
+      notificar_(`Mapa “${gm2.st.name||m.id}” aberto · objetos reconstruídos do Banco.`,'sucesso',3000);return;
+    }
+  }catch(e){console.error('Abrir mapa por referência',e);}
+  return map803LoadBase_.apply(this,arguments);
+};
+
+// Salvamento oficial por referência.
+gm2saveLibrary=async function(){
+  if(!batalhaEhMestre_())return;
+  const input=document.getElementById('gm2mapname'),nome=String(input?.value||gm2.st.name||'').trim();
+  if(!nome){notificar_('Digite um nome para o mapa antes de salvar.','aviso',3200);input?.focus();return;}
+  let id=String(gm2.st.mapId||''),existente=id?(mapasDB||[]).find(m=>String(m.id)===id):null;
+  if(!id){id=labMapaSlug_(nome);let base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;}
+  try{
+    notificar_(`⏳ Preparando “${nome}” por referências…`,'info',2600);
+    const slim=await map803EstadoSlim_(gm2.st,id);
+    const dados={id,nome,larguraM:slim.state.w,alturaM:slim.state.h,pxPorMetro:slim.state.ppm,fundo:slim.state.bg,corGrade:slim.state.grid,gradeVisivel:slim.state.showGrid,textura:slim.state.texture,
+      desenhos:[],formas:[],objetos:map803LegacyRefs_(slim.state),oficina2State:slim.state,formatoObjetos:MAP803_REF_VERSION_,criadoPor:existente?.criadoPor||currentUserUid||'',atualizadoEm:new Date().toISOString(),oficina2:true};
+    const kb=(map803Bytes_(dados)/1024).toFixed(1);
+    notificar_(`📦 Mapa preparado: ${kb} KB · ${slim.refs} objeto(s) por referência · ${slim.externas} imagem(ns) externa(s).`,'info',4200);
+    const salvo=await labMapaSalvarFirestore_(dados,Number(existente?.partes||0));
+    const ix=(mapasDB||[]).findIndex(m=>String(m.id)===String(id));if(ix>=0)mapasDB[ix]=salvo;else mapasDB.push(salvo);
+    gm2.st.mapId=id;gm2.st.name=nome;gm2saveLocal();labMapaSelecionado_=id;labAtualizarSelectMapas_();gm2populateMapSelect();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
+    notificar_(`💾 “${nome}” salvo · ${kb} KB · ${slim.refs} referências.`,'sucesso',4500);
+  }catch(e){console.error('Salvar mapa por referência',e);notificar_(`Não foi possível salvar “${nome}”. ${e?.message||e}`,'erro',9000);}
+};
+window.gm2saveLibrary=gm2saveLibrary;
+
+// O botão foi criado com uma referência antiga; força o handler final.
+function map803ReligarSalvar_(){const b=document.getElementById('gm2save');if(b)b.onclick=()=>gm2saveLibrary();}
+const map803InstallBase_=gm2installTab;
+gm2installTab=function(){const r=map803InstallBase_.apply(this,arguments);setTimeout(map803ReligarSalvar_,0);return r;};
+setInterval(map803ReligarSalvar_,1200);
+
 window.gm2render=gm2render;
 setTimeout(gm2installTab,900);
 })();
@@ -32224,177 +32360,6 @@ labRender_=function(){
 window.labRender_=labRender_;
 
 setTimeout(()=>{try{labLiveRenderObjectBank770_();}catch(_){}},900);
-
-// ============================================================
-// V46.80.1 REBUILD — SOMENTE infraestrutura de mapas
-// Base: v46.80.0 confirmada funcional.
-// 1) Imagens da Oficina 2 -> Firebase Storage antes de salvar.
-// 2) Firestore guarda URLs, não data:image/base64.
-// 3) Último mapa da Mesa é persistido e restaurado após recarregar.
-// Este bloco fica DENTRO do script type="module", após todo o código legado.
-// ============================================================
-const MAP801_LAST_KEY_='mesa_estelar_ultimo_mapa_mesa_v1';
-
-function map801ExtFromData_(s){
- const m=String(s||'').match(/^data:image\/([^;,]+)/i);let x=(m?.[1]||'webp').toLowerCase();
- if(x==='jpeg')x='jpg';if(!/^(png|webp|jpg|gif)$/.test(x))x='webp';return x;
-}
-async function map801UploadDataUrl_(dataUrl,mapId,cache,seq){
- if(!String(dataUrl||'').startsWith('data:image/'))return dataUrl;
- if(cache.has(dataUrl))return cache.get(dataUrl);
- if(!currentUserUid)throw new Error('Usuário não autenticado para enviar imagens do mapa.');
- const blob=await (await fetch(dataUrl)).blob();
- const ext=map801ExtFromData_(dataUrl);
- const safe=String(mapId||'mapa').replace(/[^a-zA-Z0-9_-]+/g,'_');
- const caminho=`mapas/${currentUserUid}/${safe}/${Date.now()}_${String(seq.n++).padStart(4,'0')}.${ext}`;
- const snap=await uploadBytes(ref(storage,caminho),blob,{contentType:blob.type||`image/${ext}`});
- const url=await getDownloadURL(snap.ref);cache.set(dataUrl,url);return url;
-}
-async function map801Externalizar_(value,mapId,cache=new Map(),seq={n:1}){
- if(typeof value==='string')return value.startsWith('data:image/')?await map801UploadDataUrl_(value,mapId,cache,seq):value;
- if(Array.isArray(value)){const out=[];for(const v of value)out.push(await map801Externalizar_(v,mapId,cache,seq));return out;}
- if(value&&typeof value==='object'){
-   const out={};for(const [k,v] of Object.entries(value))out[k]=await map801Externalizar_(v,mapId,cache,seq);return out;
- }
- return value;
-}
-
-// Substitui o salvamento da Oficina 2 no próprio escopo do módulo.
-gm2saveLibrary=async function(){
- if(!batalhaEhMestre_())return;
- const input=document.getElementById('gm2mapname');
- const nome=String(input?.value||gm2.st.name||'').trim();
- if(!nome){notificar_('Digite um nome para o mapa antes de salvar.','aviso',3200);input?.focus();return;}
- let id=String(gm2.st.mapId||'');
- let existente=id?(mapasDB||[]).find(m=>String(m.id)===id):null;
- if(!id){id=labMapaSlug_(nome);let base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;}
- notificar_(`⏳ Salvando “${nome}”…`,'info',2500);
- try{
-   // Clona primeiro. O mapa aberto só troca Base64 por URLs depois que o upload terminou.
-   const stateStorage=await map801Externalizar_(gm2clone(gm2.st),id);
-   const prev=gm2.st;gm2.st=stateStorage;
-   let legacy;
-   try{legacy=gm2toLegacy();}finally{gm2.st=prev;}
-   const dados={
-     id,nome,larguraM:stateStorage.w,alturaM:stateStorage.h,pxPorMetro:stateStorage.ppm,
-     fundo:stateStorage.bg,corGrade:stateStorage.grid,gradeVisivel:stateStorage.showGrid,textura:stateStorage.texture,
-     desenhos:[],formas:[],objetos:legacy.objetos.filter(o=>!o.imagemImportada),
-     oficina2State:stateStorage,criadoPor:existente?.criadoPor||currentUserUid||'',
-     atualizadoEm:new Date().toISOString(),oficina2:true,midiaStorage:true
-   };
-   const salvo=await labMapaSalvarFirestore_(dados,Number(existente?.partes||0));
-   const ix=(mapasDB||[]).findIndex(m=>String(m.id)===String(id));if(ix>=0)mapasDB[ix]=salvo;else mapasDB.push(salvo);
-   gm2.st=stateStorage;gm2.st.mapId=id;gm2.st.name=nome;gm2saveLocal();
-   labMapaSelecionado_=id;labAtualizarSelectMapas_();gm2populateMapSelect();
-   if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
-   notificar_(`💾 “${nome}” salvo no Firebase.`,'sucesso',3500);
- }catch(e){console.error('Oficina 2 / Storage / salvar',e);notificar_(`Não foi possível salvar “${nome}”: ${e?.message||e}`,'erro',8000);}
-};
-window.gm2saveLibrary=gm2saveLibrary;
-
-// O onclick foi atribuído a uma referência antiga durante a montagem da UI.
-// Religamos o botão explicitamente sempre que a Oficina 2 existir.
-function map801ReligarSalvar_(){const b=document.getElementById('gm2save');if(b&&b.__map801!==true){b.onclick=()=>gm2saveLibrary();b.__map801=true;}}
-const map801InstallBase_=gm2installTab;
-gm2installTab=function(){const r=map801InstallBase_.apply(this,arguments);setTimeout(map801ReligarSalvar_,0);return r;};
-window.gm2installTab=gm2installTab;
-setInterval(map801ReligarSalvar_,1500);
-
-function map801GuardarAtivo_(id){try{id=String(id||'');if(id)localStorage.setItem(MAP801_LAST_KEY_,id);else localStorage.removeItem(MAP801_LAST_KEY_);}catch(_){}}
-function map801LerAtivo_(){try{return String(localStorage.getItem(MAP801_LAST_KEY_)||'');}catch(_){return '';}}
-async function map801AplicarMapaMesa_(m0,silencioso=false){
- if(!m0)return false;let m=m0;
- try{m=await labMapaHidratar_(m0);}catch(e){console.error('Restaurar mapa ativo',e);return false;}
- labMapaSelecionado_=String(m.id||m0.id||'');
- labEstado_.larguraM=Math.max(4,Number(m.larguraM||28));labEstado_.alturaM=Math.max(4,Number(m.alturaM||14));
- labEstado_.fundo=String(m.fundo||'#d7d7d7');labEstado_.corGrade=String(m.corGrade||'#777777');labEstado_.gradeVisivel=m.gradeVisivel!==false;labEstado_.textura=String(m.textura||'nenhuma');
- labEstado_.oficina2State=m.oficina2State?JSON.parse(JSON.stringify(m.oficina2State)):null;
- if(m.oficina2State&&m.pxPorMetro)labEstado_.pxPorMetro=Number(m.pxPorMetro)||labEstado_.pxPorMetro;
- labEstado_.desenhosLab=m.oficina2State?[]:JSON.parse(JSON.stringify(m.desenhos||[]));labEstado_.formasLab=m.oficina2State?[]:JSON.parse(JSON.stringify(m.formas||[]));
- labEstado_.objetosLab=JSON.parse(JSON.stringify(m.objetos||[])).filter(o=>!m.oficina2State||!o.imagemImportada);
- labEstado_.objetoSelecionadoId='';
- for(const t of labEstado_.tokens||[]){t.x=Math.max(0,Math.min(labEstado_.larguraM,Number(t.x||0)));t.y=Math.max(0,Math.min(labEstado_.alturaM,Number(t.y||0)));}
- try{labHidratarObjetosMesa780_();}catch(_){}
- map801GuardarAtivo_(labMapaSelecionado_);labAtualizarSelectMapas_();labSalvarLocal_();labRender_();
- if(!silencioso)notificar_(`Mapa “${m.nome||m.id}” carregado.`,'info',3000);return true;
-}
-
-// Carregamento manual passa a registrar explicitamente qual mapa é o ativo.
-window.labCarregarMapaBanco_=async function(){
- const m0=(mapasDB||[]).find(x=>String(x.id)===String(labMapaSelecionado_));
- if(!m0){notificar_('Selecione um mapa salvo.','aviso');return;}
- if((labEstado_.desenhosLab||[]).length&&!confirm(`Carregar “${m0.nome||m0.id}”? O terreno/desenho atual será substituído. Os participantes não serão removidos.`))return;
- await map801AplicarMapaMesa_(m0,false);
-};
-
-// Publicar pela Oficina 2 também define esse mapa como o mapa ativo da Mesa.
-const map801PublishBase_=gm2publish;
-gm2publish=function(){const r=map801PublishBase_.apply(this,arguments);if(gm2.st.mapId){labMapaSelecionado_=String(gm2.st.mapId);map801GuardarAtivo_(gm2.st.mapId);}return r;};
-window.gm2publish=gm2publish;
-
-// Depois que os bancos terminarem de carregar, restaura somente um ID que ainda existe.
-let map801AutoDone_=false;
-const map801Timer_=setInterval(async()=>{
- if(map801AutoDone_||!currentUserUid||!(mapasDB||[]).length)return;
- const id=map801LerAtivo_();if(!id){map801AutoDone_=true;clearInterval(map801Timer_);return;}
- const m=(mapasDB||[]).find(x=>String(x.id)===id);
- if(!m){map801GuardarAtivo_('');map801AutoDone_=true;clearInterval(map801Timer_);return;}
- map801AutoDone_=true;clearInterval(map801Timer_);await map801AplicarMapaMesa_(m,true);
-},700);
-
-
-
-// V46.80.2 — salvamento robusto: Storage + cabeçalho Firestore mínimo
-async function map802PrepararDados_(dados,mapId){ return await map801Externalizar_(dados,mapId,new Map(),{n:1}); }
-function map802ContarDataImages_(v,path='raiz',out=[]){
-  if(typeof v==='string'){ if(v.includes('data:image/'))out.push({path,tamanho:v.length}); return out; }
-  if(Array.isArray(v)){v.forEach((x,i)=>map802ContarDataImages_(x,`${path}[${i}]`,out));return out;}
-  if(v&&typeof v==='object')for(const [k,x] of Object.entries(v))map802ContarDataImages_(x,`${path}.${k}`,out);
-  return out;
-}
-labMapaSepararPayload_=function(dados){
-  const meta={id:String(dados.id||''),nome:String(dados.nome||dados.id||'Mapa'),larguraM:Number(dados.larguraM||0),alturaM:Number(dados.alturaM||0),pxPorMetro:Number(dados.pxPorMetro||0),corGrade:String(dados.corGrade||''),gradeVisivel:dados.gradeVisivel!==false,criadoPor:String(dados.criadoPor||''),atualizadoEm:String(dados.atualizadoEm||new Date().toISOString()),oficina2:!!dados.oficina2,midiaStorage:!!dados.midiaStorage,tipo:'mapa',formato:'partes-v1'};
-  const payload={};
-  for(const [k,v] of Object.entries(dados||{})){
-    if(['id','nome','larguraM','alturaM','pxPorMetro','corGrade','gradeVisivel','criadoPor','atualizadoEm','oficina2','midiaStorage'].includes(k))continue;
-    payload[k]=v;
-  }
-  // URLs pequenas podem ficar no cabeçalho; data URLs nunca.
-  if(typeof dados.fundo==='string'&&!dados.fundo.includes('data:image/'))meta.fundo=dados.fundo;
-  if(typeof dados.textura==='string'&&!dados.textura.includes('data:image/'))meta.textura=dados.textura;
-  const texto=JSON.stringify(payload),partes=[];
-  for(let i=0;i<texto.length;i+=LAB_MAPA_PARTE_CHARS_)partes.push(texto.slice(i,i+LAB_MAPA_PARTE_CHARS_));
-  if(!partes.length)partes.push('{}'); meta.partes=partes.length;meta.tamanhoSerializado=texto.length;
-  return {meta,partes};
-};
-labMapaHidratar_=async function(m){
-  if(!m)return null;if(m.formato!=='partes-v1')return m;
-  const n=Math.max(1,Number(m.partes||1));let texto='';
-  for(let i=0;i<n;i++){const snap=await getDoc(doc(db,'mapas',labMapaParteId_(m.id,i)));if(!snap.exists())throw new Error(`Parte ${i+1}/${n} do mapa não encontrada.`);texto+=String(snap.data()?.dados||'');}
-  const payload=JSON.parse(texto||'{}');return {...m,...payload,id:m.id,nome:m.nome||payload.nome||m.id};
-};
-gm2saveLibrary=async function(){
-  if(!batalhaEhMestre_())return;
-  const input=document.getElementById('gm2mapname'),nome=String(input?.value||gm2.st.name||'').trim();
-  if(!nome){notificar_('Digite um nome para o mapa antes de salvar.','aviso',3200);return;}
-  let id=String(gm2.st.mapId||''),existente=id?(mapasDB||[]).find(m=>String(m.id)===id):null;
-  if(!id){id=labMapaSlug_(nome);let base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;}
-  notificar_(`⏳ Enviando imagens e salvando “${nome}”…`,'info',3000);
-  try{
-    const stateStorage=await map801Externalizar_(gm2clone(gm2.st),id,new Map(),{n:1});
-    const prev=gm2.st;gm2.st=stateStorage;let legacy;try{legacy=gm2toLegacy();}finally{gm2.st=prev;}
-    let dados={id,nome,larguraM:stateStorage.w,alturaM:stateStorage.h,pxPorMetro:stateStorage.ppm,fundo:stateStorage.bg,corGrade:stateStorage.grid,gradeVisivel:stateStorage.showGrid,textura:stateStorage.texture,desenhos:[],formas:[],objetos:legacy.objetos.filter(o=>!o.imagemImportada),oficina2State:stateStorage,criadoPor:existente?.criadoPor||currentUserUid||'',atualizadoEm:new Date().toISOString(),oficina2:true,midiaStorage:true};
-    dados=await map802PrepararDados_(dados,id);
-    const restantes=map802ContarDataImages_(dados);if(restantes.length)console.warn('data:image restantes (isoladas em partes):',restantes);
-    const salvo=await labMapaSalvarFirestore_(dados,Number(existente?.partes||0));
-    const ix=(mapasDB||[]).findIndex(m=>String(m.id)===String(id));if(ix>=0)mapasDB[ix]=salvo;else mapasDB.push(salvo);
-    gm2.st=stateStorage;gm2.st.mapId=id;gm2.st.name=nome;gm2saveLocal();labMapaSelecionado_=id;labAtualizarSelectMapas_();gm2populateMapSelect();if(typeof renderizarBancoMapas_==='function')renderizarBancoMapas_();
-    notificar_(`💾 “${nome}” salvo. ${salvo.partes||0} parte(s).`,'sucesso',4200);
-  }catch(e){console.error('46.80.2 salvar',e);notificar_(`Não foi possível salvar “${nome}”: ${e?.message||e}`,'erro',9000);}
-};
-window.gm2saveLibrary=gm2saveLibrary;
-function map802Religar_(){const b=document.getElementById('gm2save');if(b){b.onclick=()=>gm2saveLibrary();b.__map802=true;}}
-setInterval(map802Religar_,800);setTimeout(map802Religar_,0);
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -32411,7 +32376,7 @@ setInterval(map802Religar_,800);setTimeout(map802Religar_,0);
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.77.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.80.3: recorte de objetos, modos exclusivos e fogo ambiental -->
 
 <script>
 // ============================================================
