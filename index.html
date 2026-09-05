@@ -32561,8 +32561,139 @@ function lab281HidratarLuz_(){for(const o of (labEstado_.objetosLab||[])){const 
 const lab281RenderHydBase_=labRender_;labRender_=function(){try{lab281HidratarLuz_();}catch(_){}return lab281RenderHydBase_.apply(this,arguments);};window.labRender_=labRender_;
 
 
+
+// ============================================================
+// V46.82.0 — correções de integração e polimento da Mesa
+// - feedback de salvamento/erro do Storage
+// - visibilidade do mapa na própria Oficina 2
+// - ferramentas de ocultação na lateral da Mesa
+// - microações materiais robustas
+// - ESC cancela seleção/edição
+// - tooltip do inventário mais compacto
+// - aproximação visual Mesa ↔ Oficina 2
+// ============================================================
+
+// ---- Feedback robusto ao salvar: a etapa de Storage agora também é capturada. ----
+const gm282SaveLibraryBase_=gm2saveLibrary;
+gm2saveLibrary=async function(){
+    try{
+        notificar_('💾 Salvando mapa…','info',1600);
+        return await gm282SaveLibraryBase_.apply(this,arguments);
+    }catch(e){
+        console.error('Oficina 2 salvar / Storage',e);
+        notificar_(`Não foi possível salvar o mapa. ${e?.message||'Falha ao enviar imagem para o Storage.'}`,'erro',7500);
+        throw e;
+    }
+};
+window.gm2saveLibrary=gm2saveLibrary;
+
+// ---- Visibilidade/obscuridade do mapa diretamente na barra superior da Oficina 2. ----
+function gm282VisValor_(){return Math.max(0,Math.min(100,Number(gm2.st?.visibilidadeJogadores||0)));}
+function gm282SyncVisUI_(){
+    const r=document.getElementById('gm282MapVis'),v=document.getElementById('gm282MapVisValue');
+    if(r)r.value=String(gm282VisValor_());if(v)v.textContent=gm282VisValor_()+'%';
+}
+async function gm282SetVis_(v){
+    v=Math.max(0,Math.min(100,Number(v||0)));gm2.st.visibilidadeJogadores=v;gm2saveLocal();gm282SyncVisUI_();
+    const id=String(gm2.st.mapId||'');if(!id)return;
+    const m=(mapasDB||[]).find(x=>String(x.id)===id);if(m)m.visibilidadeJogadores=v;
+    try{await setDoc(doc(db,'mapas',id),{visibilidadeJogadores:v},{merge:true});}
+    catch(e){console.warn('Visibilidade do mapa',e);notificar_('A visibilidade foi alterada localmente, mas ainda não foi sincronizada.','aviso',3500);}
+}
+window.gm282SetVis_=gm282SetVis_;
+function gm282InstallTopVis_(){
+    const sel=document.getElementById('gm2mapselect');if(!sel||document.getElementById('gm282MapVisWrap'))return;
+    sel.insertAdjacentHTML('afterend',`<button id="gm282DeleteMap" type="button" title="Excluir o mapa salvo atualmente aberto" style="min-width:34px;width:34px;height:34px;padding:2px">🗑️</button><label id="gm282MapVisWrap" title="0% = mapa totalmente visível; 100% = totalmente escuro, exceto áreas iluminadas" style="display:flex;align-items:center;gap:5px;margin:0 0 0 6px;color:#b9c2e7;font-size:10px;white-space:nowrap">Visível aos jogadores <input id="gm282MapVis" type="range" min="0" max="100" value="0" style="width:105px;margin:0" oninput="document.getElementById('gm282MapVisValue').textContent=this.value+'%'" onchange="gm282SetVis_(this.value)"><span id="gm282MapVisValue" style="min-width:28px">0%</span></label>`);
+    document.getElementById('gm282DeleteMap').onclick=()=>{const id=String(gm2.st.mapId||'');if(!id){notificar_('Este rascunho ainda não é um mapa salvo.','aviso',2600);return;}if(typeof excluirMapaBancoAdmin_==='function')excluirMapaBancoAdmin_(id);};
+    gm282SyncVisUI_();
+}
+const gm282RenderBase_=gm2render;
+gm2render=function(){const r=gm282RenderBase_.apply(this,arguments);try{gm282InstallTopVis_();gm282SyncVisUI_();}catch(_){}return r;};
+const gm282LoadBase_=gm2loadLibraryMap;
+gm2loadLibraryMap=async function(id){const r=await gm282LoadBase_.apply(this,arguments);const m=(mapasDB||[]).find(x=>String(x.id)===String(id));if(m)gm2.st.visibilidadeJogadores=Number(m.visibilidadeJogadores??gm2.st.visibilidadeJogadores??0);gm2saveLocal();gm282SyncVisUI_();return r;};
+const gm282PublishBase_=gm2publish;
+gm2publish=function(){labEstado_.visibilidadeJogadores=gm282VisValor_();return gm282PublishBase_.apply(this,arguments);};
+
+// ---- Microações de materiais: remove Atacar de modo robusto quando há a ferramenta certa. ----
+const lab282ObjMicroBase_=labObjetoMicroPainelHtml_;
+labObjetoMicroPainelHtml_=function(o,ppm){
+    let h=lab282ObjMicroBase_(o,ppm);if(!h)return h;const a=labTokenAtual_();if(!a)return h;
+    const madeira=lab281EhMadeira_(o),pedra=lab281EhPedra_(o),pic=lab281Picareta_(a),axe=lab281Machado_(a),per=lab281ForcaBruta_(a),near=lab281DistOk_(a,o,1.5);
+    if((madeira&&axe)||(pedra&&pic)){
+        h=h.replace(/<button\b[^>]*onclick="[^"]*labAtacarObjetoContextual_[^"]*"[^>]*>[\s\S]*?<\/button>/gi,'');
+        h=h.replace(/<button\b[^>]*>[\s\S]*?⚔️\s*Atacar[\s\S]*?<\/button>/gi,'');
+    }
+    // Remove duplicatas antigas e reinsere as ações materiais canônicas.
+    h=h.replace(/<button\b[^>]*>[\s\S]*?⛏️\s*Minerar[\s\S]*?<\/button>/gi,'')
+       .replace(/<button\b[^>]*>[\s\S]*?🪓\s*(?:Cortar|Lenhar)[\s\S]*?<\/button>/gi,'');
+    let extra='';
+    if(pedra&&pic&&per)extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${String(o.id).replace(/'/g,"\\'")}')" ${near?'':'disabled'} style="min-height:27px;padding:2px 7px;font-size:.72em;">⛏️ Minerar</button>`;
+    if(madeira&&axe&&per)extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${String(o.id).replace(/'/g,"\\'")}')" ${near?'':'disabled'} style="min-height:27px;padding:2px 7px;font-size:.72em;">🪓 Lenhar</button>`;
+    return h.replace('</div>',extra+'</div>');
+};
+window.labObjetoMicroPainelHtml_=labObjetoMicroPainelHtml_;
+
+// ---- Ferramentas de ocultação na lateral esquerda da Mesa, no estilo da Oficina 2. ----
+function lab282AtualizarVisBtns_(){
+    document.querySelectorAll('#lab282VisTools button').forEach(b=>b.classList.remove('active'));
+    if(lab281VisMode_==='hide')document.getElementById('lab282Hide')?.classList.add('active');
+    if(lab281VisMode_==='remove')document.getElementById('lab282Remove')?.classList.add('active');
+    document.getElementById('lab282Bright')?.classList.toggle('active',!!labEstado_.clarearMestreVisLab);
+}
+const lab282VisToolBase_=window.lab281VisTool_;
+window.lab281VisTool_=function(m){const r=lab282VisToolBase_.apply(this,arguments);lab282AtualizarVisBtns_();return r;};
+const lab282ClarearBase_=window.lab281ClarearMestre_;
+window.lab281ClarearMestre_=function(){const r=lab282ClarearBase_.apply(this,arguments);lab282AtualizarVisBtns_();return r;};
+function lab282InstallMesaTools_(){
+    const map=document.getElementById('labMetricMap');if(!map||document.getElementById('lab282MapWorkspace'))return;
+    const parent=map.parentElement;
+    const ws=document.createElement('div');ws.id='lab282MapWorkspace';
+    const tools=document.createElement('aside');tools.id='lab282VisTools';tools.innerHTML=`<div class="lab282-side-title">Visibilidade</div><button id="lab282Hide" title="Arraste no mapa para ocultar dos jogadores">🌑</button><button id="lab282Bright" title="Alterna entre ver essas zonas a 50% ou totalmente claras para o mestre">👁️</button><button id="lab282Remove" title="Clique numa zona de ocultação para removê-la">🧽</button><button id="lab282Cancel" title="Cancelar ferramenta de visibilidade">↖</button>`;
+    const stage=document.createElement('div');stage.id='lab282MapStage';
+    parent.insertBefore(ws,map);ws.appendChild(tools);ws.appendChild(stage);stage.appendChild(map);
+    document.getElementById('lab282Hide').onclick=()=>lab281VisTool_('hide');
+    document.getElementById('lab282Bright').onclick=()=>lab281ClarearMestre_();
+    document.getElementById('lab282Remove').onclick=()=>lab281VisTool_('remove');
+    document.getElementById('lab282Cancel').onclick=()=>{lab281VisMode_='';lab282AtualizarVisBtns_();};
+    lab282AtualizarVisBtns_();
+}
+const lab282RenderMesaBase_=labRender_;
+labRender_=function(){const r=lab282RenderMesaBase_.apply(this,arguments);try{lab282InstallMesaTools_();lab282AtualizarVisBtns_();}catch(e){console.warn('Mesa toolbar',e);}return r;};window.labRender_=labRender_;
+
+// ---- ESC fecha edição, cancela ferramentas e limpa seleções. ----
+document.addEventListener('keydown',ev=>{
+    if(ev.key!=='Escape')return;let mudou=false;
+    const item=document.getElementById('itemModal');if(item?.classList.contains('active')){try{fecharModal();}catch(_){item.classList.remove('active');}mudou=true;}
+    const dbItem=document.getElementById('dbItemModal');if(dbItem?.classList.contains('active')){try{fecharItemBancoModal();}catch(_){dbItem.classList.remove('active');}mudou=true;}
+    const objEd=document.getElementById('editorObjetoMapaBanco');if(objEd&&objEd.style.display!=='none'){try{fecharEditorObjetoMapa_();}catch(_){objEd.style.display='none';}mudou=true;}
+    if(document.getElementById('gm-sub-oficina2')&&!document.getElementById('gm-sub-oficina2').classList.contains('hidden')&&(gm2.selected.size||gm2.tool!=='select')){gm2clearSelection();gm2.tool='select';gm2render();mudou=true;}
+    if(lab281VisMode_){lab281VisMode_='';lab282AtualizarVisBtns_();mudou=true;}
+    if(labEstado_?.objetoSelecionadoId||labEstado_?.selecionadoId){labEstado_.objetoSelecionadoId='';labEstado_.selecionadoId='';try{labRenderObjetoPainel_();labRender_();}catch(_){}mudou=true;}
+    if(mudou){ev.preventDefault();ev.stopPropagation();}
+},true);
+
+// ---- CSS compacto e visual alinhado à Oficina 2. ----
+(function(){
+ const st=document.createElement('style');st.id='gm282Style';st.textContent=`
+ .item-tooltip{font-size:.68em!important;line-height:1.22!important;min-width:165px!important;max-width:225px!important;padding:6px 7px!important;border-width:1px!important}
+ .item-tooltip h5{font-size:1.02em!important;margin:0 0 3px!important;line-height:1.15!important}.item-tooltip p{font-size:.92em!important;line-height:1.2!important;margin:2px 0!important}
+ #laboratorio-combate{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+ #laboratorio-combate #labMasterGameControls,#laboratorio-combate #labMasterMapLoader,#laboratorio-combate #labMapCreationControls{background:#11152d!important;border:1px solid #34506d!important;border-radius:8px!important;padding:7px!important;gap:6px!important}
+ #laboratorio-combate #labMasterGameControls button,#laboratorio-combate #labMasterMapLoader button,#laboratorio-combate #labMapCreationControls button{min-height:34px!important;height:34px!important;padding:0 9px!important;border-radius:6px!important;font-size:.82rem!important}
+ #laboratorio-combate #labMasterGameControls label,#laboratorio-combate #labMasterMapLoader label,#laboratorio-combate #labMapCreationControls label{font-size:.72rem!important;color:#b9c2e7!important}
+ #lab282MapWorkspace{display:flex;align-items:flex-start;width:max-content;min-width:100%;background:#0f142b;border:1px solid #34506d;border-radius:8px;overflow:hidden}
+ #lab282MapStage{position:relative;flex:0 0 auto;padding:0;background:#070b18}
+ #lab282VisTools{width:54px;flex:0 0 54px;align-self:stretch;background:#11152d;border-right:1px solid #34506d;padding:6px 5px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box}
+ #lab282VisTools .lab282-side-title{font-size:8px;line-height:1.1;color:#8fa8d8;text-align:center;word-break:break-word;margin:2px 0 4px}
+ #lab282VisTools button{width:42px;height:42px;min-height:42px;padding:0;border:1px solid #34506d;border-radius:7px;background:#f4f4f4;color:#111;font-size:18px;cursor:pointer}
+ #lab282VisTools button.active{outline:2px solid #45d7ff;box-shadow:0 0 0 1px #0d6380 inset;background:#dff8ff}
+ #gm282MapVisWrap input[type=range]{accent-color:#27c7ee}
+ `;document.head.appendChild(st);
+})();
+setTimeout(()=>{try{gm282InstallTopVis_();lab282InstallMesaTools_();}catch(_){}},900);
+
 </script>
-<!-- Mesa Estelar v46.81.0: Storage, luz, materiais, ferramentas e visibilidade -->
+<!-- Mesa Estelar v46.82.0: integração Storage/UI/visibilidade/ESC corrigida -->
 
 <script>
 // ============================================================
