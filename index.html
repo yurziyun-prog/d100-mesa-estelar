@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.76.5 ===== */
+/* ===== V46.77.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.76.5 ===== */
+/* ===== V46.77.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -645,6 +645,14 @@
   pointer-events:none;
 }
 </style>
+
+<style id="v46770-live-object-bank-css">
+#labLiveObjectList770 label{margin:0;display:flex;align-items:center;gap:7px;padding:5px 7px;border-radius:7px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);min-width:0}
+#labLiveObjectList770 img{width:38px;height:38px;object-fit:contain;flex:0 0 auto;background:rgba(255,255,255,.04);border-radius:6px}
+#labLiveObjectList770 .lab-live-obj-meta770{min-width:0;line-height:1.15}
+#labLiveObjectList770 .lab-live-obj-name770{font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#labLiveObjectList770 small{color:#9fb8c9;font-size:.75em}
+</style>
 </head>
 <body>
     <div class="galaxy-bg"></div>
@@ -777,6 +785,15 @@
                     <div id="labPlayerPrivateResult" style="display:none"></div>
                     <div id="labMetricMap" onclick="labCliqueFundoMapa_(event)" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
+                    <details id="labLiveObjectBank770" style="display:none;margin-top:8px;padding:7px 9px;border-radius:9px;background:rgba(9,15,38,.66);border:1px solid rgba(86,240,138,.25);">
+                      <summary style="cursor:pointer;font-weight:800;color:#d8ffe5;user-select:none;">🧰 Objetos do banco</summary>
+                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 6px;">
+                        <label style="margin:0;display:flex;align-items:center;gap:5px;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
+                        <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()">➕ Adicionar marcados</button>
+                        <small style="color:#9fb8c9">Os objetos entram no centro do mapa com PV, dureza, fogo e demais propriedades do banco.</small>
+                      </div>
+                      <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px;"></div>
+                    </details>
                     <div id="labHistoricoMesa" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(8,12,29,.68);border:1px solid rgba(0,212,255,.22);max-height:210px;overflow:auto;"></div>
                     <div style="margin-top:8px;color:#888;font-size:.88em;">Área padrão: 28 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
                 </div>
@@ -16884,7 +16901,8 @@ function objetoSvgData_(tipo){
 function objetosMapaPadrao_(){return [
  {id:'arvore_media',nome:'Árvore média',tipoVisual:'arvore',imagem:objetoSvgData_('arvore'),larguraM:2.2,alturaM:2.2,pvMax:30,dureza:5,pesoKg:600,destrutivel:true,inflamavel:true,bloqueiaMovimento:true,bloqueiaVisao:true},
  {id:'rocha_media',nome:'Rocha média',tipoVisual:'rocha',imagem:objetoSvgData_('rocha'),larguraM:1.5,alturaM:1.3,pvMax:45,dureza:9,pesoKg:450,destrutivel:true,inflamavel:false,bloqueiaMovimento:true,bloqueiaVisao:false},
- {id:'caixa_madeira',nome:'Caixa de madeira',tipoVisual:'caixa',imagem:objetoSvgData_('caixa'),larguraM:1,alturaM:1,pvMax:15,dureza:3,pesoKg:30,destrutivel:true,inflamavel:true,bloqueiaMovimento:true,bloqueiaVisao:false}
+ {id:'caixa_madeira',nome:'Caixa de madeira',tipoVisual:'caixa',imagem:objetoSvgData_('caixa'),larguraM:1,alturaM:1,pvMax:15,dureza:3,pesoKg:30,destrutivel:true,inflamavel:true,bloqueiaMovimento:true,bloqueiaVisao:false},
+ {id:'boneco_treino_objeto',nome:'Boneco de treino',tipoVisual:'personalizado',imagem:'',larguraM:0.8,alturaM:0.8,pvMax:20,dureza:2,pesoKg:35,destrutivel:true,inflamavel:false,bloqueiaMovimento:false,bloqueiaVisao:false}
 ];}
 function garantirObjetosMapaPadrao_(){
     objetosMapaDB=Array.isArray(objetosMapaDB)?objetosMapaDB:[];
@@ -22159,7 +22177,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.5 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.77.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22318,7 +22336,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.76.5
+// V46.77.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22675,7 +22693,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.5
+// V46.77.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22960,7 +22978,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.5 — Oficina: estilos de traço exclusivos + prévia real
+// V46.77.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -23036,7 +23054,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.76.5
+// V46.77.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23121,7 +23139,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.76.5 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.77.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23262,7 +23280,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.5 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.77.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23504,7 +23522,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.76.5 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.77.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23663,7 +23681,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.5 — Oficina simplificada
+// V46.77.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -24008,7 +24026,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.5 — Oficina: objetos realmente opacos + painel de camadas
+// V46.77.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24181,7 +24199,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.5 — Oficina: composição real por ordem de adição
+// V46.77.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24404,7 +24422,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.76.5',e);}
+    }catch(e){console.warn('Oficina v46.77.0',e);}
     return r;
 };
 
@@ -24414,7 +24432,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.76.5 — REFORMA DA OFICINA
+// V46.77.0 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25167,8 +25185,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.76.5 — reconstrução limpa da barra da Oficina
-// Base: 46.76.5 funcional. Não usa varredura agressiva do DOM.
+// V46.77.0 — reconstrução limpa da barra da Oficina
+// Base: 46.77.0 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25397,8 +25415,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.76.5 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.76.5
+// V46.77.0 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.77.0
 // ============================================================
 
 const gm580_ = {
@@ -26065,14 +26083,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.76.5 — OFICINA REESTRUTURADA
+// V46.77.0 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.76.5'
+  version:'46.77.0'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26296,7 +26314,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.76.5 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.77.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26388,7 +26406,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — Oficina realmente única
+// V46.77.0 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26444,7 +26462,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — edição persistente de formas/objetos + histórico completo
+// V46.77.0 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26849,7 +26867,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — estados separados, undo/redo real, sombra persistente,
+// V46.77.0 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27264,7 +27282,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.77.0 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27402,7 +27420,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.77.0 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27857,7 +27875,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — layout da Oficina baseado no mockup do usuário
+// V46.77.0 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -28095,7 +28113,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — corrige aplicação real do layout 46.65
+// V46.77.0 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -28108,7 +28126,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.76.5: falha ao substituir bindings',e);
+    console.warn('Oficina 46.77.0: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -28131,7 +28149,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.76.5 rebuild',e);
+      console.warn('Oficina 46.77.0 rebuild',e);
     }
   }
 
@@ -28156,7 +28174,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — arrumação visual da Oficina
+// V46.77.0 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28267,7 +28285,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — remove conta-gotas extras e coloca HEX compacto
+// V46.77.0 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28344,7 +28362,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — estabilização funcional da Oficina
+// V46.77.0 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28808,7 +28826,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.5 — OFICINA 2 EXPERIMENTAL
+// V46.77.0 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -30106,7 +30124,7 @@ class RPGTextureGenerator {
 
 
 
-// V46.76.5 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
+// V46.77.0 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
 // IMPORTANTE: RPGTextureGenerator usa this.canvas.width/height; ele não possui this.w/this.h.
 RPGTextureGenerator.prototype.textureFloresta=function(){
  const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
@@ -30643,7 +30661,8 @@ function gm2legacyToState_(m){
  }
  for(const o of (m.objetos||[])){
    const w=Math.max(.05,Number(o.larguraM||1)),h=Math.max(.05,Number(o.alturaM||1)),isImg=!!o.imagemImportada||String(o.modeloId||'')==='imagem_importada';
-   st.elements.push({...JSON.parse(JSON.stringify(o)),id:String(o.id||gm2id(isImg?'i':'o')),type:isImg?'image':'object',modeloId:o.modeloId||'',name:o.nome||'',src:String(o.imagem||''),x:Number(o.x||0)-w/2,y:Number(o.y||0)-h/2,w,h,rot:Number(o.angulo||0),z:Number(o.ordemOficina||z++),locked:!!o.fixada,opacity:Number(o.opacity??1),shadow:o.sombraOficina||'nenhuma',shadowDir:o.sombraDirecao||'SE',shadowDist:Number(o.sombraDist||4),crop:o.crop||{l:0,t:0,r:0,b:0},cropMode:false});
+   const copy=JSON.parse(JSON.stringify(o));
+   st.elements.push({...copy,dadosBanco:isImg?undefined:(copy.dadosBanco||copy),id:String(o.id||gm2id(isImg?'i':'o')),type:isImg?'image':'object',modeloId:o.modeloId||o.objetoBancoId||'',objetoBancoId:o.objetoBancoId||o.modeloId||'',nome:o.nome||o.name||'',name:o.name||o.nome||'',src:String(o.imagem||''),x:Number(o.x||0)-w/2,y:Number(o.y||0)-h/2,w,h,rot:Number(o.angulo||0),z:Number(o.ordemOficina||z++),locked:!!o.fixada,opacity:Number(o.opacity??1),shadow:o.sombraOficina||'nenhuma',shadowDir:o.sombraDirecao||'SE',shadowDist:Number(o.sombraDist||4),crop:o.crop||{l:0,t:0,r:0,b:0},cropMode:false});
  }
  return st;
 }
@@ -31013,11 +31032,15 @@ function gm2placeObjects(p){
    const w=Math.max(.35,Number(m.larguraM||m.largura||1)),h=Math.max(.35,Number(m.alturaM||m.altura||1)),src=m.imagem||m.image||'';
    // A Oficina 2 preserva os dados funcionais do objeto do banco.
    // Assim árvore continua sendo inflamável, parede continua bloqueando, etc.
+   const banco=JSON.parse(JSON.stringify(m));
    gm2.st.elements.push({
-     ...JSON.parse(JSON.stringify(m)),
-     id:gm2id('o'),type:'object',modeloId:m.id,nome:getNome(m)||m.nome||m.id,name:getNome(m)||m.nome||m.id,src,
+     ...banco,
+     dadosBanco:banco,
+     id:gm2id('o'),type:'object',modeloId:m.id,objetoBancoId:m.id,nome:getNome(m)||m.nome||m.id,name:getNome(m)||m.nome||m.id,src,
      x:p.x+off,y:p.y+off,w,h,rot:0,z:gm2zNext(),locked:false,opacity:1,
-     pvAtual:Number(m.pvAtual??m.pvMax??0),destruido:false,pegandoFogoLab:false,fogoUltimaRodadaLab:-1,
+     pvMax:Number(m.pvMax||0),pvAtual:Number(m.pvMax||0),dureza:Number(m.dureza||0),pesoKg:Number(m.pesoKg||0),
+     destrutivel:m.destrutivel!==false,inflamavel:!!m.inflamavel,bloqueiaMovimento:m.bloqueiaMovimento!==false,bloqueiaVisao:!!m.bloqueiaVisao,
+     destruido:false,pegandoFogoLab:false,fogoUltimaRodadaLab:-1,
      shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist
    });
    off+=.25;
@@ -31042,7 +31065,10 @@ function gm2toLegacy(){
    if(e.type==='path')desenhos.push({id:e.id,cor:e.stroke,esp:e.strokeWidth,opacidade:e.strokeOpacity,pincel:e.brush,textura:e.brush,ferramenta:e.brush==='borracha'?'borracha':'traco',pts:gm2clone(e.points),ordemOficina:e.z});
    else if(e.type==='shape')formas.push({id:e.id,tipo:e.kind,x:e.x,y:e.y,w:e.w,h:e.h,rot:e.rot||0,radius:e.radius||0,fill:e.fill,fillOpacity:e.fillOpacity,stroke:e.stroke,strokeWidth:e.strokeWidth,strokeOpacity:e.strokeOpacity,opacity:e.opacity,ordemOficina:e.z,fixada:e.locked,sombraOficina:e.shadow,sombraDirecao:e.shadowDir,sombraDist:e.shadowDist});
    else if(e.type==='line')formas.push({id:e.id,tipo:e.kind,x:e.x,y:e.y,x2:e.x2,y2:e.y2,cx:e.cx,cy:e.cy,w:Math.abs(e.x2-e.x),h:Math.abs(e.y2-e.y),fill:'none',stroke:e.stroke,strokeWidth:e.strokeWidth,strokeOpacity:e.strokeOpacity,ordemOficina:e.z,fixada:e.locked,sombraOficina:e.shadow,sombraDirecao:e.shadowDir,sombraDist:e.shadowDist});
-   else if(e.type==='object')objetos.push({...gm2objMetaLegacy_(e),id:e.id,modeloId:e.modeloId,x:e.x+e.w/2,y:e.y+e.h/2,larguraM:e.w,alturaM:e.h,angulo:e.rot||0,imagem:e.src,ordemOficina:e.z,fixada:e.locked,sombraOficina:e.shadow,sombraDirecao:e.shadowDir,sombraDist:e.shadowDist});
+   else if(e.type==='object'){
+     const snap=e.dadosBanco&&typeof e.dadosBanco==='object'?gm2clone(e.dadosBanco):{};
+     objetos.push({...snap,...gm2objMetaLegacy_(e),id:e.id,modeloId:e.modeloId||e.objetoBancoId||snap.id||'',objetoBancoId:e.objetoBancoId||e.modeloId||snap.id||'',nome:e.nome||e.name||snap.nome||'Objeto',x:e.x+e.w/2,y:e.y+e.h/2,larguraM:e.w,alturaM:e.h,angulo:e.rot||0,imagem:e.src||snap.imagem||'',ordemOficina:e.z,fixada:e.locked,sombraOficina:e.shadow,sombraDirecao:e.shadowDir,sombraDist:e.shadowDist});
+   }
    else if(e.type==='image')objetos.push({id:e.id,modeloId:'imagem_importada',x:e.x+e.w/2,y:e.y+e.h/2,larguraM:e.w,alturaM:e.h,angulo:e.rot||0,imagem:e.src,ordemOficina:e.z,fixada:e.locked,imagemImportada:true,crop:e.crop});
  }
  return{desenhos,objetos,formas};
@@ -31177,7 +31203,7 @@ setTimeout(gm2installTab,900);
 
 
 // ============================================================
-// V46.76.5 — correções finais desta rodada
+// V46.77.0 — correções finais desta rodada
 // ============================================================
 
 // Um alvo explicitamente escolhido nunca deve ser trocado por "primeiro alvo válido"
@@ -31226,7 +31252,7 @@ try{
 
 
 // ============================================================
-// V46.76.5 — rollback seguro + alvo de objetos endurecido
+// V46.77.0 — rollback seguro + alvo de objetos endurecido
 // ============================================================
 
 // A integração experimental da Oficina 2 no Mapa da Mesa foi retirada desta versão.
@@ -31278,7 +31304,7 @@ window.labCliqueFundoMapa_=function(ev){
 };
 
 // ============================================================
-// V46.76.5
+// V46.77.0
 // seta temporária + risco persistente + controle PJ pelo mestre
 // + alcance recortado + alvo destruído preservado + painel compacto
 // ============================================================
@@ -31517,7 +31543,7 @@ window.labRender_=labRender_;
 setTimeout(()=>{try{labAtualizarControlePJ760_();labQuickToolsUpdate760_();labQuickRender760_();}catch(_){}},800);
 
 // ============================================================
-// V46.76.5 — alvo mais recente vence
+// V46.77.0 — alvo mais recente vence
 // O erro anterior era um "alvo pegajoso": objetoSelecionadoId antigo continuava
 // tendo prioridade mesmo depois de o usuário escolher outro alvo.
 // ============================================================
@@ -31597,26 +31623,42 @@ window.labRolarAtaque_=function(){
 };
 
 // ============================================================
-// V46.76.5 — objetos da Oficina 2 preservam propriedades de combate
+// V46.77.0 — objetos da Oficina 2 preservam propriedades de combate
 // ============================================================
 function gm2EnriquecerObjetosBanco762_(st){
  if(!st?.elements)return st;
+ const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ');
  for(const e of st.elements){
-   if(e.type!=='object'||!e.modeloId)continue;
-   const m=(objetosMapaDB||[]).find(x=>String(x.id)===String(e.modeloId));
+   if(e.type!=='object')continue;
+   const ids=[e.modeloId,e.objetoBancoId,e.dadosBanco?.id].filter(Boolean).map(String);
+   const names=[e.nome,e.name,e.dadosBanco?.nome].filter(Boolean).map(norm);
+   let m=(objetosMapaDB||[]).find(x=>ids.includes(String(x.id)));
+   if(!m&&names.length)m=(objetosMapaDB||[]).find(x=>names.includes(norm(x.nome||x.name||x.id)));
    if(!m)continue;
-   const preservar={id:e.id,type:e.type,modeloId:e.modeloId,name:e.name,src:e.src,x:e.x,y:e.y,w:e.w,h:e.h,rot:e.rot,z:e.z,locked:e.locked,opacity:e.opacity,shadow:e.shadow,shadowDir:e.shadowDir,shadowDist:e.shadowDist};
-   Object.assign(e,JSON.parse(JSON.stringify(m)),preservar);
-   e.nome=e.nome||getNome(m)||e.name||m.id||'Objeto';
+
+   const antigoSemSnapshot=!e.dadosBanco;
+   const visual={id:e.id,type:e.type,x:e.x,y:e.y,w:e.w,h:e.h,rot:e.rot,z:e.z,locked:e.locked,opacity:e.opacity,shadow:e.shadow,shadowDir:e.shadowDir,shadowDist:e.shadowDist,src:e.src||m.imagem};
+   const banco=JSON.parse(JSON.stringify(m));
+   Object.assign(e,banco,visual);
+   e.dadosBanco=banco;
+   e.modeloId=String(m.id);
+   e.objetoBancoId=String(m.id);
+   e.nome=e.nome||getNome(m)||m.nome||m.id||'Objeto';
    e.name=e.name||e.nome;
-   if(e.pvAtual===undefined||e.pvAtual===null)e.pvAtual=Number(e.pvMax||0);
+   e.pvMax=Number(m.pvMax||0);
+   e.dureza=Number(m.dureza||0);
+   e.pesoKg=Number(m.pesoKg||0);
+   e.destrutivel=m.destrutivel!==false;
+   e.inflamavel=!!m.inflamavel;
+   e.bloqueiaMovimento=m.bloqueiaMovimento!==false;
+   e.bloqueiaVisao=!!m.bloqueiaVisao;
+   if(antigoSemSnapshot || !Number.isFinite(Number(e.pvAtual)) || (Number(e.pvMax)>0&&Number(e.pvAtual)<=0&&!e.destruido))e.pvAtual=e.pvMax;
    if(e.destruido===undefined)e.destruido=false;
    if(e.pegandoFogoLab===undefined)e.pegandoFogoLab=false;
    if(e.fogoUltimaRodadaLab===undefined)e.fogoUltimaRodadaLab=-1;
  }
  return st;
 }
-
 const gm2LoadLibraryMap762Base_=gm2loadLibraryMap;
 gm2loadLibraryMap=async function(id){
  const r=await gm2LoadLibraryMap762Base_(id);
@@ -31654,7 +31696,7 @@ if(labLoad762Base_)window.labCarregarMapaBanco_=async function(){
 };
 
 // ============================================================
-// V46.76.5 — alvo SOMENTE pelo mapa + objetos Oficina 2 funcionais
+// V46.77.0 — alvo SOMENTE pelo mapa + objetos Oficina 2 funcionais
 // + fogo/morte visuais robustos
 // ============================================================
 
@@ -31863,7 +31905,7 @@ labRender_=function(){
     try{
         labAlvoMapaUI763_();
         labEstadosVisuais763_();
-    }catch(e){console.warn('v46.76.5 visual/alvo',e);}
+    }catch(e){console.warn('v46.77.0 visual/alvo',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -31885,7 +31927,7 @@ setTimeout(()=>{
 },700);
 
 // ============================================================
-// V46.76.5 — seleção de alvo por mapa, captura direta
+// V46.77.0 — seleção de alvo por mapa, captura direta
 // ============================================================
 function labSelecionarAlvoMapa764_(id){
     const ator=labTokenAtual_();
@@ -31958,13 +32000,13 @@ function labRemoverDropdownAtaque764_(){
 const labRender764Base_=labRender_;
 labRender_=function(){
     const r=labRender764Base_.apply(this,arguments);
-    try{labRemoverDropdownAtaque764_();}catch(e){console.warn('v46.76.5 alvo UI',e);}
+    try{labRemoverDropdownAtaque764_();}catch(e){console.warn('v46.77.0 alvo UI',e);}
     return r;
 };
 window.labRender_=labRender_;
 
 // ============================================================
-// V46.76.5 — alvo único: SEM dropdown, clique no mapa é a autoridade
+// V46.77.0 — alvo único: SEM dropdown, clique no mapa é a autoridade
 // ============================================================
 function labNomeAlvo765_(a){
   return a?(a.nome||a.name||labObjetoModelo_(a)?.nome||getNome(a)||'Objeto'):'';
@@ -32089,6 +32131,83 @@ labRender_=function(){
     return r;
 };
 window.labRender_=labRender_;
+
+// ============================================================
+// V46.77.0 — banco de objetos também no Mapa da Mesa
+// ============================================================
+function labLiveRenderObjectBank770_(){
+ const box=document.getElementById('labLiveObjectBank770'),list=document.getElementById('labLiveObjectList770');
+ if(!box||!list)return;
+ box.style.display=batalhaEhMestre_()?'block':'none';
+ if(!batalhaEhMestre_())return;
+ garantirObjetosMapaPadrao_();
+ list.innerHTML=(objetosMapaDB||[]).map(o=>{
+   const pv=Number(o.pvMax||0),du=Number(o.dureza||0),infl=o.inflamavel?'🔥':'',img=o.imagem||'';
+   return `<label title="${escaparHtmlInventario_(o.nome||o.id)}"><input class="lab-live-obj-check770" type="checkbox" value="${escaparHtmlInventario_(o.id)}">${img?`<img src="${escaparHtmlInventario_(img)}" draggable="false">`:''}<span class="lab-live-obj-meta770"><div class="lab-live-obj-name770">${escaparHtmlInventario_(o.nome||o.id)}</div><small>PV ${pv} · Dur ${du} ${infl}</small></span></label>`;
+ }).join('');
+ const all=document.getElementById('labLiveObjAll770');
+ if(all&&!all.dataset.wired){all.dataset.wired='1';all.addEventListener('change',()=>document.querySelectorAll('.lab-live-obj-check770').forEach(c=>c.checked=all.checked));}
+}
+
+function labInstanciaObjetoBanco770_(m,x,y,offset=0){
+ const snap=JSON.parse(JSON.stringify(m));
+ const pv=Math.max(0,Number(m.pvMax||0));
+ return {
+   ...snap,
+   dadosBanco:snap,
+   id:`obj:${Date.now()}:${Math.floor(Math.random()*100000)}:${offset}`,
+   modeloId:String(m.id),objetoBancoId:String(m.id),
+   nome:m.nome||m.name||m.id||'Objeto',name:m.name||m.nome||m.id||'Objeto',
+   x,y,angulo:0,pvMax:pv,pvAtual:pv,dureza:Number(m.dureza||0),pesoKg:Number(m.pesoKg||0),
+   destrutivel:m.destrutivel!==false,inflamavel:!!m.inflamavel,bloqueiaMovimento:m.bloqueiaMovimento!==false,bloqueiaVisao:!!m.bloqueiaVisao,
+   destruido:false,pegandoFogoLab:false,fogoUltimaRodadaLab:-1
+ };
+}
+window.labLiveAdicionarObjetos770_=function(){
+ if(!batalhaEhMestre_())return;
+ const ids=[...document.querySelectorAll('.lab-live-obj-check770:checked')].map(c=>String(c.value));
+ if(!ids.length){notificar_('Marque pelo menos um objeto do banco.','aviso',2500);return;}
+ labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
+ let off=0,last=null;
+ for(const id of ids){
+   const m=(objetosMapaDB||[]).find(o=>String(o.id)===id);if(!m)continue;
+   const inst=labInstanciaObjetoBanco770_(m,Math.max(0,Math.min(labEstado_.larguraM,labEstado_.larguraM/2+off)),Math.max(0,Math.min(labEstado_.alturaM,labEstado_.alturaM/2+off)),off);
+   labEstado_.objetosLab.push(inst);last=inst;off+=.35;
+ }
+ if(last){labEstado_.objetoSelecionadoId=last.id;labEstado_.selecionadoId='';}
+ labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+ notificar_(`${ids.length} objeto(s) adicionado(s) ao mapa.`,'sucesso',2200);
+};
+
+function labRepararObjetosBanco770_(){
+ const norm=v=>String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ');
+ for(const o of (labEstado_.objetosLab||[])){
+   const ids=[o.modeloId,o.objetoBancoId,o.dadosBanco?.id].filter(Boolean).map(String);
+   const names=[o.nome,o.name,o.dadosBanco?.nome].filter(Boolean).map(norm);
+   let m=(objetosMapaDB||[]).find(x=>ids.includes(String(x.id)));
+   if(!m&&names.length)m=(objetosMapaDB||[]).find(x=>names.includes(norm(x.nome||x.name||x.id)));
+   if(!m)continue;
+   const lost=!o.dadosBanco||!Number.isFinite(Number(o.pvMax))||Number(o.pvMax)<=0;
+   const state={id:o.id,x:o.x,y:o.y,angulo:o.angulo,larguraM:o.larguraM||m.larguraM,alturaM:o.alturaM||m.alturaM,destruido:!!o.destruido,pegandoFogoLab:!!o.pegandoFogoLab,fogoUltimaRodadaLab:Number(o.fogoUltimaRodadaLab??-1)};
+   const snap=JSON.parse(JSON.stringify(m));
+   Object.assign(o,snap,state);
+   o.dadosBanco=snap;o.modeloId=String(m.id);o.objetoBancoId=String(m.id);o.nome=o.nome||m.nome||m.id;o.name=o.name||o.nome;
+   o.pvMax=Number(m.pvMax||0);o.dureza=Number(m.dureza||0);o.pesoKg=Number(m.pesoKg||0);o.destrutivel=m.destrutivel!==false;o.inflamavel=!!m.inflamavel;o.bloqueiaMovimento=m.bloqueiaMovimento!==false;o.bloqueiaVisao=!!m.bloqueiaVisao;
+   if(lost&&!o.destruido)o.pvAtual=o.pvMax;
+   else if(!Number.isFinite(Number(o.pvAtual)))o.pvAtual=o.pvMax;
+ }
+}
+
+const labRender770Base_=labRender_;
+labRender_=function(){
+ try{labRepararObjetosBanco770_();}catch(e){console.warn('reparo objetos banco',e);}
+ const r=labRender770Base_.apply(this,arguments);
+ try{labLiveRenderObjectBank770_();}catch(e){console.warn('banco objetos ao vivo',e);}
+ return r;
+};
+window.labRender_=labRender_;
+
+setTimeout(()=>{try{labLiveRenderObjectBank770_();}catch(_){}},900);
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -32105,6 +32224,6 @@ window.labRender_=labRender_;
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.76.5: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.77.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
