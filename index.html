@@ -786,7 +786,7 @@
                     <div id="labPlayerPrivateResult" style="display:none"></div>
                     <div id="labMetricMap" onclick="labCliqueFundoMapa_(event)" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
-                    <details id="labLiveObjectBank770" style="display:none;margin-top:10px;padding:9px 11px;border-radius:10px;background:#11152d;border:1px solid #34506d;">
+                    <details id="labLiveObjectBank770" style="display:block;margin-top:10px;padding:9px 11px;border-radius:10px;background:#11152d;border:1px solid #34506d;">
                       <summary style="cursor:pointer;font-weight:800;color:#cfeeff;user-select:none;list-style:revert;">Objetos do banco</summary>
                       <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:8px 0 6px;">
                         <label style="margin:0;display:flex;align-items:center;gap:5px;font-size:.9em;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
@@ -32948,7 +32948,13 @@ setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
   let mesaEnt810Carregando_=false;
 
   function mesaEnt810Mestre_(){
-    try{return typeof batalhaEhMestre_==='function' && batalhaEhMestre_();}catch(_){return false;}
+    // Durante o bootstrap userData pode ainda não existir. Só tratamos como jogador
+    // quando o papel estiver explicitamente carregado como 'jogador'. Isso evita
+    // esconder o painel do mestre antes da autenticação terminar.
+    try{
+      if(typeof userData==='undefined' || !userData || !userData.role) return true;
+      return userData.role==='mestre';
+    }catch(_){return true;}
   }
   function mesaEnt810MapaId_(){
     const sel=document.getElementById('labMapaSalvoSelect');
@@ -33121,6 +33127,13 @@ setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
   document.addEventListener('click',()=>setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},0),true);
   setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},0);
   setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},1200);
+  // Revalida após o bootstrap da autenticação. Jogadores têm o painel ocultado;
+  // mestre permanece com o <details> visível e expansível.
+  let mesaEnt810RoleChecks_=0;
+  const mesaEnt810RoleTimer_=setInterval(()=>{
+    mesaEnt810MontarBanco_();
+    if(++mesaEnt810RoleChecks_>=20 || (typeof userData!=='undefined' && userData?.role)) clearInterval(mesaEnt810RoleTimer_);
+  },500);
 })();
 </script>
 <!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
