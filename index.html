@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.75.2 ===== */
+/* ===== V46.76.0 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.75.2 ===== */
+/* ===== V46.76.0 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -564,6 +564,86 @@
 <style id="v46740-retire-old-map-editor">
 #laboratorio-combate #labMapCreationControls,
 #laboratorio-combate #labEditMapToggleWrap{display:none !important;}
+</style>
+
+<style id="v46760-css">
+#labMetricMap{
+  overflow:hidden !important;
+}
+#labMetricMap .lab-range-overlay-760{
+  z-index:8 !important;
+  pointer-events:none !important;
+}
+#labActionPanel{
+  padding:8px 10px !important;
+}
+#labActionPanel select{
+  min-height:38px !important;
+  height:38px !important;
+  padding-top:4px !important;
+  padding-bottom:4px !important;
+}
+#labActionPanel .btn-small{
+  min-height:36px;
+}
+#labActionPanel > div{
+  row-gap:5px;
+}
+#labActionPanel small{
+  margin-bottom:2px !important;
+}
+#labQuickTools760{
+  display:none;
+  align-items:center;
+  gap:5px;
+  margin:0;
+}
+#labQuickTools760 button{
+  height:36px;
+  min-width:38px;
+  padding:4px 9px;
+}
+#labQuickTools760 button.active{
+  outline:2px solid #67e8f9;
+  background:#233e50;
+  color:#fff;
+}
+#labMasterPJWrap760{
+  display:none;
+  align-items:center;
+  gap:6px;
+  margin:0;
+  min-height:36px;
+  box-sizing:border-box;
+}
+#labQuickOverlay760{
+  position:absolute;
+  inset:0;
+  z-index:18;
+  pointer-events:none;
+  overflow:hidden;
+}
+.lab-point-arrow760{
+  position:absolute;
+  width:44px;
+  height:58px;
+  transform:translate(-50%,-100%);
+  transform-origin:50% 100%;
+  animation:labPointFade760 6s linear forwards;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.7));
+}
+.lab-point-arrow760 svg{width:100%;height:100%;display:block}
+@keyframes labPointFade760{
+  0%,65%{opacity:1}
+  100%{opacity:0}
+}
+#labQuickLinePreview760{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+}
 </style>
 </head>
 <body>
@@ -16962,7 +17042,7 @@ window.labUsarPsiContextualRapido_=function(poderId,alvoId){
 };
 window.labAtacarObjetoContextual_=function(objetoId){
     const t=labTokenAtual_(),o=labObjetoPorId_(objetoId);if(!t||!o||!labPodeControlarToken_(t))return;
-    t.alvoLab=String(o.id);t._alvoManualFixadoLab=String(o.id);t.microModoLab='ataque';t.acaoAuxLab=null;
+    t.alvoLab=String(o.id);t._alvoManualFixadoLab=String(o.id);t._alvoMortoManual510=!!labAlvoInerte490_(o);t.microModoLab='ataque';t.acaoAuxLab=null;
     labEstado_.objetoSelecionadoId=String(o.id);labEstado_.selecionadoId='';
     labSalvarLocal_();window.labRolarAtaque_();
 };
@@ -17023,9 +17103,9 @@ window.labSelecionarObjeto_=function(id){
     const o=labObjetoPorId_(id);if(!o)return;
     const at=labTokenAtual_();
     if(!batalhaEhMestre_()){
-        if(at&&labPodeControlarToken_(at)){at.alvoLab=String(id);at._alvoManualFixadoLab=String(id);labEstado_.selecionadoId='';labEstado_.objetoSelecionadoId=String(id);labRender_();notificar_(`Objeto selecionado: ${o.nome||'objeto'}.`,'info',1600);}return;
+        if(at&&labPodeControlarToken_(at)){at.alvoLab=String(id);at._alvoManualFixadoLab=String(id);at._alvoMortoManual510=!!labAlvoInerte490_(o);labEstado_.selecionadoId='';labEstado_.objetoSelecionadoId=String(id);labRender_();notificar_(`Objeto selecionado: ${o.nome||'objeto'}.`,'info',1600);}return;
     }
-    if(labEstado_.fase==='combate'&&!labEstado_.modoCriacaoMapa){if(at){at.alvoLab=String(id);at._alvoManualFixadoLab=String(id);labApontarPara_(at,o);labEstado_.selecionadoId='';labEstado_.objetoSelecionadoId=String(id);labSalvarLocal_();labRender_();return;}}
+    if(labEstado_.fase==='combate'&&!labEstado_.modoCriacaoMapa){if(at){at.alvoLab=String(id);at._alvoManualFixadoLab=String(id);at._alvoMortoManual510=!!labAlvoInerte490_(o);labApontarPara_(at,o);labEstado_.selecionadoId='';labEstado_.objetoSelecionadoId=String(id);labSalvarLocal_();labRender_();return;}}
     labEstado_.objetoSelecionadoId=String(id||'');labEstado_.selecionadoId='';labSalvarLocal_();labRenderObjetoPainel_();labRender_();
 };
 window.labObjetoPointerDown_=function(ev,id){
@@ -19475,7 +19555,7 @@ labRenderActionPanel_=function(){
       <button class="btn-small" onclick="labPassarAcao_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:42px;">⏭ ${Number(t.passagensLab||0)===0?'Passar (grátis)':'Passar (1 AÇ)'}</button>
       <button class="btn-small" onclick="labLevantar_()" ${!labGarantirSnapshotCombate_(t)?.derrubado||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:42px;">⬆️ Levantar</button>
       ${modo==='combate'&&labItemSelecionado_(t)&&labEhArmaMuniciada_(labItemSelecionado_(t))?`<button class="btn-small" onclick="labRecarregar_()" style="height:42px;">🔋 Recarregar ${labMunicaoAtual_(t,labItemSelecionado_(t))}/${labCapacidadeArma_(labItemSelecionado_(t))}</button>`:''}
-
+      ${labPrimeirosSocorrosPericia_(t)&&(labEstado_.tokens||[]).some(x=>labFeridasTrataveis_(x).length>0&&!labGarantirSnapshotCombate_(x)?.morto)?`<button class="btn-small" onclick="labAbrirPrimeirosSocorros_()" ${Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="height:42px;">🩹 Primeiros Socorros</button>`:''}
     </div>
     ${descricao?`<div style="margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.045);color:#cfe7ff;"><b>ℹ️</b> ${escaparHtmlInventario_(descricao)}</div>`:''}
     ${labResumoPVHtml_(t,'SEUS PV')}
@@ -22026,7 +22106,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.75.2 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.76.0 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22185,7 +22265,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.75.2
+// V46.76.0
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22542,7 +22622,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.75.2
+// V46.76.0
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22827,7 +22907,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.75.2 — Oficina: estilos de traço exclusivos + prévia real
+// V46.76.0 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -22903,7 +22983,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.75.2
+// V46.76.0
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -22988,7 +23068,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.75.2 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.76.0 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23129,7 +23209,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.75.2 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.76.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23371,7 +23451,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.75.2 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.76.0 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23530,7 +23610,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.75.2 — Oficina simplificada
+// V46.76.0 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23875,7 +23955,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.75.2 — Oficina: objetos realmente opacos + painel de camadas
+// V46.76.0 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24048,7 +24128,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.75.2 — Oficina: composição real por ordem de adição
+// V46.76.0 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24271,7 +24351,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.75.2',e);}
+    }catch(e){console.warn('Oficina v46.76.0',e);}
     return r;
 };
 
@@ -24281,7 +24361,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.75.2 — REFORMA DA OFICINA
+// V46.76.0 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25034,8 +25114,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.75.2 — reconstrução limpa da barra da Oficina
-// Base: 46.75.2 funcional. Não usa varredura agressiva do DOM.
+// V46.76.0 — reconstrução limpa da barra da Oficina
+// Base: 46.76.0 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25264,8 +25344,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.75.2 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.75.2
+// V46.76.0 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.76.0
 // ============================================================
 
 const gm580_ = {
@@ -25932,14 +26012,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.75.2 — OFICINA REESTRUTURADA
+// V46.76.0 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.75.2'
+  version:'46.76.0'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26163,7 +26243,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.75.2 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.76.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26255,7 +26335,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — Oficina realmente única
+// V46.76.0 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26311,7 +26391,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — edição persistente de formas/objetos + histórico completo
+// V46.76.0 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26716,7 +26796,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — estados separados, undo/redo real, sombra persistente,
+// V46.76.0 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27131,7 +27211,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.76.0 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27269,7 +27349,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.76.0 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27724,7 +27804,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — layout da Oficina baseado no mockup do usuário
+// V46.76.0 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -27962,7 +28042,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — corrige aplicação real do layout 46.65
+// V46.76.0 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -27975,7 +28055,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.75.2: falha ao substituir bindings',e);
+    console.warn('Oficina 46.76.0: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -27998,7 +28078,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.75.2 rebuild',e);
+      console.warn('Oficina 46.76.0 rebuild',e);
     }
   }
 
@@ -28023,7 +28103,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — arrumação visual da Oficina
+// V46.76.0 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28134,7 +28214,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — remove conta-gotas extras e coloca HEX compacto
+// V46.76.0 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28211,7 +28291,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — estabilização funcional da Oficina
+// V46.76.0 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28675,7 +28755,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.2 — OFICINA 2 EXPERIMENTAL
+// V46.76.0 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -29973,7 +30053,7 @@ class RPGTextureGenerator {
 
 
 
-// V46.75.2 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
+// V46.76.0 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
 // IMPORTANTE: RPGTextureGenerator usa this.canvas.width/height; ele não possui this.w/this.h.
 RPGTextureGenerator.prototype.textureFloresta=function(){
  const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
@@ -31021,7 +31101,7 @@ setTimeout(gm2installTab,900);
 
 
 // ============================================================
-// V46.75.2 — correções finais desta rodada
+// V46.76.0 — correções finais desta rodada
 // ============================================================
 
 // Um alvo explicitamente escolhido nunca deve ser trocado por "primeiro alvo válido"
@@ -31070,7 +31150,7 @@ try{
 
 
 // ============================================================
-// V46.75.2 — rollback seguro + alvo de objetos endurecido
+// V46.76.0 — rollback seguro + alvo de objetos endurecido
 // ============================================================
 
 // A integração experimental da Oficina 2 no Mapa da Mesa foi retirada desta versão.
@@ -31120,6 +31200,245 @@ window.labCliqueFundoMapa_=function(ev){
  if(t && !ev?.target?.closest?.('.lab-map-object'))t._alvoManualFixadoLab='';
  return labCliqueFundoMapa752Base_.apply(this,arguments);
 };
+
+// ============================================================
+// V46.76.0
+// seta temporária + risco persistente + controle PJ pelo mestre
+// + alcance recortado + alvo destruído preservado + painel compacto
+// ============================================================
+
+// ---------- Alvo selecionado é autoridade, inclusive objeto destruído ----------
+const labUniversalGarantir760Base_=labUniversalGarantir_;
+labUniversalGarantir_=function(t){
+  if(!t)return labUniversalGarantir760Base_(t);
+  const objId=String(labEstado_?.objetoSelecionadoId||'');
+  const obj=objId?labObjetoPorId_(objId):null;
+  if(obj&&obj.destrutivel!==false){
+    t.alvoLab=objId;
+    t._alvoManualFixadoLab=objId;
+    t._alvoMortoManual510=!!labAlvoInerte490_(obj);
+  }
+  const r=labUniversalGarantir760Base_(t);
+  if(obj&&obj.destrutivel!==false)t.alvoLab=objId;
+  return r;
+};
+
+const labGarantirPrefsAtaque760Base_=labGarantirPrefsAtaque_;
+labGarantirPrefsAtaque_=function(t){
+  if(!t)return labGarantirPrefsAtaque760Base_(t);
+  const objId=String(labEstado_?.objetoSelecionadoId||'');
+  const obj=objId?labObjetoPorId_(objId):null;
+  const fixo=String(obj?.id||t._alvoComandoFixadoLab||t._alvoManualFixadoLab||t.alvoLab||'');
+  if(obj){
+    t._alvoMortoManual510=!!labAlvoInerte490_(obj);
+    t._alvoManualFixadoLab=fixo;
+    t.alvoLab=fixo;
+  }
+  const valido=fixo&&labAlvosAtaque_(t).some(a=>String(a.id)===fixo);
+  const r=labGarantirPrefsAtaque760Base_(t);
+  if(valido)t.alvoLab=fixo;
+  return r;
+};
+
+const labRolarAtaque760Base_=window.labRolarAtaque_;
+window.labRolarAtaque_=function(){
+  const t=labTokenAtual_();
+  if(t){
+    const objId=String(labEstado_?.objetoSelecionadoId||'');
+    const obj=objId?labObjetoPorId_(objId):null;
+    if(obj&&obj.destrutivel!==false){
+      t.alvoLab=objId;
+      t._alvoManualFixadoLab=objId;
+      t._alvoMortoManual510=!!labAlvoInerte490_(obj);
+    }
+  }
+  return labRolarAtaque760Base_.apply(this,arguments);
+};
+
+// ---------- Mestre só controla PJ quando autorizado ----------
+function labEhPJ760_(t){
+  if(!t||String(t.id||'').startsWith('dummy:'))return false;
+  return !!String(t.donoUid||'').trim();
+}
+function labMestrePodeControlarPJ760_(){
+  return !!labEstado_.mestreControlaPJLab;
+}
+const labPodeControlarToken760Base_=labPodeControlarToken_;
+labPodeControlarToken_=function(t){
+  if(!batalhaEhMestre_())return labPodeControlarToken760Base_(t);
+  if(labEhPJ760_(t))return labMestrePodeControlarPJ760_();
+  return true;
+};
+window.labMestreControlaPJToggle760_=function(v){
+  if(!batalhaEhMestre_())return;
+  labEstado_.mestreControlaPJLab=!!v;
+  labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+  notificar_(v?'🎭 Controle dos PJ pelo mestre ativado.':'🔒 Controle dos PJ pelo mestre desativado.',v?'sucesso':'info',2200);
+};
+
+function labInstalarControlePJ760_(){
+  const free=document.getElementById('labFreeEntryWrap530');
+  if(!free||document.getElementById('labMasterPJWrap760'))return;
+  const w=document.createElement('label');w.id='labMasterPJWrap760';
+  w.title='Quando desligado, o mestre não pode mover, atacar, defender ou escolher ações pelos personagens dos jogadores.';
+  w.innerHTML='<input id="labMasterPJ760" type="checkbox" onchange="labMestreControlaPJToggle760_(this.checked)"> 🎭 Controlar PJ';
+  free.insertAdjacentElement('afterend',w);
+}
+function labAtualizarControlePJ760_(){
+  labInstalarControlePJ760_();
+  const w=document.getElementById('labMasterPJWrap760'),cb=document.getElementById('labMasterPJ760');
+  if(w)w.style.display=batalhaEhMestre_()?'flex':'none';
+  if(cb)cb.checked=!!labEstado_.mestreControlaPJLab;
+}
+
+// Se o turno é de um PJ e o controle está desligado, mestre apenas observa.
+const labRenderActionPanel760Base_=labRenderActionPanel_;
+labRenderActionPanel_=function(){
+  const t=labTokenAtual_(),el=document.getElementById('labActionPanel');
+  if(batalhaEhMestre_()&&t&&labEhPJ760_(t)&&!labMestrePodeControlarPJ760_()
+     &&!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab){
+    if(el){
+      el.style.display='block';
+      el.innerHTML=`<div style="display:flex;align-items:center;gap:9px;min-height:36px">
+        <strong style="color:#ffd54a">🎯 Ação de ${escaparHtmlInventario_(t.nome)}</strong>
+        <span style="color:#9fc6d8">Controle do PJ está desligado. O jogador controla este personagem.</span>
+      </div>`;
+    }
+    return;
+  }
+  return labRenderActionPanel760Base_.apply(this,arguments);
+};
+window.labRenderActionPanel_=labRenderActionPanel_;
+
+// ---------- Ferramentas rápidas do mestre ----------
+let labQuickTool760_='';
+let labQuickDrawing760_=null;
+
+function labQuickToolsInstall760_(){
+  const free=document.getElementById('labFreeEntryWrap530');
+  if(!free||document.getElementById('labQuickTools760'))return;
+  const d=document.createElement('div');d.id='labQuickTools760';
+  d.innerHTML=`
+    <button id="labPointTool760" class="btn-small" title="Seta temporária: clique no mapa; desaparece em 6 segundos" onclick="labQuickToolToggle760_('seta')">➤</button>
+    <button id="labLineTool760" class="btn-small" title="Risco persistente: arraste no mapa para desenhar" onclick="labQuickToolToggle760_('linha')">✎</button>
+    <button class="btn-small" title="Limpar riscos persistentes" onclick="labQuickClearLines760_()">⌫</button>`;
+  const pj=document.getElementById('labMasterPJWrap760');
+  (pj||free).insertAdjacentElement('afterend',d);
+}
+function labQuickToolsUpdate760_(){
+  labQuickToolsInstall760_();
+  const d=document.getElementById('labQuickTools760');
+  if(d)d.style.display=batalhaEhMestre_()?'flex':'none';
+  document.getElementById('labPointTool760')?.classList.toggle('active',labQuickTool760_==='seta');
+  document.getElementById('labLineTool760')?.classList.toggle('active',labQuickTool760_==='linha');
+  const map=document.getElementById('labMetricMap');
+  if(map){
+    if(labQuickTool760_==='seta')map.style.cursor='crosshair';
+    else if(labQuickTool760_==='linha')map.style.cursor='crosshair';
+    else map.style.cursor='';
+  }
+}
+window.labQuickToolToggle760_=function(tool){
+  if(!batalhaEhMestre_())return;
+  labQuickTool760_=labQuickTool760_===tool?'':tool;
+  labQuickToolsUpdate760_();
+};
+window.labQuickClearLines760_=function(){
+  if(!batalhaEhMestre_())return;
+  labEstado_.riscosRapidosLab=[];
+  labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+};
+
+function labQuickPoint760_(ev){
+  const map=document.getElementById('labMetricMap'),ppm=Number(labEstado_.pxPorMetro||48);
+  const r=map.getBoundingClientRect();
+  return {
+    x:Math.max(0,Math.min(Number(labEstado_.larguraM||28),(ev.clientX-r.left)/ppm)),
+    y:Math.max(0,Math.min(Number(labEstado_.alturaM||14),(ev.clientY-r.top)/ppm))
+  };
+}
+function labQuickArrow760_(p){
+  labEstado_.apontadoresRapidosLab=Array.isArray(labEstado_.apontadoresRapidosLab)?labEstado_.apontadoresRapidosLab:[];
+  const id=`ptr:${Date.now()}:${Math.random().toString(36).slice(2,6)}`;
+  labEstado_.apontadoresRapidosLab.push({id,x:p.x,y:p.y,ts:Date.now(),duracao:6000});
+  labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+  setTimeout(()=>{
+    if(!batalhaEhMestre_())return;
+    const antes=(labEstado_.apontadoresRapidosLab||[]).length;
+    labEstado_.apontadoresRapidosLab=(labEstado_.apontadoresRapidosLab||[]).filter(a=>String(a.id)!==id);
+    if((labEstado_.apontadoresRapidosLab||[]).length!==antes){
+      labSalvarLocal_();labAgendarSyncRemoto_();labRender_();
+    }
+  },6500);
+}
+function labQuickPointerDown760_(ev){
+  if(!batalhaEhMestre_()||!labQuickTool760_)return;
+  const map=document.getElementById('labMetricMap');
+  if(!map||!map.contains(ev.target))return;
+  // Ferramenta ativa tem prioridade sobre tokens/objetos.
+  ev.preventDefault();ev.stopImmediatePropagation();
+  const p=labQuickPoint760_(ev);
+  if(labQuickTool760_==='seta'){
+    labQuickArrow760_(p);return;
+  }
+  if(labQuickTool760_==='linha'){
+    const pts=[p];labQuickDrawing760_={pts};
+    const mv=e=>{const q=labQuickPoint760_(e),last=pts.at(-1);if(!last||Math.hypot(q.x-last.x,q.y-last.y)>.035){pts.push(q);labQuickRender760_();}};
+    const up=()=>{
+      window.removeEventListener('pointermove',mv,true);
+      if(pts.length>1){
+        labEstado_.riscosRapidosLab=Array.isArray(labEstado_.riscosRapidosLab)?labEstado_.riscosRapidosLab:[];
+        labEstado_.riscosRapidosLab.push({id:`risco:${Date.now()}:${Math.random().toString(36).slice(2,6)}`,pts:JSON.parse(JSON.stringify(pts)),cor:'#ffd54a',larguraM:.07});
+        labSalvarLocal_();labAgendarSyncRemoto_();
+      }
+      labQuickDrawing760_=null;labRender_();
+    };
+    window.addEventListener('pointermove',mv,true);window.addEventListener('pointerup',up,{once:true,capture:true});
+  }
+}
+document.addEventListener('pointerdown',labQuickPointerDown760_,true);
+
+function labQuickRender760_(){
+  const map=document.getElementById('labMetricMap');if(!map)return;
+  let ov=document.getElementById('labQuickOverlay760');
+  if(!ov){ov=document.createElement('div');ov.id='labQuickOverlay760';map.appendChild(ov);}
+  const ppm=Number(labEstado_.pxPorMetro||48),w=Number(labEstado_.larguraM||28)*ppm,h=Number(labEstado_.alturaM||14)*ppm;
+  const now=Date.now();
+  const arrows=(labEstado_.apontadoresRapidosLab||[]).filter(a=>now-Number(a.ts||0)<Number(a.duracao||6000));
+  const lines=[...(labEstado_.riscosRapidosLab||[])];
+  if(labQuickDrawing760_)lines.push({id:'preview',pts:labQuickDrawing760_.pts,cor:'#67e8f9',larguraM:.07});
+  const lineSvg=lines.map(l=>{
+    const pts=(l.pts||[]).map(p=>`${Number(p.x)*ppm},${Number(p.y)*ppm}`).join(' ');
+    return pts?`<polyline points="${pts}" fill="none" stroke="${l.cor||'#ffd54a'}" stroke-width="${Math.max(2,Number(l.larguraM||.07)*ppm)}" stroke-linecap="round" stroke-linejoin="round"/>`:'';
+  }).join('');
+  ov.innerHTML=`<svg id="labQuickLinePreview760" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${lineSvg}</svg>`+
+    arrows.map(a=>`<div class="lab-point-arrow760" style="left:${Number(a.x)*ppm}px;top:${Number(a.y)*ppm}px;animation-delay:-${Math.max(0,now-Number(a.ts||0))}ms">
+      <svg viewBox="0 0 44 58"><path d="M22 56 L5 27 H14 V4 H30 V27 H39 Z" fill="#ffd54a" stroke="#111827" stroke-width="2.2" stroke-linejoin="round"/></svg>
+    </div>`).join('');
+}
+
+// ---------- Alcance sempre sobre o mapa e recortado no limite ----------
+const labOverlayMovimentoHtml760Base_=labOverlayMovimentoHtml_;
+labOverlayMovimentoHtml_=function(t,ppm){
+  const h=labOverlayMovimentoHtml760Base_(t,ppm);
+  return String(h||'').replaceAll('<div style="','<div class="lab-range-overlay-760" style="z-index:8;');
+};
+
+// ---------- Atualização pós-render ----------
+const labRender760Base_=labRender_;
+labRender_=function(){
+  const r=labRender760Base_.apply(this,arguments);
+  try{
+    labAtualizarControlePJ760_();
+    labQuickToolsUpdate760_();
+    labQuickRender760_();
+  }catch(e){console.warn('v46.76 UI',e);}
+  return r;
+};
+window.labRender_=labRender_;
+
+// instalação inicial sem depender de uma renderização específica
+setTimeout(()=>{try{labAtualizarControlePJ760_();labQuickToolsUpdate760_();labQuickRender760_();}catch(_){}},800);
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -31136,6 +31455,6 @@ window.labCliqueFundoMapa_=function(ev){
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.75.2: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.76.0: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
