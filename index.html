@@ -32875,8 +32875,66 @@ if(typeof labRender_==='function'){
  labRender_=function(){try{mat800HidratarMesa_();}catch(_){}return labRenderBase.apply(this,arguments);};window.labRender_=labRender_;
 }
 
+
 mat800Lista_=mat800LerLocal_();if(!mat800Lista_.length)mat800Lista_=MAT800_DEFAULTS_.slice();
 setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
+})();
+
+// ============================================================
+// V46.80.9 — Banco de Objetos VISÍVEL diretamente na Mesa
+// Instalação independente de labRender_: não depende da cadeia de wrappers.
+// ============================================================
+(function(){
+  function bancoMesa809EhMestre_(){
+    try{ if(typeof batalhaEhMestre_==='function' && batalhaEhMestre_()) return true; }catch(_){}
+    try{ return String(userData?.role||'').toLowerCase()==='mestre'; }catch(_){ return false; }
+  }
+  function bancoMesa809Esc_(v){
+    try{return escaparHtmlInventario_(String(v??''));}catch(_){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+  }
+  function bancoMesa809Montar_(){
+    const box=document.getElementById('labLiveObjectBank770');
+    const list=document.getElementById('labLiveObjectList770');
+    const hist=document.getElementById('labHistoricoMesa');
+    if(!box||!list)return;
+
+    const master=bancoMesa809EhMestre_();
+    box.style.display=master?'block':'none';
+    if(!master)return;
+
+    // Garante posição imediatamente depois do mapa e antes do Histórico.
+    if(hist && box.nextElementSibling!==hist){
+      hist.parentNode.insertBefore(box,hist);
+    }
+
+    const arr=[...(typeof objetosMapaDB!=='undefined'&&Array.isArray(objetosMapaDB)?objetosMapaDB:[])];
+    arr.sort((a,b)=>String(a?.nome||a?.id||'').localeCompare(String(b?.nome||b?.id||''),'pt-BR',{sensitivity:'base'}));
+    const marcados=new Set([...list.querySelectorAll('input:checked')].map(x=>String(x.value)));
+    list.innerHTML=arr.map(o=>`<label title="${bancoMesa809Esc_(o.nome||o.id)}" style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px;min-height:24px;overflow:hidden;"><input class="lab-live-obj-check770" type="checkbox" value="${bancoMesa809Esc_(o.id)}" ${marcados.has(String(o.id))?'checked':''}><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${bancoMesa809Esc_(o.nome||o.id)}</span></label>`).join('');
+
+    const all=document.getElementById('labLiveObjAll770');
+    if(all && all.dataset.v809!=='1'){
+      all.dataset.v809='1';
+      all.addEventListener('change',()=>document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770').forEach(c=>c.checked=all.checked));
+    }
+  }
+
+  // Atualiza ao abrir a aba da Mesa e quando o banco termina de chegar do Firebase.
+  document.addEventListener('click',ev=>{
+    const tab=ev.target.closest?.('#laboratorioTabBtn');
+    if(tab)setTimeout(bancoMesa809Montar_,0);
+  },true);
+  document.addEventListener('toggle',ev=>{
+    if(ev.target?.id==='labLiveObjectBank770' && ev.target.open)bancoMesa809Montar_();
+  },true);
+
+  // O banco pode carregar depois da interface. Pequena janela de sincronização, depois para.
+  let tentativas=0;
+  const timer=setInterval(()=>{
+    bancoMesa809Montar_();
+    if(++tentativas>=20)clearInterval(timer);
+  },500);
+  setTimeout(bancoMesa809Montar_,0);
 })();
 </script>
 <!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
