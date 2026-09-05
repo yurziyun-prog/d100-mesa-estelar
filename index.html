@@ -789,7 +789,7 @@
                       <summary style="cursor:pointer;font-weight:800;color:#d8ffe5;user-select:none;">🧱 Objetos do banco <span style="font-size:.72em;color:#7fdfff">v46.81.3</span></summary>
                       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 6px;">
                         <label style="margin:0;display:flex;align-items:center;gap:5px;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
-                        <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()">➕ Adicionar marcados</button>
+                        <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()">➕ Adicionar marcados</button> <span id="mapEntitiesStatus822" style="margin-left:8px;font-size:.82em;color:#9ab0c8">Entidades: aguardando módulo…</span>
                         <small style="color:#9fb8c9">Os objetos entram no centro do mapa com PV, dureza, fogo e demais propriedades do banco.</small>
                       </div>
                       <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px;"></div>
@@ -32653,6 +32653,92 @@ document.addEventListener('toggle',function(ev){
   }
 },true);
 
+// ============================================================
+// V46.82.2 — PRIMEIRO MÓDULO ES REAL: entidades interativas
+// Importação dinâmica para não impedir o restante do site de iniciar
+// caso o arquivo externo esteja ausente ou em cache incorreto.
+// ============================================================
+(async function mapEntities822Instalar_(){
+  const status=()=>document.getElementById('mapEntitiesStatus822');
+  const setStatus=(txt,cor='#9ab0c8')=>{const e=status();if(e){e.textContent=txt;e.style.color=cor;}};
+  try{
+    const mod=await import('./js/map-entities-v46822.js?v=46822');
+    const mapEntities822=mod.createMapEntities({
+      getModels:()=>objetosMapaDB||[],
+      getMapInfo:()=>({larguraM:Number(labEstado_.larguraM||28),alturaM:Number(labEstado_.alturaM||14),ppm:Number(labEstado_.pxPorMetro||48)}),
+      renderObjectHtml:(o,ppm)=>labObjetoHtml_(o,ppm),
+      renderMicroHtml:(o,ppm)=>labObjetoMicroPainelHtml_(o,ppm),
+      notify:(m,t='info',ms=2600)=>notificar_(m,t,ms)
+    });
+
+    // O motor da Mesa passa a reconhecer entidades externas sem colocá-las
+    // em labEstado_.objetosLab, portanto a Oficina 2 não pode apagá-las.
+    const oldObjetoPorId=labObjetoPorId_;
+    labObjetoPorId_=function(id){
+      return mapEntities822.get(id)||oldObjetoPorId(id);
+    };
+
+    const oldExcluir=window.labObjetoExcluir_;
+    window.labObjetoExcluir_=function(){
+      const id=String(labEstado_.objetoSelecionadoId||'');
+      const ext=mapEntities822.get(id);
+      if(ext){
+        if(!confirm(`Remover “${ext.nome||'objeto'}” deste mapa?`))return;
+        mapEntities822.remove(id);
+        labEstado_.objetoSelecionadoId='';
+        labRender_();
+        return;
+      }
+      return oldExcluir?.apply(this,arguments);
+    };
+
+    // O botão do Banco agora chama diretamente a instância ES importada.
+    window.labLiveAdicionarObjetos770_=function(){
+      if(!batalhaEhMestre_())return;
+      const checks=[...document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770:checked')];
+      const ids=checks.map(c=>String(c.value));
+      if(!ids.length){notificar_('Marque pelo menos um objeto do banco.','aviso',2500);return;}
+      const info={larguraM:Number(labEstado_.larguraM||28),alturaM:Number(labEstado_.alturaM||14)};
+      let n=0,last=null;
+      for(const id of ids){
+        try{
+          last=mapEntities822.add(id,{
+            x:Math.max(.6,Math.min(info.larguraM-.6,1.3+(n%5)*1.25)),
+            y:Math.max(.6,Math.min(info.alturaM-.6,1.3+Math.floor(n/5)*1.25))
+          });
+          n++;
+        }catch(e){console.error('[MapEntities 46.82.2] add',id,e);}
+      }
+      checks.forEach(c=>c.checked=false);
+      const all=document.getElementById('labLiveObjAll770');if(all)all.checked=false;
+      if(last){labEstado_.objetoSelecionadoId=last.id;labEstado_.selecionadoId='';}
+      // render legado primeiro; camada independente por último.
+      labRender_();
+      mapEntities822.render();
+      setStatus(`Entidades: ${mapEntities822.getAll().length} no mapa`,'#8fffb2');
+      notificar_(`${n} objeto(s) adicionado(s) pela camada ES independente.`,'sucesso',2800);
+    };
+
+    // Sempre recoloca a camada externa DEPOIS que o renderer legado recria o mapa.
+    const oldRender822=labRender_;
+    labRender_=function(){
+      const r=oldRender822.apply(this,arguments);
+      try{mapEntities822.render();}catch(e){console.warn('[MapEntities 46.82.2] render',e);}
+      return r;
+    };
+    window.labRender_=labRender_;
+
+    // Exposto só para diagnóstico no console, não como mecanismo de integração.
+    window.__MapEntities822=mapEntities822;
+    setStatus('Entidades: módulo carregado ✓','#8fffb2');
+    try{mapEntities822.render();}catch(_){}
+  }catch(e){
+    console.error('[MapEntities 46.82.2] módulo não carregou',e);
+    setStatus('Entidades: ERRO ao carregar módulo','#ff8d8d');
+    try{notificar_('Falha ao carregar js/map-entities-v46822.js.','erro',6000);}catch(_){}
+  }
+})();
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -32891,6 +32977,5 @@ setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
 </script>
 <!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
 
-  <script src="js/map-entities.js"></script>
 </body>
 </html>
