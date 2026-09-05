@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.75.0 ===== */
+/* ===== V46.75.1 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.75.0 ===== */
+/* ===== V46.75.1 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22130,7 +22130,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.75.0 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.75.1 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22289,7 +22289,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.75.0
+// V46.75.1
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22646,7 +22646,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.75.0
+// V46.75.1
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22931,7 +22931,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.75.0 — Oficina: estilos de traço exclusivos + prévia real
+// V46.75.1 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -23007,7 +23007,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.75.0
+// V46.75.1
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23092,7 +23092,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.75.0 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.75.1 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23233,7 +23233,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.75.0 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.75.1 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23475,7 +23475,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.75.0 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.75.1 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23634,7 +23634,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.75.0 — Oficina simplificada
+// V46.75.1 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23979,7 +23979,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.75.0 — Oficina: objetos realmente opacos + painel de camadas
+// V46.75.1 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24152,7 +24152,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.75.0 — Oficina: composição real por ordem de adição
+// V46.75.1 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24375,7 +24375,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.75.0',e);}
+    }catch(e){console.warn('Oficina v46.75.1',e);}
     return r;
 };
 
@@ -24385,7 +24385,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.75.0 — REFORMA DA OFICINA
+// V46.75.1 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25138,8 +25138,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.75.0 — reconstrução limpa da barra da Oficina
-// Base: 46.75.0 funcional. Não usa varredura agressiva do DOM.
+// V46.75.1 — reconstrução limpa da barra da Oficina
+// Base: 46.75.1 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25368,8 +25368,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.75.0 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.75.0
+// V46.75.1 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.75.1
 // ============================================================
 
 const gm580_ = {
@@ -26036,14 +26036,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.75.0 — OFICINA REESTRUTURADA
+// V46.75.1 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.75.0'
+  version:'46.75.1'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26267,7 +26267,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.75.0 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.75.1 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26359,7 +26359,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — Oficina realmente única
+// V46.75.1 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26415,7 +26415,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — edição persistente de formas/objetos + histórico completo
+// V46.75.1 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26820,7 +26820,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — estados separados, undo/redo real, sombra persistente,
+// V46.75.1 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27235,7 +27235,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.75.1 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27373,7 +27373,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.75.1 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27828,7 +27828,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — layout da Oficina baseado no mockup do usuário
+// V46.75.1 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -28066,7 +28066,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — corrige aplicação real do layout 46.65
+// V46.75.1 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -28079,7 +28079,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.75.0: falha ao substituir bindings',e);
+    console.warn('Oficina 46.75.1: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -28102,7 +28102,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.75.0 rebuild',e);
+      console.warn('Oficina 46.75.1 rebuild',e);
     }
   }
 
@@ -28127,7 +28127,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — arrumação visual da Oficina
+// V46.75.1 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28238,7 +28238,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — remove conta-gotas extras e coloca HEX compacto
+// V46.75.1 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28315,7 +28315,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — estabilização funcional da Oficina
+// V46.75.1 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28779,7 +28779,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.75.0 — OFICINA 2 EXPERIMENTAL
+// V46.75.1 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -30077,7 +30077,7 @@ class RPGTextureGenerator {
 
 
 
-// V46.75.0 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
+// V46.75.1 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
 // IMPORTANTE: RPGTextureGenerator usa this.canvas.width/height; ele não possui this.w/this.h.
 RPGTextureGenerator.prototype.textureFloresta=function(){
  const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
@@ -31125,7 +31125,7 @@ setTimeout(gm2installTab,900);
 
 
 // ============================================================
-// V46.75.0 — correções finais desta rodada
+// V46.75.1 — correções finais desta rodada
 // ============================================================
 
 // Um alvo explicitamente escolhido nunca deve ser trocado por "primeiro alvo válido"
@@ -31166,7 +31166,7 @@ try{
 
 
 // ============================================================
-// V46.75.0 — Oficina 2 dentro do Mapa da Mesa
+// V46.75.1 — Oficina 2 dentro do Mapa da Mesa
 // Reutiliza o MESMO motor/DOM da Oficina 2. Nada é duplicado em repouso.
 // ============================================================
 let gm2LiveEdit_=false;
@@ -31257,22 +31257,65 @@ function gm2LiveMountSvg_(){
 }
 function gm2LiveEnter_(){
  if(gm2LiveEdit_||!batalhaEhMestre_())return;
- gm2LiveBackup_={
-   st:gm2clone(gm2.st),history:gm2clone(gm2.history||[]),redo:gm2clone(gm2.redo||[]),
-   selected:gm2LiveCloneSet_(gm2.selected),primary:gm2.primary,tool:gm2.tool,shape:gm2.shape,line:gm2.line,brush:gm2.brush,objectIds:[...(gm2.objectIds||[])]
- };
- gm2LiveEdit_=true;
- labEstado_.modoCriacaoMapa=true;
- gm2.st=gm2LiveStateFromMesa_();
- gm2.history=[];gm2.redo=[];gm2.selected.clear();gm2.primary='';gm2.tool='select';
- gm2LiveMoveControls_();
- const shell=document.getElementById('labOficina2LiveShell');if(shell)shell.style.display='block';
- const ck=document.getElementById('labModoCriarMapa');if(ck)ck.checked=true;
- labSalvarLocal_();
- // Render normal da Mesa primeiro, depois encaixa o SVG do editor.
- labRender_();
- gm2LiveMountSvg_();
- gm2populateBank();gm2populateMapSelect();gm2syncControls();gm2updateToolbarState();
+ const shell=document.getElementById('labOficina2LiveShell');
+ if(shell){
+   shell.style.display='block';
+   shell.innerHTML='<div id="labLiveLoading751" style="padding:10px 12px;color:#d9fbff;font-weight:700">🛠️ Abrindo ferramentas da Oficina 2…</div><div id="labLiveEditTop"></div><div id="labLiveEditSide"></div><div id="labLiveEditBank"></div><div id="labLiveEditStatus"></div>';
+ }
+ try{
+   // Em páginas onde a aba ainda não foi aberta/instalada, instala sob demanda.
+   if(!document.getElementById('gm2svg')){
+     try{gm2installTab();}catch(_){}
+   }
+   if(!document.getElementById('gm2svg')){
+     setTimeout(()=>gm2LiveEnterContinue_(),80);
+     return;
+   }
+   gm2LiveEnterContinue_();
+ }catch(err){
+   console.error('Oficina 2 ao vivo: falha ao abrir',err);
+   gm2LiveEdit_=false;
+   labEstado_.modoCriacaoMapa=false;
+   const ck=document.getElementById('labModoCriarMapa');if(ck)ck.checked=false;
+   if(shell)shell.innerHTML=`<div style="padding:10px 12px;color:#ffb4b4">Não foi possível abrir o editor: ${gm2esc(err?.message||String(err))}</div>`;
+ }
+}
+function gm2LiveEnterContinue_(){
+ if(gm2LiveEdit_)return;
+ const shell=document.getElementById('labOficina2LiveShell');
+ try{
+   if(!document.getElementById('gm2svg'))throw new Error('A Oficina 2 ainda não foi inicializada.');
+   gm2LiveBackup_={
+     st:gm2clone(gm2.st),history:gm2clone(gm2.history||[]),redo:gm2clone(gm2.redo||[]),
+     selected:gm2LiveCloneSet_(gm2.selected),primary:gm2.primary,tool:gm2.tool,shape:gm2.shape,line:gm2.line,brush:gm2.brush,objectIds:[...(gm2.objectIds||[])]
+   };
+   gm2LiveEdit_=true;
+   labEstado_.modoCriacaoMapa=true;
+   gm2.st=gm2LiveStateFromMesa_();
+   gm2.history=[];gm2.redo=[];gm2.selected.clear();gm2.primary='';gm2.tool='select';
+
+   if(!gm2LiveMoveControls_())throw new Error('Os controles da Oficina 2 não foram encontrados.');
+
+   document.getElementById('labLiveLoading751')?.remove();
+   if(shell)shell.style.display='block';
+   const ck=document.getElementById('labModoCriarMapa');if(ck)ck.checked=true;
+
+   labSalvarLocal_();
+   labRender_();
+   requestAnimationFrame(()=>{
+     gm2LiveMountSvg_();
+     gm2populateBank();gm2populateMapSelect();gm2syncControls();gm2updateToolbarState();
+   });
+ }catch(err){
+   console.error('Oficina 2 ao vivo: falha ao montar',err);
+   gm2LiveEdit_=false;
+   labEstado_.modoCriacaoMapa=false;
+   const ck=document.getElementById('labModoCriarMapa');if(ck)ck.checked=false;
+   if(shell){
+     shell.style.display='block';
+     shell.innerHTML=`<div style="padding:10px 12px;color:#ffb4b4">Não foi possível abrir o editor: ${gm2esc(err?.message||String(err))}</div>`;
+   }
+ }
 }
 function gm2LiveExit_(){
  if(!gm2LiveEdit_)return;
@@ -31357,6 +31400,33 @@ if(labLoad750Base_)window.labCarregarMapaBanco_=async function(){
 // Não deixa edição visual sobreviver a troca de aba/estado acidental.
 window.addEventListener('beforeunload',()=>{if(gm2LiveEdit_)gm2LiveSyncToMesa_(false);});
 
+
+// V46.75.1 — ligação robusta do checkbox "Editar mapa".
+function gm2LiveBindToggle751_(){
+ const ck=document.getElementById('labModoCriarMapa');
+ if(!ck||ck.dataset.gm2751==='1')return;
+ ck.dataset.gm2751='1';
+ ck.removeAttribute('onchange');
+ ck.addEventListener('change',ev=>{
+   ev.stopPropagation();
+   if(ck.checked)gm2LiveEnter_();
+   else gm2LiveExit_();
+ });
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',gm2LiveBindToggle751_,{once:true});
+else gm2LiveBindToggle751_();
+setTimeout(gm2LiveBindToggle751_,1000);
+setTimeout(gm2LiveBindToggle751_,2500);
+
+// Se algum render/rearranjo antigo recriar ou reposicionar controles, religa o checkbox.
+const labAtualizarModo751Base_=labAtualizarModoCriacaoMapa_;
+labAtualizarModoCriacaoMapa_=function(){
+ const r=labAtualizarModo751Base_.apply(this,arguments);
+ const ck=document.getElementById('labModoCriarMapa');
+ if(gm2LiveEdit_&&ck)ck.checked=true;
+ gm2LiveBindToggle751_();
+ return r;
+};
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -31373,6 +31443,6 @@ window.addEventListener('beforeunload',()=>{if(gm2LiveEdit_)gm2LiveSyncToMesa_(f
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.75.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.75.1: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
