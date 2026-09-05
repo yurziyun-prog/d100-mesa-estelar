@@ -33158,5 +33158,233 @@ setTimeout(install_,300);setTimeout(install_,1100);setInterval(()=>{wireSlider_(
 </script>
 <!-- Mesa Estelar v46.84.0 -->
 
+
+
+<script>
+// ============================================================
+// V46.85.0 — correção estrutural: salvar de verdade, último mapa,
+// visibilidade desenhável e mineração por material/modelo.
+// ============================================================
+(function(){
+'use strict';
+const VER='46.85.0', LAST_MAP_KEY='mesaEstelarUltimoMapaMesaId_v4685';
+const clamp=(v,a=0,b=100)=>{v=Number(v);return Number.isFinite(v)?Math.max(a,Math.min(b,v)):a;};
+const norm=v=>{try{return normalizarTextoCombate_(String(v||''));}catch(_){return String(v||'').toLowerCase();}};
+
+// ---------- material robusto, inclusive para instâncias antigas ----------
+function banco_(){try{return Array.isArray(objetosMapaDB)?objetosMapaDB:[];}catch(_){return [];}}
+function modelo_(o){
+  const dbb=banco_();
+  const ids=[o?.modeloId,o?.objetoBancoId,o?.dadosBanco?.id].filter(Boolean).map(String);
+  let m=dbb.find(x=>ids.includes(String(x.id)));
+  if(m)return m;
+  const nomes=[o?.nome,o?.name,o?.dadosBanco?.nome].filter(Boolean).map(norm);
+  m=dbb.find(x=>nomes.includes(norm(x?.nome||x?.name||'')));
+  if(m)return m;
+  const img=String(o?.imagem||o?.src||o?.dadosBanco?.imagem||'');
+  if(img)m=dbb.find(x=>String(x?.imagem||'')===img);
+  return m||null;
+}
+function material_(o){
+  const m=modelo_(o);
+  let v=String(o?.material||o?.dadosBanco?.material||m?.material||'').trim();
+  // somente reparo legado: nunca grava isto no Banco, apenas permite reconhecer
+  // objetos antigos que foram salvos antes da categoria Material existir.
+  if(!v){
+    const t=norm(`${o?.nome||''} ${o?.name||''} ${o?.dadosBanco?.nome||''} ${m?.nome||''}`);
+    if(/pedra|rocha|rock|stone/.test(t))v='Pedra';
+    else if(/arvore|árvore|palmeira|tronco|madeira|tree|wood/.test(t))v='Madeira';
+  }
+  return norm(v);
+}
+window.lab281EhPedra_=o=>/pedra|rock|stone|concreto|ceram/.test(material_(o));
+window.lab281EhMadeira_=o=>/madeira|wood|vegetal/.test(material_(o));
+try{lab281EhPedra_=window.lab281EhPedra_;lab281EhMadeira_=window.lab281EhMadeira_;}catch(_){ }
+function hidratarMaterial_(o){
+  const m=modelo_(o);if(!o)return;
+  if(!o.material&&m?.material)o.material=m.material;
+  if(o.dadosBanco&&typeof o.dadosBanco==='object'&&!o.dadosBanco.material&&m?.material)o.dadosBanco.material=m.material;
+}
+try{
+  const b=labObjetoAcaoExecutar_;
+  labObjetoAcaoExecutar_=function(ator,obj,tipo){if(tipo==='minerar'||tipo==='cortar')hidratarMaterial_(obj);return b.apply(this,arguments);};
+  window.labObjetoAcaoExecutar_=labObjetoAcaoExecutar_;
+}catch(e){console.warn(VER,'ação material',e);}
+
+// ---------- SALVAR Oficina 2: função final, com TODO o fluxo dentro do try ----------
+async function salvarOficinaFinal_(){
+  if(!batalhaEhMestre_())return null;
+  const input=document.getElementById('gm2mapname');
+  const nome=String(input?.value||gm2?.st?.name||'').trim();
+  if(!nome){notificar_('Digite um nome para o mapa antes de salvar.','aviso',3200);input?.focus();return null;}
+  try{
+    notificar_('💾 Salvando mapa…','info',2200);
+    gm2.st.name=nome;
+    let id=String(gm2.st.mapId||'');
+    let existente=id?(mapasDB||[]).find(m=>String(m.id)===id):null;
+    if(!id){id=labMapaSlug_(nome);let base=id,n=2;while((mapasDB||[]).some(m=>String(m.id)===String(id)))id=`${base}_${n++}`;}
+
+    // Imagens pesadas saem do Firestore e vão para Storage.
+    await gm281StoragePrepararEstado_(id);
+    const legacy=gm2toLegacy();
+    const vis=clamp(gm2.st.visibilidadeJogadores||0);
+    const dados={
+      id,nome,larguraM:gm2.st.w,alturaM:gm2.st.h,pxPorMetro:gm2.st.ppm,
+      fundo:gm2.st.bg,corGrade:gm2.st.grid,gradeVisivel:gm2.st.showGrid,textura:gm2.st.texture,
+      desenhos:[],formas:[],objetos:legacy.objetos.filter(o=>!o.imagemImportada),
+      oficina2State:gm2clone(gm2.st),
+      criadoPor:existente?.criadoPor||currentUserUid||'',atualizadoEm:new Date().toISOString(),
+      oficina2:true,visibilidadeJogadores:vis
+    };
+    const salvo=await labMapaSalvarFirestore_(dados,Number(existente?.partes||0));
+    const ix=(mapasDB||[]).findIndex(m=>String(m.id)===String(id));
+    if(ix>=0)mapasDB[ix]=salvo;else mapasDB.push(salvo);
+    gm2.st.mapId=id;gm2.st.name=nome;gm2.st.visibilidadeJogadores=vis;gm2saveLocal();
+    labMapaSelecionado_=id;labAtualizarSelectMapas_();gm2populateMapSelect?.();
+    try{renderizarBancoMapas_?.();}catch(_){ }
+    notificar_(`✅ “${nome}” salvo.`,'sucesso',3200);
+    return salvo;
+  }catch(e){
+    console.error('Oficina 2 salvar FINAL',e);
+    notificar_(`Não foi possível salvar o mapa. ${e?.message||String(e)||'Erro desconhecido.'}`,'erro',9000);
+    return null;
+  }
+}
+window.gm2saveLibrary=salvarOficinaFinal_;
+try{gm2saveLibrary=salvarOficinaFinal_;}catch(_){ }
+
+// ---------- slider: evento real e valor do estado como fonte ----------
+window.v4685SetVis_=function(v,remote){
+  v=clamp(v);try{gm2.st.visibilidadeJogadores=v;gm2saveLocal();}catch(_){ }
+  for(const id of ['v4683MapVis','gm282MapVis']){const r=document.getElementById(id);if(r&&document.activeElement!==r)r.value=String(v);}
+  for(const id of ['v4683MapVisValue','gm282MapVisValue']){const n=document.getElementById(id);if(n)n.textContent=Math.round(v)+'%';}
+  const mid=String(gm2?.st?.mapId||'');const m=(mapasDB||[]).find(x=>String(x.id)===mid);if(m)m.visibilidadeJogadores=v;
+  if(remote&&mid)try{setDoc(doc(db,'mapas',mid),{visibilidadeJogadores:v},{merge:true}).catch(e=>console.warn(VER,e));}catch(_){ }
+};
+function ligarControlesOficina_(){
+  const save=document.getElementById('gm2save');
+  if(save&&save.dataset.v4685!=='1'){
+    save.dataset.v4685='1';
+    save.onclick=e=>{e.preventDefault();e.stopPropagation();salvarOficinaFinal_();};
+  }
+  const r=document.getElementById('v4683MapVis')||document.getElementById('gm282MapVis');
+  if(r&&r.dataset.v4685!=='1'){
+    r.dataset.v4685='1';
+    r.oninput=e=>{e.stopPropagation();window.v4685SetVis_(e.target.value,false);};
+    r.onchange=e=>{e.stopPropagation();window.v4685SetVis_(e.target.value,true);};
+    r.onpointerup=e=>{e.stopPropagation();window.v4685SetVis_(e.target.value,true);};
+  }
+  if(r&&document.activeElement!==r){const v=clamp(gm2?.st?.visibilidadeJogadores||0);r.value=String(v);const n=document.getElementById('v4683MapVisValue')||document.getElementById('gm282MapVisValue');if(n)n.textContent=Math.round(v)+'%';}
+}
+
+// ---------- último mapa ativo da Mesa ----------
+function guardarMapaAtivo_(id){id=String(id||'');try{if(id)localStorage.setItem(LAST_MAP_KEY,id);else localStorage.removeItem(LAST_MAP_KEY);}catch(_){ }try{labEstado_.mapaAtivoId=id;}catch(_){ }}
+try{
+  const b=window.labCarregarMapaBanco_;
+  window.labCarregarMapaBanco_=async function(){const id=String(labMapaSelecionado_||document.getElementById('labMapaSalvoSelect')?.value||'');const r=await b.apply(this,arguments);if(id&&(mapasDB||[]).some(m=>String(m.id)===id))guardarMapaAtivo_(id);return r;};
+}catch(e){console.warn(VER,'wrap carregar Mesa',e);}
+try{
+  const b=window.abrirMapaBancoNaMesa_;
+  window.abrirMapaBancoNaMesa_=function(id){guardarMapaAtivo_(id);return b.apply(this,arguments);};
+}catch(_){ }
+try{
+  const b=gm2publish;
+  gm2publish=function(){const id=String(gm2?.st?.mapId||'');if(id)guardarMapaAtivo_(id);labEstado_.mapaAtivoId=id||labEstado_.mapaAtivoId||'';labEstado_.visibilidadeJogadores=clamp(gm2?.st?.visibilidadeJogadores||0);return b.apply(this,arguments);};
+  window.gm2publish=gm2publish;
+  const pub=document.getElementById('gm2publish');if(pub)pub.onclick=e=>{e.preventDefault();e.stopPropagation();gm2publish();};
+}catch(_){ }
+try{
+  const b=window.excluirMapaBancoAdmin_;
+  window.excluirMapaBancoAdmin_=async function(id){const r=await b.apply(this,arguments);let k='';try{k=localStorage.getItem(LAST_MAP_KEY)||'';}catch(_){}if(String(k)===String(id))guardarMapaAtivo_('');return r;};
+}catch(_){ }
+
+let tentouRestaurar_=false;
+async function restaurarUltimoMapa_(){
+  if(tentouRestaurar_)return;
+  if(!Array.isArray(mapasDB)||!mapasDB.length)return;
+  tentouRestaurar_=true;
+  let id='';try{id=localStorage.getItem(LAST_MAP_KEY)||labEstado_?.mapaAtivoId||labEstado_?.oficina2State?.mapId||'';}catch(_){ }
+  id=String(id||'');
+  const existe=id&&(mapasDB||[]).some(m=>String(m.id)===id);
+  if(existe){
+    labMapaSelecionado_=id;labAtualizarSelectMapas_();
+    // remove apenas o gatilho de confirmação do terreno antigo durante restauração automática.
+    const antigos=labEstado_.desenhosLab;labEstado_.desenhosLab=[];
+    try{await window.labCarregarMapaBanco_();}catch(e){console.warn(VER,'restaurar último mapa',e);}finally{if(!labEstado_.mapaAtivoId&&antigos?.length)labEstado_.desenhosLab=antigos;}
+    return;
+  }
+  // Não ressuscita um mapa deletado que ficou serializado no navegador.
+  const stale=String(labEstado_?.oficina2State?.mapId||labEstado_?.mapaAtivoId||'');
+  if(stale&&!(mapasDB||[]).some(m=>String(m.id)===stale)){
+    labEstado_.oficina2State=null;labEstado_.objetosLab=[];labEstado_.desenhosLab=[];labEstado_.formasLab=[];
+    labEstado_.mapaAtivoId='';labEstado_.fundo='#d7d7d7';labEstado_.textura='nenhuma';labSalvarLocal_();labRender_();
+  }
+}
+
+// ---------- ferramenta de visibilidade: ponteiro ligado DIRETAMENTE ao mapa ----------
+let modoVis_='';
+function estadoBotoes_(){
+  const ids={hide:'v4683Hide',clearGM:'v4683Bright',remove:'v4683Remove'};
+  Object.values(ids).forEach(id=>document.getElementById(id)?.classList.remove('active'));
+  if(ids[modoVis_])document.getElementById(ids[modoVis_])?.classList.add('active');
+}
+function escolherVis_(m){modoVis_=m;estadoBotoes_();try{notificar_(m==='hide'?'Arraste um retângulo no mapa para ocultá-lo dos jogadores.':m==='clearGM'?'Arraste um retângulo: escuro para jogadores e claro para o mestre.':m==='remove'?'Clique numa zona para removê-la.':'Ferramenta de visibilidade cancelada.','info',2400);}catch(_){}}
+function instalarFerramentasVis_(){
+  const h=document.getElementById('v4683Hide'),b=document.getElementById('v4683Bright'),r=document.getElementById('v4683Remove'),c=document.getElementById('v4683Cancel');
+  if(h)h.onclick=e=>{e.preventDefault();e.stopPropagation();escolherVis_('hide');};
+  if(b)b.onclick=e=>{e.preventDefault();e.stopPropagation();escolherVis_('clearGM');};
+  if(r)r.onclick=e=>{e.preventDefault();e.stopPropagation();escolherVis_('remove');};
+  if(c)c.onclick=e=>{e.preventDefault();e.stopPropagation();escolherVis_('');};
+  const map=document.getElementById('labMetricMap');if(!map||map.dataset.v4685vis==='1')return;
+  map.dataset.v4685vis='1';
+  map.addEventListener('pointerdown',function(ev){
+    if(!modoVis_||!batalhaEhMestre_())return;
+    if(ev.target.closest?.('.lab-token,.lab-map-object,.lab-micro-actions'))return;
+    ev.preventDefault();ev.stopImmediatePropagation();
+    const rect=map.getBoundingClientRect(),ppm=Number(labEstado_?.pxPorMetro||48),pt=e=>({x:clamp((e.clientX-rect.left)/ppm,0,labEstado_.larguraM),y:clamp((e.clientY-rect.top)/ppm,0,labEstado_.alturaM)}),a=pt(ev);
+    if(modoVis_==='remove'){
+      const z=[...(labEstado_.zonasVisibilidadeLab||[])].reverse().find(z=>a.x>=z.x&&a.x<=z.x+z.w&&a.y>=z.y&&a.y<=z.y+z.h);
+      if(z){labEstado_.zonasVisibilidadeLab=(labEstado_.zonasVisibilidadeLab||[]).filter(x=>x!==z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}
+      return;
+    }
+    const ghost=document.createElement('div');ghost.style.cssText='position:absolute;border:2px dashed #39d7ff;background:rgba(0,0,0,.38);z-index:214;pointer-events:none';map.appendChild(ghost);
+    const mv=e=>{const q=pt(e),x=Math.min(a.x,q.x),y=Math.min(a.y,q.y),w=Math.abs(a.x-q.x),h=Math.abs(a.y-q.y);Object.assign(ghost.style,{left:x*ppm+'px',top:y*ppm+'px',width:w*ppm+'px',height:h*ppm+'px'});};
+    const up=e=>{window.removeEventListener('pointermove',mv,true);const q=pt(e),z={id:`vis:${Date.now()}`,x:Math.min(a.x,q.x),y:Math.min(a.y,q.y),w:Math.abs(a.x-q.x),h:Math.abs(a.y-q.y),gmClear:modoVis_==='clearGM'};ghost.remove();if(z.w>.08&&z.h>.08){labEstado_.zonasVisibilidadeLab=labEstado_.zonasVisibilidadeLab||[];labEstado_.zonasVisibilidadeLab.push(z);labSalvarLocal_();labAgendarSyncRemoto_();labRender_();}};
+    window.addEventListener('pointermove',mv,true);window.addEventListener('pointerup',up,{once:true,capture:true});
+  },true);
+}
+
+// Zonas com gmClear precisam respeitar o tipo individualmente.
+function renderZonasFinal_(){
+  const map=document.getElementById('labMetricMap');if(!map)return;map.querySelectorAll('.v4685-zone').forEach(n=>n.remove());
+  const ppm=Number(labEstado_?.pxPorMetro||48),master=batalhaEhMestre_();
+  for(const z of (labEstado_.zonasVisibilidadeLab||[])){
+    const op=master?(z.gmClear?0:.5):1;if(op<=0)continue;
+    const n=document.createElement('div');n.className='v4685-zone';n.style.cssText=`position:absolute;left:${z.x*ppm}px;top:${z.y*ppm}px;width:${z.w*ppm}px;height:${z.h*ppm}px;background:#000;opacity:${op};z-index:19;pointer-events:none`;map.appendChild(n);
+  }
+}
+try{const br=labRender_;labRender_=function(){const r=br.apply(this,arguments);renderZonasFinal_();return r;};window.labRender_=labRender_;}catch(_){ }
+
+// ---------- microações finais ----------
+try{
+  const bm=labObjetoMicroPainelHtml_;
+  labObjetoMicroPainelHtml_=function(o,ppm){
+    hidratarMaterial_(o);let h=bm.apply(this,arguments);if(!h)return h;const a=labTokenAtual_();if(!a)return h;
+    const pedra=window.lab281EhPedra_(o),madeira=window.lab281EhMadeira_(o),pic=lab281Picareta_(a),axe=lab281Machado_(a),near=lab281DistOk_(a,o,1.5),oid=String(o.id||'').replace(/'/g,"\\'");
+    if((pedra&&pic)||(madeira&&axe))h=h.replace(/<button\b[^>]*>[\s\S]*?⚔️\s*Atacar[\s\S]*?<\/button>/gi,'');
+    h=h.replace(/<button\b[^>]*>[\s\S]*?⛏️\s*Minerar[\s\S]*?<\/button>/gi,'').replace(/<button\b[^>]*>[\s\S]*?🪓\s*(?:Cortar|Lenhar)[\s\S]*?<\/button>/gi,'');
+    let extra='';if(pedra&&pic)extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${oid}')" ${near?'':'disabled'}>⛏️ Minerar</button>`;if(madeira&&axe)extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${oid}')" ${near?'':'disabled'}>🪓 Lenhar</button>`;
+    return extra?h.replace('</div>',extra+'</div>'):h;
+  };window.labObjetoMicroPainelHtml_=labObjetoMicroPainelHtml_;
+}catch(e){console.warn(VER,'micro painel',e);}
+
+function instalarTudo_(){ligarControlesOficina_();instalarFerramentasVis_();restaurarUltimoMapa_();}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',instalarTudo_);else instalarTudo_();
+setTimeout(instalarTudo_,250);setTimeout(instalarTudo_,900);setTimeout(instalarTudo_,1800);setInterval(instalarTudo_,2200);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modoVis_){modoVis_='';estadoBotoes_();}},true);
+})();
+</script>
+<!-- Mesa Estelar v46.85.0 -->
+
 </body>
 </html>
