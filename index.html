@@ -32459,6 +32459,83 @@ window.labRender_=labRender_;
 window.map804HidratarMesa_=map804HidratarMesa_;
 
 setTimeout(()=>{try{if(map804HidratarMesa_()){labSalvarLocal_();labRender_();}}catch(_){}},1400);
+
+
+// ============================================================
+// V46.80.5 — hidratação direta no Firestore para referências da Mesa
+// Não depende do timing de objetosMapaDB. Cada modeloId é resolvido pelo
+// documento individual do Banco de Objetos e cacheado nesta sessão.
+// ============================================================
+const map805ModeloCache_=new Map();
+async function map805ModeloDireto_(mid){
+  mid=String(mid||'');if(!mid)return null;
+  if(map805ModeloCache_.has(mid))return map805ModeloCache_.get(mid);
+  let m=(objetosMapaDB||[]).find(x=>String(x.id)===mid)||null;
+  // Se o banco em memória parece incompleto, consulta diretamente o documento.
+  if(!m || !(Number(m.pvMax)>0) || !(Number(m.dureza)>0)){
+    try{
+      const ds=await getDoc(doc(db,'configuracoes',objetoMapaDocId_(mid)));
+      if(ds.exists()){
+        const remoto={id:mid,...ds.data()};
+        // Remoto é soberano para os campos funcionais atuais.
+        m={...(m||{}),...remoto,id:mid};
+        const i=(objetosMapaDB||[]).findIndex(x=>String(x.id)===mid);
+        if(i>=0)objetosMapaDB[i]=m; else objetosMapaDB.push(m);
+      }
+    }catch(e){console.warn('V46.80.5 modelo direto',mid,e);}
+  }
+  map805ModeloCache_.set(mid,m);return m;
+}
+function map805AplicarModelo_(o,m){
+  if(!o||!m)return false;
+  const pvMax=Math.max(0,Number(m.pvMax??m.pv??m.vidaMax??m.vida??0));
+  const dureza=Math.max(0,Number(m.dureza??m.hardness??0));
+  const peso=Math.max(0,Number(m.pesoKg??m.peso??m.weightKg??0));
+  o.modeloId=String(m.id||o.modeloId||o.objetoBancoId||'');
+  o.objetoBancoId=o.modeloId;
+  o.nome=m.nome||m.name||o.nome||o.modeloId||'Objeto';o.name=o.nome;
+  if(m.imagem||m.image)o.imagem=m.imagem||m.image;
+  o.pvMax=pvMax;o.dureza=dureza;o.pesoKg=peso;
+  o.material=m.material||o.material||'';
+  o.destrutivel=m.destrutivel!==false;o.inflamavel=!!m.inflamavel;
+  o.inflamabilidade=Math.max(0,Math.min(5,Number(m.inflamabilidade||0)));
+  o.bloqueiaMovimento=m.bloqueiaMovimento!==false;o.bloqueiaVisao=!!m.bloqueiaVisao;
+  if(m.fixoAoMapa!==undefined)o.fixoAoMapa=!!m.fixoAoMapa;
+  if(m.fonteLuz!==undefined)o.fonteLuz=!!m.fonteLuz;
+  if(m.luzLarguraM!==undefined)o.luzLarguraM=Number(m.luzLarguraM||0);
+  if(m.luzAlturaM!==undefined)o.luzAlturaM=Number(m.luzAlturaM||0);
+  if(m.luzRaioM!==undefined)o.luzRaioM=Number(m.luzRaioM||0);
+  // Uma referência recém-carregada nasce íntegra. Estado realmente destruído
+  // continua respeitado.
+  const pa=Number(o.pvAtual);
+  if(!Number.isFinite(pa) || (o.mapRef && !o.destruido && pa<=0))o.pvAtual=pvMax;
+  else o.pvAtual=Math.max(0,Math.min(pa,pvMax||pa));
+  o.dadosBanco=JSON.parse(JSON.stringify(m));
+  return true;
+}
+async function map805HidratarMesaDireto_(){
+  if(!labEstado_||!Array.isArray(labEstado_.objetosLab))return 0;
+  let n=0;
+  for(const o of labEstado_.objetosLab){
+    const mid=String(o?.modeloId||o?.objetoBancoId||'');if(!mid||mid==='imagem_importada')continue;
+    const m=await map805ModeloDireto_(mid);
+    if(map805AplicarModelo_(o,m))n++;
+  }
+  return n;
+}
+const map805LoadBase_=window.labCarregarMapaBanco_;
+if(map805LoadBase_){
+  window.labCarregarMapaBanco_=async function(){
+    const r=await map805LoadBase_.apply(this,arguments);
+    const n=await map805HidratarMesaDireto_();
+    try{labSalvarLocal_();labRender_();}catch(_){ }
+    if(n)notificar_(`Objetos reconstruídos diretamente do Banco: ${n}.`,'info',2400);
+    return r;
+  };
+}
+window.map805HidratarMesaDireto_=map805HidratarMesaDireto_;
+setTimeout(async()=>{try{const n=await map805HidratarMesaDireto_();if(n){labSalvarLocal_();labRender_();}}catch(e){console.warn('V46.80.5 hidratação inicial',e);}},1700);
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
