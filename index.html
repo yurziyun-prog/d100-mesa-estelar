@@ -739,7 +739,6 @@
                               <select id="labMapaSalvoSelect" onchange="labSelecionarMapaSalvo_(this.value)"><option value="">— nenhum —</option></select>
                             </label>
                             <button class="btn-small" onclick="labCarregarMapaBanco_()" title="Carrega o mapa selecionado sem alterar os participantes">📂 Carregar</button>
-                            <button class="btn-small btn-select" onclick="labSalvarMapaBanco_()" title="Salva o cenário atual e os objetos interativos exatamente nas posições em que estão">💾 Salvar mapa</button>
                         </div>
                         <label class="lab-control">Escala <select id="labZoom" onchange="labMudarZoom_(this.value)"><option value="36">36 px/m</option><option value="48" selected>48 px/m</option><option value="60">60 px/m</option><option value="72">72 px/m</option></select></label>
                         <label id="labEditMapToggleWrap" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid rgba(86,240,138,.35);border-radius:8px;background:rgba(86,240,138,.07);" title="Mostra ou esconde as ferramentas de criação do mapa"><input id="labModoCriarMapa" type="checkbox" onchange="labAlternarModoCriacaoMapa_(this.checked)"> 🛠️ Editar mapa</label>
@@ -786,34 +785,16 @@
                     <div id="labPlayerPrivateResult" style="display:none"></div>
                     <div id="labMetricMap" onclick="labCliqueFundoMapa_(event)" oncontextmenu="return false;" style="position:relative;width:1152px;height:672px;background-color:#d7d7d7;background-image:linear-gradient(to right,rgba(0,0,0,.15) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.15) 1px,transparent 1px);background-size:48px 48px;user-select:none;touch-action:none;"></div>
                     </div>
-                    <details id="labLiveObjectBank770" style="display:none!important;margin-top:10px;padding:9px 11px;border-radius:10px;background:#11152d;border:1px solid #34506d;">
-                      <summary style="cursor:pointer;font-weight:800;color:#cfeeff;user-select:none;list-style:revert;">Objetos do banco</summary>
-                      <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:8px 0 6px;">
-                        <label style="margin:0;display:flex;align-items:center;gap:5px;font-size:.9em;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
+                    <details id="labLiveObjectBank770" style="display:block;margin-top:8px;padding:7px 9px;border-radius:9px;background:rgba(9,15,38,.66);border:1px solid rgba(86,240,138,.25);">
+                      <summary style="cursor:pointer;font-weight:800;color:#d8ffe5;user-select:none;">🧱 Objetos do banco <span style="font-size:.72em;color:#7fdfff">v46.81.3</span></summary>
+                      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 6px;">
+                        <label style="margin:0;display:flex;align-items:center;gap:5px;"><input id="labLiveObjAll770" type="checkbox"> Selecionar todos</label>
+                        <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()">➕ Adicionar marcados</button>
+                        <small style="color:#9fb8c9">Os objetos entram no centro do mapa com PV, dureza, fogo e demais propriedades do banco.</small>
                       </div>
-                      <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-height:170px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:7px;"></div>
-                      <button class="btn-small btn-select" onclick="labLiveAdicionarObjetos770_()" style="margin-top:8px;">＋ Adicionar marcados</button>
+                      <div id="labLiveObjectList770" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px;"></div>
                     </details>
-                    
-                    <!-- V46.81.2: painel NOVO, independente do painel legado -->
-                    <details id="mesaObjectBank8112" style="display:block;margin-top:12px;padding:9px 11px;border-radius:10px;background:#11152d;border:1px solid #34506d;">
-                      <summary style="cursor:pointer;font-weight:800;color:#cfeeff;user-select:none;list-style:revert;">
-                        🧱 Objetos do banco <span style="font-size:.72em;color:#7fdfff;font-weight:600;">v46.81.2</span>
-                      </summary>
-                      <div id="mesaObjectBankBody8112" style="padding-top:7px;">
-                        <div style="display:flex;justify-content:flex-end;align-items:center;gap:8px;margin:0 0 6px;">
-                          <label style="margin:0;display:flex;align-items:center;gap:5px;font-size:.9em;">
-                            <input id="mesaObjectAll8112" type="checkbox"> Selecionar todos
-                          </label>
-                        </div>
-                        <div id="mesaObjectList8112" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:4px;max-height:170px;overflow:auto;padding:5px;border:1px solid rgba(255,255,255,.10);border-radius:7px;">
-                          <div style="color:#91a5c7;padding:6px;">Carregando objetos…</div>
-                        </div>
-                        <button class="btn-small btn-select" onclick="mesaObj8112Adicionar_()" style="margin-top:8px;">＋ Adicionar marcados</button>
-                      </div>
-                    </details>
-
-                    <div id="labHistoricoMesa" style="display:none;margin-top:22px;padding:10px 12px;border-radius:10px;background:rgba(8,12,29,.68);border:1px solid rgba(0,212,255,.22);max-height:210px;overflow:auto;"></div>
+                    <div id="labHistoricoMesa" style="display:none;margin-top:10px;padding:10px 12px;border-radius:10px;background:rgba(8,12,29,.68);border:1px solid rgba(0,212,255,.22);max-height:210px;overflow:auto;"></div>
                     <div style="margin-top:8px;color:#888;font-size:.88em;">Área padrão: 28 m × 14 m. As linhas de 1 m servem apenas como régua visual. O token pode parar em qualquer ponto.</div>
                 </div>
             </div>
@@ -3007,6 +2988,7 @@ async function carregarBancosDeDados() {
             }else objetosMapaDB=Array.isArray(idx?.lista)?idx.lista:[];
         }catch(e){console.warn('Banco de objetos de mapa indisponível:',e);objetosMapaDB=[];}
         garantirObjetosMapaPadrao_();
+        try{labLiveRenderObjectBank770_();}catch(e){console.warn('Painel objetos Mesa v46.81.3',e);}
     }
     if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'npcs'));npcsDB=[];q.forEach(d=>npcsDB.push({id:d.id,...d.data()}));}catch(e){console.warn(e);}}
     if(userData?.role==='mestre'){try{let q=await getDocs(collection(db,'criaturas'));criaturasDB=[];q.forEach(d=>criaturasDB.push({id:d.id,...d.data()}));}catch(e){console.warn('Banco de criaturas indisponível:',e);criaturasDB=[];}}
@@ -9128,12 +9110,8 @@ function labMapaDadosAtuais_(nome,id=''){
         corGrade:String(labEstado_.corGrade||'#777777'),
         gradeVisivel:labEstado_.gradeVisivel!==false,
         textura:String(labEstado_.textura||'nenhuma'),
-        pxPorMetro:Number(labEstado_.pxPorMetro||48),
         desenhos:labDesenhoSnapshot_(),
         objetos:JSON.parse(JSON.stringify(labEstado_.objetosLab||[])),
-        // O cenário da Oficina 2 continua sendo salvo como camada visual separada.
-        // Objetos interativos são persistidos acima em `objetos`, já como instâncias completas da Mesa.
-        oficina2State:labEstado_.oficina2State?JSON.parse(JSON.stringify(labEstado_.oficina2State)):null,
         criadoPor:currentUserUid||'',
         atualizadoEm:new Date().toISOString()
     };
@@ -30542,6 +30520,11 @@ function gm2panelHtml(){
    </aside>
    <div id="gm2viewport"><svg id="gm2svg"></svg></div>
  </div>
+ <div id="gm2bank">
+   <div class="gm2-bankhead"><b>Objetos do banco</b><label><input id="gm2allobj" type="checkbox"> Selecionar todos</label></div>
+   <div id="gm2objlist"></div>
+   <button id="gm2addobj">＋ Adicionar marcados</button>
+ </div>
  <div id="gm2status"></div>`;
 }
 
@@ -30549,7 +30532,6 @@ function gm2css(){
  if(document.getElementById('gm2css'))return;
  const st=document.createElement('style');st.id='gm2css';st.textContent=`
  #gm-sub-oficina2{--g2:#67e8f9;--g2b:#11152d}
- #gm2bank,#gm580ObjectBank,#gm580AddObjects,#gm2objlist,#gm2addobj{display:none!important}
  #gm-sub-oficina2 button,#gm-sub-oficina2 select,#gm-sub-oficina2 input{font:inherit}
  .gm2-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-bottom:10px}
  .gm2-head h3{margin:0 0 3px;color:#8feaff}.gm2-head h3 span{font-size:.55em;color:#ffcf67;border:1px solid #80651f;border-radius:10px;padding:2px 6px}
@@ -32312,9 +32294,10 @@ function labLiveRenderObjectBank770_(){
  box.style.display=batalhaEhMestre_()?'block':'none';
  if(!batalhaEhMestre_())return;
  garantirObjetosMapaPadrao_();
- const lista=[...(objetosMapaDB||[])].sort((a,b)=>String(a.nome||a.id||'').localeCompare(String(b.nome||b.id||''),'pt-BR',{sensitivity:'base'}));
- list.innerHTML=lista.map(o=>{
-   return `<label title="${escaparHtmlInventario_(o.nome||o.id)}" style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px;min-height:24px;overflow:hidden;"><input class="lab-live-obj-check770" type="checkbox" value="${escaparHtmlInventario_(o.id)}"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escaparHtmlInventario_(o.nome||o.id)}</span></label>`;
+ const listaMesa813=[...(objetosMapaDB||[])].sort((a,b)=>String(a.nome||a.id||'').localeCompare(String(b.nome||b.id||''),'pt-BR',{sensitivity:'base'}));
+ list.innerHTML=listaMesa813.map(o=>{
+   const pv=Number(o.pvMax||0),du=Number(o.dureza||0),infl=o.inflamavel?'🔥':'',img=o.imagem||'';
+   return `<label title="${escaparHtmlInventario_(o.nome||o.id)}"><input class="lab-live-obj-check770" type="checkbox" value="${escaparHtmlInventario_(o.id)}">${img?`<img src="${escaparHtmlInventario_(img)}" draggable="false">`:''}<span class="lab-live-obj-meta770"><div class="lab-live-obj-name770">${escaparHtmlInventario_(o.nome||o.id)}</div><small>PV ${pv} · Dur ${du} ${infl}</small></span></label>`;
  }).join('');
  const all=document.getElementById('labLiveObjAll770');
  if(all&&!all.dataset.wired){all.dataset.wired='1';all.addEventListener('change',()=>document.querySelectorAll('.lab-live-obj-check770').forEach(c=>c.checked=all.checked));}
@@ -32662,6 +32645,14 @@ window.labCarregarMapaBanco_=async function(){
   else notificar_(`✅ Mapa “${m.nome||m.id}” carregado · ${rr.ok} objeto(s) funcionais do Banco.`,'sucesso',3800);
 };
 window.map807CarregarRefsNaMesa_=map807CarregarRefsNaMesa_;
+
+// V46.81.3 — refresco do painel dentro do MESMO módulo de objetosMapaDB.
+document.addEventListener('toggle',function(ev){
+  if(ev.target?.id==='labLiveObjectBank770' && ev.target.open){
+    try{labLiveRenderObjectBank770_();}catch(e){console.warn('Abrir banco Mesa 46.81.3',e);}
+  }
+},true);
+
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -32894,391 +32885,11 @@ if(typeof labRender_==='function'){
  labRender_=function(){try{mat800HidratarMesa_();}catch(_){}return labRenderBase.apply(this,arguments);};window.labRender_=labRender_;
 }
 
-
 mat800Lista_=mat800LerLocal_();if(!mat800Lista_.length)mat800Lista_=MAT800_DEFAULTS_.slice();
 setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
 })();
-
-// ============================================================
-// V46.80.9 — Banco de Objetos VISÍVEL diretamente na Mesa
-// Instalação independente de labRender_: não depende da cadeia de wrappers.
-// ============================================================
-(function(){
-  function bancoMesa809EhMestre_(){
-    try{ if(typeof batalhaEhMestre_==='function' && batalhaEhMestre_()) return true; }catch(_){}
-    try{ return String(userData?.role||'').toLowerCase()==='mestre'; }catch(_){ return false; }
-  }
-  function bancoMesa809Esc_(v){
-    try{return escaparHtmlInventario_(String(v??''));}catch(_){return String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-  }
-  function bancoMesa809Montar_(){
-    const box=document.getElementById('labLiveObjectBank770');
-    const list=document.getElementById('labLiveObjectList770');
-    const hist=document.getElementById('labHistoricoMesa');
-    if(!box||!list)return;
-
-    const master=bancoMesa809EhMestre_();
-    box.style.display=master?'block':'none';
-    if(!master)return;
-
-    // Garante posição imediatamente depois do mapa e antes do Histórico.
-    if(hist && box.nextElementSibling!==hist){
-      hist.parentNode.insertBefore(box,hist);
-    }
-
-    const arr=[...(typeof objetosMapaDB!=='undefined'&&Array.isArray(objetosMapaDB)?objetosMapaDB:[])];
-    arr.sort((a,b)=>String(a?.nome||a?.id||'').localeCompare(String(b?.nome||b?.id||''),'pt-BR',{sensitivity:'base'}));
-    const marcados=new Set([...list.querySelectorAll('input:checked')].map(x=>String(x.value)));
-    list.innerHTML=arr.map(o=>`<label title="${bancoMesa809Esc_(o.nome||o.id)}" style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px;min-height:24px;overflow:hidden;"><input class="lab-live-obj-check770" type="checkbox" value="${bancoMesa809Esc_(o.id)}" ${marcados.has(String(o.id))?'checked':''}><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${bancoMesa809Esc_(o.nome||o.id)}</span></label>`).join('');
-
-    const all=document.getElementById('labLiveObjAll770');
-    if(all && all.dataset.v809!=='1'){
-      all.dataset.v809='1';
-      all.addEventListener('change',()=>document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770').forEach(c=>c.checked=all.checked));
-    }
-  }
-
-  // Atualiza ao abrir a aba da Mesa e quando o banco termina de chegar do Firebase.
-  document.addEventListener('click',ev=>{
-    const tab=ev.target.closest?.('#laboratorioTabBtn');
-    if(tab)setTimeout(bancoMesa809Montar_,0);
-  },true);
-  document.addEventListener('toggle',ev=>{
-    if(ev.target?.id==='labLiveObjectBank770' && ev.target.open)bancoMesa809Montar_();
-  },true);
-
-  // O banco pode carregar depois da interface. Pequena janela de sincronização, depois para.
-  let tentativas=0;
-  const timer=setInterval(()=>{
-    bancoMesa809Montar_();
-    if(++tentativas>=20)clearInterval(timer);
-  },500);
-  setTimeout(bancoMesa809Montar_,0);
-})();
-
-
-// ============================================================
-// V46.81.0 — MODO DE EMERGÊNCIA ESTÁVEL PARA A SESSÃO
-// Oficina 2 = cenário visual. Mapa da Mesa = entidades funcionais.
-// Não converte mais objetos da Oficina 2 em objetos de combate.
-// ============================================================
-(function(){
-  const MESA_ENT_FIELD_='mesaEntitiesV1';
-  let mesaEnt810Carregando_=false;
-
-  function mesaEnt810Mestre_(){
-    // Durante o bootstrap userData pode ainda não existir. Só tratamos como jogador
-    // quando o papel estiver explicitamente carregado como 'jogador'. Isso evita
-    // esconder o painel do mestre antes da autenticação terminar.
-    try{
-      if(typeof userData==='undefined' || !userData || !userData.role) return true;
-      return userData.role==='mestre';
-    }catch(_){return true;}
-  }
-  function mesaEnt810MapaId_(){
-    const sel=document.getElementById('labMapaSalvoSelect');
-    return String((typeof labMapaSelecionado_!=='undefined'&&labMapaSelecionado_)||sel?.value||'').trim();
-  }
-  function mesaEnt810Clone_(v){return JSON.parse(JSON.stringify(v));}
-  function mesaEnt810ModeloLocal_(id){
-    return (objetosMapaDB||[]).find(m=>String(m.id)===String(id))||null;
-  }
-  async function mesaEnt810Modelo_(id){
-    id=String(id||'').trim(); if(!id)return null;
-    const local=mesaEnt810ModeloLocal_(id); if(local)return local;
-    try{
-      const snap=await getDoc(doc(db,'configuracoes',objetoMapaDocId_(id)));
-      if(snap.exists()){
-        const m={id,...snap.data()};
-        if(!(objetosMapaDB||[]).some(x=>String(x.id)===id))objetosMapaDB.push(m);
-        return m;
-      }
-    }catch(e){console.warn('[Mesa entities] modelo',id,e);}
-    return null;
-  }
-  function mesaEnt810Criar_(modelo,inst={}){
-    const m=mesaEnt810Clone_(modelo||{});
-    const pvMax=Number(inst.pvMax ?? m.pvMax ?? 0);
-    return {
-      ...m,
-      dadosBanco:mesaEnt810Clone_(m),
-      id:String(inst.id||`obj:${Date.now()}:${Math.floor(Math.random()*100000)}`),
-      modeloId:String(m.id||inst.modeloId||''),
-      objetoBancoId:String(m.id||inst.modeloId||''),
-      nome:m.nome||m.name||m.id||'Objeto',
-      name:m.name||m.nome||m.id||'Objeto',
-      x:Number(inst.x ?? 0), y:Number(inst.y ?? 0),
-      larguraM:Number(inst.larguraM ?? m.larguraM ?? 1),
-      alturaM:Number(inst.alturaM ?? m.alturaM ?? 1),
-      angulo:Number(inst.angulo ?? 0),
-      pvMax,
-      pvAtual:Number(inst.pvAtual ?? pvMax),
-      dureza:Number(inst.dureza ?? m.dureza ?? 0),
-      pesoKg:Number(inst.pesoKg ?? m.pesoKg ?? 0),
-      material:inst.material ?? m.material ?? '',
-      destrutivel:inst.destrutivel ?? (m.destrutivel!==false),
-      inflamavel:inst.inflamavel ?? !!m.inflamavel,
-      inflamabilidade:Number(inst.inflamabilidade ?? m.inflamabilidade ?? 0),
-      bloqueiaMovimento:inst.bloqueiaMovimento ?? (m.bloqueiaMovimento!==false),
-      bloqueiaVisao:inst.bloqueiaVisao ?? !!m.bloqueiaVisao,
-      destruido:!!inst.destruido,
-      pegandoFogoLab:!!inst.pegandoFogoLab,
-      fogoUltimaRodadaLab:Number(inst.fogoUltimaRodadaLab ?? -1),
-      ligado:inst.ligado ?? m.ligado ?? false,
-      origemMesaEntidadesV1:true
-    };
-  }
-  function mesaEnt810Serializar_(o){
-    const modeloId=String(o?.modeloId||o?.objetoBancoId||o?.dadosBanco?.id||'');
-    if(!modeloId)return null;
-    return {
-      id:String(o.id||''),modeloId,
-      x:Number(o.x||0),y:Number(o.y||0),
-      larguraM:Number(o.larguraM||1),alturaM:Number(o.alturaM||1),angulo:Number(o.angulo||0),
-      pvAtual:Number(o.pvAtual ?? o.pvMax ?? 0),
-      destruido:!!o.destruido,pegandoFogoLab:!!o.pegandoFogoLab,
-      fogoUltimaRodadaLab:Number(o.fogoUltimaRodadaLab ?? -1),
-      ligado:!!o.ligado
-    };
-  }
-  async function mesaEnt810HidratarLista_(lista){
-    const out=[],faltando=[];
-    for(const inst of (Array.isArray(lista)?lista:[])){
-      const modelo=await mesaEnt810Modelo_(inst?.modeloId);
-      if(!modelo){faltando.push(String(inst?.modeloId||'?'));continue;}
-      out.push(mesaEnt810Criar_(modelo,inst));
-    }
-    if(faltando.length)notificar_(`⚠️ Modelos não encontrados: ${[...new Set(faltando)].join(', ')}`,'aviso',6500);
-    return out;
-  }
-
-  // O banco da Mesa é uma interface do mestre e fica sempre entre mapa e histórico.
-  function mesaEnt810MontarBanco_(){
-    const box=document.getElementById('labLiveObjectBank770'),list=document.getElementById('labLiveObjectList770'),hist=document.getElementById('labHistoricoMesa');
-    if(!box||!list)return;
-    const master=mesaEnt810Mestre_();
-    box.style.setProperty('display',master?'block':'none','important');
-    if(!master)return;
-    if(hist&&box.nextElementSibling!==hist)hist.parentNode.insertBefore(box,hist);
-    const marcados=new Set([...list.querySelectorAll('input:checked')].map(x=>String(x.value)));
-    const arr=[...(objetosMapaDB||[])].sort((a,b)=>String(a.nome||a.id||'').localeCompare(String(b.nome||b.id||''),'pt-BR',{sensitivity:'base'}));
-    list.innerHTML=arr.map(o=>`<label style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px;min-height:24px;overflow:hidden"><input class="lab-live-obj-check770" type="checkbox" value="${escaparHtmlInventario_(o.id)}" ${marcados.has(String(o.id))?'checked':''}><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escaparHtmlInventario_(o.nome||o.id)}</span></label>`).join('');
-    const all=document.getElementById('labLiveObjAll770');
-    if(all&&!all.dataset.ent810){all.dataset.ent810='1';all.onchange=()=>document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770').forEach(c=>c.checked=all.checked);}
-    if(hist)hist.style.marginTop='28px';
-  }
-
-  // Adicionar objetos agora é exclusivamente Mesa -> construtor funcional.
-  window.labLiveAdicionarObjetos770_=function(){
-    if(!mesaEnt810Mestre_())return;
-    const ids=[...document.querySelectorAll('#labLiveObjectList770 .lab-live-obj-check770:checked')].map(c=>String(c.value));
-    if(!ids.length){notificar_('Marque pelo menos um objeto do banco.','aviso',2500);return;}
-    labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
-    let off=0,last=null,adicionados=0;
-    for(const id of ids){
-      const m=mesaEnt810ModeloLocal_(id); if(!m)continue;
-      const inst=mesaEnt810Criar_(m,{x:Math.max(0,Math.min(labEstado_.larguraM,labEstado_.larguraM/2+off)),y:Math.max(0,Math.min(labEstado_.alturaM,labEstado_.alturaM/2+off))});
-      labEstado_.objetosLab.push(inst); last=inst; off+=.35; adicionados++;
-    }
-    if(last){labEstado_.objetoSelecionadoId=last.id;labEstado_.selecionadoId='';}
-    labSalvarLocal_();try{labAgendarSyncRemoto_();}catch(_){}labRender_();
-    notificar_(`${adicionados} objeto(s) funcional(is) adicionado(s) à Mesa.`,'sucesso',2600);
-  };
-
-  // Salva SOMENTE a camada de entidades no cabeçalho do mapa. Não toca no cenário da Oficina 2.
-  window.labSalvarMapaBanco_=async function(){
-    if(!mesaEnt810Mestre_())return;
-    const id=mesaEnt810MapaId_();
-    if(!id){notificar_('Selecione primeiro o mapa ao qual estes objetos pertencem.','aviso',4200);return;}
-    const entidades=(labEstado_.objetosLab||[]).map(mesaEnt810Serializar_).filter(Boolean);
-    try{
-      await setDoc(doc(db,'mapas',id),{[MESA_ENT_FIELD_]:entidades,mesaEntitiesAtualizadoEm:new Date().toISOString()},{merge:true});
-      const base=(mapasDB||[]).find(m=>String(m.id)===id);if(base)base[MESA_ENT_FIELD_]=mesaEnt810Clone_(entidades);
-      localStorage.setItem('mesa_estelar_ultimo_mapa_mesa_v1',id);
-      notificar_(`💾 ${entidades.length} objeto(s) interativo(s) salvo(s) neste mapa.`,'sucesso',4200);
-    }catch(e){console.error('[Mesa entities] salvar',e);notificar_(`Não foi possível salvar os objetos da Mesa. ${e?.message||''}`,'erro',7000);}
-  };
-
-  // Carregador direto: Oficina 2 fornece apenas o cenário; entidades vêm do campo separado.
-  window.labCarregarMapaBanco_=async function(){
-    if(mesaEnt810Carregando_)return;
-    const id=mesaEnt810MapaId_();
-    if(!id){notificar_('Selecione um mapa salvo.','aviso');return;}
-    mesaEnt810Carregando_=true;
-    try{
-      let base=(mapasDB||[]).find(x=>String(x.id)===id);
-      if(!base){notificar_('Mapa não encontrado no banco.','erro',4500);return;}
-      try{const ds=await getDoc(doc(db,'mapas',id));if(ds.exists())base={...base,...ds.data(),id};}catch(e){console.warn('[Mesa entities] cabeçalho',e);}
-      let m=base;try{m=await labMapaHidratar_(base);}catch(e){console.error(e);notificar_('Não foi possível carregar os dados completos do cenário.','erro',6000);return;}
-
-      labMapaSelecionado_=id;const sel=document.getElementById('labMapaSalvoSelect');if(sel)sel.value=id;
-      labEstado_.larguraM=Math.max(4,Number(m.larguraM||28));labEstado_.alturaM=Math.max(4,Number(m.alturaM||14));
-      labEstado_.fundo=String(m.fundo||'#d7d7d7');labEstado_.corGrade=String(m.corGrade||'#777777');labEstado_.gradeVisivel=m.gradeVisivel!==false;labEstado_.textura=String(m.textura||'nenhuma');
-      labEstado_.oficina2State=m.oficina2State?mesaEnt810Clone_(m.oficina2State):null;
-      if(m.oficina2State&&m.pxPorMetro)labEstado_.pxPorMetro=Number(m.pxPorMetro)||labEstado_.pxPorMetro;
-      labEstado_.desenhosLab=m.oficina2State?[]:mesaEnt810Clone_(m.desenhos||[]);labEstado_.formasLab=m.oficina2State?[]:mesaEnt810Clone_(m.formas||[]);
-
-      // ESSENCIAL: não importa nenhum objeto funcional vindo da Oficina 2.
-      // Somente a camada salva diretamente pela Mesa é reconstruída.
-      const entidadesRaw=Array.isArray(base[MESA_ENT_FIELD_])?base[MESA_ENT_FIELD_]:[];
-      labEstado_.objetosLab=await mesaEnt810HidratarLista_(entidadesRaw);
-      labEstado_.objetoSelecionadoId='';
-      for(const t of (labEstado_.tokens||[])){t.x=Math.max(0,Math.min(labEstado_.larguraM,Number(t.x||0)));t.y=Math.max(0,Math.min(labEstado_.alturaM,Number(t.y||0)));}
-      try{labDesenhoUndo_=[];labDesenhoRedo_=[];}catch(_){}
-      labSalvarLocal_();try{labAgendarSyncRemoto_();}catch(_){}labRender_();
-      localStorage.setItem('mesa_estelar_ultimo_mapa_mesa_v1',id);
-      notificar_(`Mapa “${m.nome||id}” carregado · ${labEstado_.objetosLab.length} objeto(s) interativo(s).`,'sucesso',4200);
-      mesaEnt810MontarBanco_();
-    }finally{mesaEnt810Carregando_=false;}
-  };
-
-  // A Oficina 2 não oferece mais o banco de objetos interativos.
-  function mesaEnt810OcultarBancoOficina_(){
-    const bank=document.getElementById('gm580ObjectBank');
-    if(bank){const parent=bank.parentElement;if(parent)parent.style.display='none';bank.style.display='none';}
-    document.querySelectorAll('#gm580Toolbar button').forEach(b=>{if((b.getAttribute('onclick')||'').includes('gm580AddObjects_'))b.style.display='none';});
-  }
-
-  // Mantém o painel vivo quando abas/renders antigos mexerem no DOM.
-  const observer=new MutationObserver(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();});
-  observer.observe(document.body,{childList:true,subtree:true});
-  document.addEventListener('toggle',e=>{if(e.target?.id==='labLiveObjectBank770'&&e.target.open)mesaEnt810MontarBanco_();},true);
-  document.addEventListener('click',()=>setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},0),true);
-  setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},0);
-  setTimeout(()=>{mesaEnt810MontarBanco_();mesaEnt810OcultarBancoOficina_();},1200);
-  // Revalida após o bootstrap da autenticação. Jogadores têm o painel ocultado;
-  // mestre permanece com o <details> visível e expansível.
-  let mesaEnt810RoleChecks_=0;
-  const mesaEnt810RoleTimer_=setInterval(()=>{
-    mesaEnt810MontarBanco_();
-    if(++mesaEnt810RoleChecks_>=20 || (typeof userData!=='undefined' && userData?.role)) clearInterval(mesaEnt810RoleTimer_);
-  },500);
-})();
-
-// ============================================================
-// V46.81.2 — PAINEL ESTÁTICO REAL DE OBJETOS DA MESA
-// IDs totalmente novos: nenhum patch legado conhece este painel.
-// ============================================================
-(function(){
-  function mesa8112EhMestre_(){
-    try{
-      if(typeof batalhaEhMestre_==='function' && batalhaEhMestre_()) return true;
-    }catch(_){}
-    try{
-      // Durante bootstrap não escondemos. Só ocultamos quando o papel
-      // estiver explicitamente conhecido e não for mestre.
-      if(typeof userData==='undefined' || !userData || !userData.role) return true;
-      return String(userData.role).toLowerCase()==='mestre';
-    }catch(_){ return true; }
-  }
-
-  function mesa8112Esc_(v){
-    try{return escaparHtmlInventario_(String(v??''));}
-    catch(_){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-  }
-
-  function mesa8112Render_(){
-    const box=document.getElementById('mesaObjectBank8112');
-    const list=document.getElementById('mesaObjectList8112');
-    if(!box||!list)return;
-
-    const master=mesa8112EhMestre_();
-    box.style.setProperty('display', master ? 'block' : 'none', 'important');
-    if(!master)return;
-
-    let arr=[];
-    try{
-      if(typeof garantirObjetosMapaPadrao_==='function')garantirObjetosMapaPadrao_();
-      arr=[...(Array.isArray(objetosMapaDB)?objetosMapaDB:[])];
-    }catch(_){}
-
-    arr.sort((a,b)=>String(a?.nome||a?.id||'').localeCompare(String(b?.nome||b?.id||''),'pt-BR',{sensitivity:'base'}));
-
-    const marcados=new Set([...list.querySelectorAll('input.mesa-obj-8112:checked')].map(x=>String(x.value)));
-    list.innerHTML=arr.length ? arr.map(o=>`
-      <label title="${mesa8112Esc_(o.nome||o.id)}"
-        style="display:flex;align-items:center;gap:5px;font-size:.83em;padding:3px 4px;background:rgba(255,255,255,.035);border-radius:4px;min-height:24px;overflow:hidden;">
-        <input class="mesa-obj-8112" type="checkbox" value="${mesa8112Esc_(o.id)}" ${marcados.has(String(o.id))?'checked':''}>
-        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${mesa8112Esc_(o.nome||o.id)}</span>
-      </label>`).join('')
-      : '<div style="color:#91a5c7;padding:6px;">Banco ainda carregando…</div>';
-
-    const all=document.getElementById('mesaObjectAll8112');
-    if(all && !all.dataset.wired){
-      all.dataset.wired='1';
-      all.addEventListener('change',()=>{
-        document.querySelectorAll('#mesaObjectList8112 .mesa-obj-8112').forEach(c=>c.checked=all.checked);
-      });
-    }
-  }
-
-  window.mesaObj8112Adicionar_=function(){
-    if(!mesa8112EhMestre_())return;
-    const ids=[...document.querySelectorAll('#mesaObjectList8112 .mesa-obj-8112:checked')].map(c=>String(c.value));
-    if(!ids.length){
-      try{notificar_('Marque pelo menos um objeto do banco.','aviso',2500);}catch(_){}
-      return;
-    }
-
-    if(!Array.isArray(labEstado_.objetosLab))labEstado_.objetosLab=[];
-    let off=0,last=null,adicionados=0;
-
-    for(const id of ids){
-      const m=(objetosMapaDB||[]).find(o=>String(o.id)===id);
-      if(!m)continue;
-
-      const snap=JSON.parse(JSON.stringify(m));
-      const pv=Math.max(0,Number(m.pvMax??m.pv??0));
-      const inst={
-        ...snap,
-        dadosBanco:snap,
-        id:`obj:${Date.now()}:${Math.floor(Math.random()*100000)}:${adicionados}`,
-        modeloId:String(m.id),
-        objetoBancoId:String(m.id),
-        nome:m.nome||m.name||m.id||'Objeto',
-        name:m.name||m.nome||m.id||'Objeto',
-        x:Math.max(0,Math.min(Number(labEstado_.larguraM||28),Number(labEstado_.larguraM||28)/2+off)),
-        y:Math.max(0,Math.min(Number(labEstado_.alturaM||14),Number(labEstado_.alturaM||14)/2+off)),
-        angulo:0,
-        pvMax:pv,
-        pvAtual:pv,
-        dureza:Math.max(0,Number(m.dureza??0)),
-        pesoKg:Math.max(0,Number(m.pesoKg??m.peso??0)),
-        destruido:false,
-        pegandoFogoLab:false,
-        fogoUltimaRodadaLab:-1
-      };
-      labEstado_.objetosLab.push(inst);
-      last=inst;off+=.35;adicionados++;
-    }
-
-    if(last){
-      labEstado_.objetoSelecionadoId=last.id;
-      labEstado_.selecionadoId='';
-    }
-    try{labSalvarLocal_();}catch(_){}
-    try{labAgendarSyncRemoto_();}catch(_){}
-    try{labRender_();}catch(_){}
-    try{notificar_(`${adicionados} objeto(s) adicionado(s) diretamente à Mesa.`,'sucesso',2500);}catch(_){}
-  };
-
-  // A posição é estática no HTML. Este código SOMENTE popula/oculta por papel.
-  document.addEventListener('toggle',e=>{
-    if(e.target?.id==='mesaObjectBank8112' && e.target.open)mesa8112Render_();
-  },true);
-
-  let checks=0;
-  const timer=setInterval(()=>{
-    mesa8112Render_();
-    if(++checks>=30)clearInterval(timer);
-  },400);
-  document.addEventListener('DOMContentLoaded',mesa8112Render_,{once:true});
-  setTimeout(mesa8112Render_,0);
-})();
-
 </script>
 <!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
 
-<!-- Mesa Estelar v46.80.8: objetos interativos passam a ser adicionados/salvos diretamente no Mapa da Mesa; banco removido da Oficina 2 -->
 </body>
 </html>
