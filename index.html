@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.76.2 ===== */
+/* ===== V46.76.3 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.76.2 ===== */
+/* ===== V46.76.3 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -22128,7 +22128,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.2 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.76.3 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22287,7 +22287,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.76.2
+// V46.76.3
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22644,7 +22644,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.2
+// V46.76.3
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22929,7 +22929,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.2 — Oficina: estilos de traço exclusivos + prévia real
+// V46.76.3 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -23005,7 +23005,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.76.2
+// V46.76.3
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23090,7 +23090,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.76.2 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.76.3 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23231,7 +23231,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.2 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.76.3 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23473,7 +23473,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.76.2 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.76.3 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23632,7 +23632,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.2 — Oficina simplificada
+// V46.76.3 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23977,7 +23977,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.2 — Oficina: objetos realmente opacos + painel de camadas
+// V46.76.3 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24150,7 +24150,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.2 — Oficina: composição real por ordem de adição
+// V46.76.3 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24373,7 +24373,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.76.2',e);}
+    }catch(e){console.warn('Oficina v46.76.3',e);}
     return r;
 };
 
@@ -24383,7 +24383,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.76.2 — REFORMA DA OFICINA
+// V46.76.3 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25136,8 +25136,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.76.2 — reconstrução limpa da barra da Oficina
-// Base: 46.76.2 funcional. Não usa varredura agressiva do DOM.
+// V46.76.3 — reconstrução limpa da barra da Oficina
+// Base: 46.76.3 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25366,8 +25366,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.76.2 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.76.2
+// V46.76.3 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.76.3
 // ============================================================
 
 const gm580_ = {
@@ -26034,14 +26034,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.76.2 — OFICINA REESTRUTURADA
+// V46.76.3 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.76.2'
+  version:'46.76.3'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26265,7 +26265,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.76.2 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.76.3 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26357,7 +26357,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — Oficina realmente única
+// V46.76.3 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26413,7 +26413,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — edição persistente de formas/objetos + histórico completo
+// V46.76.3 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26818,7 +26818,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — estados separados, undo/redo real, sombra persistente,
+// V46.76.3 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27233,7 +27233,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.76.3 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27371,7 +27371,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.76.3 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27826,7 +27826,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — layout da Oficina baseado no mockup do usuário
+// V46.76.3 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -28064,7 +28064,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — corrige aplicação real do layout 46.65
+// V46.76.3 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -28077,7 +28077,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.76.2: falha ao substituir bindings',e);
+    console.warn('Oficina 46.76.3: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -28100,7 +28100,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.76.2 rebuild',e);
+      console.warn('Oficina 46.76.3 rebuild',e);
     }
   }
 
@@ -28125,7 +28125,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — arrumação visual da Oficina
+// V46.76.3 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28236,7 +28236,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — remove conta-gotas extras e coloca HEX compacto
+// V46.76.3 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28313,7 +28313,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — estabilização funcional da Oficina
+// V46.76.3 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28777,7 +28777,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.2 — OFICINA 2 EXPERIMENTAL
+// V46.76.3 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -30075,7 +30075,7 @@ class RPGTextureGenerator {
 
 
 
-// V46.76.2 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
+// V46.76.3 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
 // IMPORTANTE: RPGTextureGenerator usa this.canvas.width/height; ele não possui this.w/this.h.
 RPGTextureGenerator.prototype.textureFloresta=function(){
  const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
@@ -31146,7 +31146,7 @@ setTimeout(gm2installTab,900);
 
 
 // ============================================================
-// V46.76.2 — correções finais desta rodada
+// V46.76.3 — correções finais desta rodada
 // ============================================================
 
 // Um alvo explicitamente escolhido nunca deve ser trocado por "primeiro alvo válido"
@@ -31195,7 +31195,7 @@ try{
 
 
 // ============================================================
-// V46.76.2 — rollback seguro + alvo de objetos endurecido
+// V46.76.3 — rollback seguro + alvo de objetos endurecido
 // ============================================================
 
 // A integração experimental da Oficina 2 no Mapa da Mesa foi retirada desta versão.
@@ -31247,7 +31247,7 @@ window.labCliqueFundoMapa_=function(ev){
 };
 
 // ============================================================
-// V46.76.2
+// V46.76.3
 // seta temporária + risco persistente + controle PJ pelo mestre
 // + alcance recortado + alvo destruído preservado + painel compacto
 // ============================================================
@@ -31486,7 +31486,7 @@ window.labRender_=labRender_;
 setTimeout(()=>{try{labAtualizarControlePJ760_();labQuickToolsUpdate760_();labQuickRender760_();}catch(_){}},800);
 
 // ============================================================
-// V46.76.2 — alvo mais recente vence
+// V46.76.3 — alvo mais recente vence
 // O erro anterior era um "alvo pegajoso": objetoSelecionadoId antigo continuava
 // tendo prioridade mesmo depois de o usuário escolher outro alvo.
 // ============================================================
@@ -31566,7 +31566,7 @@ window.labRolarAtaque_=function(){
 };
 
 // ============================================================
-// V46.76.2 — objetos da Oficina 2 preservam propriedades de combate
+// V46.76.3 — objetos da Oficina 2 preservam propriedades de combate
 // ============================================================
 function gm2EnriquecerObjetosBanco762_(st){
  if(!st?.elements)return st;
@@ -31619,6 +31619,237 @@ if(labLoad762Base_)window.labCarregarMapaBanco_=async function(){
  }
  return r;
 };
+
+// ============================================================
+// V46.76.3 — alvo SOMENTE pelo mapa + objetos Oficina 2 funcionais
+// + fogo/morte visuais robustos
+// ============================================================
+
+// 1) "Objeto" não pode depender do prefixo do ID.
+// Os objetos vindos da Oficina 2 usam IDs próprios, portanto o teste antigo
+// startsWith('obj:') os tratava como se não fossem objetos.
+labEhAlvoObjeto_=function(a){
+    if(!a||a.id==null)return false;
+    return !!labObjetoPorId_(String(a.id));
+};
+
+// 2) Em combate, clicar/pressionar um objeto serve para SELECIONAR o alvo.
+// Arrastar objetos diretamente fica reservado à preparação, evitando que o
+// pointerdown do mestre engula o clique da árvore.
+const labObjetoPointerDown763Base_=window.labObjetoPointerDown_;
+window.labObjetoPointerDown_=function(ev,id){
+    if(labEstado_.fase==='combate'&&!labEstado_.modoCriacaoMapa){
+        ev.preventDefault();ev.stopPropagation();
+        labSelecionarObjeto_(id);
+        return;
+    }
+    return labObjetoPointerDown763Base_.apply(this,arguments);
+};
+
+function labMarcarAlvoMapa763_(id){
+    const ator=labTokenAtual_();if(!ator)return;
+    const alvo=labAlvoAtaquePorId_(id);
+    if(!alvo||String(alvo.id)===String(ator.id))return;
+    ator.alvoLab=String(alvo.id);
+    ator._alvoManualFixadoLab=String(alvo.id);
+    ator._alvoComandoFixadoLab='';
+    ator._alvoSelecionadoMapa763=true;
+    ator._alvoMortoManual510=!!labAlvoInerte490_(alvo);
+    if(labEhAlvoObjeto_(alvo)){
+        labEstado_.objetoSelecionadoId=String(alvo.id);
+        labEstado_.selecionadoId='';
+    }else{
+        labEstado_.objetoSelecionadoId='';
+        labEstado_.selecionadoId=String(alvo.id);
+    }
+    labApontarPara_(ator,alvo);
+}
+
+// Clique em token passa a ser a escolha oficial do alvo.
+const labSelecionar763Base_=window.labSelecionar_;
+window.labSelecionar_=function(id){
+    const r=labSelecionar763Base_.apply(this,arguments);
+    if(labEstado_.fase==='combate'&&!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab){
+        const ator=labTokenAtual_(),alvo=labTokenPorId_(id);
+        if(ator&&alvo&&String(ator.id)!==String(alvo.id))labMarcarAlvoMapa763_(id);
+    }
+    return r;
+};
+
+// Clique em objeto passa a ser a escolha oficial do alvo.
+const labSelecionarObjeto763Base_=window.labSelecionarObjeto_;
+window.labSelecionarObjeto_=function(id){
+    const r=labSelecionarObjeto763Base_.apply(this,arguments);
+    if(labEstado_.fase==='combate'&&!labEstado_.pendenciaLab&&!labEstado_.danoPendenteLab){
+        const alvo=labObjetoPorId_(id);
+        if(alvo)labMarcarAlvoMapa763_(id);
+    }
+    return r;
+};
+
+// 3) Nunca mais escolhe automaticamente o "primeiro alvo".
+// Perícia/arma ainda recebem defaults, alvo NÃO.
+const labGarantirPrefsAtaque763Base_=labGarantirPrefsAtaque_;
+labGarantirPrefsAtaque_=function(t){
+    if(!t)return labGarantirPrefsAtaque763Base_(t);
+    const escolhido=String(t.alvoLab||'');
+    const manual=!!t._alvoSelecionadoMapa763;
+    const alvoAntes=manual?labAlvoAtaquePorId_(escolhido):null;
+
+    labGarantirPrefsAtaque763Base_(t);
+
+    if(manual&&alvoAntes){
+        t.alvoLab=escolhido;
+        t._alvoManualFixadoLab=escolhido;
+    }else{
+        t.alvoLab='';
+        t._alvoManualFixadoLab='';
+        t._alvoComandoFixadoLab='';
+        t._alvoMortoManual510=false;
+    }
+};
+
+// 4) Ataque só existe se o alvo foi clicado no mapa.
+// Isso encerra definitivamente a disputa entre dropdown, objetoSelecionadoId
+// e saneadores antigos.
+const labRolarAtaque763Base_=window.labRolarAtaque_;
+window.labRolarAtaque_=function(){
+    const t=labTokenAtual_();
+    if(!t)return;
+    const id=String(t.alvoLab||'');
+    const alvo=id?labAlvoAtaquePorId_(id):null;
+    if(!t._alvoSelecionadoMapa763||!alvo){
+        t.alvoLab='';t._alvoManualFixadoLab='';
+        notificar_('🎯 Clique no alvo diretamente dentro do mapa antes de atacar.','aviso',3300);
+        labRender_();
+        return;
+    }
+    // Garante que seleção visual e alvo lógico sejam exatamente o mesmo.
+    if(labEhAlvoObjeto_(alvo)){
+        labEstado_.objetoSelecionadoId=id;labEstado_.selecionadoId='';
+    }else{
+        labEstado_.objetoSelecionadoId='';labEstado_.selecionadoId=id;
+    }
+    t._alvoManualFixadoLab=id;
+    t._alvoMortoManual510=!!labAlvoInerte490_(alvo);
+    return labRolarAtaque763Base_.apply(this,arguments);
+};
+
+// Cada nova oportunidade começa sem alvo. É obrigatório clicar novamente.
+const labEncerrarOportunidade763Base_=window.labEncerrarOportunidade_;
+window.labEncerrarOportunidade_=function(){
+    const atual=labTokenAtual_();
+    if(atual){
+        atual.alvoLab='';
+        atual._alvoManualFixadoLab='';
+        atual._alvoComandoFixadoLab='';
+        atual._alvoSelecionadoMapa763=false;
+        atual._alvoMortoManual510=false;
+    }
+    labEstado_.objetoSelecionadoId='';
+    const r=labEncerrarOportunidade763Base_.apply(this,arguments);
+    const novo=labTokenAtual_();
+    if(novo){
+        novo.alvoLab='';
+        novo._alvoManualFixadoLab='';
+        novo._alvoComandoFixadoLab='';
+        novo._alvoSelecionadoMapa763=false;
+        novo._alvoMortoManual510=false;
+    }
+    return r;
+};
+
+// 5) Remove visualmente o seletor Alvo apenas em COMBATE.
+// Psiquismo e outras perícias continuam podendo ter seus próprios alvos.
+function labAlvoMapaUI763_(){
+    const painel=document.getElementById('labActionPanel'),t=labTokenAtual_();
+    if(!painel||!t||labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return;
+    if((t.universalModoLab||'combate')!=='combate'&&painel.querySelector('[onchange*="labUniversalAlvo_"]'))return;
+
+    const alvo=t._alvoSelecionadoMapa763?labAlvoAtaquePorId_(t.alvoLab):null;
+    const labels=[...painel.querySelectorAll('label')];
+    for(const lab of labels){
+        const sm=lab.querySelector('small');
+        const sel=lab.querySelector('select');
+        if(!sm||!sel||sm.textContent.trim()!=='Alvo')continue;
+        if(!/labSelecionarAlvo_|labUniversalAlvo_/.test(sel.getAttribute('onchange')||''))continue;
+        const box=document.createElement('div');
+        box.className='lab-target-map-only-763';
+        box.style.cssText='min-height:38px;box-sizing:border-box;padding:6px 9px;border:1px solid rgba(126,231,255,.30);border-radius:8px;background:rgba(255,255,255,.045);display:flex;align-items:center;gap:7px;color:#cfe7ff;';
+        box.innerHTML=alvo
+          ? `🎯 <b>${escaparHtmlInventario_(alvo.nome||'Objeto')}</b> <span style="opacity:.68;font-size:.82em">selecionado no mapa</span>`
+          : `🎯 <span style="color:#ffd98c">Clique no alvo dentro do mapa</span>`;
+        lab.replaceWith(box);
+    }
+    const atacar=[...painel.querySelectorAll('button')].find(b=>(b.getAttribute('onclick')||'').includes('labRolarAtaque_'));
+    if(atacar){
+        atacar.disabled=atacar.disabled||!alvo;
+        atacar.title=alvo?'Atacar o alvo selecionado no mapa.':'Clique primeiro no alvo dentro do mapa.';
+    }
+}
+
+// 6) Visuais de morto/destruído e fogo.
+// Independente de qual camada histórica gerou o HTML, o estado final manda.
+function labEstadosVisuais763_(){
+    const map=document.getElementById('labMetricMap');if(!map)return;
+
+    for(const t of (labEstado_.tokens||[])){
+        let node=null;try{node=map.querySelector(`.lab-token[data-id="${CSS.escape(String(t.id))}"]`);}catch(_){}
+        if(!node)continue;
+        const morto=!!labAlvoInerte490_(t);
+        if(morto){
+            node.style.opacity='.42';
+            node.style.filter='grayscale(.88) saturate(.45)';
+        }
+    }
+
+    for(const o of (labEstado_.objetosLab||[])){
+        let node=null;try{node=map.querySelector(`.lab-map-object[data-id="${CSS.escape(String(o.id))}"]`);}catch(_){}
+        if(!node)continue;
+
+        if(labAlvoInerte490_(o)){
+            node.style.opacity='.42';
+            node.style.filter='grayscale(.88) saturate(.45)';
+        }
+
+        // Reforço visual do sistema de incêndio existente.
+        // Não cria fogo novo; só garante que pegandoFogoLab seja visível.
+        if(o.pegandoFogoLab&&!o.destruido&&!node.querySelector('.lab-fire-real-510')){
+            const fire=document.createElement('span');
+            fire.className='lab-fire-real-510';
+            fire.innerHTML='<i class="fl f1"></i><i class="fl f2"></i><i class="fl f3"></i><i class="sm"></i>';
+            node.appendChild(fire);
+        }
+    }
+}
+
+// Render final desta correção.
+const labRender763Base_=labRender_;
+labRender_=function(){
+    const r=labRender763Base_.apply(this,arguments);
+    try{
+        labAlvoMapaUI763_();
+        labEstadosVisuais763_();
+    }catch(e){console.warn('v46.76.3 visual/alvo',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
+// Zera alvos herdados de versões antigas ao abrir esta versão.
+// Assim nenhum dropdown antigo começa a rodada com um alvo fantasma.
+setTimeout(()=>{
+    try{
+        for(const t of (labEstado_.tokens||[])){
+            t.alvoLab='';
+            t._alvoManualFixadoLab='';
+            t._alvoComandoFixadoLab='';
+            t._alvoSelecionadoMapa763=false;
+            t._alvoMortoManual510=false;
+        }
+        labEstado_.objetoSelecionadoId='';
+        labSalvarLocal_();labRender_();
+    }catch(_){}
+},700);
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -31635,6 +31866,6 @@ if(labLoad762Base_)window.labCarregarMapaBanco_=async function(){
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.76.2: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.76.3: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
