@@ -1448,6 +1448,12 @@
                             <label>PV<input id="objMapaPV" type="number" min="0" step="1" value="10"></label>
                             <label>Dureza<input id="objMapaDureza" type="number" min="0" step="1" value="2"></label>
                             <label>Peso (kg)<input id="objMapaPesoKg" type="number" min="0.1" step="0.1" value="10"></label>
+                            <label>Material
+                              <div style="display:flex;gap:6px;align-items:center;">
+                                <select id="objMapaMaterial" style="flex:1;min-width:0;"><option value="">— Não classificado —</option></select>
+                                <button type="button" class="btn-small" onclick="objMapaEditarMateriais800_()" title="Editar a lista de materiais" style="width:auto;white-space:nowrap;padding:9px 10px;">⚙️</button>
+                              </div>
+                            </label>
 <label>Inflamabilidade (0–5)<input id="objMapaInflamabilidade" type="number" min="0" max="5" step="1" value="0" title="0 = não inflamável; 5 = pega fogo com extrema facilidade"></label>
                           </div>
                           <div style="display:flex;gap:14px;flex-wrap:wrap;margin:10px 0;">
@@ -32338,6 +32344,123 @@ setTimeout(()=>{try{lab780HidratarMesa_();labRender_();}catch(_){}},1200);
 // ============================================================
 </script>
 <!-- Mesa Estelar v46.79.0: rotação de objetos/imagens na Oficina 2 e microações adaptativas na borda inferior -->
+
+
+<script>
+// ============================================================
+// V46.80.0 — material explícito e editável para objetos de mapa
+// Base para regras de ferramentas, fogo e resistência por material.
+// ============================================================
+(function(){
+const MAT800_DEFAULTS_=['Madeira','Pedra','Metal','Vidro','Plástico','Papel','Carne'];
+let mat800Lista_=[];
+
+function mat800Limpar_(v){return String(v||'').trim().replace(/\s+/g,' ');}
+function mat800Unicos_(arr){
+ const out=[],seen=new Set();
+ for(const raw of (arr||[])){const v=mat800Limpar_(raw);if(!v)continue;const k=v.toLocaleLowerCase('pt-BR');if(seen.has(k))continue;seen.add(k);out.push(v);}
+ return out;
+}
+function mat800LerLocal_(){
+ try{const a=JSON.parse(localStorage.getItem('mesaEstelarMateriaisObjetos800')||'[]');return Array.isArray(a)?mat800Unicos_(a):[];}catch(_){return [];}
+}
+function mat800ListaAtual_(){return mat800Lista_.length?mat800Lista_:MAT800_DEFAULTS_.slice();}
+function mat800SalvarLocal_(){try{localStorage.setItem('mesaEstelarMateriaisObjetos800',JSON.stringify(mat800ListaAtual_()));}catch(_){}}
+function mat800Escape_(v){return typeof escaparHtmlInventario_==='function'?escaparHtmlInventario_(v):String(v||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function mat800PopularSelect_(valor){
+ const sel=document.getElementById('objMapaMaterial');if(!sel)return;
+ const atual=valor!==undefined?String(valor||''):String(sel.value||'');
+ const lista=mat800ListaAtual_();
+ sel.innerHTML='<option value="">— Não classificado —</option>'+lista.map(v=>`<option value="${mat800Escape_(v)}">${mat800Escape_(v)}</option>`).join('');
+ if(atual&&!lista.some(v=>v===atual)){const op=document.createElement('option');op.value=atual;op.textContent=atual+' (fora da lista)';sel.appendChild(op);}
+ sel.value=atual;
+}
+async function mat800Carregar_(){
+ const local=mat800LerLocal_();mat800Lista_=local.length?local:MAT800_DEFAULTS_.slice();mat800PopularSelect_();
+ try{
+   if(typeof db!=='undefined'&&typeof getDoc==='function'&&typeof doc==='function'){
+     const ds=await getDoc(doc(db,'configuracoes','materiaisObjetosMapa'));
+     const remoto=ds.exists()?ds.data()?.lista:null;
+     if(Array.isArray(remoto)&&remoto.length){mat800Lista_=mat800Unicos_(remoto);mat800SalvarLocal_();mat800PopularSelect_();}
+   }
+ }catch(e){console.warn('Materiais de objetos: usando lista local.',e);}
+}
+window.objMapaEditarMateriais800_=async function(){
+ if(typeof batalhaEhMestre_==='function'&&!batalhaEhMestre_())return;
+ const atual=mat800ListaAtual_().join('\n');
+ const txt=prompt('Edite a lista de materiais. Use um material por linha (ou separe por vírgulas):',atual);
+ if(txt===null)return;
+ const lista=mat800Unicos_(String(txt).split(/[\n,;]+/));
+ if(!lista.length){if(typeof notificar_==='function')notificar_('A lista precisa ter pelo menos um material.','aviso',3000);return;}
+ mat800Lista_=lista;mat800SalvarLocal_();mat800PopularSelect_();
+ try{
+   if(typeof db!=='undefined'&&typeof setDoc==='function'&&typeof doc==='function')
+     await setDoc(doc(db,'configuracoes','materiaisObjetosMapa'),{lista:lista,atualizadoEm:new Date().toISOString()},{merge:false});
+   if(typeof notificar_==='function')notificar_('Lista de materiais atualizada.','sucesso',2400);
+ }catch(e){console.warn('Materiais: falha ao salvar no Firestore',e);if(typeof notificar_==='function')notificar_('Lista salva neste navegador, mas não consegui sincronizar com o banco.','aviso',4500);}
+};
+
+// Preenche o material ao abrir/criar um objeto.
+const preencherBase=window.preencherEditorObjetoMapa_||((typeof preencherEditorObjetoMapa_==='function')?preencherEditorObjetoMapa_:null);
+if(preencherBase){
+ const wrapped=function(o){const r=preencherBase.apply(this,arguments);mat800PopularSelect_(o?.material||o?.dadosBanco?.material||'');return r;};
+ window.preencherEditorObjetoMapa_=wrapped;try{preencherEditorObjetoMapa_=wrapped;}catch(_){}
+}
+
+// Persiste o material junto do objeto, sem alterar a lógica existente de PV, dureza etc.
+const salvarBase=window.salvarObjetoMapaEditor_;
+if(salvarBase){
+ window.salvarObjetoMapaEditor_=async function(){
+   const idAntes=String(document.getElementById('objMapaEditId')?.value||'');
+   const nomeAntes=String(document.getElementById('objMapaNome')?.value||'').trim();
+   const material=mat800Limpar_(document.getElementById('objMapaMaterial')?.value||'');
+   await salvarBase.apply(this,arguments);
+   const o=(objetosMapaDB||[]).find(x=>String(x.id)===idAntes)||[...(objetosMapaDB||[])].reverse().find(x=>String(x.nome||'')===nomeAntes);
+   if(!o)return;
+   o.material=material;
+   if(o.dadosBanco&&typeof o.dadosBanco==='object')o.dadosBanco.material=material;
+   try{
+     if(typeof setDoc==='function'&&typeof doc==='function')await setDoc(doc(db,'configuracoes',objetoMapaDocId_(o.id)),{material},{merge:true});
+   }catch(e){console.warn('Persistência do material',e);}
+   try{renderizarBancoObjetosMapa_();}catch(_){}
+ };
+}
+
+// Acrescenta a coluna Material à tabela sem reescrever todo o banco legado.
+const renderBase=window.renderizarBancoObjetosMapa_;
+if(renderBase){
+ window.renderizarBancoObjetosMapa_=function(){
+   const r=renderBase.apply(this,arguments);
+   const table=document.querySelector('#listaBancoObjetosMapa table');if(!table)return r;
+   const hr=table.querySelector('thead tr');
+   if(hr&&!hr.querySelector('[data-mat800-head]')){const th=document.createElement('th');th.dataset.mat800Head='1';th.textContent='Material';const alvo=hr.children[5]||null;hr.insertBefore(th,alvo);}
+   const rows=[...table.querySelectorAll('tbody tr')];
+   rows.forEach((tr,i)=>{if(tr.querySelector('[data-mat800-cell]'))return;const td=document.createElement('td');td.dataset.mat800Cell='1';const m=(objetosMapaDB||[])[i];td.textContent=m?.material||'—';const alvo=tr.children[5]||null;tr.insertBefore(td,alvo);});
+   return r;
+ };
+}
+
+// Objetos de mapas antigos podem recuperar o material pelo snapshot/modelo atual.
+function mat800HidratarMesa_(){
+ if(typeof labEstado_==='undefined'||!labEstado_)return;
+ for(const o of (labEstado_.objetosLab||[])){
+   if(o.material)continue;
+   if(o.dadosBanco?.material){o.material=o.dadosBanco.material;continue;}
+   const ids=[o.modeloId,o.objetoBancoId,o.dadosBanco?.id].filter(Boolean).map(String);
+   const m=(objetosMapaDB||[]).find(x=>ids.includes(String(x.id)));
+   if(m?.material)o.material=m.material;
+ }
+}
+if(typeof labRender_==='function'){
+ const labRenderBase=labRender_;
+ labRender_=function(){try{mat800HidratarMesa_();}catch(_){}return labRenderBase.apply(this,arguments);};window.labRender_=labRender_;
+}
+
+mat800Lista_=mat800LerLocal_();if(!mat800Lista_.length)mat800Lista_=MAT800_DEFAULTS_.slice();
+setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
+})();
+</script>
+<!-- Mesa Estelar v46.80.0: material explícito/editável para objetos de mapa -->
 
 </body>
 </html>
