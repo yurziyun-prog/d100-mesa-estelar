@@ -32225,5 +32225,101 @@ setTimeout(()=>{try{labLiveRenderObjectBank770_();}catch(_){}},900);
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
 <!-- Mesa Estelar v46.77.0: recorte de objetos, modos exclusivos e fogo ambiental -->
+
+<script>
+// ============================================================
+// V46.78.0 — hidratação funcional definitiva dos objetos de mapa
+// Oficina 2 -> mapa salvo -> Mesa: PV, dureza e propriedades físicas
+// passam a viajar com a instância, sem depender do timing do Banco.
+// ============================================================
+(function(){
+function lab780NormNome_(v){
+ return String(v||'').trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ');
+}
+function lab780ModeloPara_(o){
+ const db=(typeof objetosMapaDB!=='undefined'&&Array.isArray(objetosMapaDB))?objetosMapaDB:[];
+ const ids=[o?.modeloId,o?.objetoBancoId,o?.dadosBanco?.id].filter(Boolean).map(String);
+ let m=db.find(x=>ids.includes(String(x?.id)));
+ if(m)return m;
+ const nomes=[o?.nome,o?.name,o?.dadosBanco?.nome,o?.dadosBanco?.name].filter(Boolean).map(lab780NormNome_);
+ return nomes.length?db.find(x=>nomes.includes(lab780NormNome_(x?.nome||x?.name||x?.id))):null;
+}
+function lab780Numero_(...vals){
+ for(const v of vals){const n=Number(v);if(Number.isFinite(n))return n;}
+ return 0;
+}
+function lab780HidratarObjeto_(o){
+ if(!o||typeof o!=='object')return o;
+ const snap=(o.dadosBanco&&typeof o.dadosBanco==='object')?JSON.parse(JSON.stringify(o.dadosBanco)):null;
+ const mod=lab780ModeloPara_(o);
+ // A instância continua soberana para estado dinâmico; snapshot e Banco
+ // servem para recuperar propriedades funcionais perdidas no transporte.
+ const fonte={...(snap||{}),...(mod||{})};
+ const idModelo=o.modeloId||o.objetoBancoId||snap?.id||mod?.id||'';
+ if(idModelo){o.modeloId=String(idModelo);o.objetoBancoId=String(idModelo);}
+ if(!o.nome)o.nome=fonte.nome||fonte.name||idModelo||'Objeto';
+ if(!o.name)o.name=o.nome;
+ if(!o.imagem)o.imagem=fonte.imagem||fonte.image||'';
+ if(!o.dadosBanco && (snap||mod))o.dadosBanco=JSON.parse(JSON.stringify(snap||mod));
+
+ const maxAtual=Number(o.pvMax), maxFonte=lab780Numero_(fonte.pvMax,fonte.pv,fonte.vidaMax,fonte.vida);
+ if(!Number.isFinite(maxAtual)||(maxAtual<=0&&maxFonte>0))o.pvMax=Math.max(0,maxFonte);
+ else o.pvMax=Math.max(0,maxAtual);
+ const dAtual=Number(o.dureza), dFonte=lab780Numero_(fonte.dureza,fonte.hardness);
+ if(!Number.isFinite(dAtual)||(dAtual===0&&dFonte>0))o.dureza=Math.max(0,dFonte); else o.dureza=Math.max(0,dAtual);
+ const pAtual=Number(o.pesoKg), pFonte=lab780Numero_(fonte.pesoKg,fonte.peso,fonte.weightKg);
+ if(!Number.isFinite(pAtual)||(pAtual===0&&pFonte>0))o.pesoKg=Math.max(0,pFonte); else o.pesoKg=Math.max(0,pAtual);
+
+ if(o.destrutivel===undefined)o.destrutivel=fonte.destrutivel!==false;
+ if(o.inflamavel===undefined)o.inflamavel=!!fonte.inflamavel;
+ const infAtual=Number(o.inflamabilidade), infFonte=lab780Numero_(fonte.inflamabilidade,fonte.inflamabilidadeLab);
+ if(!Number.isFinite(infAtual)||(infAtual===0&&infFonte>0))o.inflamabilidade=Math.max(0,Math.min(5,infFonte));
+ else o.inflamabilidade=Math.max(0,Math.min(5,infAtual));
+ if(o.inflamavel && o.inflamabilidade<=0){
+   const fallback=lab780Numero_(fonte.inflamabilidade,fonte.inflamabilidadeLab);
+   o.inflamabilidade=fallback>0?Math.min(5,fallback):3;
+ }
+ if(o.bloqueiaMovimento===undefined)o.bloqueiaMovimento=fonte.bloqueiaMovimento!==false;
+ if(o.bloqueiaVisao===undefined)o.bloqueiaVisao=!!fonte.bloqueiaVisao;
+ if(o.fixoAoMapa===undefined&&fonte.fixoAoMapa!==undefined)o.fixoAoMapa=!!fonte.fixoAoMapa;
+
+ const pv=Number(o.pvAtual);
+ if(!Number.isFinite(pv)||(pv<=0&&Number(o.pvMax)>0&&!o.destruido))o.pvAtual=Number(o.pvMax)||0;
+ else o.pvAtual=Math.max(0,pv);
+ if(o.destruido===undefined)o.destruido=false;
+ if(o.pegandoFogoLab===undefined)o.pegandoFogoLab=false;
+ if(o.fogoUltimaRodadaLab===undefined)o.fogoUltimaRodadaLab=-1;
+ return o;
+}
+function lab780HidratarMesa_(){
+ if(typeof labEstado_==='undefined'||!labEstado_)return;
+ labEstado_.objetosLab=Array.isArray(labEstado_.objetosLab)?labEstado_.objetosLab:[];
+ labEstado_.objetosLab.forEach(lab780HidratarObjeto_);
+}
+// Substitui o reparo da v46.77 por uma versão que funciona inclusive quando
+// o Banco ainda não terminou de carregar, graças ao snapshot da própria instância.
+window.labRepararObjetosBanco770_=function(){lab780HidratarMesa_();};
+try{labRepararObjetosBanco770_=window.labRepararObjetosBanco770_;}catch(_){}
+
+// Garante hidratação também imediatamente após carregar um mapa salvo.
+const loadBase=window.labCarregarMapaBanco_;
+if(loadBase&&!loadBase.__v46780){
+ const wrapped=async function(){
+   const r=await loadBase.apply(this,arguments);
+   lab780HidratarMesa_();
+   try{labSalvarLocal_();}catch(_){}
+   try{labRender_();}catch(_){}
+   return r;
+ };
+ wrapped.__v46780=true;window.labCarregarMapaBanco_=wrapped;
+}
+// Exposto apenas para os demais caminhos internos de criação/publicação.
+window.labHidratarObjetoFuncional780_=lab780HidratarObjeto_;
+window.labHidratarObjetosMesa780_=lab780HidratarMesa_;
+setTimeout(()=>{try{lab780HidratarMesa_();labRender_();}catch(_){}},1200);
+})();
+</script>
+<!-- Mesa Estelar v46.78.0: objetos da Oficina 2 preservam PV, dureza, inflamabilidade e propriedades funcionais na Mesa -->
+
 </body>
 </html>
