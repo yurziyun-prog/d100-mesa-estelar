@@ -32360,6 +32360,105 @@ labRender_=function(){
 window.labRender_=labRender_;
 
 setTimeout(()=>{try{labLiveRenderObjectBank770_();}catch(_){}},900);
+
+// ============================================================
+// V46.80.4 — referências do mapa são reidratadas na Mesa
+// O mapa salvo guarda apenas modeloId + transformação; a Mesa recupera
+// PV, dureza, material, imagem e demais propriedades no Banco de Objetos.
+// ============================================================
+function map804HidratarObjetoMesa_(o){
+  if(!o||typeof o!=='object')return o;
+  const mid=String(o.modeloId||o.objetoBancoId||'');
+  if(!mid)return o;
+  const m=(objetosMapaDB||[]).find(x=>String(x.id)===mid);
+  if(!m)return o;
+
+  // Estado espacial/dinâmico pertence à instância do mapa.
+  const dyn={
+    id:o.id,x:o.x,y:o.y,larguraM:o.larguraM,alturaM:o.alturaM,angulo:o.angulo,
+    ordemOficina:o.ordemOficina,fixada:o.fixada,opacity:o.opacity,
+    sombraOficina:o.sombraOficina,sombraDirecao:o.sombraDirecao,sombraDist:o.sombraDist,
+    destruido:o.destruido,pegandoFogoLab:o.pegandoFogoLab,fogoUltimaRodadaLab:o.fogoUltimaRodadaLab,
+    despedacadoLab:o.despedacadoLab,explodindoLab:o.explodindoLab,
+    pvAtual:o.pvAtual
+  };
+  const tinhaPvAtual=Number.isFinite(Number(o.pvAtual));
+
+  // Propriedades de modelo vêm sempre do Banco atual.
+  o.modeloId=mid;o.objetoBancoId=mid;
+  o.nome=m.nome||m.name||mid;o.name=o.nome;
+  o.imagem=m.imagem||m.image||'';
+  o.pvMax=Math.max(0,Number(m.pvMax||m.pv||0));
+  o.dureza=Math.max(0,Number(m.dureza||0));
+  o.pesoKg=Math.max(0,Number(m.pesoKg||m.peso||0));
+  o.material=m.material||'';
+  o.destrutivel=m.destrutivel!==false;
+  o.inflamavel=!!m.inflamavel;
+  o.inflamabilidade=Math.max(0,Math.min(5,Number(m.inflamabilidade||0)));
+  o.bloqueiaMovimento=m.bloqueiaMovimento!==false;
+  o.bloqueiaVisao=!!m.bloqueiaVisao;
+  if(m.fixoAoMapa!==undefined)o.fixoAoMapa=!!m.fixoAoMapa;
+  if(m.fonteLuz!==undefined)o.fonteLuz=!!m.fonteLuz;
+  if(m.luzLarguraM!==undefined)o.luzLarguraM=Number(m.luzLarguraM||0);
+  if(m.luzAlturaM!==undefined)o.luzAlturaM=Number(m.luzAlturaM||0);
+  if(m.luzRaioM!==undefined)o.luzRaioM=Number(m.luzRaioM||0);
+
+  // Reaplica transformação e estado da instância.
+  if(dyn.id!=null)o.id=dyn.id;
+  if(Number.isFinite(Number(dyn.x)))o.x=Number(dyn.x);
+  if(Number.isFinite(Number(dyn.y)))o.y=Number(dyn.y);
+  o.larguraM=Math.max(.05,Number(dyn.larguraM||m.larguraM||1));
+  o.alturaM=Math.max(.05,Number(dyn.alturaM||m.alturaM||1));
+  o.angulo=Number(dyn.angulo||0);o.ordemOficina=Number(dyn.ordemOficina||0);
+  o.fixada=!!dyn.fixada;if(dyn.opacity!==undefined)o.opacity=Number(dyn.opacity);
+  if(dyn.sombraOficina!==undefined)o.sombraOficina=dyn.sombraOficina;
+  if(dyn.sombraDirecao!==undefined)o.sombraDirecao=dyn.sombraDirecao;
+  if(dyn.sombraDist!==undefined)o.sombraDist=dyn.sombraDist;
+  o.destruido=!!dyn.destruido;o.pegandoFogoLab=!!dyn.pegandoFogoLab;
+  o.fogoUltimaRodadaLab=Number(dyn.fogoUltimaRodadaLab??-1);
+  if(dyn.despedacadoLab!==undefined)o.despedacadoLab=dyn.despedacadoLab;
+  if(dyn.explodindoLab!==undefined)o.explodindoLab=dyn.explodindoLab;
+  o.pvAtual=tinhaPvAtual?Math.max(0,Number(dyn.pvAtual)):o.pvMax;
+  if(o.pvAtual>o.pvMax&&o.pvMax>=0)o.pvAtual=o.pvMax;
+  o.mapRef=true;
+  return o;
+}
+function map804HidratarMesa_(){
+  if(!labEstado_||!Array.isArray(labEstado_.objetosLab))return 0;
+  let n=0;
+  for(const o of labEstado_.objetosLab){
+    if(String(o?.modeloId||o?.objetoBancoId||'')){
+      const antes=Number(o.pvMax||0);
+      map804HidratarObjetoMesa_(o);
+      if(Number(o.pvMax||0)>0||antes>0)n++;
+    }
+  }
+  return n;
+}
+
+// Última camada dentro do módulo, onde objetosMapaDB realmente está acessível.
+const map804LoadMesaBase_=window.labCarregarMapaBanco_;
+if(map804LoadMesaBase_){
+  window.labCarregarMapaBanco_=async function(){
+    const r=await map804LoadMesaBase_.apply(this,arguments);
+    const n=map804HidratarMesa_();
+    try{labSalvarLocal_();}catch(_){}
+    try{labRender_();}catch(_){}
+    if(n)notificar_(`Objetos do mapa reconstruídos do Banco: ${n}.`,'info',2200);
+    return r;
+  };
+}
+
+// Também reidrata quando o Banco termina de carregar depois do mapa.
+const map804RenderBase_=labRender_;
+labRender_=function(){
+  try{map804HidratarMesa_();}catch(e){console.warn('hidratação refs Mesa',e);}
+  return map804RenderBase_.apply(this,arguments);
+};
+window.labRender_=labRender_;
+window.map804HidratarMesa_=map804HidratarMesa_;
+
+setTimeout(()=>{try{if(map804HidratarMesa_()){labSalvarLocal_();labRender_();}}catch(_){}},1400);
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
