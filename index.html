@@ -32820,5 +32820,157 @@ setTimeout(()=>{try{mat800Carregar_();}catch(_){}},900);
 </script>
 <!-- Mesa Estelar v46.81.0: material explícito/editável para objetos de mapa -->
 
+
+<script>
+// ============================================================
+// V46.83.0 — patch FINAL, instalado após todos os blocos legados
+// Corrige controles que eram sobrescritos por scripts posteriores.
+// ============================================================
+(function(){
+'use strict';
+
+function v4683Clamp_(v,a,b){v=Number(v);return Number.isFinite(v)?Math.max(a,Math.min(b,v)):a;}
+function v4683Esc_(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c));}
+
+// ---------- Oficina 2: barra Visível aos jogadores ----------
+window.v4683SetMapVisibility_=function(v){
+  v=v4683Clamp_(v,0,100);
+  try{ if(typeof gm2!=='undefined'&&gm2.st){gm2.st.visibilidadeJogadores=v; if(typeof gm2saveLocal==='function')gm2saveLocal();} }catch(_){}
+  const n=document.getElementById('v4683MapVisValue');if(n)n.textContent=Math.round(v)+'%';
+};
+function v4683InstallOficinaVis_(){
+  const sel=document.getElementById('gm2mapselect');
+  if(!sel)return false;
+  let wrap=document.getElementById('v4683MapVisWrap');
+  if(!wrap){
+    wrap=document.createElement('label');wrap.id='v4683MapVisWrap';wrap.title='0% = totalmente visível; 100% = totalmente invisível para os jogadores, exceto onde houver luz.';
+    wrap.innerHTML=`<span>Visível aos jogadores</span><input id="v4683MapVis" type="range" min="0" max="100" step="5" value="0"><b id="v4683MapVisValue">0%</b>`;
+    // Sem lixeira nova: usa apenas os controles que já existem.
+    sel.insertAdjacentElement('afterend',wrap);
+    wrap.querySelector('input').addEventListener('input',e=>v4683SetMapVisibility_(e.target.value));
+  }
+  let v=0;try{v=v4683Clamp_(gm2?.st?.visibilidadeJogadores??0,0,100);}catch(_){}
+  const r=document.getElementById('v4683MapVis');if(r&&document.activeElement!==r)r.value=String(v);
+  const n=document.getElementById('v4683MapVisValue');if(n)n.textContent=Math.round(v)+'%';
+  return true;
+}
+
+// ---------- Mesa: barra lateral de visibilidade ----------
+function v4683ToolState_(){
+  document.querySelectorAll('#v4683MesaVisTools button').forEach(b=>b.classList.remove('active'));
+  const mode=(typeof lab281VisMode_!=='undefined')?lab281VisMode_:'';
+  if(mode==='hide')document.getElementById('v4683Hide')?.classList.add('active');
+  if(mode==='remove')document.getElementById('v4683Remove')?.classList.add('active');
+  try{document.getElementById('v4683Bright')?.classList.toggle('active',!!labEstado_?.clarearMestreVisLab);}catch(_){}
+}
+function v4683InstallMesaTools_(){
+  const map=document.getElementById('labMetricMap');if(!map)return false;
+  if(document.getElementById('v4683MesaMapWrap')){v4683ToolState_();return true;}
+  // desfaz somente wrappers experimentais da 46.82, se existirem
+  const old=document.getElementById('lab282MapWorkspace');
+  if(old&&old.contains(map)){
+    const p=old.parentElement;p.insertBefore(map,old);old.remove();
+  }
+  const wrap=document.createElement('div');wrap.id='v4683MesaMapWrap';
+  const tools=document.createElement('aside');tools.id='v4683MesaVisTools';
+  tools.innerHTML=`<div class="v4683SideTitle">Visibilidade</div>
+    <button id="v4683Hide" title="Escurecer para jogadores">🌑</button>
+    <button id="v4683Bright" title="Clarear zonas ocultas apenas para o mestre">👁️</button>
+    <button id="v4683Remove" title="Remover uma zona de ocultação">🧽</button>
+    <button id="v4683Cancel" title="Cancelar ferramenta">↖</button>`;
+  const parent=map.parentElement;parent.insertBefore(wrap,map);wrap.append(tools,map);
+  document.getElementById('v4683Hide').onclick=()=>{try{window.lab281VisTool_?.('hide');}catch(_){};v4683ToolState_();};
+  document.getElementById('v4683Bright').onclick=()=>{try{window.lab281ClarearMestre_?.();}catch(_){};v4683ToolState_();};
+  document.getElementById('v4683Remove').onclick=()=>{try{window.lab281VisTool_?.('remove');}catch(_){};v4683ToolState_();};
+  document.getElementById('v4683Cancel').onclick=()=>{try{lab281VisMode_='';}catch(_){};v4683ToolState_();};
+  v4683ToolState_();return true;
+}
+
+// ---------- Microações materiais, instaladas por último ----------
+try{
+  const base=labObjetoMicroPainelHtml_;
+  labObjetoMicroPainelHtml_=function(o,ppm){
+    let h=base.apply(this,arguments);if(!h)return h;
+    let ator=null;try{ator=labTokenAtual_();}catch(_){}
+    if(!ator)return h;
+    let madeira=false,pedra=false,pic=false,axe=false,near=true;
+    try{madeira=lab281EhMadeira_(o);pedra=lab281EhPedra_(o);pic=lab281Picareta_(ator);axe=lab281Machado_(ator);near=lab281DistOk_(ator,o,1.5);}catch(_){}
+    const especial=(madeira&&axe)||(pedra&&pic);
+    if(especial){
+      h=h.replace(/<button\b[^>]*onclick=["'][^"']*labAtacarObjetoContextual_[^"']*["'][^>]*>[\s\S]*?<\/button>/gi,'')
+         .replace(/<button\b[^>]*>[\s\S]*?⚔️\s*Atacar[\s\S]*?<\/button>/gi,'');
+    }
+    h=h.replace(/<button\b[^>]*>[\s\S]*?⛏️\s*Minerar[\s\S]*?<\/button>/gi,'')
+       .replace(/<button\b[^>]*>[\s\S]*?🪓\s*(?:Cortar|Lenhar)[\s\S]*?<\/button>/gi,'');
+    let extra='';
+    const oid=String(o?.id||'').replace(/'/g,"\\'");
+    if(pedra&&pic) extra+=`<button class="btn-small" onclick="labObjetoAcao_('minerar','${oid}')" ${near?'':'disabled'}>⛏️ Minerar</button>`;
+    if(madeira&&axe) extra+=`<button class="btn-small" onclick="labObjetoAcao_('cortar','${oid}')" ${near?'':'disabled'}>🪓 Lenhar</button>`;
+    if(extra)h=h.replace('</div>',extra+'</div>');
+    return h;
+  };
+  window.labObjetoMicroPainelHtml_=labObjetoMicroPainelHtml_;
+}catch(e){console.warn('v46.83 microações',e);}
+
+// ---------- Salvamento: feedback garantido e visibilidade embutida ----------
+try{
+  const baseSave=gm2saveLibrary;
+  gm2saveLibrary=async function(){
+    try{
+      if(typeof gm2!=='undefined'&&gm2.st){const r=document.getElementById('v4683MapVis');if(r)gm2.st.visibilidadeJogadores=v4683Clamp_(r.value,0,100);}
+      if(typeof notificar_==='function')notificar_('💾 Salvando mapa…','info',1800);
+      const r=await baseSave.apply(this,arguments);
+      if(typeof notificar_==='function')notificar_('✅ Mapa salvo.','sucesso',2600);
+      return r;
+    }catch(e){
+      console.error('v46.83 salvar mapa',e);
+      if(typeof notificar_==='function')notificar_(`Não foi possível salvar o mapa. ${e?.message||e||'Erro desconhecido.'}`,'erro',8000);
+      return null;
+    }
+  };window.gm2saveLibrary=gm2saveLibrary;
+}catch(e){console.warn('v46.83 save wrapper',e);}
+try{
+  const basePub=gm2publish;
+  gm2publish=function(){try{if(typeof labEstado_!=='undefined')labEstado_.visibilidadeJogadores=v4683Clamp_(gm2?.st?.visibilidadeJogadores??0,0,100);}catch(_){}return basePub.apply(this,arguments);};
+  window.gm2publish=gm2publish;
+}catch(_){}
+
+// ---------- ESC ----------
+document.addEventListener('keydown',ev=>{
+  if(ev.key!=='Escape')return;
+  let acted=false;
+  try{if(typeof lab281VisMode_!=='undefined'&&lab281VisMode_){lab281VisMode_='';acted=true;v4683ToolState_();}}catch(_){}
+  try{if(typeof gm2!=='undefined'&&(gm2.selected?.size||gm2.tool!=='select')){gm2clearSelection();gm2.tool='select';gm2render();acted=true;}}catch(_){}
+  try{const ed=document.getElementById('editorObjetoMapaBanco');if(ed&&getComputedStyle(ed).display!=='none'){window.fecharEditorObjetoMapa_?.();acted=true;}}catch(_){}
+  for(const id of ['itemModal','dbItemModal']){const m=document.getElementById(id);if(m?.classList.contains('active')){m.classList.remove('active');acted=true;}}
+  if(acted){ev.preventDefault();ev.stopPropagation();}
+},true);
+
+// ---------- CSS final ----------
+const css=document.createElement('style');css.id='v4683Css';css.textContent=`
+#v4683MapVisWrap{display:inline-flex;align-items:center;gap:5px;height:34px;padding:0 7px;margin-left:6px;border:1px solid #34506d;border-radius:6px;background:#11152d;color:#b9c2e7;font:600 10px/1 'Segoe UI',sans-serif;white-space:nowrap;vertical-align:middle}
+#v4683MapVisWrap input{width:110px;margin:0;accent-color:#27c7ee}#v4683MapVisWrap b{min-width:29px;color:#e5f7ff;font-size:10px}
+#v4683MesaMapWrap{display:flex;align-items:stretch;width:max-content;min-width:100%;background:#0f142b;border:1px solid #34506d;border-radius:8px;overflow:visible}
+#v4683MesaVisTools{width:50px;flex:0 0 50px;background:#11152d;border-right:1px solid #34506d;padding:6px 4px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box}
+#v4683MesaVisTools .v4683SideTitle{font:700 8px/1.1 'Segoe UI',sans-serif;color:#8fa8d8;text-align:center;margin:2px 0 4px;word-break:break-word}
+#v4683MesaVisTools button{width:40px;height:40px;min-height:40px;padding:0;border:1px solid #34506d;border-radius:7px;background:#f4f4f4;color:#111;font-size:18px;cursor:pointer}
+#v4683MesaVisTools button.active{outline:2px solid #45d7ff;background:#dff8ff}
+.item-tooltip{font-size:.58em!important;line-height:1.15!important;min-width:145px!important;max-width:190px!important;padding:5px 6px!important;border-width:1px!important}
+.item-tooltip h5{font-size:1em!important;margin:0 0 2px!important}.item-tooltip p{font-size:.9em!important;line-height:1.15!important;margin:1px 0!important}
+#laboratorio-combate{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
+#laboratorio-combate #labMetricMap{flex:0 0 auto}
+`;
+document.head.appendChild(css);
+
+// Instala após tudo e continua vigiando UI criada dinamicamente.
+function v4683InstallAll_(){try{v4683InstallOficinaVis_();}catch(e){console.warn(e)}try{v4683InstallMesaTools_();}catch(e){console.warn(e)}}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',v4683InstallAll_);else v4683InstallAll_();
+setTimeout(v4683InstallAll_,250);setTimeout(v4683InstallAll_,900);setTimeout(v4683InstallAll_,1800);
+const obs=new MutationObserver(()=>{clearTimeout(window.__v4683mo);window.__v4683mo=setTimeout(v4683InstallAll_,30);});
+obs.observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+<!-- Mesa Estelar v46.83.0: patch final após todos os scripts legados -->
+
 </body>
 </html>
