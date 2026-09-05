@@ -472,7 +472,7 @@
 #gmMusica510 select{min-width:230px}
 
 
-/* ===== V46.76.3 ===== */
+/* ===== V46.76.5 ===== */
 #labFreeEntryWrap530{
     display:flex;align-items:center;gap:7px;padding:6px 9px;
     border:1px solid rgba(86,240,138,.35);border-radius:8px;
@@ -495,7 +495,7 @@
 #gmMusicaToggle530.playing{color:#8ff0a8;border-color:rgba(86,240,138,.45)}
 
 
-/* ===== V46.76.3 ===== */
+/* ===== V46.76.5 ===== */
 #labPlayerJoin530.joining-540{opacity:.72;pointer-events:none}
 .lab-burn-hint-540{font-weight:800}
 
@@ -7770,9 +7770,16 @@ function labPericiaPorToken_(t,token){
     }
     return p;
 }
-function labAlvosAtaque_(t){return [...(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t?.id)),...(labEstado_.objetosLab||[]).filter(o=>o.destrutivel!==false&&!o.destruido)];}
+function labAlvosAtaque_(t){
+    // A lista existe para validações, mas não escolhe nada automaticamente.
+    // Objetos destruídos continuam selecionáveis manualmente para ataques posteriores.
+    return [
+      ...(labEstado_.tokens||[]).filter(x=>String(x.id)!==String(t?.id)),
+      ...(labEstado_.objetosLab||[]).filter(o=>o.destrutivel!==false)
+    ];
+}
 function labAlvoAtaquePorId_(id){return labTokenPorId_(id)||labObjetoPorId_(id)||null;}
-function labEhAlvoObjeto_(a){return !!a&&String(a.id||'').startsWith('obj:');}
+function labEhAlvoObjeto_(a){return !!a&&a.id!=null&&!!labObjetoPorId_(String(a.id));}
 function labGarantirPrefsAtaque_(t){
     if(!t)return;
     const c=labCharToken_(t),skills=labPericiasAtaque_(t);
@@ -7781,8 +7788,14 @@ function labGarantirPrefsAtaque_(t){
     const per=labPericiaPorToken_(t,t.periciaLab);
     const eq=batalhaEquipamentos_(c,per,t.equipamentoLab);
     if(!eq.some(x=>x.valor===t.equipamentoLab))t.equipamentoLab=eq[0]?.valor||'';
-    const alvos=labAlvosAtaque_(t);
-    if(!alvos.some(x=>String(x.id)===String(t.alvoLab)))t.alvoLab=alvos[0]?.id||'';
+    // CRÍTICO: alvo nunca recebe fallback. Só um clique no mapa define alvoLab.
+    const alvo=labAlvoAtaquePorId_(t.alvoLab);
+    if(!t._alvoSelecionadoMapa763||!alvo||String(alvo.id)===String(t.id)){
+        t.alvoLab='';
+        t._alvoManualFixadoLab='';
+        t._alvoComandoFixadoLab='';
+        t._alvoSelecionadoMapa763=false;
+    }
 }
 function labItemSelecionado_(t){
     const c=labCharToken_(t);if(!c)return null;
@@ -8116,7 +8129,7 @@ function labPsiAjustarCura_(t){
     if(lim<=0)a.custo=min;
     else a.custo=Math.max(min,Math.min(lim,Math.floor(Number(a.custo||min))));
 }
-window.labPsiSelecionarPoder_=function(v){const t=labTokenAtual_();if(!t?.acaoAuxLab)return;const p=labPsiPoderes_(t).find(x=>x.id===String(v||''));if(!p)return;t.acaoAuxLab.poderId=p.id;t.acaoAuxLab.custo=Math.max(0,Number(p.custo||0));t.acaoAuxLab.local='';const alvos=labPsiAlvos_(t,p);if(!alvos.some(x=>String(x.id)===String(t.acaoAuxLab.alvoId)))t.acaoAuxLab.alvoId=String(alvos[0]?.id||t.id);labPsiAjustarCura_(t);t.psiSelecaoLab=JSON.parse(JSON.stringify(t.acaoAuxLab));labSalvarLocal_();labRender_();};
+window.labPsiSelecionarPoder_=function(v){const t=labTokenAtual_();if(!t?.acaoAuxLab)return;const p=labPsiPoderes_(t).find(x=>x.id===String(v||''));if(!p)return;t.acaoAuxLab.poderId=p.id;t.acaoAuxLab.custo=Math.max(0,Number(p.custo||0));t.acaoAuxLab.local='';const alvos=labPsiAlvos_(t,p);if(!alvos.some(x=>String(x.id)===String(t.acaoAuxLab.alvoId)))t.acaoAuxLab.alvoId='';if(!t.acaoAuxLab.alvoId&&alvos.length===1&&String(alvos[0].id)===String(t.id))t.acaoAuxLab.alvoId=String(t.id);labPsiAjustarCura_(t);t.psiSelecaoLab=JSON.parse(JSON.stringify(t.acaoAuxLab));labSalvarLocal_();labRender_();};
 window.labPsiSelecionarAlvo_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab){t.acaoAuxLab.alvoId=String(v||'');const p=labPsiPoderes_(t).find(x=>x.id===t.acaoAuxLab.poderId),alvo=labPsiAlvoPorId_(t.acaoAuxLab.alvoId);if(p?.id==='mover_objeto'&&alvo)t.acaoAuxLab.custo=Math.max(Number(t.acaoAuxLab.custo||0),labPsiMoverCustoKg_(p,alvo));}labPsiAjustarCura_(t);t.psiSelecaoLab=JSON.parse(JSON.stringify(t.acaoAuxLab));labSalvarLocal_();labRender_();};
 window.labPsiSelecionarLocal_=function(v){const t=labTokenAtual_();if(t?.acaoAuxLab)t.acaoAuxLab.local=String(v||'');labPsiAjustarCura_(t);t.psiSelecaoLab=JSON.parse(JSON.stringify(t.acaoAuxLab));labSalvarLocal_();labRender_();};
 window.labPsiCusto_=function(v){
@@ -8621,7 +8634,7 @@ window.labRolarAtaque_=function(){
     }
     if(labEhArmaMuniciada_(item)&&labMunicaoAtual_(t,item)<=0){notificar_(`${getNome(item)} está sem munição. Recarregue antes de atacar.`,'aviso');labRender_();return;}
     if(!batalhaEhMestre_()){
-        labEnviarComandoJogador_('ataque',{periciaLab:t.periciaLab,equipamentoLab:t.equipamentoLab,alvoId:String(alvo.id)},t).then(ok=>{if(ok)notificar_(`Ataque contra ${alvo.nome} enviado ao mestre.`,'info',2200);});
+        labEnviarComandoJogador_('ataque',{periciaLab:t.periciaLab,equipamentoLab:t.equipamentoLab,alvoId:String(alvo.id)},t).then(ok=>{if(ok)notificar_(`Ataque contra ${alvo.nome||alvo.name||labObjetoModelo_(alvo)?.nome||'objeto'} enviado ao mestre.`,'info',2200);});
         return;
     }
     const bonusInt=Math.max(0,Number(t.bonusIntuicaoPendenteLab||0)),bonusMente=Number(t.menteAceleradaCargasLab||0)>0&&/INT/.test(String(per.formula||''))?Math.max(0,Number(t.menteAceleradaBonusLab||20)):0,valor=labValorPericiaAtaque_(c,per,alvo,item)+bonusMente,roll=1+Math.floor(Math.random()*100),r=classificarD100_(valor,roll);if(bonusInt>0)t.bonusIntuicaoPendenteLab=0;if(bonusMente>0)t.menteAceleradaCargasLab=Math.max(0,Number(t.menteAceleradaCargasLab||0)-1);if(t.bonusDificuldadeFacilPsiLab)t.bonusDificuldadeFacilPsiLab=0;
@@ -8745,20 +8758,21 @@ function labRenderActionPanel_(){
 
     if(t.acaoAuxLab?.tipo==='psiquismo'){
         const contexto=labPsiAlvoPorId_(t.acaoAuxLab.alvoId),todosPsi=labPsiPoderes_(t),poderes=todosPsi,p=poderes.find(x=>x.id===t.acaoAuxLab.poderId)||poderes[0];if(!p){t.acaoAuxLab=null;labSalvarLocal_();labRender_();return;}
-        const alvosPsi=labPsiAlvos_(t,p);if(!alvosPsi.some(x=>String(x.id)===String(t.acaoAuxLab.alvoId)))t.acaoAuxLab.alvoId=String(alvosPsi[0]?.id||t.id);
-        t.acaoAuxLab.poderId=p.id;const alvos=alvosPsi,alvo=labPsiAlvoPorId_(t.acaoAuxLab.alvoId)||alvosPsi[0]||t,feridas=labPsiEhObjeto_(alvo)?[]:labFeridasTrataveis_(alvo);
+        const alvosPsi=labPsiAlvos_(t,p);
+        if(!alvosPsi.some(x=>String(x.id)===String(t.acaoAuxLab.alvoId)))t.acaoAuxLab.alvoId='';
+        if(!t.acaoAuxLab.alvoId&&alvosPsi.length===1&&String(alvosPsi[0].id)===String(t.id))t.acaoAuxLab.alvoId=String(t.id);
+        t.acaoAuxLab.poderId=p.id;const alvos=alvosPsi,alvo=t.acaoAuxLab.alvoId?labPsiAlvoPorId_(t.acaoAuxLab.alvoId):null,feridas=alvo&&labPsiEhObjeto_(alvo)?[]:(alvo?labFeridasTrataveis_(alvo):[]);
         if(labPsiEhCura_(p)){labPsiAjustarCura_(t);}
         const minBase=Math.max(0,Number(p.custo||0)),min=p.id==='mover_objeto'&&labPsiEhObjeto_(alvo)?labPsiMoverCustoKg_(p,alvo):minBase,rest=labPsiRestantes_(t),valor=labPsiValor_(t,p);if(Number(t.acaoAuxLab.custo||0)<min)t.acaoAuxLab.custo=min;
         const curaLimite=labPsiEhCura_(p)?labPsiCuraLimite_(t,p,alvo,t.acaoAuxLab.local):rest;
         const ppMax=p.id==='intuicao_psi'?Math.min(4,rest):(labPsiEhCura_(p)?Math.max(min,curaLimite):rest);
         el.innerHTML=`<div><div style="display:flex;justify-content:space-between;gap:12px;align-items:center;"><strong style="color:#d8b4ff;">🔮 Psiquismo</strong><span style="color:#e6d4ff;font-weight:700;">PP ${rest}/${labPsiMax_(t)}</span></div>
-          <div style="display:grid;grid-template-columns:minmax(210px,1.25fr) minmax(150px,.9fr) 100px ${labPsiEhCura_(p)?'minmax(150px,.9fr) ':''}auto auto;gap:8px;align-items:end;margin-top:8px;">
+          <div style="display:grid;grid-template-columns:minmax(210px,1.25fr) 100px ${labPsiEhCura_(p)?'minmax(150px,.9fr) ':''}auto auto;gap:8px;align-items:end;margin-top:8px;">
           <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Poder</small><select onchange="labPsiSelecionarPoder_(this.value)" style="width:100%;margin:0;">${poderes.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${x.id===p.id?'selected':''}>${escaparHtmlInventario_(getNome(x))} · ${x.esfera} · A${Number(x.arco||1)}</option>`).join('')}</select></label>
-          <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Alvo</small><select onchange="labPsiSelecionarAlvo_(this.value)" style="width:100%;margin:0;">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(alvo.id)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
           <label style="margin:0;"><small style="display:block;margin-bottom:4px;">PP</small><input type="number" min="${min}" max="${ppMax}" value="${Math.min(ppMax,Math.max(min,Number(t.acaoAuxLab.custo||min)))}" onchange="labPsiCusto_(this.value)" style="width:100%;height:48px;margin:0;text-align:center;"></label>
           ${labPsiEhCura_(p)?`<label style="margin:0;"><small style="display:block;margin-bottom:4px;">Local</small><select onchange="labPsiSelecionarLocal_(this.value)" style="width:100%;margin:0;">${feridas.map(x=>`<option value="${escaparHtmlInventario_(x.local)}" ${x.local===t.acaoAuxLab.local?'selected':''}>${escaparHtmlInventario_(x.local)}</option>`).join('')||'<option value="">Sem ferida</option>'}</select></label>`:''}
           <button class="btn-small btn-select" onclick="labUsarPsi_()" ${rest<min||(labPsiEhCura_(p)&&curaLimite<=0)?'disabled':''} style="height:48px;min-width:165px;">✨ Usar ${p.id==='intuicao_psi'?'(sem AÇ)':'(1 AÇ)'}</button><button class="btn-small" onclick="labCancelarAcaoAux_()" style="height:48px;min-width:100px;">Cancelar</button></div>
-          <div style="margin-top:7px;color:#b9add8;"><b>Teste ${valor}%</b> · custo mínimo ${min} PP${p.id==='mover_objeto'&&labPsiEhObjeto_(alvo)?` · ${labObjetoPesoKg_(alvo).toFixed(1)} kg · capacidade com ${Math.max(min,Number(t.acaoAuxLab.custo||min))} PP: ${labPsiMoverCapacidadeKg_(p,Math.max(min,Number(t.acaoAuxLab.custo||min))).toFixed(0)} kg`:''} · ${escaparHtmlInventario_(getObservacaoPsi_(p))}${labPsiEhCura_(p)&&t.acaoAuxLab.local?` · <b>máx. nesta localização: ${curaLimite} PP</b>`:''}</div>${labResumoPVHtml_(t,'SEUS PV')}${alvo&&!labPsiEhObjeto_(alvo)&&String(alvo.id)!==String(t.id)?labEstadoPublicoAlvoHtml_(alvo):''}</div>`;return;
+          <div style="margin-top:7px;color:#b9add8;">${alvo?`🎯 <b>${escaparHtmlInventario_(alvo.nome||alvo.name||labObjetoModelo_(alvo)?.nome||'Objeto')}</b> selecionado no mapa · `:'🎯 <b style="color:#ffd98c">Clique no alvo dentro do mapa</b> · '}<b>Teste ${valor}%</b> · custo mínimo ${min} PP${p.id==='mover_objeto'&&labPsiEhObjeto_(alvo)?` · ${labObjetoPesoKg_(alvo).toFixed(1)} kg · capacidade com ${Math.max(min,Number(t.acaoAuxLab.custo||min))} PP: ${labPsiMoverCapacidadeKg_(p,Math.max(min,Number(t.acaoAuxLab.custo||min))).toFixed(0)} kg`:''} · ${escaparHtmlInventario_(getObservacaoPsi_(p))}${labPsiEhCura_(p)&&t.acaoAuxLab.local?` · <b>máx. nesta localização: ${curaLimite} PP</b>`:''}</div>${labResumoPVHtml_(t,'SEUS PV')}${alvo&&!labPsiEhObjeto_(alvo)&&String(alvo.id)!==String(t.id)?labEstadoPublicoAlvoHtml_(alvo):''}</div>`;return;
     }
 
     if(t.primeirosSocorrosLab){
@@ -8813,12 +8827,11 @@ function labRenderActionPanel_(){
     const dist=alvo?labDistanciaEntre_(t,alvo):Infinity,alc=item?labAlcanceAtaque_(t,item):0;
     el.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px;">
         <strong style="color:#ffd54a;">🎯 Ação de ${escaparHtmlInventario_(t.nome)}</strong><span style="font-size:.86em;color:#9fc6d8;">🔊 sons de combate ativos</span>
-        <span style="color:${dist<=alc?'#9fffb0':'#ff9b93'}">${alvo?`Distância até ${escaparHtmlInventario_(alvo.nome)}: <b>${dist.toFixed(2)} m</b> · alcance <b>${alc.toFixed(1)} m</b>`:'Selecione um alvo'}</span>
+        <span style="color:${alvo?(dist<=alc?'#9fffb0':'#ff9b93'):'#ffd98c'}">${alvo?`🎯 ${escaparHtmlInventario_(alvo.nome)} · ${dist.toFixed(2)} m · alcance ${alc.toFixed(1)} m`:'🎯 Clique no alvo dentro do mapa'}</span>
       </div>
-      <div style="display:grid;grid-template-columns:minmax(145px,1.15fr) minmax(160px,1.25fr) minmax(135px,.95fr) minmax(145px,.58fr);gap:8px;align-items:start;">
+      <div style="display:grid;grid-template-columns:minmax(145px,1.15fr) minmax(160px,1.25fr) minmax(145px,.58fr);gap:8px;align-items:start;">
         <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Perícia</small><select onchange="labMudarAtaquePref_('periciaLab',this.value)" style="width:100%;margin:0;">${skills.map(p=>`<option value="${batalhaTokenPericia_(p)}" ${batalhaTokenPericia_(p)===t.periciaLab?'selected':''}>${escaparHtmlInventario_(getNome(p))} (${labValorPericiaAtaque_(c,p,alvo,item)}%)</option>`).join('')}</select></label>
         <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Arma / ataque</small><select onchange="labMudarAtaquePref_('equipamentoLab',this.value)" style="width:100%;margin:0;">${eq.map(x=>`<option value="${escaparHtmlInventario_(x.valor)}" ${x.valor===t.equipamentoLab?'selected':''}>${escaparHtmlInventario_(x.rotulo)}</option>`).join('')||'<option>—</option>'}</select></label>
-        <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Alvo</small><select onchange="labSelecionarAlvo_(this.value)" style="width:100%;margin:0;">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.id)}" ${String(x.id)===String(t.alvoLab)?'selected':''}>${escaparHtmlInventario_(x.nome)}</option>`).join('')}</select></label>
         <label style="margin:0;"><small style="display:block;margin-bottom:4px;visibility:hidden;">Ação</small><button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!item||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;min-width:0;padding:0 12px;font-size:1em;margin:0;box-sizing:border-box;white-space:nowrap;">🎲 Atacar (1 AÇ)</button></label>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;">
@@ -17064,7 +17077,7 @@ window.labCliqueFundoMapa_=function(ev){
     labTokenArrastandoId_='';
     labSalvarLocal_();labRender_();
 };
-function labObjetoNatureza_(o){const m=labObjetoModelo_(o),n=normalizarTextoCombate_(`${o?.nome||''} ${m?.nome||''} ${o?.descricao||''} ${m?.descricao||''}`);if(/arvore|árvore|tronco|madeira|tree|wood/.test(n))return 'arvore';if(/rocha|pedra|miner|ore|rock|stone/.test(n))return 'rocha';return 'outro';}
+function labObjetoNatureza_(o){const m=labObjetoModelo_(o),n=normalizarTextoCombate_(`${o?.nome||''} ${m?.nome||''} ${o?.descricao||''} ${m?.descricao||''}`);if(/arvore|árvore|palmeira|palm|tronco|madeira|tree|wood/.test(n))return 'arvore';if(/rocha|pedra|miner|ore|rock|stone/.test(n))return 'rocha';return 'outro';}
 function labEquipadoRegex_(t,re){const c=labCharToken_(t);if(!c)return null;try{return (obterItensEquipados_(c)||[]).find(i=>re.test(normalizarTextoCombate_(`${getNome(i)||i.nome||''} ${i.tipo||''} ${i.categoria||''}`)))||null;}catch(_){return null;}}
 function labPericiaRegex_(t,re){const c=labCharToken_(t);if(!c)return null;return (batalhaListaPericias_(c)||[]).find(p=>re.test(normalizarTextoCombate_(`${p.id||''} ${getNome(p)||''}`)))||null;}
 function labObjetoAplicarDanoDireto_(o,bruto,fonte='Ação'){const duro=Math.max(0,Number(o.dureza||0)),final=Math.max(0,Math.floor(Number(bruto||0))-duro);o.pvAtual=Math.max(0,Number(o.pvAtual??o.pvMax??0)-final);if(o.pvAtual<=0)o.destruido=true;return {bruto:Math.floor(Number(bruto||0)),duro,final};}
@@ -19414,8 +19427,12 @@ function labUniversalGarantir_(t){
         if(!ps.some(p=>String(p.id)===String(t.universalPsiPoderIdLab)))t.universalPsiPoderIdLab=ps[0]?.id||'';
         const p=ps.find(x=>String(x.id)===String(t.universalPsiPoderIdLab));
         const alvos=p?labPsiAlvos_(t,p):[];
-        if(!alvos.some(a=>String(a.id)===String(t.universalAlvoIdLab)))t.universalAlvoIdLab=String(alvos[0]?.id||t.id);
-        const min=p?.id==='mover_objeto'?labPsiMoverCustoKg_(p,labPsiAlvoPorId_(t.universalAlvoIdLab)):Math.max(0,Number(p?.custo||0));
+        const atual=labPsiAlvoPorId_(t.universalAlvoIdLab);
+        if(!alvos.some(a=>String(a.id)===String(t.universalAlvoIdLab)))t.universalAlvoIdLab='';
+        // Poder estritamente pessoal pode usar o próprio usuário sem clique.
+        if(!t.universalAlvoIdLab&&alvos.length===1&&String(alvos[0].id)===String(t.id))t.universalAlvoIdLab=String(t.id);
+        const alvoPsi=t.universalAlvoIdLab?labPsiAlvoPorId_(t.universalAlvoIdLab):null;
+        const min=p?.id==='mover_objeto'&&alvoPsi?labPsiMoverCustoKg_(p,alvoPsi):Math.max(0,Number(p?.custo||0));
         if(!Number.isFinite(Number(t.universalPsiCustoLab))||Number(t.universalPsiCustoLab)<min)t.universalPsiCustoLab=min;
     }else{
         labGarantirPrefsAtaque_(t);
@@ -19434,7 +19451,8 @@ window.labUniversalSegundo_=function(v){
     else if(t.universalModoLab==='psi'){
         t.universalPsiPoderIdLab=String(v||'');t.universalPsiCustoLab=NaN;
         const p=labPsiPoderes_(t).find(x=>String(x.id)===String(v));
-        const alvos=p?labPsiAlvos_(t,p):[];t.universalAlvoIdLab=String(alvos[0]?.id||t.id);
+        const alvos=p?labPsiAlvos_(t,p):[];
+        t.universalAlvoIdLab=(alvos.length===1&&String(alvos[0].id)===String(t.id))?String(t.id):'';
     }else{t.equipamentoLab=String(v||'');labGarantirPrefsAtaque_(t);}
     labUniversalGarantir_(t);labSalvarLocal_();labRender_();
 };
@@ -19496,7 +19514,12 @@ window.labUniversalExecutarPericia_=function(){
 window.labUniversalExecutarPsi_=function(){
     const t=labTokenAtual_();if(!t||Number(t.acoesAtuaisLab||0)<=0)return;
     const p=labPsiPoderes_(t).find(x=>String(x.id)===String(t.universalPsiPoderIdLab));if(!p)return;
-    const alvo=labPsiAlvoPorId_(t.universalAlvoIdLab)||t;
+    const validos=labPsiAlvos_(t,p);
+    let alvo=t.universalAlvoIdLab?labPsiAlvoPorId_(t.universalAlvoIdLab):null;
+    if(!alvo&&validos.length===1&&String(validos[0].id)===String(t.id))alvo=t;
+    if(!alvo||!validos.some(x=>String(x.id)===String(alvo.id))){
+        notificar_('🎯 Clique no alvo diretamente no mapa antes de usar este poder.','aviso',3200);return;
+    }
     t.acaoAuxLab={tipo:'psiquismo',poderId:p.id,alvoId:String(alvo.id),custo:Math.max(0,Number(t.universalPsiCustoLab||p.custo||0)),local:''};
     if(labPsiEhCura_(p)){
         const fer=labFeridasTrataveis_(alvo);t.acaoAuxLab.local=fer[0]?.local||'';
@@ -19531,11 +19554,13 @@ labRenderActionPanel_=function(){
     ];
     const primeiroValor=modo==='outras'?'__outras__':modo==='psi'?'__psi__':t.periciaLab;
 
-    let segundo=[],alvos=[],segValor='',alvoValor='',descricao='',campo4='',final='',distTxt='';
+    let segundo=[],alvos=[],segValor='',alvoValor='',descricao='',campoAlvo='',campo4='',final='',distTxt='';
     if(modo==='outras'){
         segundo=gerais.map(p=>({v:p.id,n:`${getNome(p)} (${labValorTeste_(t,p)}%)`}));
         segValor=t.universalPericiaIdLab;
-        alvos=labUniversalAlvosGerais_(t).map(x=>({v:x.id,n:x.nome||'Objeto'}));alvoValor=t.universalAlvoGeralLab||'';
+        alvos=labUniversalAlvosGerais_(t).map(x=>({v:x.id,n:x.nome||x.name||'Objeto'}));alvoValor=t.universalAlvoGeralLab||'';
+        const alvoG=alvoValor?labPsiAlvoPorId_(alvoValor):null;
+        distTxt=alvoG?`🎯 ${alvoG.nome||alvoG.name||'Objeto'} selecionado no mapa`:'🎯 Clique no alvo dentro do mapa, se a ação exigir alvo';
         const per=gerais.find(p=>String(p.id)===String(segValor));descricao=getDescricao(per);
         campo4=`<button class="btn-small ${t.sortePreparadaLab?'btn-select':''}" onclick="labPrepararSorte_()" ${labSorteAtualToken_(t)<=0||t.sortePreparadaLab?'disabled':''} style="width:100%;height:48px;margin:0;white-space:nowrap;">${t.sortePreparadaLab?'🍀 Preparada':`🍀 Sorte ${labSorteAtualToken_(t)}/${labSorteMaxToken_(t)}`}</button>`;
         final=`<button class="btn-small btn-select" onclick="labUniversalExecutarPericia_()" ${!per||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;margin:0;">🎲 Usar (1 AÇ)</button>`;
@@ -19545,7 +19570,9 @@ labRenderActionPanel_=function(){
         const p=poderes.find(x=>String(x.id)===String(segValor)),aa=p?labPsiAlvos_(t,p):[];
         alvos=aa.map(x=>({v:x.id,n:x.nome||labObjetoModelo_(x)?.nome||'Objeto'}));alvoValor=t.universalAlvoIdLab;
         descricao=labDescricaoTraduzidaPsi_(p);
-        const min=p?.id==='mover_objeto'?labPsiMoverCustoKg_(p,labPsiAlvoPorId_(alvoValor)):Math.max(0,Number(p?.custo||0));
+        const alvoPsiAtual=alvoValor?labPsiAlvoPorId_(alvoValor):null;
+        distTxt=alvoPsiAtual?`🎯 ${alvoPsiAtual.nome||alvoPsiAtual.name||labObjetoModelo_(alvoPsiAtual)?.nome||'Objeto'} selecionado no mapa`:'🎯 Clique no alvo dentro do mapa';
+        const min=p?.id==='mover_objeto'&&alvoPsiAtual?labPsiMoverCustoKg_(p,alvoPsiAtual):Math.max(0,Number(p?.custo||0));
         const max=Math.max(min,labPsiRestantes_(t));
         campo4=`<label style="margin:0;"><small style="display:block;margin-bottom:4px;">PP</small><input type="number" min="${min}" max="${max}" value="${Math.max(min,Number(t.universalPsiCustoLab||min))}" onchange="labUniversalPP_(this.value)" style="width:100%;height:48px;margin:0;box-sizing:border-box;text-align:center;"></label>`;
         final=`<button class="btn-small btn-select" onclick="labUniversalExecutarPsi_()" ${!p||!alvoValor||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;margin:0;">✨ Usar (1 AÇ)</button>`;
@@ -19557,20 +19584,24 @@ labRenderActionPanel_=function(){
         descricao=getDescricao(per);
         if(item?.descricao)descricao=[descricao,getDescricao(item)].filter(Boolean).join(' · ');
         if(item?.dano)descricao=[descricao,`🎲 Dano ${item.dano}${Number(item?.penetracao||0)?` · Pen. ${Number(item.penetracao)}`:''}`].filter(Boolean).join(' · ');
-        if(alvo&&item){const d=labDistanciaEntre_(t,alvo),a=labAlcanceAtaque_(t,item);distTxt=`Distância: ${d.toFixed(2)} m · alcance ${a.toFixed(1)} m`;}
+        if(alvo&&item){const d=labDistanciaEntre_(t,alvo),a=labAlcanceAtaque_(t,item);distTxt=`🎯 ${alvo.nome||'Alvo'} · ${d.toFixed(2)} m · alcance ${a.toFixed(1)} m`;}
+        else distTxt='🎯 Clique no alvo dentro do mapa';
+        campoAlvo='';
         campo4=`<button class="btn-small ${t.sortePreparadaLab?'btn-select':''}" onclick="labPrepararSorte_()" ${labSorteAtualToken_(t)<=0||t.sortePreparadaLab?'disabled':''} style="width:100%;height:48px;margin:0;white-space:nowrap;">${t.sortePreparadaLab?'🍀 Preparada':`🍀 Sorte ${labSorteAtualToken_(t)}/${labSorteMaxToken_(t)}`}</button>`;
         final=`<button class="btn-small btn-select" onclick="labRolarAtaque_()" ${!per||!labItemSelecionado_(t)||!alvo||Number(t.acoesAtuaisLab||0)<=0?'disabled':''} style="width:100%;height:48px;margin:0;">🎲 Atacar (1 AÇ)</button>`;
     }
 
+    // Alvos de combate, psiquismo e ações direcionadas são escolhidos no mapa.
+    campoAlvo='';
     el.style.display='block';
     el.innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:7px;">
       <strong style="color:#ffd54a;">🎯 Ação de ${escaparHtmlInventario_(t.nome)}</strong>
       <span style="font-size:.86em;color:#9fc6d8;">${escaparHtmlInventario_(distTxt)}</span>
     </div>
-    <div style="display:grid;grid-template-columns:minmax(180px,1.15fr) minmax(220px,1.25fr) minmax(160px,.95fr) minmax(125px,.62fr) minmax(145px,.66fr);gap:8px;align-items:end;">
+    <div style="display:grid;grid-template-columns:minmax(180px,1.15fr) minmax(220px,1.25fr) minmax(125px,.62fr) minmax(145px,.66fr);gap:8px;align-items:end;">
       <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Ação / Perícia</small><select onchange="labUniversalPrimeiro_(this.value)" style="width:100%;margin:0;">${primeiro.map(x=>`<option value="${escaparHtmlInventario_(x.v)}" ${String(x.v)===String(primeiroValor)?'selected':''}>${escaparHtmlInventario_(x.n)}</option>`).join('')}</select></label>
       <label style="margin:0;"><small style="display:block;margin-bottom:4px;">${modo==='psi'?'Poder':modo==='outras'?'Perícia':'Arma / ataque'}</small><select onchange="labUniversalSegundo_(this.value)" style="width:100%;margin:0;">${segundo.map(x=>`<option value="${escaparHtmlInventario_(x.v)}" ${String(x.v)===String(segValor)?'selected':''}>${escaparHtmlInventario_(x.n)}</option>`).join('')||'<option>—</option>'}</select></label>
-      <label style="margin:0;"><small style="display:block;margin-bottom:4px;">Alvo</small><select onchange="labUniversalAlvo_(this.value)" style="width:100%;margin:0;">${alvos.map(x=>`<option value="${escaparHtmlInventario_(x.v)}" ${String(x.v)===String(alvoValor)?'selected':''}>${escaparHtmlInventario_(x.n)}</option>`).join('')||'<option value="">—</option>'}</select></label>
+      ${campoAlvo}
       <div>${campo4}</div><div>${final}</div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;">
@@ -19629,7 +19660,7 @@ function labObjetoTextoMaterialV46470_(o){
     const m=labObjetoModelo_(o);
     return normalizarTextoCombate_(`${o?.nome||''} ${o?.material||''} ${o?.descricao||''} ${m?.nome||''} ${m?.material||''} ${m?.descricao||''}`);
 }
-function labObjetoInflamavelV46470_(o){return /arvore|árvore|tree|wood|madeira|papel|paper|tecido|cloth|planta|folha|folhas|inflam/.test(labObjetoTextoMaterialV46470_(o));}
+function labObjetoInflamavelV46470_(o){return /arvore|árvore|palmeira|palm|tree|wood|madeira|papel|paper|tecido|cloth|planta|folha|folhas|inflam/.test(labObjetoTextoMaterialV46470_(o));}
 function labObjetoFragilV46470_(o){return /vidro|glass|cristal|crystal|ceram|porcel|rocha|rock|pedra|stone/.test(labObjetoTextoMaterialV46470_(o));}
 
 const labEfeitosDisponiveisV46470_=labEfeitosDisponiveis_;
@@ -20049,7 +20080,7 @@ function labObjetoInflamavelV247_(o){
     const m=labObjetoModelo_(o);
     if(o?.inflamavel===true||m?.inflamavel===true)return true;
     const txt=normalizarTextoCombate_(`${o?.nome||''} ${o?.material||''} ${m?.nome||''} ${m?.material||''} ${m?.descricao||''}`);
-    return /arvore|tree|madeira|wood|papel|paper|tecido|cloth|planta|folha|folhas|inflam/.test(txt);
+    return /arvore|árvore|palmeira|palm|tree|madeira|wood|papel|paper|tecido|cloth|planta|folha|folhas|inflam/.test(txt);
 }
 function labObjetoFragilV247_(o){
     const m=labObjetoModelo_(o);
@@ -22128,7 +22159,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.3 — Oficina recortável, modos exclusivos, fogo ambiental
+// V46.76.5 — Oficina recortável, modos exclusivos, fogo ambiental
 //            e pequenos ajustes de interface
 // ============================================================
 
@@ -22287,7 +22318,7 @@ labRender_=function(){const r=labRender520Base_();try{const old=document.getElem
 
 
 // ============================================================
-// V46.76.3
+// V46.76.5
 // Oficina: retângulo arredondado + opacidades independentes
 // Música: estado Play/Stop visível
 // Mesa: entrada livre para jogadores
@@ -22644,7 +22675,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.3
+// V46.76.5
 // Corrige floats fantasmas, aviso de queimadura, estabilidade
 // vertical da Mesa, ataque a mortos e entrada livre automática.
 // ============================================================
@@ -22929,7 +22960,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.3 — Oficina: estilos de traço exclusivos + prévia real
+// V46.76.5 — Oficina: estilos de traço exclusivos + prévia real
 // ============================================================
 function gmOficinaV2EstiloAtual550_(){
     const tex=String(gmOficinaV2Cfg_.texturaTraco||'solida');
@@ -23005,7 +23036,7 @@ window.gmOficinaV2Opacity_=function(v){gmOficinaV2Opacity550Base_(v);gmOficinaV2
 
 
 // ============================================================
-// V46.76.3
+// V46.76.5
 // Corrige formas vetoriais aparentemente transparentes mesmo com
 // opacidade de conteúdo = 1.
 // ============================================================
@@ -23090,7 +23121,7 @@ window.gmVet490Prop_ = gmVet490Prop_;
 
 
 // ============================================================
-// V46.76.3 — Oficina: cores digitáveis, borda zero e espessura fina
+// V46.76.5 — Oficina: cores digitáveis, borda zero e espessura fina
 // ============================================================
 
 function gmCor552Hex_(v, fallback='#000000'){
@@ -23231,7 +23262,7 @@ window.labRender_=labRender_;
 
 
 // ============================================================
-// V46.76.3 — Oficina: seleção discreta, objetos opacos, sombras e camadas
+// V46.76.5 — Oficina: seleção discreta, objetos opacos, sombras e camadas
 // ============================================================
 
 let gmOficinaObjSel553_='';
@@ -23473,7 +23504,7 @@ window.labObjetoHtml_=labObjetoHtml_;
 
 
 // ============================================================
-// V46.76.3 — Oficina: escala px/m como zoom uniforme verdadeiro
+// V46.76.5 — Oficina: escala px/m como zoom uniforme verdadeiro
 // ============================================================
 
 function gm554Zoom_(){
@@ -23632,7 +23663,7 @@ window.gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.3 — Oficina simplificada
+// V46.76.5 — Oficina simplificada
 // - 10x10 e 50x40
 // - HEX no desenho
 // - Hexágono, Estrela e U
@@ -23977,7 +24008,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.3 — Oficina: objetos realmente opacos + painel de camadas
+// V46.76.5 — Oficina: objetos realmente opacos + painel de camadas
 // ============================================================
 
 const gm556OpaqueCache_ = new Map();
@@ -24150,7 +24181,7 @@ gmOficinaRender_=function(){
 
 
 // ============================================================
-// V46.76.3 — Oficina: composição real por ordem de adição
+// V46.76.5 — Oficina: composição real por ordem de adição
 // Arquitetura simplificada:
 //   raster/desenho = fundo
 //   formas + objetos = UM MESMO SVG, ordenados cronologicamente
@@ -24373,7 +24404,7 @@ gmOficinaRender_=function(){
         gm560GarantirOrdem_();
         gm560RenderUnificado_();
         gm560LimparUIAntiga_();
-    }catch(e){console.warn('Oficina v46.76.3',e);}
+    }catch(e){console.warn('Oficina v46.76.5',e);}
     return r;
 };
 
@@ -24383,7 +24414,7 @@ setTimeout(()=>{try{gm560GarantirOrdem_();gmOficinaPersistir_();gm560RenderUnifi
 
 
 // ============================================================
-// V46.76.3 — REFORMA DA OFICINA
+// V46.76.5 — REFORMA DA OFICINA
 // Interface única + pilha cronológica real para desenho, formas e objetos.
 // ============================================================
 
@@ -25136,8 +25167,8 @@ setTimeout(()=>{try{gm570BuildUI_();gm570EnsureOrder_();gmOficinaPersistir_();gm
 
 
 // ============================================================
-// V46.76.3 — reconstrução limpa da barra da Oficina
-// Base: 46.76.3 funcional. Não usa varredura agressiva do DOM.
+// V46.76.5 — reconstrução limpa da barra da Oficina
+// Base: 46.76.5 funcional. Não usa varredura agressiva do DOM.
 // ============================================================
 const gm573_ = {
   mode:'select',
@@ -25366,8 +25397,8 @@ setTimeout(()=>{try{gm573Build_();gm573Sync_();}catch(e){console.warn('Oficina 5
 
 
 // ============================================================
-// V46.76.3 — Oficina consolidada conforme especificação de 16 pontos
-// Base visual estável: 46.76.3
+// V46.76.5 — Oficina consolidada conforme especificação de 16 pontos
+// Base visual estável: 46.76.5
 // ============================================================
 
 const gm580_ = {
@@ -26034,14 +26065,14 @@ setTimeout(()=>{try{gm580Install_();gm580Tool_('select');}catch(e){console.warn(
 
 
 // ============================================================
-// V46.76.3 — OFICINA REESTRUTURADA
+// V46.76.5 — OFICINA REESTRUTURADA
 // Modelo único de composição: desenho + forma + objeto participam
 // da mesma pilha cronológica visual, em coordenadas métricas.
 // ============================================================
 
 const gm600_ = {
   installed:false,
-  version:'46.76.3'
+  version:'46.76.5'
 };
 
 // A Oficina nova assume integralmente a interface da 58, evitando que
@@ -26265,7 +26296,7 @@ setTimeout(()=>{try{gm600Install_();gm580Render_();}catch(e){console.warn('Ofici
 
 
 // ============================================================
-// V46.76.3 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
+// V46.76.5 — HOTFIX: elimina o pisca-pisca/reconstrução da Oficina
 // A interface é montada uma vez por abertura, e render do mapa NÃO
 // reconstrói nem reposiciona a toolbar.
 // ============================================================
@@ -26357,7 +26388,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — Oficina realmente única
+// V46.76.5 — Oficina realmente única
 // ============================================================
 (function(){
   function gm610CleanLegacy_(){
@@ -26413,7 +26444,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — edição persistente de formas/objetos + histórico completo
+// V46.76.5 — edição persistente de formas/objetos + histórico completo
 // ============================================================
 (function(){
   const gm620_ = {
@@ -26818,7 +26849,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — estados separados, undo/redo real, sombra persistente,
+// V46.76.5 — estados separados, undo/redo real, sombra persistente,
 // fixar formas, ferramenta persistente e feedback de carregamento
 // ============================================================
 (function(){
@@ -27233,7 +27264,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — hotfix Ctrl+V duplicado + corte de imagens
+// V46.76.5 — hotfix Ctrl+V duplicado + corte de imagens
 // ============================================================
 (function(){
   // Há dois listeners históricos de paste na Oficina. Para IMAGENS,
@@ -27371,7 +27402,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — Oficina compacta + ferramenta persistente + crop por alças
+// V46.76.5 — Oficina compacta + ferramenta persistente + crop por alças
 // + Ctrl+V sem duplicação
 // ============================================================
 (function(){
@@ -27826,7 +27857,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — layout da Oficina baseado no mockup do usuário
+// V46.76.5 — layout da Oficina baseado no mockup do usuário
 // barra superior compacta + formas à esquerda + banco embaixo
 // rolagem natural: nada fica sticky sobre o mapa
 // ============================================================
@@ -28064,7 +28095,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — corrige aplicação real do layout 46.65
+// V46.76.5 — corrige aplicação real do layout 46.65
 // ============================================================
 (function(){
   // Captura as implementações novas que a 46.65.0 colocou em window.
@@ -28077,7 +28108,7 @@ setTimeout(()=>{
     if(typeof gm651ToolbarNew_==='function') gm580ToolbarHtml_ = gm651ToolbarNew_;
     if(typeof gm651BuildNew_==='function')   gm580BuildUI_ = gm651BuildNew_;
   }catch(e){
-    console.warn('Oficina 46.76.3: falha ao substituir bindings',e);
+    console.warn('Oficina 46.76.5: falha ao substituir bindings',e);
   }
 
   function gm651ForceRebuild_(){
@@ -28100,7 +28131,7 @@ setTimeout(()=>{
       gm580PopulateObjects_?.();
       gm580Render_?.();
     }catch(e){
-      console.warn('Oficina 46.76.3 rebuild',e);
+      console.warn('Oficina 46.76.5 rebuild',e);
     }
   }
 
@@ -28125,7 +28156,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — arrumação visual da Oficina
+// V46.76.5 — arrumação visual da Oficina
 // 1 conta-gotas por setor, 1 banco de objetos, RGB/HEX visíveis,
 // sem "..." redundantes e sem alterar a lógica das ferramentas.
 // ============================================================
@@ -28236,7 +28267,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — remove conta-gotas extras e coloca HEX compacto
+// V46.76.5 — remove conta-gotas extras e coloca HEX compacto
 // ============================================================
 (function(){
   function gm653Arrange_(){
@@ -28313,7 +28344,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — estabilização funcional da Oficina
+// V46.76.5 — estabilização funcional da Oficina
 // seleção real + formas persistentes + alças + borda 0 + undo/redo por ação
 // ============================================================
 (function(){
@@ -28777,7 +28808,7 @@ setTimeout(()=>{
 
 
 // ============================================================
-// V46.76.3 — OFICINA 2 EXPERIMENTAL
+// V46.76.5 — OFICINA 2 EXPERIMENTAL
 // Editor novo e independente. Não reutiliza os controladores da Oficina 1.
 // ============================================================
 (function(){
@@ -30075,7 +30106,7 @@ class RPGTextureGenerator {
 
 
 
-// V46.76.3 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
+// V46.76.5 — refinamentos solicitados de textura, corrigidos para RPGTextureGenerator.
 // IMPORTANTE: RPGTextureGenerator usa this.canvas.width/height; ele não possui this.w/this.h.
 RPGTextureGenerator.prototype.textureFloresta=function(){
  const c=this.ctx,w=this.canvas.width,h=this.canvas.height;
@@ -30984,7 +31015,7 @@ function gm2placeObjects(p){
    // Assim árvore continua sendo inflamável, parede continua bloqueando, etc.
    gm2.st.elements.push({
      ...JSON.parse(JSON.stringify(m)),
-     id:gm2id('o'),type:'object',modeloId:m.id,name:getNome(m)||m.nome||m.id,src,
+     id:gm2id('o'),type:'object',modeloId:m.id,nome:getNome(m)||m.nome||m.id,name:getNome(m)||m.nome||m.id,src,
      x:p.x+off,y:p.y+off,w,h,rot:0,z:gm2zNext(),locked:false,opacity:1,
      pvAtual:Number(m.pvAtual??m.pvMax??0),destruido:false,pegandoFogoLab:false,fogoUltimaRodadaLab:-1,
      shadow:gm2.defaults.shadow,shadowDir:gm2.defaults.shadowDir,shadowDist:gm2.defaults.shadowDist
@@ -31146,7 +31177,7 @@ setTimeout(gm2installTab,900);
 
 
 // ============================================================
-// V46.76.3 — correções finais desta rodada
+// V46.76.5 — correções finais desta rodada
 // ============================================================
 
 // Um alvo explicitamente escolhido nunca deve ser trocado por "primeiro alvo válido"
@@ -31195,7 +31226,7 @@ try{
 
 
 // ============================================================
-// V46.76.3 — rollback seguro + alvo de objetos endurecido
+// V46.76.5 — rollback seguro + alvo de objetos endurecido
 // ============================================================
 
 // A integração experimental da Oficina 2 no Mapa da Mesa foi retirada desta versão.
@@ -31247,7 +31278,7 @@ window.labCliqueFundoMapa_=function(ev){
 };
 
 // ============================================================
-// V46.76.3
+// V46.76.5
 // seta temporária + risco persistente + controle PJ pelo mestre
 // + alcance recortado + alvo destruído preservado + painel compacto
 // ============================================================
@@ -31486,7 +31517,7 @@ window.labRender_=labRender_;
 setTimeout(()=>{try{labAtualizarControlePJ760_();labQuickToolsUpdate760_();labQuickRender760_();}catch(_){}},800);
 
 // ============================================================
-// V46.76.3 — alvo mais recente vence
+// V46.76.5 — alvo mais recente vence
 // O erro anterior era um "alvo pegajoso": objetoSelecionadoId antigo continuava
 // tendo prioridade mesmo depois de o usuário escolher outro alvo.
 // ============================================================
@@ -31566,7 +31597,7 @@ window.labRolarAtaque_=function(){
 };
 
 // ============================================================
-// V46.76.3 — objetos da Oficina 2 preservam propriedades de combate
+// V46.76.5 — objetos da Oficina 2 preservam propriedades de combate
 // ============================================================
 function gm2EnriquecerObjetosBanco762_(st){
  if(!st?.elements)return st;
@@ -31576,6 +31607,8 @@ function gm2EnriquecerObjetosBanco762_(st){
    if(!m)continue;
    const preservar={id:e.id,type:e.type,modeloId:e.modeloId,name:e.name,src:e.src,x:e.x,y:e.y,w:e.w,h:e.h,rot:e.rot,z:e.z,locked:e.locked,opacity:e.opacity,shadow:e.shadow,shadowDir:e.shadowDir,shadowDist:e.shadowDist};
    Object.assign(e,JSON.parse(JSON.stringify(m)),preservar);
+   e.nome=e.nome||getNome(m)||e.name||m.id||'Objeto';
+   e.name=e.name||e.nome;
    if(e.pvAtual===undefined||e.pvAtual===null)e.pvAtual=Number(e.pvMax||0);
    if(e.destruido===undefined)e.destruido=false;
    if(e.pegandoFogoLab===undefined)e.pegandoFogoLab=false;
@@ -31621,7 +31654,7 @@ if(labLoad762Base_)window.labCarregarMapaBanco_=async function(){
 };
 
 // ============================================================
-// V46.76.3 — alvo SOMENTE pelo mapa + objetos Oficina 2 funcionais
+// V46.76.5 — alvo SOMENTE pelo mapa + objetos Oficina 2 funcionais
 // + fogo/morte visuais robustos
 // ============================================================
 
@@ -31830,7 +31863,7 @@ labRender_=function(){
     try{
         labAlvoMapaUI763_();
         labEstadosVisuais763_();
-    }catch(e){console.warn('v46.76.3 visual/alvo',e);}
+    }catch(e){console.warn('v46.76.5 visual/alvo',e);}
     return r;
 };
 window.labRender_=labRender_;
@@ -31850,6 +31883,212 @@ setTimeout(()=>{
         labSalvarLocal_();labRender_();
     }catch(_){}
 },700);
+
+// ============================================================
+// V46.76.5 — seleção de alvo por mapa, captura direta
+// ============================================================
+function labSelecionarAlvoMapa764_(id){
+    const ator=labTokenAtual_();
+    if(!ator)return false;
+    const alvo=labAlvoAtaquePorId_(String(id||''));
+    if(!alvo||String(alvo.id)===String(ator.id))return false;
+
+    ator.alvoLab=String(alvo.id);
+    ator._alvoManualFixadoLab=String(alvo.id);
+    ator._alvoComandoFixadoLab='';
+    ator._alvoSelecionadoMapa763=true;
+    ator._alvoMortoManual510=!!labAlvoInerte490_(alvo);
+
+    if(labEhAlvoObjeto_(alvo)){
+        labEstado_.objetoSelecionadoId=String(alvo.id);
+        labEstado_.selecionadoId='';
+    }else{
+        labEstado_.objetoSelecionadoId='';
+        labEstado_.selecionadoId=String(alvo.id);
+    }
+
+    labApontarPara_(ator,alvo);
+    labEstado_.ultimoResultadoLab=`Alvo selecionado no mapa: ${alvo.nome||'alvo'}.`;
+    labSalvarLocal_();
+    labRender_();
+    return true;
+}
+
+document.addEventListener('pointerdown',function(ev){
+    if(labEstado_.fase!=='combate'||labEstado_.pendenciaLab||labEstado_.danoPendenteLab)return;
+    if(typeof labQuickTool760_!=='undefined'&&labQuickTool760_)return;
+
+    const map=document.getElementById('labMetricMap');
+    if(!map||!map.contains(ev.target))return;
+
+    const node=ev.target.closest?.('.lab-token,.lab-map-object');
+    if(!node)return;
+
+    const id=String(node.dataset.id||'');
+    const ator=labTokenAtual_();
+    if(!ator||!id)return;
+
+    // No ataque comum, clicar no próprio token continua reservado ao movimento.
+    // Em Psiquismo, o próprio token pode ser um alvo válido.
+    const modo=String(ator.universalModoLab||'combate');
+    if(node.classList.contains('lab-token')&&String(id)===String(ator.id)&&modo!=='psi'&&ator.acaoAuxLab?.tipo!=='psiquismo')return;
+
+    // Qualquer token/objeto válido vira o alvo mais recente.
+    if(labSelecionarAlvoMapa764_(id)){
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+    }
+},true);
+
+// Remove qualquer resíduo visual de dropdown de ataque caso algum renderer antigo
+// volte a produzir o painel por um caminho legado. Psi e outras ações não são tocadas.
+function labRemoverDropdownAtaque764_(){
+    const painel=document.getElementById('labActionPanel'),t=labTokenAtual_();
+    if(!painel||!t||labEstado_.fase!=='combate')return;
+    if((t.universalModoLab||'combate')!=='combate')return;
+
+    for(const sel of [...painel.querySelectorAll('select')]){
+        const fn=sel.getAttribute('onchange')||'';
+        if(!/labSelecionarAlvo_|labUniversalAlvo_/.test(fn))continue;
+        const lab=sel.closest('label');
+        if(lab)lab.remove();
+        else sel.remove();
+    }
+}
+const labRender764Base_=labRender_;
+labRender_=function(){
+    const r=labRender764Base_.apply(this,arguments);
+    try{labRemoverDropdownAtaque764_();}catch(e){console.warn('v46.76.5 alvo UI',e);}
+    return r;
+};
+window.labRender_=labRender_;
+
+// ============================================================
+// V46.76.5 — alvo único: SEM dropdown, clique no mapa é a autoridade
+// ============================================================
+function labNomeAlvo765_(a){
+  return a?(a.nome||a.name||labObjetoModelo_(a)?.nome||getNome(a)||'Objeto'):'';
+}
+
+labSelecionarAlvoMapa764_=function(id){
+    const ator=labTokenAtual_();if(!ator)return false;
+    const alvo=labAlvoAtaquePorId_(String(id||''))||labPsiAlvoPorId_(String(id||''));
+    if(!alvo)return false;
+
+    const modo=String(ator.universalModoLab||'combate');
+
+    // Painel Psi especializado.
+    if(ator.acaoAuxLab?.tipo==='psiquismo'){
+        const p=labPsiPoderes_(ator).find(x=>String(x.id)===String(ator.acaoAuxLab.poderId));
+        const validos=p?labPsiAlvos_(ator,p):[];
+        if(!validos.some(x=>String(x.id)===String(alvo.id)))return false;
+        ator.acaoAuxLab.alvoId=String(alvo.id);
+        ator.psiSelecaoLab=JSON.parse(JSON.stringify(ator.acaoAuxLab));
+        if(p?.id==='mover_objeto')ator.acaoAuxLab.custo=Math.max(Number(ator.acaoAuxLab.custo||0),labPsiMoverCustoKg_(p,alvo));
+        labEstado_.objetoSelecionadoId=labEhAlvoObjeto_(alvo)?String(alvo.id):'';
+        labEstado_.selecionadoId=labEhAlvoObjeto_(alvo)?'':String(alvo.id);
+        labSalvarLocal_();labRender_();return true;
+    }
+
+    // Psi universal.
+    if(modo==='psi'){
+        const p=labPsiPoderes_(ator).find(x=>String(x.id)===String(ator.universalPsiPoderIdLab));
+        const validos=p?labPsiAlvos_(ator,p):[];
+        if(!validos.some(x=>String(x.id)===String(alvo.id)))return false;
+        ator.universalAlvoIdLab=String(alvo.id);
+        if(p?.id==='mover_objeto')ator.universalPsiCustoLab=Math.max(Number(ator.universalPsiCustoLab||0),labPsiMoverCustoKg_(p,alvo));
+        labEstado_.objetoSelecionadoId=labEhAlvoObjeto_(alvo)?String(alvo.id):'';
+        labEstado_.selecionadoId=labEhAlvoObjeto_(alvo)?'':String(alvo.id);
+        labSalvarLocal_();labRender_();return true;
+    }
+
+    // Outras perícias direcionadas.
+    if(modo==='outras'){
+        const validos=labUniversalAlvosGerais_(ator);
+        if(!validos.some(x=>String(x.id)===String(alvo.id)))return false;
+        ator.universalAlvoGeralLab=String(alvo.id);
+        labEstado_.objetoSelecionadoId=labEhAlvoObjeto_(alvo)?String(alvo.id):'';
+        labEstado_.selecionadoId=labEhAlvoObjeto_(alvo)?'':String(alvo.id);
+        labSalvarLocal_();labRender_();return true;
+    }
+
+    // Ataque normal.
+    if(String(alvo.id)===String(ator.id))return false;
+    ator.alvoLab=String(alvo.id);
+    ator._alvoManualFixadoLab=String(alvo.id);
+    ator._alvoComandoFixadoLab='';
+    ator._alvoSelecionadoMapa763=true;
+    ator._alvoMortoManual510=!!labAlvoInerte490_(alvo);
+
+    if(labEhAlvoObjeto_(alvo)){
+        alvo.nome=alvo.nome||alvo.name||labObjetoModelo_(alvo)?.nome||'Objeto';
+        alvo.name=alvo.name||alvo.nome;
+        labEstado_.objetoSelecionadoId=String(alvo.id);
+        labEstado_.selecionadoId='';
+    }else{
+        labEstado_.objetoSelecionadoId='';
+        labEstado_.selecionadoId=String(alvo.id);
+    }
+    labApontarPara_(ator,alvo);
+    labSalvarLocal_();labRender_();return true;
+};
+
+// Limpa a lógica de preferências de ataque sem chamar os wrappers pegajosos antigos.
+labGarantirPrefsAtaque_=function(t){
+    if(!t)return;
+    const c=labCharToken_(t),skills=labPericiasAtaque_(t);
+    if(!skills.length){t.periciaLab='';t.equipamentoLab='';t.alvoLab='';return;}
+    if(!skills.some(p=>batalhaTokenPericia_(p)===t.periciaLab))t.periciaLab=batalhaTokenPericia_(skills[0]);
+    const per=labPericiaPorToken_(t,t.periciaLab);
+    const eq=batalhaEquipamentos_(c,per,t.equipamentoLab);
+    if(!eq.some(x=>x.valor===t.equipamentoLab))t.equipamentoLab=eq[0]?.valor||'';
+    const alvo=t._alvoSelecionadoMapa763?labAlvoAtaquePorId_(t.alvoLab):null;
+    if(!alvo||String(alvo.id)===String(t.id)){
+        t.alvoLab='';t._alvoManualFixadoLab='';t._alvoComandoFixadoLab='';t._alvoSelecionadoMapa763=false;t._alvoMortoManual510=false;
+    }
+};
+
+// Remove qualquer campo de alvo que algum renderer histórico tente recolocar.
+// Vale para combate, Psi e outras perícias.
+function labRetirarTodoDropdownAlvo765_(){
+    const painel=document.getElementById('labActionPanel');if(!painel)return;
+    for(const lab of [...painel.querySelectorAll('label')]){
+        const sm=lab.querySelector('small'),sel=lab.querySelector('select');
+        if(!sm||!sel)continue;
+        const titulo=String(sm.textContent||'').trim().toLowerCase();
+        const fn=String(sel.getAttribute('onchange')||'');
+        if(titulo==='alvo'||/labSelecionarAlvo_|labUniversalAlvo_|labPsiSelecionarAlvo_/.test(fn)){
+            const ator=labTokenAtual_();
+            let alvo=null;
+            if(ator?.acaoAuxLab?.tipo==='psiquismo')alvo=labPsiAlvoPorId_(ator.acaoAuxLab.alvoId);
+            else if(ator?.universalModoLab==='psi')alvo=labPsiAlvoPorId_(ator.universalAlvoIdLab);
+            else if(ator?.universalModoLab==='outras')alvo=labPsiAlvoPorId_(ator.universalAlvoGeralLab);
+            else alvo=labAlvoAtaquePorId_(ator?.alvoLab);
+            const box=document.createElement('div');
+            box.className='lab-map-target-status-765';
+            box.style.cssText='min-height:38px;box-sizing:border-box;padding:6px 9px;border:1px solid rgba(126,231,255,.28);border-radius:8px;background:rgba(255,255,255,.045);display:flex;align-items:center;color:#cfe7ff;';
+            box.innerHTML=alvo?`🎯 <b>${escaparHtmlInventario_(labNomeAlvo765_(alvo))}</b>&nbsp;<span style="opacity:.65;font-size:.82em">selecionado no mapa</span>`:`🎯 <span style="color:#ffd98c">Clique no alvo dentro do mapa</span>`;
+            lab.replaceWith(box);
+        }
+    }
+}
+
+const labRenderActionPanel765Base_=labRenderActionPanel_;
+labRenderActionPanel_=function(){
+    const r=labRenderActionPanel765Base_.apply(this,arguments);
+    labRetirarTodoDropdownAlvo765_();
+    return r;
+};
+window.labRenderActionPanel_=labRenderActionPanel_;
+
+// Também executa após labRender, caso um painel seja desenhado por uma resolução assíncrona.
+const labRender765Base_=labRender_;
+labRender_=function(){
+    const r=labRender765Base_.apply(this,arguments);
+    try{labRetirarTodoDropdownAlvo765_();}catch(_){}
+    return r;
+};
+window.labRender_=labRender_;
 </script>
 <!-- Mesa Estelar v46.38.0: segurança de objetos, XP contextual, tutorial reforçado, PM/PJ, imagem pós-conclusão e sincronização de magia -->
 
@@ -31866,6 +32105,6 @@ setTimeout(()=>{
 <!-- Mesa Estelar v46.41.1: hotfix de autenticação; login não é mais bloqueado por falhas de inicialização secundária -->
 <!-- Mesa Estelar v46.41.2: hotfix de inicialização, login resiliente e idioma de fallback -->
 <!-- Mesa Estelar v46.51.0: restaura autenticação estável da v46.40 mantendo recursos v46.41 -->
-<!-- Mesa Estelar v46.76.3: recorte de objetos, modos exclusivos e fogo ambiental -->
+<!-- Mesa Estelar v46.76.5: recorte de objetos, modos exclusivos e fogo ambiental -->
 </body>
 </html>
